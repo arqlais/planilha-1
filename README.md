@@ -21,7 +21,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 
 ## Área do professor (aba Alunos)
 
-- **Meu treino (particular)**: o seu treino, separado dos alunos.
+- **Meu treino (particular)**: o seu treino, separado dos alunos. Não aparece na lista de alunos; quando um aluno estiver aberto, use **← Voltar para o meu treino** na aba Alunos.
 - **＋ Adicionar aluno**: nome, WhatsApp, objetivo e observações. Cada aluno ganha a própria planilha, começando com os mesmos exercícios do seu treino, sem as cargas.
 - **Perfil do aluno**: dados e objetivo, acompanhamento (treinos e kg na semana, cardio, kg por grupo × semana anterior), últimos treinos, **montar o treino** (editar séries/carga/reps e adicionar exercícios por grupo) e **mensagem pelo WhatsApp** com modelos prontos (treino do grupo, resumo da semana, lembrete, parabéns). As mensagens enviadas ficam registradas no perfil.
 - Cada aluno mostra: último treino (há quantos dias), treinos na semana e volume comparado com a semana anterior.

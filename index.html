@@ -1063,8 +1063,8 @@ function renderAlunos() {
   const shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   $main.innerHTML = `
     <div class="banner"><div class="grow"><h2>Área do professor</h2>
-      <small>Seu treino particular e o acompanhamento de cada aluno</small></div></div>
-    ${profileCard(profile(ME))}
+      <small>Acompanhamento de cada aluno</small>
+      ${ui.profile !== ME ? `<div class="actions"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}</div></div>
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
     <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro '}</p>`}</div>
