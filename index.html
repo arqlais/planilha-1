@@ -406,6 +406,7 @@ const UI_KEY = 'planilha-treino-ui';
 const STEP = { carga: 2.5, reps: 1 };
 const REST_DEFAULT = 120;
 const ME = 'me';
+const MY_NAME = 'Igor Pedro';
 const CARDIO = 'Cardio';
 const MODES = [['corrida', 'Corrida', '🏃'], ['bicicleta', 'Bicicleta', '🚴'], ['escada', 'Escada', '🪜'], ['eliptico', 'Elíptico', '⭕']];
 const modeOf = id => MODES.find(m => m[0] === id) || [id, id, '❤️'];
@@ -444,12 +445,14 @@ function seed() {
   add('Braços', 'Tríceps barra', [[40, 9], [45, 10], [50, 10], [55, 7], [45, 10]], '2026-06-22');
   add('Braços', 'Tríceps francês', [[25, null], [30, null], [35, null], [30, null], [35, null]]);
   add('Braços', 'Rosca direta', [[null, 10], [null, 10], [null, 10], [null, 10]]);
-  return { profiles: [{ id: ME, name: 'Meu treino' }], exercises, sessions, cardio: [] };
+  return { profiles: [{ id: ME, name: MY_NAME }], exercises, sessions, cardio: [] };
 }
-// Versões antigas não tinham perfis: tudo vira "Meu treino"
+// Versões antigas não tinham perfis: tudo vira o treino do professor
 function migrate(d) {
-  if (!Array.isArray(d.profiles)) d.profiles = [{ id: ME, name: 'Meu treino' }];
-  if (!d.profiles.some(p => p.id === ME)) d.profiles.unshift({ id: ME, name: 'Meu treino' });
+  if (!Array.isArray(d.profiles)) d.profiles = [{ id: ME, name: MY_NAME }];
+  if (!d.profiles.some(p => p.id === ME)) d.profiles.unshift({ id: ME, name: MY_NAME });
+  const me = d.profiles.find(p => p.id === ME);
+  if (me.name === 'Meu treino') me.name = MY_NAME;
   d.exercises.forEach(e => { if (!e.profileId) e.profileId = ME; });
   if (!Array.isArray(d.cardio)) d.cardio = [];
   d.profiles.forEach(p => { if (p.id !== ME && !Array.isArray(p.messages)) p.messages = []; });
@@ -550,7 +553,7 @@ function renderHero() {
   const p = profile(ui.profile), isMe = ui.profile === ME;
   const $who = document.getElementById('who');
   $who.innerHTML = ui.studentMode ? `<span class="av">${esc(initials(p.name))}</span><span>Olá, ${esc(firstName(p))}!</span>`
-    : `<span class="av">${isMe ? 'EU' : esc(initials(p.name))}</span><span>${isMe ? 'Meu treino (particular)' : 'Aluno: ' + esc(p.name)}</span> ▾`;
+    : `<span class="av">${esc(initials(p.name))}</span><span>${isMe ? esc(p.name) : 'Aluno: ' + esc(p.name)}</span> ▾`;
   $who.dataset.view = ui.studentMode ? 'recados' : isMe ? 'alunos' : 'perfil';
   if (ui.view === 'alunos') { $who.innerHTML = '<span>Alunos</span>'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
   document.getElementById('studentBar').hidden = !ui.studentMode;
@@ -1069,8 +1072,8 @@ function profileCard(p) {
   const isMe = p.id === ME, s = profileSummary(p.id), active = ui.profile === p.id;
   return `<section class="card ${isMe ? 'me-card' : ''} ${active ? 'complete' : ''}">
     <div class="student">
-      <span class="av">${isMe ? 'EU' : esc(initials(p.name))}</span>
-      <div class="grow"><h3>${isMe ? 'Meu treino' : esc(p.name)} ${isMe ? '<span class="pill eq">particular</span>' : ''}</h3>
+      <span class="av">${esc(initials(p.name))}</span>
+      <div class="grow"><h3>${esc(p.name)}</h3>
         <small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt} ${s.lastGroups}</small>
         <div class="tags"><span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
           ${s.now || s.before ? `<span class="pill eq">${fmt(s.now)} kg</span> ${delta(s.now, s.before)}` : ''}</div></div>
