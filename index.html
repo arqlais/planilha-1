@@ -31,62 +31,72 @@ input,select,button{font:inherit;color:inherit}
 button{cursor:pointer}
 
 /* ---- topo ---- */
-.hero{background:var(--hero);color:#fff;padding:18px 16px 56px;border-radius:0 0 28px 28px}
+.hero{background:var(--hero);color:#fff;padding:16px 16px 56px;border-radius:0 0 28px 28px}
 .hero-in{max-width:760px;margin:0 auto}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.hello{margin:0;opacity:.85;font-size:14px}
-.hero h1{margin:2px 0 0;font-size:24px;letter-spacing:-.3px}
+.who{display:inline-flex;align-items:center;gap:6px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:4px 12px 4px 4px;font-size:13px;font-weight:700;max-width:100%}
+.who .av{width:24px;height:24px;font-size:11px;background:#fff;color:var(--blue)}
+.who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero h1{margin:8px 0 0;font-size:24px;letter-spacing:-.3px}
 .date-chip{position:relative;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;white-space:nowrap}
 .date-chip input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .stats div{background:rgba(255,255,255,.14);border-radius:14px;padding:10px 12px}
 .stats b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
 .stats span{font-size:12px;opacity:.85}
 
 main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 
-/* ---- faixa do grupo ---- */
+.av{width:40px;height:40px;border-radius:50%;background:var(--hero);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 auto}
+
+/* ---- chips de grupo ---- */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:0 0 auto;border:0;background:var(--card);color:var(--muted);box-shadow:var(--shadow);padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px}
+.chips button.on{background:var(--blue);color:#fff}
+
+/* ---- faixa ---- */
 .banner{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
 .banner .ico{width:48px;height:48px;border-radius:14px;background:var(--blue-soft);display:grid;place-items:center;font-size:26px;flex:0 0 auto}
 .banner h2{margin:0;font-size:19px}
 .banner small{color:var(--muted)}
-.banner .grow{flex:1;min-width:0}
+.grow{flex:1;min-width:0}
 
 /* ---- cartão de exercício ---- */
 .card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);border:2px solid transparent;transition:border-color .3s}
 .card.complete{border-color:var(--blue)}
 .card-h{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.card-h .grow{flex:1;min-width:0}
 .card-h h3{margin:0;font-size:17px}
 .card-h small{color:var(--muted)}
-.ring{--p:0;width:46px;height:46px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:12px;font-weight:700;
+.ring{--p:0;width:42px;height:42px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:12px;font-weight:700;
   background:radial-gradient(closest-side,var(--card) 76%,transparent 78%),conic-gradient(var(--blue) calc(var(--p)*1%),var(--blue-soft) 0)}
-.icon{border:0;background:var(--blue-soft);color:var(--blue);width:34px;height:34px;border-radius:10px;font-size:18px;font-weight:700}
+.icon{border:0;background:var(--blue-soft);color:var(--blue);width:34px;height:34px;border-radius:10px;font-size:18px;font-weight:700;flex:0 0 auto}
 
-.set-h,.set{display:grid;grid-template-columns:26px 1fr 1fr 46px;gap:6px;align-items:center}
-.set-h{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);padding:0 2px 4px}
+.set-h,.set{display:grid;grid-template-columns:22px 108px 92px 1fr;gap:8px;align-items:center}
+.set-h{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);padding:0 4px 2px}
 .set-h span{text-align:center}
-.set{padding:8px 4px;border-radius:14px;transition:background .2s}
-.set + .set{margin-top:4px}
+.set-h span:last-child{text-align:right}
+.set{padding:5px 4px;border-radius:12px;transition:background .2s}
+.set + .set{margin-top:2px}
 .set.done{background:var(--blue-soft)}
-.num{width:24px;height:24px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:12px;font-weight:700}
+.num{width:22px;height:22px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:11px;font-weight:700}
 .set.done .num{background:var(--blue);color:#fff}
-.step{display:flex;align-items:center;background:var(--input);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.step{display:flex;align-items:center;background:var(--input);border:1px solid var(--line);border-radius:9px;overflow:hidden;min-width:0;height:32px}
 .set.done .step{border-color:var(--blue-2)}
-.step button{border:0;background:transparent;color:var(--blue);width:30px;height:38px;font-size:18px;font-weight:700;flex:0 0 auto}
+.step button{border:0;background:transparent;color:var(--blue);width:26px;height:100%;font-size:16px;font-weight:700;flex:0 0 auto;padding:0}
 .step button:active{background:var(--blue-soft)}
-.step input{flex:1;min-width:0;width:100%;border:0;background:transparent;text-align:center;font-weight:700;font-size:16px;padding:0;height:38px;outline:none}
-.chk{width:42px;height:42px;border-radius:50%;border:2px dashed var(--blue-2);background:transparent;color:var(--blue-2);font-size:18px;font-weight:700;justify-self:end;transition:transform .15s}
+.step input{flex:1;min-width:0;width:100%;border:0;background:transparent;text-align:center;font-weight:700;font-size:15px;padding:0;height:100%;outline:none}
+.chk{width:34px;height:34px;border-radius:50%;border:2px dashed var(--blue-2);background:transparent;color:var(--blue-2);font-size:15px;font-weight:700;justify-self:end;transition:transform .15s;padding:0}
 .chk:active{transform:scale(.9)}
 .set.done .chk{background:var(--blue);border:2px solid var(--blue);color:#fff;animation:pop .3s}
 @keyframes pop{50%{transform:scale(1.18)}}
-.meta{grid-column:2/-1;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;padding:0 2px}
+.meta{grid-column:2/-1;font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;padding:0 2px;margin-top:-3px}
 .meta .tot{font-variant-numeric:tabular-nums;font-weight:600}
 .set.up .meta .tot{color:var(--up)}
 .set.down .meta .tot{color:var(--down)}
 
 .actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.btn{border:1px solid var(--line);background:var(--card);color:var(--blue);font-weight:600;border-radius:10px;padding:8px 12px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--blue);font-weight:600;border-radius:10px;padding:7px 12px;font-size:14px}
 .btn.primary{background:var(--blue);color:var(--blue-ink);border-color:var(--blue)}
 .btn.danger{color:var(--down);border-color:transparent;background:transparent}
 
@@ -96,8 +106,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .cmp-row b{font-variant-numeric:tabular-nums}
 .track{height:10px;border-radius:5px;background:var(--blue-soft);overflow:hidden}
 .fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),#38bdf8);transition:width .4s}
-.cmp-row.prev .fill{background:var(--muted);opacity:.45}
-.cmp-foot{margin-top:2px}
+.cmp-row.prev .fill,.track.prev .fill{background:var(--muted);opacity:.45}
 
 .pill{display:inline-block;white-space:nowrap;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
 .pill.up{background:var(--up-bg);color:var(--up)}
@@ -105,12 +114,12 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .pill.eq{background:var(--blue-soft);color:var(--blue)}
 
 .add{width:100%;padding:14px;border:2px dashed var(--blue-2);background:transparent;border-radius:18px;color:var(--blue);font-weight:700}
-.empty{color:var(--muted);text-align:center;padding:24px 0}
+.empty{color:var(--muted);text-align:center;padding:18px 0}
 
 /* ---- navegação inferior ---- */
 nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--line);
   display:flex;justify-content:center;padding:6px 6px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(15,27,51,.08)}
-nav.bottom button{flex:1;max-width:110px;border:0;background:transparent;border-radius:14px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted)}
+nav.bottom button{flex:1;max-width:120px;border:0;background:transparent;border-radius:14px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted)}
 nav.bottom button i{font-style:normal;font-size:20px;line-height:1.1;filter:grayscale(.6);opacity:.8}
 nav.bottom button.on{background:var(--blue-soft);color:var(--blue)}
 nav.bottom button.on i{filter:none;opacity:1}
@@ -125,11 +134,40 @@ nav.bottom button.on i{filter:none;opacity:1}
 @keyframes pulse{50%{transform:translateX(-50%) scale(1.06)}}
 
 /* ---- aviso e confete ---- */
-#toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-120px);z-index:20;background:var(--card);color:var(--text);border:2px solid var(--blue);
+#toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-140px);z-index:20;background:var(--card);color:var(--text);border:2px solid var(--blue);
   border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);font-weight:600;transition:transform .35s;max-width:calc(100vw - 32px);text-align:center}
 #toast.show{transform:translate(-50%,0)}
 .confetti{position:fixed;top:-12px;width:8px;height:14px;border-radius:2px;z-index:19;pointer-events:none;animation:fall 1.6s ease-in forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.6}}
+
+/* ---- alunos ---- */
+.student{display:flex;align-items:center;gap:12px}
+.student h3{margin:0;font-size:16px}
+.student small{color:var(--muted);display:block}
+.student .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.me-card{border-color:var(--blue-2)}
+.search{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;color:var(--text)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);opacity:.5;margin-right:4px}
+.dot.on{background:#22c55e;opacity:1}
+
+/* ---- histórico ---- */
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-h h3{margin:0;font-size:16px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .wd{font-size:11px;font-weight:700;color:var(--muted);padding-bottom:2px}
+.cal button{aspect-ratio:1;border:0;border-radius:10px;background:transparent;font-weight:600;font-size:14px;color:var(--text);padding:0;position:relative}
+.cal button.has{background:var(--hero);color:#fff}
+.cal button.today{outline:2px solid var(--blue-2);outline-offset:-2px}
+.cal button:disabled{cursor:default}
+.cal button small{position:absolute;left:0;right:0;bottom:2px;font-size:9px;opacity:.9}
+.month-sum{display:flex;gap:8px;margin-top:12px}
+.month-sum div{flex:1;background:var(--blue-soft);border-radius:12px;padding:8px 10px}
+.month-sum b{display:block;font-size:17px;color:var(--blue)}
+.month-sum span{font-size:12px;color:var(--muted)}
+.day-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.day-h .d{width:46px;height:46px;border-radius:12px;background:var(--hero);color:#fff;display:grid;place-items:center;line-height:1;font-weight:800;flex:0 0 auto;text-align:center}
+.day-h .d small{display:block;font-size:10px;font-weight:600;opacity:.85;margin-top:2px}
+.day-h h3{margin:0;font-size:16px;text-transform:capitalize}
 
 /* ---- evolução ---- */
 .bars{display:grid;gap:12px}
@@ -137,11 +175,10 @@ nav.bottom button.on i{filter:none;opacity:1}
 .bar-row .ico{font-size:22px;text-align:center}
 .bar-row .track{height:12px}
 .bar-row .track + .track{margin-top:4px}
-.bar-row .track.prev .fill{background:var(--muted);opacity:.45}
 .bar-row small{color:var(--muted)}
 .hist{width:100%;font-size:13px;border-collapse:collapse}
 .hist td,.hist th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:center}
-.hist th{font-size:11px;text-transform:uppercase;color:var(--muted)}
+.hist th{font-size:10px;text-transform:uppercase;color:var(--muted)}
 .hist td:first-child,.hist th:first-child{text-align:left}
 .spark{width:100%;height:64px;display:block;margin:6px 0}
 .ex-h{margin-top:14px;font-weight:700}
@@ -154,7 +191,7 @@ dialog{border:0;border-radius:20px;background:var(--card);color:var(--text);padd
 dialog::backdrop{background:rgba(8,18,38,.6)}
 dialog h2{margin:0 0 14px;font-size:19px}
 label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px}
-label.f input,label.f select{display:block;width:100%;margin-top:5px;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text)}
+label.f input{display:block;width:100%;margin-top:5px;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text)}
 .groups{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .groups label{cursor:pointer}
 .groups input{position:absolute;opacity:0;pointer-events:none}
@@ -163,14 +200,16 @@ label.f input,label.f select{display:block;width:100%;margin-top:5px;background:
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .hint{font-size:12px;color:var(--muted);margin:0 0 14px}
 .dlg-actions{display:flex;gap:8px;align-items:center}
-.dlg-actions .grow{flex:1}
 </style>
 </head>
 <body>
 <header class="hero">
   <div class="hero-in">
     <div class="hero-top">
-      <div><p class="hello" id="hello"></p><h1 id="heroTitle">Treino de hoje</h1></div>
+      <div class="grow">
+        <button class="who" id="who" data-view="alunos"></button>
+        <h1 id="heroTitle">Treino de hoje</h1>
+      </div>
       <label class="date-chip">📅 <span id="dateLabel"></span><input type="date" id="date" aria-label="Data do treino"></label>
     </div>
     <div class="stats" id="stats"></div>
@@ -179,10 +218,10 @@ label.f input,label.f select{display:block;width:100%;margin-top:5px;background:
 
 <main id="main"></main>
 
-<nav class="bottom" id="tabs"></nav>
+<nav class="bottom" id="nav"></nav>
 
 <div id="rest" hidden>
-  <div><small>Descanso</small><b id="restTime">1:30</b></div>
+  <div><small>Descanso</small><b id="restTime">2:00</b></div>
   <button data-r="-15">−15s</button>
   <button data-r="15">+15s</button>
   <button data-r="x" aria-label="Fechar">✕</button>
@@ -193,7 +232,7 @@ label.f input,label.f select{display:block;width:100%;margin-top:5px;background:
   <form method="dialog" id="exForm">
     <h2 id="exTitle">Novo exercício</h2>
     <label class="f">Nome do exercício<input name="name" required placeholder="Ex.: Supino inclinado" autocomplete="off"></label>
-    <div class="f" style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Grupo muscular<div class="groups" id="groupPick"></div></div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Grupo muscular<div class="groups" id="groupPick"></div></div>
     <div class="grid3">
       <label class="f">Séries<input name="sets" inputmode="numeric" value="4"></label>
       <label class="f">Carga (kg)<input name="carga" inputmode="decimal" placeholder="0"></label>
@@ -211,26 +250,33 @@ label.f input,label.f select{display:block;width:100%;margin-top:5px;background:
 
 <script>
 const GROUPS = ['Costas', 'Peito', 'Ombros', 'Pernas', 'Braços'];
-const ICONS = { Costas: '🦅', Peito: '🛡️', Ombros: '🏔️', Pernas: '🦵', 'Braços': '💪', 'Evolução': '📈' };
+const ICONS = { Costas: '🦅', Peito: '🛡️', Ombros: '🏔️', Pernas: '🦵', 'Braços': '💪' };
+const VIEWS = [['treino', '🏋️', 'Treino'], ['historico', '📅', 'Histórico'], ['evolucao', '📈', 'Evolução'], ['alunos', '👥', 'Alunos']];
 const KEY = 'planilha-treino-v1';
 const UI_KEY = 'planilha-treino-ui';
 const STEP = { carga: 2.5, reps: 1 };
+const REST_DEFAULT = 120;
+const ME = 'me';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const pad = n => String(n).padStart(2, '0');
 const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const today = () => isoDate(new Date());
+const toDate = s => new Date(s + 'T12:00:00');
 const parseNum = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null; };
 const fmt = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const fmtDate = s => { const [y, m, d] = s.split('-'); return `${d}/${m}`; };
+const weekday = s => toDate(s).toLocaleDateString('pt-BR', { weekday: 'long' });
 const numVal = v => v == null ? '' : String(v).replace('.', ',');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const initials = n => n.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const daysBetween = (a, b) => Math.round((toDate(b) - toDate(a)) / 864e5);
 
 // ---------- Dados ----------
 function seed() {
   const exercises = [], sessions = [];
   const add = (group, name, sets, histDate) => {
-    const ex = { id: uid(), group, name, sets: sets.map(([carga, reps]) => ({ carga, reps })) };
+    const ex = { id: uid(), profileId: ME, group, name, sets: sets.map(([carga, reps]) => ({ carga, reps })) };
     exercises.push(ex);
     if (histDate) sessions.push({ id: uid(), exId: ex.id, date: histDate, sets: ex.sets.map(s => ({ ...s, done: true })) });
   };
@@ -246,23 +292,42 @@ function seed() {
   add('Braços', 'Tríceps barra', [[40, 9], [45, 10], [50, 10], [55, 7], [45, 10]], '2026-06-22');
   add('Braços', 'Tríceps francês', [[25, null], [30, null], [35, null], [30, null], [35, null]]);
   add('Braços', 'Rosca direta', [[null, 10], [null, 10], [null, 10], [null, 10]]);
-  return { exercises, sessions };
+  return { profiles: [{ id: ME, name: 'Meu treino' }], exercises, sessions };
+}
+// Versões antigas não tinham perfis: tudo vira "Meu treino"
+function migrate(d) {
+  if (!Array.isArray(d.profiles)) d.profiles = [{ id: ME, name: 'Meu treino' }];
+  if (!d.profiles.some(p => p.id === ME)) d.profiles.unshift({ id: ME, name: 'Meu treino' });
+  d.exercises.forEach(e => { if (!e.profileId) e.profileId = ME; });
+  return d;
 }
 function load() {
-  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.exercises)) return d; } catch (e) {}
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.exercises)) return migrate(d); } catch (e) {}
   return seed();
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
 
 let db = load();
-let ui = { tab: 'Peito', date: today(), rest: 90 };
-try { const u = JSON.parse(localStorage.getItem(UI_KEY)); if (u) { if (u.tab) ui.tab = u.tab; if (u.rest) ui.rest = u.rest; } } catch (e) {}
-const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ tab: ui.tab, rest: ui.rest })); } catch (e) {} };
+let ui = { view: 'treino', group: 'Peito', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '' };
+try {
+  const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
+  if (VIEWS.some(v => v[0] === u.view)) ui.view = u.view;
+  if (GROUPS.includes(u.group)) ui.group = u.group;
+  if (db.profiles.some(p => p.id === u.profile)) ui.profile = u.profile;
+  if (u.restSec) ui.rest = u.restSec;
+} catch (e) {}
+const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest })); } catch (e) {} };
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
 const vol = sets => sets.reduce((a, s) => a + setVol(s), 0);
 const hasDone = s => s.sets.some(x => x.done);
 const exById = id => db.exercises.find(e => e.id === id);
+const profile = id => db.profiles.find(p => p.id === id);
+const profExs = (pid = ui.profile) => db.exercises.filter(e => e.profileId === pid);
+function profSessions(pid = ui.profile) {
+  const ids = new Set(profExs(pid).map(e => e.id));
+  return db.sessions.filter(s => ids.has(s.exId) && hasDone(s));
+}
 const history = exId => db.sessions.filter(s => s.exId === exId && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date));
 const prevSession = (exId, date) => history(exId).filter(s => s.date < date).pop();
 const sessionOn = (exId, date) => db.sessions.find(s => s.exId === exId && s.date === date);
@@ -283,19 +348,18 @@ function ensureSession(ex, date) {
 
 // ---------- Semanas ----------
 function weekStart(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  const dow = (d.getDay() + 6) % 7; // segunda = 0
-  d.setDate(d.getDate() - dow);
+  const d = toDate(dateStr);
+  d.setDate(d.getDate() - (d.getDay() + 6) % 7); // segunda = início
   return isoDate(d);
 }
-function addDays(dateStr, n) { const d = new Date(dateStr + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDate(d); }
-function groupVolume(group, from, to) {
-  const ids = new Set(db.exercises.filter(e => e.group === group).map(e => e.id));
+function addDays(dateStr, n) { const d = toDate(dateStr); d.setDate(d.getDate() + n); return isoDate(d); }
+function volumeBetween(from, to, group, pid = ui.profile) {
+  const ids = new Set(profExs(pid).filter(e => !group || e.group === group).map(e => e.id));
   return db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to).reduce((a, s) => a + vol(s.sets), 0);
 }
-function weekPair(group) {
-  const ws = weekStart(ui.date);
-  return [groupVolume(group, ws, addDays(ws, 6)), groupVolume(group, addDays(ws, -7), addDays(ws, -1))];
+function weekPair(group, pid = ui.profile, ref = ui.date) {
+  const ws = weekStart(ref);
+  return [volumeBetween(ws, addDays(ws, 6), group, pid), volumeBetween(addDays(ws, -7), addDays(ws, -1), group, pid)];
 }
 function delta(now, before) {
   if (!before) return now ? '<span class="pill up">🚀 novo</span>' : '';
@@ -311,57 +375,64 @@ function progress(total, prevTotal, finished) {
   return delta(total, prevTotal);
 }
 
-// ---------- Render ----------
+// ---------- Topo e navegação ----------
 const $main = document.getElementById('main');
-const $tabs = document.getElementById('tabs');
+const $nav = document.getElementById('nav');
 const $date = document.getElementById('date');
 
 function renderHero() {
-  const h = new Date().getHours();
-  document.getElementById('hello').textContent = (h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite') + ', bora treinar! 💙';
-  document.getElementById('heroTitle').textContent = ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`;
+  const p = profile(ui.profile), isMe = ui.profile === ME;
+  document.getElementById('who').innerHTML = `<span class="av">${isMe ? '⭐' : esc(initials(p.name))}</span><span>${isMe ? 'Meu treino (particular)' : 'Aluno: ' + esc(p.name)}</span> ▾`;
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor' };
+  document.getElementById('heroTitle').textContent = titles[ui.view];
   document.getElementById('dateLabel').textContent = ui.date === today() ? 'Hoje' : fmtDate(ui.date);
   $date.value = ui.date;
   renderStats();
 }
 function renderStats() {
-  const day = db.sessions.filter(s => s.date === ui.date && hasDone(s));
-  const sets = day.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0);
-  const groups = new Set(day.map(s => (exById(s.exId) || {}).group)).size;
-  document.getElementById('stats').innerHTML = `
-    <div><b>${sets}</b><span>séries feitas</span></div>
-    <div><b>${fmt(day.reduce((a, s) => a + vol(s.sets), 0))}</b><span>kg levantados</span></div>
-    <div><b>${groups}</b><span>${groups === 1 ? 'grupo' : 'grupos'}</span></div>`;
+  let cells;
+  if (ui.view === 'alunos') {
+    const students = db.profiles.filter(p => p.id !== ME);
+    const trainedToday = students.filter(p => profSessions(p.id).some(s => s.date === today())).length;
+    const ws = weekStart(today());
+    const activeWeek = students.filter(p => profSessions(p.id).some(s => s.date >= ws)).length;
+    cells = [[students.length, students.length === 1 ? 'aluno' : 'alunos'], [trainedToday, 'treinaram hoje'], [activeWeek, 'ativos na semana']];
+  } else {
+    const day = profSessions().filter(s => s.date === ui.date);
+    const groups = new Set(day.map(s => exById(s.exId).group)).size;
+    cells = [[day.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), 'séries feitas'],
+      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [groups, groups === 1 ? 'grupo' : 'grupos']];
+  }
+  document.getElementById('stats').innerHTML = cells.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 }
-
-function renderTabs() {
-  $tabs.innerHTML = [...GROUPS, 'Evolução'].map(t =>
-    `<button class="${t === ui.tab ? 'on' : ''}" data-tab="${t}"><i>${ICONS[t]}</i>${t}</button>`).join('');
+function renderNav() {
+  $nav.innerHTML = VIEWS.map(([id, ico, label]) =>
+    `<button class="${id === ui.view ? 'on' : ''}" data-view="${id}"><i>${ico}</i>${label}</button>`).join('');
 }
-
 function render() {
   renderHero();
-  renderTabs();
-  if (ui.tab === 'Evolução') return renderEvolution();
-  renderGroup(ui.tab);
+  renderNav();
+  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos })[ui.view]();
 }
+function go(view) { ui.view = view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
+// ---------- Treino ----------
 function bannerHtml(group) {
   const [now, before] = weekPair(group);
   return `<span class="ico">${ICONS[group]}</span>
     <div class="grow"><h2>${esc(group)}</h2><small>Semana: <b>${fmt(now)} kg</b> · anterior ${fmt(before)} kg</small></div>
     ${delta(now, before)}`;
 }
-
-function renderGroup(group) {
-  const exs = db.exercises.filter(e => e.group === group);
+function renderTreino() {
+  const group = ui.group;
+  const exs = profExs().filter(e => e.group === group);
   $main.innerHTML = `
+    <div class="chips">${GROUPS.map(g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${ICONS[g]} ${g}</button>`).join('')}</div>
     <div class="banner">${bannerHtml(group)}</div>
     ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Nenhum exercício ainda. Adicione o primeiro 👇</p>'}
     <button class="add" data-act="new">＋ Adicionar exercício</button>`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
-
 function isComplete(exId) {
   const s = sessionOn(exId, ui.date);
   return !!s && s.sets.length > 0 && s.sets.every(x => x.done);
@@ -402,9 +473,7 @@ function cardHtml(ex) {
     </div>
     <div class="compare">${compareHtml(s, prev)}</div>`;
 }
-
 const setTotal = x => x.carga != null && x.reps != null ? `${fmt(x.carga * x.reps)} kg` : '';
-
 function rowClass(x, p) {
   if (!x.done) return '';
   if (!p || !p.done) return 'done';
@@ -418,9 +487,8 @@ function compareHtml(s, prev) {
       <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${fmt(total)} kg</b></div>
     ${prev ? `<div class="cmp-row prev"><span>${fmtDate(prev.date)}</span>
       <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${fmt(pt)} kg</b></div>` : ''}
-    <div class="cmp-foot">${prev ? progress(total, pt, finished) : total ? '<span class="pill up">🚀 primeiro registro</span>' : ''}</div>`;
+    <div>${prev ? progress(total, pt, finished) : total ? '<span class="pill up">🚀 primeiro registro</span>' : ''}</div>`;
 }
-
 function refreshCard(exId) {
   const card = $main.querySelector(`[data-ex="${exId}"]`);
   if (!card) return;
@@ -430,9 +498,64 @@ function refreshCard(exId) {
 function refreshTop() {
   renderStats();
   const b = $main.querySelector('.banner');
-  if (b && GROUPS.includes(ui.tab)) b.innerHTML = bannerHtml(ui.tab);
+  if (b && ui.view === 'treino') b.innerHTML = bannerHtml(ui.group);
 }
 
+// ---------- Histórico ----------
+function dayMap(pid = ui.profile) {
+  const m = {};
+  for (const s of profSessions(pid)) (m[s.date] = m[s.date] || []).push(s);
+  return m;
+}
+function renderHistorico() {
+  const days = dayMap();
+  const [y, m] = ui.month.split('-').map(Number);
+  const first = new Date(y, m - 1, 1), nDays = new Date(y, m, 0).getDate(), offset = (first.getDay() + 6) % 7;
+  const monthName = first.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
+  const monthDays = Object.keys(days).filter(d => d.startsWith(ui.month)).sort().reverse();
+  const monthVol = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + vol(s.sets), 0), 0);
+  const monthSets = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + s.sets.filter(x => x.done).length, 0), 0);
+  const all = Object.keys(days).sort();
+
+  let cells = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map(w => `<span class="wd">${w}</span>`).join('');
+  cells += '<span></span>'.repeat(offset);
+  for (let d = 1; d <= nDays; d++) {
+    const iso = `${ui.month}-${pad(d)}`, has = days[iso];
+    const gs = has ? [...new Set(has.map(s => ICONS[exById(s.exId).group]))].join('') : '';
+    cells += `<button class="${has ? 'has' : ''} ${iso === today() ? 'today' : ''}" ${has ? `data-act="goday" data-d="${iso}"` : 'disabled'}>${d}${gs ? `<small>${gs}</small>` : ''}</button>`;
+  }
+
+  let html = `<div class="banner"><span class="ico">📅</span><div class="grow"><h2>Histórico</h2>
+      <small>${esc(profile(ui.profile).name)} · ${all.length} ${all.length === 1 ? 'dia' : 'dias'} de treino${all.length ? ` desde ${fmtDate(all[0])}/${all[0].slice(2, 4)}` : ''}</small></div></div>
+    <section class="card">
+      <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
+        <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
+      <div class="cal">${cells}</div>
+      <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos no mês</span></div>
+        <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(monthVol)}</b><span>kg no mês</span></div></div>
+    </section>`;
+
+  html += monthDays.map(d => {
+    const list = days[d].slice().sort((a, b) => GROUPS.indexOf(exById(a.exId).group) - GROUPS.indexOf(exById(b.exId).group));
+    const groups = [...new Set(list.map(s => exById(s.exId).group))];
+    const total = list.reduce((a, s) => a + vol(s.sets), 0);
+    return `<section class="card" id="day-${d}">
+      <div class="day-h"><div class="d">${d.slice(8)}<small>${toDate(d).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></div>
+        <div class="grow"><h3>${weekday(d)}</h3><small class="muted" style="color:var(--muted)">${groups.map(g => ICONS[g] + ' ' + g).join(' · ')}</small></div>
+        <b>${fmt(total)} kg</b></div>
+      <table class="hist"><thead><tr><th>Exercício</th><th>Séries</th><th>Carga máx</th><th>Total</th><th></th></tr></thead><tbody>
+      ${list.map(s => {
+        const done = s.sets.filter(x => x.done), before = prevSession(s.exId, s.date);
+        return `<tr><td>${esc(exById(s.exId).name)}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
+          <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
+      }).join('')}</tbody></table>
+      <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${groups[0]}">✏️ Abrir este treino</button></div>
+    </section>`;
+  }).join('') || '<p class="empty">Nenhum treino neste mês.</p>';
+  $main.innerHTML = html;
+}
+
+// ---------- Evolução ----------
 function sparkline(values) {
   if (values.length < 2) return '';
   const w = 300, h = 64, max = Math.max(...values), min = Math.min(...values), r = max - min || 1;
@@ -444,13 +567,12 @@ function sparkline(values) {
     <polyline fill="none" stroke="#3b82f6" stroke-width="2.5" vector-effect="non-scaling-stroke" points="${line}"/>
     ${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#2563eb"/>`).join('')}</svg>`;
 }
-
 function renderEvolution() {
   const ws = weekStart(ui.date);
   const rows = GROUPS.map(g => { const [now, before] = weekPair(g); return { g, now, before }; });
   const max = Math.max(1, ...rows.flatMap(r => [r.now, r.before]));
   let html = `<div class="banner"><span class="ico">📈</span><div class="grow"><h2>Evolução</h2>
-      <small>Semana de ${fmtDate(ws)} a ${fmtDate(addDays(ws, 6))} × semana anterior</small></div></div>
+      <small>${esc(profile(ui.profile).name)} · semana de ${fmtDate(ws)} a ${fmtDate(addDays(ws, 6))} × anterior</small></div></div>
     <section class="card"><div class="bars">${rows.map(r => `
       <div class="bar-row"><span class="ico">${ICONS[r.g]}</span>
         <div><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px"><b>${r.g}</b>${delta(r.now, r.before)}</div>
@@ -460,15 +582,14 @@ function renderEvolution() {
     </div><p class="legend"><i></i>esta semana <i class="p"></i>semana anterior</p></section>`;
 
   for (const g of GROUPS) {
-    const blocks = db.exercises.filter(e => e.group === g).map(e => {
+    const blocks = profExs().filter(e => e.group === g).map(e => {
       const h = history(e.id);
       if (!h.length) return '';
       const last = h.slice(-8);
       return `<div class="ex-h">${esc(e.name)}</div>${sparkline(last.map(s => vol(s.sets)))}
         <table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Carga máx</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>
         ${last.slice().reverse().map((s, i, arr) => {
-          const done = s.sets.filter(x => x.done);
-          const before = arr[i + 1];
+          const done = s.sets.filter(x => x.done), before = arr[i + 1];
           return `<tr><td>${fmtDate(s.date)}</td><td>${done.length}</td>
             <td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
             <td>${done.reduce((a, x) => a + (x.reps || 0), 0)}</td>
@@ -477,15 +598,81 @@ function renderEvolution() {
     }).join('');
     if (blocks) html += `<section class="card"><div class="card-h"><span style="font-size:22px">${ICONS[g]}</span><div class="grow"><h3>${g}</h3></div></div>${blocks}</section>`;
   }
-
-  html += `<section class="card">
-    <div class="card-h"><span style="font-size:22px">💾</span><div class="grow"><h3>Backup</h3>
-      <small>Os dados ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.</small></div></div>
-    <div class="actions">
-      <button class="btn" data-act="export">⬇ Exportar</button>
-      <label class="btn">⬆ Importar<input type="file" accept="application/json" id="importFile" hidden></label>
-    </div></section>`;
   $main.innerHTML = html;
+}
+
+// ---------- Alunos (área do professor) ----------
+function profileSummary(pid) {
+  const sess = profSessions(pid);
+  const dates = [...new Set(sess.map(s => s.date))].sort();
+  const last = dates[dates.length - 1];
+  const ws = weekStart(today());
+  const weekDays = dates.filter(d => d >= ws).length;
+  const [now, before] = weekPair(null, pid, today());
+  const lastGroups = last ? [...new Set(sess.filter(s => s.date === last).map(s => ICONS[exById(s.exId).group]))].join(' ') : '';
+  let lastTxt = 'Ainda não treinou';
+  if (last) { const n = daysBetween(last, today()); lastTxt = n === 0 ? 'Treinou hoje' : n === 1 ? 'Treinou ontem' : `Último treino há ${n} dias (${fmtDate(last)})`; }
+  return { last, lastTxt, lastGroups, weekDays, now, before };
+}
+function profileCard(p) {
+  const isMe = p.id === ME, s = profileSummary(p.id), active = ui.profile === p.id;
+  return `<section class="card ${isMe ? 'me-card' : ''} ${active ? 'complete' : ''}">
+    <div class="student">
+      <span class="av">${isMe ? '⭐' : esc(initials(p.name))}</span>
+      <div class="grow"><h3>${isMe ? 'Meu treino' : esc(p.name)} ${isMe ? '<span class="pill eq">🔒 particular</span>' : ''}</h3>
+        <small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt} ${s.lastGroups}</small>
+        <div class="tags"><span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
+          ${s.now || s.before ? `<span class="pill eq">${fmt(s.now)} kg</span> ${delta(s.now, s.before)}` : ''}</div></div>
+      ${isMe ? '' : `<button class="icon" data-act="student-menu" data-pid="${p.id}" aria-label="Opções do aluno">⋯</button>`}
+    </div>
+    <div class="actions">
+      <button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="treino">🏋️ Treino</button>
+      <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">📅 Histórico</button>
+      <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">📈 Evolução</button>
+    </div></section>`;
+}
+function renderAlunos() {
+  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const q = ui.q.trim().toLowerCase();
+  const shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
+  $main.innerHTML = `
+    <div class="banner"><span class="ico">👥</span><div class="grow"><h2>Área do professor</h2>
+      <small>Seu treino particular e o acompanhamento de cada aluno</small></div></div>
+    ${profileCard(profile(ME))}
+    <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
+    ${students.length > 4 ? `<input class="search" id="search" placeholder="🔎 Buscar aluno" value="${esc(ui.q)}">` : ''}
+    <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro 👇'}</p>`}</div>
+    <button class="add" data-act="add-student">＋ Adicionar aluno</button>
+    <section class="card" style="margin-top:14px">
+      <div class="card-h"><span style="font-size:22px">💾</span><div class="grow"><h3>Backup</h3>
+        <small>Os dados (seus e dos alunos) ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.</small></div></div>
+      <div class="actions">
+        <button class="btn" data-act="export">⬇ Exportar</button>
+        <label class="btn">⬆ Importar<input type="file" accept="application/json" id="importFile" hidden></label>
+      </div></section>`;
+}
+function addStudent() {
+  const name = (prompt('Nome do aluno:') || '').trim();
+  if (!name) return;
+  const id = uid();
+  db.profiles.push({ id, name });
+  // Começa com os mesmos exercícios do seu treino, sem cargas — ajuste depois no ⋯ de cada exercício
+  for (const e of profExs(ME)) db.exercises.push({ id: uid(), profileId: id, group: e.group, name: e.name, sets: e.sets.map(s => ({ carga: null, reps: s.reps })) });
+  save(); toast(`🎓 <b>${esc(name)}</b> cadastrado!`); render();
+}
+function studentMenu(pid) {
+  const p = profile(pid);
+  const choice = prompt(`${p.name}\n\nDigite um novo nome para renomear,\nou digite EXCLUIR para apagar o aluno e todo o histórico:`, p.name);
+  if (choice == null) return;
+  if (choice.trim().toUpperCase() === 'EXCLUIR') {
+    if (!confirm(`Apagar ${p.name} e todo o histórico? Não dá para desfazer.`)) return;
+    const ids = new Set(profExs(pid).map(e => e.id));
+    db.sessions = db.sessions.filter(s => !ids.has(s.exId));
+    db.exercises = db.exercises.filter(e => e.profileId !== pid);
+    db.profiles = db.profiles.filter(x => x.id !== pid);
+    if (ui.profile === pid) ui.profile = ME;
+  } else if (choice.trim()) p.name = choice.trim();
+  save(); saveUi(); render();
 }
 
 // ---------- Timer de descanso ----------
@@ -542,19 +729,25 @@ function celebrate(ex, s) {
   const total = vol(s.sets), pt = prev ? vol(prev.sets) : 0;
   if (prev && total > pt) { confetti(); toast(`🏆 Recorde em <b>${esc(ex.name)}</b>! +${fmt(total - pt)} kg (${fmt((total - pt) / pt * 100)}%)`); }
   else if (!prev) toast(`✅ <b>${esc(ex.name)}</b> concluído — primeiro registro salvo!`);
-  else toast(`✅ <b>${esc(ex.name)}</b> concluído. Na próxima você passa de ${fmt(pt)} kg 💪`);
+  else toast(`✅ <b>${esc(ex.name)}</b> concluído. Na próxima passa de ${fmt(pt)} kg 💪`);
 }
 
 // ---------- Eventos ----------
-$tabs.addEventListener('click', e => {
-  const b = e.target.closest('[data-tab]');
-  if (!b) return;
-  ui.tab = b.dataset.tab; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+document.addEventListener('click', e => {
+  const v = e.target.closest('[data-view]');
+  if (v) go(v.dataset.view);
 });
-$date.addEventListener('change', () => { if ($date.value) { ui.date = $date.value; render(); } });
+$date.addEventListener('change', () => { if ($date.value) { ui.date = $date.value; ui.month = ui.date.slice(0, 7); render(); } });
 
 // Digitar carga/reps: atualiza os números sem redesenhar os campos (não perde o foco)
 $main.addEventListener('input', e => {
+  if (e.target.id === 'search') {
+    ui.q = e.target.value;
+    const q = ui.q.trim().toLowerCase();
+    document.getElementById('studentList').innerHTML = db.profiles.filter(p => p.id !== ME && p.name.toLowerCase().includes(q))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(profileCard).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
+    return;
+  }
   const inp = e.target.closest('input[data-f]');
   if (!inp) return;
   const card = inp.closest('[data-ex]'), ex = exById(card.dataset.ex);
@@ -573,11 +766,24 @@ $main.addEventListener('change', e => {
 });
 
 $main.addEventListener('click', e => {
+  const g = e.target.closest('[data-group]');
+  if (g) { ui.group = g.dataset.group; saveUi(); return render(); }
   const b = e.target.closest('[data-act]');
   if (!b) return;
   const act = b.dataset.act;
-  if (act === 'new') return openDialog(null);
-  if (act === 'export') return exportData();
+  switch (act) {
+    case 'new': return openDialog(null);
+    case 'export': return exportData();
+    case 'add-student': return addStudent();
+    case 'student-menu': return studentMenu(b.dataset.pid);
+    case 'open-profile': ui.profile = b.dataset.pid; ui.date = today(); ui.month = ui.date.slice(0, 7); return go(b.dataset.v);
+    case 'month': {
+      const [y, m] = ui.month.split('-').map(Number), d = new Date(y, m - 1 + (+b.dataset.d), 1);
+      ui.month = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; return render();
+    }
+    case 'goday': { const el = document.getElementById('day-' + b.dataset.d); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    case 'openday': ui.date = b.dataset.d; ui.group = b.dataset.g; return go('treino');
+  }
   const card = b.closest('[data-ex]');
   if (!card) return;
   const ex = exById(card.dataset.ex);
@@ -616,7 +822,7 @@ function openDialog(ex) {
   document.getElementById('exDelete').style.visibility = ex ? 'visible' : 'hidden';
   const w = ex ? working(ex, ui.date) : null;
   $form.name.value = ex ? ex.name : '';
-  $form.group.value = ex ? ex.group : (GROUPS.includes(ui.tab) ? ui.tab : GROUPS[0]);
+  $form.group.value = ex ? ex.group : ui.group;
   $form.sets.value = w ? w.sets.length : 4;
   $form.carga.value = w && w.sets[0] ? numVal(w.sets[0].carga) : '';
   $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : 10;
@@ -639,9 +845,9 @@ $form.addEventListener('submit', () => {
       s.sets = Array.from({ length: n }, (_, i) => ({ carga, reps, done: !!(s.sets[i] && s.sets[i].done) }));
     }
   } else {
-    db.exercises.push({ id: uid(), group, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
-    ui.tab = group; saveUi();
+    db.exercises.push({ id: uid(), profileId: ui.profile, group, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
   }
+  ui.group = group; saveUi();
   save(); render();
 });
 document.getElementById('exCancel').onclick = () => $dlg.close();
@@ -667,7 +873,9 @@ function importData(file) {
     const d = JSON.parse(t);
     if (!d || !Array.isArray(d.exercises) || !Array.isArray(d.sessions)) throw new Error('formato');
     if (!confirm('Substituir os dados atuais pelo backup?')) return;
-    db = d; save(); render();
+    db = migrate(d);
+    if (!profile(ui.profile)) ui.profile = ME;
+    save(); render();
   }).catch(() => alert('Arquivo de backup inválido.'));
 }
 

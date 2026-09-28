@@ -1,5 +1,7 @@
 # Planilha de Treino
 
+> Para professores: tem uma área para o **seu treino particular** e uma para **acompanhar cada aluno**.
+
 App simples (um único arquivo `index.html`) para registrar treinos de musculação, separado por grupo muscular: **Costas, Peito, Ombros, Pernas e Braços**.
 
 ## Como usar
@@ -8,8 +10,22 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 2. Escolha o grupo muscular na barra de abas.
 3. Cada exercício já vem preenchido com as cargas e repetições do **último treino**. Ajuste com os botões **− / +** (carga de 2,5 em 2,5 kg, reps de 1 em 1) ou digite, e toque em **✓** em cada série feita.
 4. O total (carga × repetições) é somado automaticamente.
-5. Ao marcar uma série, abre um **timer de descanso** (ajuste com −15s / +15s; o app lembra o tempo preferido).
+5. Ao marcar uma série, abre um **timer de descanso** de 2 minutos (ajuste com −15s / +15s; o app lembra o tempo preferido).
 6. Ao concluir um exercício superando o treino anterior, aparece a comemoração de **recorde** 🏆.
+
+## Área do professor (aba 👥 Alunos)
+
+- **Meu treino (particular)**: o seu treino, separado dos alunos.
+- **＋ Adicionar aluno**: cada aluno ganha a própria planilha, começando com os mesmos exercícios do seu treino, sem as cargas.
+- Cada aluno mostra: último treino (há quantos dias), treinos na semana e volume comparado com a semana anterior.
+- Os botões **Treino / Histórico / Evolução** abrem a área do aluno. O nome no topo da tela mostra de quem é o treino aberto.
+- No **⋯** do aluno dá para renomear ou excluir.
+
+## Histórico (aba 📅)
+
+- Calendário do mês com os dias treinados destacados e os grupos feitos em cada dia.
+- Resumo do mês: treinos, séries e kg.
+- Cada dia mostra os exercícios, séries, carga máxima, total e evolução. Use **Abrir este treino** para ver ou corrigir.
 
 ## Progressão
 
