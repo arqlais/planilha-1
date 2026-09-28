@@ -6,8 +6,10 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 
 1. Abra o `index.html` no navegador (celular ou computador). Para usar no celular, ative o **GitHub Pages** do repositório (Settings → Pages → branch principal) e salve o link na tela inicial.
 2. Escolha o grupo muscular na barra de abas.
-3. Cada exercício já vem preenchido com as cargas e repetições do **último treino**. Ajuste o que mudou e toque em **✓** em cada série feita.
+3. Cada exercício já vem preenchido com as cargas e repetições do **último treino**. Ajuste com os botões **− / +** (carga de 2,5 em 2,5 kg, reps de 1 em 1) ou digite, e toque em **✓** em cada série feita.
 4. O total (carga × repetições) é somado automaticamente.
+5. Ao marcar uma série, abre um **timer de descanso** (ajuste com −15s / +15s; o app lembra o tempo preferido).
+6. Ao concluir um exercício superando o treino anterior, aparece a comemoração de **recorde** 🏆.
 
 ## Progressão
 
