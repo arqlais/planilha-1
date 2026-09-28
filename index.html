@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14171c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Planilha de Treino</title>
+<style>
+:root{
+  --bg:#f4f5f7; --card:#fff; --text:#16181d; --muted:#6b7280; --line:#e3e5ea;
+  --accent:#2563eb; --accent-ink:#fff; --ok:#16a34a; --ok-bg:#dcfce7; --bad:#dc2626; --bad-bg:#fee2e2;
+  --input:#f7f8fa; --tab:#e9ebef;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1115; --card:#181b21; --text:#eef0f3; --muted:#9aa1ad; --line:#2a2f38;
+    --accent:#3b82f6; --accent-ink:#fff; --ok:#22c55e; --ok-bg:#12351f; --bad:#f87171; --bad-bg:#3a1717;
+    --input:#11141a; --tab:#232730;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:40px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 0;border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-size:20px;margin:0}
+input,select,button{font:inherit;color:inherit}
+input[type=date]{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+nav{display:flex;gap:6px;overflow-x:auto;padding:12px 0 10px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;border:0;background:var(--tab);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600}
+nav button.on{background:var(--accent);color:var(--accent-ink)}
+main{max-width:760px;margin:0 auto;padding:12px 16px}
+.summary{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
+.summary b{font-size:18px}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.card-h h3{margin:0;font-size:16px}
+.card-h small{color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:600;color:var(--muted);text-align:center;padding:4px 2px}
+td{text-align:center;padding:3px 2px}
+td.n{color:var(--muted);width:28px}
+td input{width:100%;max-width:74px;text-align:center;background:var(--input);border:1px solid var(--line);border-radius:8px;padding:8px 4px}
+td.prev{font-size:12px;color:var(--muted);white-space:nowrap}
+td.tot{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.done td input{border-color:var(--ok)}
+tr.up td.tot{color:var(--ok);font-weight:600}
+tr.down td.tot{color:var(--bad);font-weight:600}
+.chk{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:transparent;cursor:pointer;font-size:18px;line-height:1;color:transparent}
+tr.done .chk{background:var(--ok);border-color:var(--ok);color:#fff}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--bad)}
+.icon{border:0;background:transparent;font-size:20px;cursor:pointer;padding:0 6px;color:var(--muted)}
+.totals{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+.totals b{font-size:17px}
+.pill{display:inline-block;white-space:nowrap;padding:1px 8px;border-radius:999px;font-size:13px;font-weight:600}
+.pill.up{background:var(--ok-bg);color:var(--ok)}
+.pill.down{background:var(--bad-bg);color:var(--bad)}
+.pill.eq{background:var(--tab);color:var(--muted)}
+.add{width:100%;padding:12px;border:2px dashed var(--line);background:transparent;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:600}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--text);padding:16px;width:min(420px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h2{margin:0 0 12px;font-size:18px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:10px}
+label input,label select{display:block;width:100%;margin-top:4px;background:var(--input);border:1px solid var(--line);border-radius:8px;padding:9px 10px;color:var(--text)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dlg-actions{display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+.hist{width:100%;font-size:13px}
+.hist td,.hist th{padding:5px 4px;border-bottom:1px solid var(--line)}
+.hist td:first-child,.hist th:first-child{text-align:left}
+.bars{display:grid;gap:8px}
+.bar-row{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;font-size:13px}
+.bar{height:10px;border-radius:5px;background:var(--accent)}
+.bar.prev{background:var(--muted);opacity:.45}
+.spark{width:100%;height:60px;display:block;margin:6px 0}
+.empty{color:var(--muted);text-align:center;padding:24px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>🏋️ Treino</h1>
+    <input type="date" id="date" aria-label="Data do treino">
+  </div>
+  <nav id="tabs"></nav>
+</header>
+<main id="main"></main>
+
+<dialog id="exDialog">
+  <form method="dialog" id="exForm">
+    <h2 id="exTitle">Novo exercício</h2>
+    <label>Nome<input name="name" required placeholder="Ex.: Supino inclinado"></label>
+    <label>Grupo muscular<select name="group"></select></label>
+    <div class="grid3">
+      <label>Séries<input name="sets" inputmode="numeric" value="4"></label>
+      <label>Carga (kg)<input name="carga" inputmode="decimal" placeholder="0"></label>
+      <label>Repetições<input name="reps" inputmode="numeric" value="10"></label>
+    </div>
+    <p class="muted" style="font-size:12px;margin:0 0 12px">Séries, carga e repetições são o ponto de partida. Depois do primeiro treino, o app já preenche com os valores da última vez.</p>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="exDelete">Excluir</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn" id="exCancel">Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const GROUPS = ['Costas', 'Peito', 'Ombros', 'Pernas', 'Braços'];
+const KEY = 'planilha-treino-v1';
+const UI_KEY = 'planilha-treino-ui';
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const pad = n => String(n).padStart(2, '0');
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => isoDate(new Date());
+const parseNum = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null; };
+const fmt = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const fmtDate = s => { const [y, m, d] = s.split('-'); return `${d}/${m}`; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ---------- Dados ----------
+function seed() {
+  const exercises = [], sessions = [];
+  const add = (group, name, sets, histDate) => {
+    const ex = { id: uid(), group, name, sets: sets.map(([carga, reps]) => ({ carga, reps })) };
+    exercises.push(ex);
+    if (histDate) sessions.push({ id: uid(), exId: ex.id, date: histDate, sets: ex.sets.map(s => ({ ...s, done: true })) });
+  };
+  add('Costas', 'Puxada frontal', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  add('Costas', 'Remada curvada', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  add('Peito', 'Crucifixo', [[47, 9], [54, 9], [61, 8], [65.6, 8], [68, 5]], '2026-06-22');
+  add('Peito', 'Supino inclinado', [[16, 8], [22.5, 8], [27.5, 8], [30, 7], [30, 6]], '2026-06-22');
+  add('Peito', 'Cross Over Alto', [[15, 12], [20, 12], [25, 10], [25, 9], [25, 10]], '2026-06-22');
+  add('Ombros', 'Desenvolvimento', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  add('Ombros', 'Elevação lateral', [[null, 12], [null, 12], [null, 12], [null, 12]]);
+  add('Pernas', 'Agachamento', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  add('Pernas', 'Leg press', [[null, 12], [null, 12], [null, 12], [null, 12]]);
+  add('Braços', 'Tríceps barra', [[40, 9], [45, 10], [50, 10], [55, 7], [45, 10]], '2026-06-22');
+  add('Braços', 'Tríceps francês', [[25, null], [30, null], [35, null], [30, null], [35, null]]);
+  add('Braços', 'Rosca direta', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  return { exercises, sessions };
+}
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.exercises)) return d; } catch (e) {}
+  return seed();
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
+
+let db = load();
+let ui = { tab: 'Peito', date: today() };
+try { const u = JSON.parse(localStorage.getItem(UI_KEY)); if (u && u.tab) ui.tab = u.tab; } catch (e) {}
+const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ tab: ui.tab })); } catch (e) {} };
+
+const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
+const vol = sets => sets.reduce((a, s) => a + setVol(s), 0);
+const hasDone = s => s.sets.some(x => x.done);
+const exById = id => db.exercises.find(e => e.id === id);
+const history = exId => db.sessions.filter(s => s.exId === exId && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date));
+const prevSession = (exId, date) => history(exId).filter(s => s.date < date).pop();
+const sessionOn = (exId, date) => db.sessions.find(s => s.exId === exId && s.date === date);
+
+// Sessão do dia: se ainda não existe, é montada a partir do último treino (ou do modelo do exercício)
+function working(ex, date) {
+  const s = sessionOn(ex.id, date);
+  if (s) return s;
+  const prev = prevSession(ex.id, date);
+  const base = prev ? prev.sets : ex.sets;
+  return { id: null, exId: ex.id, date, sets: base.map(x => ({ carga: x.carga, reps: x.reps, done: false })) };
+}
+function ensureSession(ex, date) {
+  let s = sessionOn(ex.id, date);
+  if (!s) { s = working(ex, date); s.id = uid(); db.sessions.push(s); }
+  return s;
+}
+
+// ---------- Semanas ----------
+function weekStart(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const dow = (d.getDay() + 6) % 7; // segunda = 0
+  d.setDate(d.getDate() - dow);
+  return isoDate(d);
+}
+function addDays(dateStr, n) { const d = new Date(dateStr + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDate(d); }
+function groupVolume(group, from, to) {
+  const ids = new Set(db.exercises.filter(e => e.group === group).map(e => e.id));
+  return db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to).reduce((a, s) => a + vol(s.sets), 0);
+}
+function delta(now, before) {
+  if (!before) return now ? '<span class="pill up">novo</span>' : '';
+  const p = (now - before) / before * 100;
+  const cls = Math.abs(p) < 0.5 ? 'eq' : p > 0 ? 'up' : 'down';
+  const arrow = cls === 'eq' ? '=' : p > 0 ? '▲' : '▼';
+  return `<span class="pill ${cls}">${arrow} ${p > 0 ? '+' : ''}${fmt(p)}%</span>`;
+}
+
+// ---------- Render ----------
+const $main = document.getElementById('main');
+const $tabs = document.getElementById('tabs');
+const $date = document.getElementById('date');
+
+function renderTabs() {
+  $tabs.innerHTML = [...GROUPS, 'Evolução'].map(t =>
+    `<button class="${t === ui.tab ? 'on' : ''}" data-tab="${t}">${t === 'Evolução' ? '📈 ' : ''}${t}</button>`).join('');
+}
+
+function render() {
+  renderTabs();
+  $date.value = ui.date;
+  if (ui.tab === 'Evolução') return renderEvolution();
+  renderGroup(ui.tab);
+}
+
+function renderGroup(group) {
+  const ws = weekStart(ui.date);
+  const thisWeek = groupVolume(group, ws, addDays(ws, 6));
+  const lastWeek = groupVolume(group, addDays(ws, -7), addDays(ws, -1));
+  const exs = db.exercises.filter(e => e.group === group);
+  $main.innerHTML = `
+    <div class="summary">
+      <span class="muted">Volume de ${esc(group)} na semana</span>
+      <b>${fmt(thisWeek)} kg</b>
+      <span class="muted">semana anterior ${fmt(lastWeek)} kg</span>
+      ${delta(thisWeek, lastWeek)}
+    </div>
+    ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Nenhum exercício ainda.</p>'}
+    <button class="add" data-act="new">+ Adicionar exercício</button>`;
+}
+
+function cardHtml(ex) {
+  const s = working(ex, ui.date);
+  const prev = prevSession(ex.id, ui.date);
+  const prevTotal = prev ? vol(prev.sets) : 0;
+  const rows = s.sets.map((x, i) => {
+    const p = prev && prev.sets[i];
+    return `<tr class="${rowClass(x, p)}" data-i="${i}">
+      <td class="n">${i + 1}</td>
+      <td><input inputmode="decimal" data-f="carga" value="${x.carga == null ? '' : String(x.carga).replace('.', ',')}" placeholder="kg"></td>
+      <td><input inputmode="numeric" data-f="reps" value="${x.reps ?? ''}" placeholder="reps"></td>
+      <td class="tot">${x.carga != null && x.reps != null ? fmt(x.carga * x.reps) : '–'}</td>
+      <td class="prev">${p && p.done ? `${fmt(p.carga)}×${p.reps ?? '–'}` : '–'}</td>
+      <td><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></td>
+    </tr>`;
+  }).join('');
+  const doneCount = s.sets.filter(x => x.done).length;
+  return `
+    <div class="card-h">
+      <div><h3>${esc(ex.name)}</h3>
+        <small>${prev ? `Último treino ${fmtDate(prev.date)} · ${fmt(prevTotal)} kg` : 'Sem treino anterior'}</small></div>
+      <button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>Carga</th><th>Reps</th><th>Total</th><th>Anterior</th><th>Feito</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="actions">
+      <button class="btn" data-act="addset">+ série</button>
+      <button class="btn" data-act="rmset">− série</button>
+      <button class="btn" data-act="alldone">${doneCount === s.sets.length ? 'Desmarcar todas' : 'Marcar todas'}</button>
+    </div>
+    <div class="totals">${totalsHtml(s, prev)}</div>`;
+}
+
+function rowClass(x, p) {
+  if (!x.done) return '';
+  if (!p || !p.done) return 'done';
+  const cv = setVol(x), pv = setVol(p);
+  return 'done' + (cv > pv ? ' up' : cv < pv ? ' down' : '');
+}
+function totalsHtml(s, prev) {
+  const total = vol(s.sets), prevTotal = prev ? vol(prev.sets) : 0;
+  const doneCount = s.sets.filter(x => x.done).length;
+  return `<span class="muted">Total ${ui.date === today() ? 'hoje' : fmtDate(ui.date)}</span>
+    <b>${fmt(total)} kg</b>
+    <span class="muted">${doneCount}/${s.sets.length} séries</span>
+    ${prev ? `<span class="muted">anterior ${fmt(prevTotal)} kg</span> ${progress(total, prevTotal, doneCount === s.sets.length)}` : ''}`;
+}
+// Durante o treino mostra quanto falta para superar; ao terminar (ou ao passar) mostra a variação
+function progress(total, prevTotal, finished) {
+  if (!total) return `<span class="pill eq">meta: superar ${fmt(prevTotal)} kg</span>`;
+  if (total <= prevTotal && !finished) return `<span class="pill eq">faltam ${fmt(prevTotal - total)} kg para superar</span>`;
+  return delta(total, prevTotal);
+}
+
+function refreshCard(exId) {
+  const card = $main.querySelector(`[data-ex="${exId}"]`);
+  if (card) card.innerHTML = cardHtml(exById(exId));
+}
+function refreshSummary() {
+  if (ui.tab === 'Evolução') return;
+  const ws = weekStart(ui.date);
+  const thisWeek = groupVolume(ui.tab, ws, addDays(ws, 6));
+  const lastWeek = groupVolume(ui.tab, addDays(ws, -7), addDays(ws, -1));
+  const el = $main.querySelector('.summary');
+  if (el) el.innerHTML = `<span class="muted">Volume de ${esc(ui.tab)} na semana</span><b>${fmt(thisWeek)} kg</b>
+    <span class="muted">semana anterior ${fmt(lastWeek)} kg</span>${delta(thisWeek, lastWeek)}`;
+}
+
+function sparkline(values) {
+  if (values.length < 2) return '';
+  const w = 300, h = 60, max = Math.max(...values), min = Math.min(...values), r = max - min || 1;
+  const pts = values.map((v, i) => [i / (values.length - 1) * (w - 8) + 4, h - 6 - (v - min) / r * (h - 12)]);
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+    <polyline fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" points="${pts.map(p => p.join(',')).join(' ')}"/>
+    ${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--accent)"/>`).join('')}</svg>`;
+}
+
+function renderEvolution() {
+  const ws = weekStart(ui.date);
+  const rows = GROUPS.map(g => ({ g, now: groupVolume(g, ws, addDays(ws, 6)), before: groupVolume(g, addDays(ws, -7), addDays(ws, -1)) }));
+  const max = Math.max(1, ...rows.flatMap(r => [r.now, r.before]));
+  let html = `<section class="card">
+    <div class="card-h"><div><h3>Semana atual × semana anterior</h3><small>Volume total (carga × repetições) — semana de ${fmtDate(ws)}</small></div></div>
+    <div class="bars">${rows.map(r => `
+      <div class="bar-row"><strong>${r.g}</strong>
+        <div><div class="bar" style="width:${r.now / max * 100}%"></div>
+        <div class="bar prev" style="width:${r.before / max * 100}%;margin-top:3px"></div>
+        <small class="muted">${fmt(r.now)} kg · antes ${fmt(r.before)} kg</small> ${delta(r.now, r.before)}</div></div>`).join('')}
+    </div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Barra azul = esta semana · barra cinza = semana anterior</p>
+  </section>`;
+
+  for (const g of GROUPS) {
+    const exs = db.exercises.filter(e => e.group === g);
+    const blocks = exs.map(e => {
+      const h = history(e.id);
+      if (!h.length) return '';
+      const last = h.slice(-8);
+      return `<div style="margin-top:12px"><strong>${esc(e.name)}</strong>${sparkline(last.map(s => vol(s.sets)))}
+        <table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Carga máx</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>
+        ${last.slice().reverse().map((s, i, arr) => {
+          const done = s.sets.filter(x => x.done);
+          const before = arr[i + 1];
+          return `<tr><td>${fmtDate(s.date)}</td><td>${done.length}</td>
+            <td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
+            <td>${done.reduce((a, x) => a + (x.reps || 0), 0)}</td>
+            <td>${fmt(vol(s.sets))}</td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
+        }).join('')}</tbody></table></div>`;
+    }).join('');
+    if (blocks) html += `<section class="card"><div class="card-h"><h3>${g}</h3></div>${blocks}</section>`;
+  }
+
+  html += `<section class="card">
+    <div class="card-h"><div><h3>Backup</h3><small>Os dados ficam salvos neste navegador. Exporte de vez em quando para não perder nada.</small></div></div>
+    <div class="actions">
+      <button class="btn" data-act="export">⬇ Exportar</button>
+      <label class="btn" style="margin:0;color:inherit">⬆ Importar<input type="file" accept="application/json" id="importFile" hidden></label>
+    </div></section>`;
+  $main.innerHTML = html;
+}
+
+// ---------- Eventos ----------
+$tabs.addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]');
+  if (!b) return;
+  ui.tab = b.dataset.tab; saveUi(); render(); window.scrollTo(0, 0);
+});
+$date.addEventListener('change', () => { if ($date.value) { ui.date = $date.value; render(); } });
+
+// Digitar carga/reps: atualiza os números sem redesenhar os campos (não perde o foco)
+$main.addEventListener('input', e => {
+  const inp = e.target.closest('input[data-f]');
+  if (!inp) return;
+  const card = inp.closest('[data-ex]'), ex = exById(card.dataset.ex);
+  const i = +inp.closest('tr').dataset.i;
+  const s = ensureSession(ex, ui.date);
+  s.sets[i][inp.dataset.f] = parseNum(inp.value);
+  save();
+  const x = s.sets[i], tr = inp.closest('tr');
+  const prev = prevSession(ex.id, ui.date);
+  tr.className = rowClass(x, prev && prev.sets[i]);
+  tr.querySelector('.tot').textContent = x.carga != null && x.reps != null ? fmt(x.carga * x.reps) : '–';
+  card.querySelector('.totals').innerHTML = totalsHtml(s, prev);
+  refreshSummary();
+});
+$main.addEventListener('change', e => {
+  if (e.target.id === 'importFile') importData(e.target.files[0]);
+});
+
+$main.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'new') return openDialog(null);
+  if (act === 'export') return exportData();
+  const card = b.closest('[data-ex]');
+  if (!card) return;
+  const ex = exById(card.dataset.ex);
+  if (act === 'edit') return openDialog(ex);
+  const s = ensureSession(ex, ui.date);
+  if (act === 'done') {
+    const x = s.sets[+b.closest('tr').dataset.i];
+    x.done = !x.done;
+    if (x.done && navigator.vibrate) navigator.vibrate(30);
+  } else if (act === 'alldone') {
+    const all = s.sets.every(x => x.done);
+    s.sets.forEach(x => x.done = !all);
+  } else if (act === 'addset') {
+    const last = s.sets[s.sets.length - 1] || { carga: null, reps: null };
+    s.sets.push({ carga: last.carga, reps: last.reps, done: false });
+  } else if (act === 'rmset') {
+    if (s.sets.length > 1) s.sets.pop();
+  }
+  save(); refreshCard(ex.id); refreshSummary();
+});
+
+// ---------- Diálogo de exercício ----------
+const $dlg = document.getElementById('exDialog'), $form = document.getElementById('exForm');
+$form.group.innerHTML = GROUPS.map(g => `<option>${g}</option>`).join('');
+let editing = null, initialPlan = '';
+function openDialog(ex) {
+  editing = ex;
+  document.getElementById('exTitle').textContent = ex ? 'Editar exercício' : 'Novo exercício';
+  document.getElementById('exDelete').style.visibility = ex ? 'visible' : 'hidden';
+  const w = ex ? working(ex, ui.date) : null;
+  $form.name.value = ex ? ex.name : '';
+  $form.group.value = ex ? ex.group : (GROUPS.includes(ui.tab) ? ui.tab : GROUPS[0]);
+  $form.sets.value = w ? w.sets.length : 4;
+  $form.carga.value = w && w.sets[0] && w.sets[0].carga != null ? String(w.sets[0].carga).replace('.', ',') : '';
+  $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : 10;
+  initialPlan = [$form.sets.value, $form.carga.value, $form.reps.value].join('|');
+  $dlg.showModal();
+  if (!ex) $form.name.focus();
+}
+$form.addEventListener('submit', () => {
+  const name = $form.name.value.trim();
+  if (!name) return;
+  const n = Math.max(1, Math.min(20, parseInt($form.sets.value) || 4));
+  const carga = parseNum($form.carga.value), reps = parseNum($form.reps.value);
+  if (editing) {
+    editing.name = name; editing.group = $form.group.value;
+    // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
+    if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
+      editing.sets = Array.from({ length: n }, () => ({ carga, reps }));
+      const s = ensureSession(editing, ui.date);
+      s.sets = Array.from({ length: n }, (_, i) => ({ carga, reps, done: !!(s.sets[i] && s.sets[i].done) }));
+    }
+  } else {
+    db.exercises.push({ id: uid(), group: $form.group.value, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
+    ui.tab = $form.group.value; saveUi();
+  }
+  save(); render();
+});
+document.getElementById('exCancel').onclick = () => $dlg.close();
+document.getElementById('exDelete').onclick = () => {
+  if (!editing || !confirm(`Excluir "${editing.name}" e todo o histórico dele?`)) return;
+  db.sessions = db.sessions.filter(s => s.exId !== editing.id);
+  db.exercises = db.exercises.filter(e => e.id !== editing.id);
+  save(); $dlg.close(); render();
+};
+
+// ---------- Backup ----------
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `treino-backup-${today()}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function importData(file) {
+  if (!file) return;
+  file.text().then(t => {
+    const d = JSON.parse(t);
+    if (!d || !Array.isArray(d.exercises) || !Array.isArray(d.sessions)) throw new Error('formato');
+    if (!confirm('Substituir os dados atuais pelo backup?')) return;
+    db = d; save(); render();
+  }).catch(() => alert('Arquivo de backup inválido.'));
+}
+
+render();
+</script>
+</body>
+</html>
