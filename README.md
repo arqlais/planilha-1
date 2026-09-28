@@ -15,7 +15,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 
 ## Cardio
 
-- No treino, toque em **❤️ Cardio** e escolha **Corrida, Bicicleta, Escada ou Elíptico**.
+- No treino, toque em **Cardio** e escolha **Corrida, Bicicleta, Escada ou Elíptico**.
 - Informe os minutos (− / +) e toque em **Registrar**, ou use **▶ Cronometrar** e **Parar e registrar** ao terminar.
 - O cardio aparece no topo (min de cardio), no histórico, na evolução e no perfil do aluno.
 

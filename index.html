@@ -441,7 +441,7 @@ const ME = 'me';
 const MY_NAME = 'Igor Pedro';
 const CARDIO = 'Cardio';
 const MODES = [['corrida', 'Corrida', '🏃'], ['bicicleta', 'Bicicleta', '🚴'], ['escada', 'Escada', '🪜'], ['eliptico', 'Elíptico', '⭕']];
-const modeOf = id => MODES.find(m => m[0] === id) || [id, id, '❤️'];
+const modeOf = id => MODES.find(m => m[0] === id) || [id, id, '•'];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const pad = n => String(n).padStart(2, '0');
@@ -688,20 +688,20 @@ function renderStudentTreino(p, greet, isToday) {
       ${groups.length ? `<div class="layout">Séries em:
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
-      ${blocks}${plan.includes(CARDIO) ? `<h3 style="margin:18px 4px 10px">❤️ Cardio</h3>${cardioHtml(true)}` : ''}`
+      ${blocks}${plan.includes(CARDIO) ? `<h3 style="margin:18px 4px 10px">Cardio</h3>${cardioHtml(true)}` : ''}`
     : `<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 function groupChips(group) {
-  const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? '❤️ ' : ''}${g}</button>`;
+  const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g}</button>`;
   return `<div class="chips">${UPPER.map(chip).join('')}</div>
-    <div class="chips sub"><span class="lbl">🦵 Pernas</span>${LEGS.map(chip).join('')}${chip(CARDIO)}</div>`;
+    <div class="chips sub"><span class="lbl">Pernas</span>${LEGS.map(chip).join('')}${chip(CARDIO)}</div>`;
 }
 // Seletor por seções (superiores / pernas / cardio) para diálogos
 function groupPicker(type, name, checked, withCardio) {
-  const opt = g => `<label><input type="${type}" name="${name}" value="${g}" ${checked(g) ? 'checked' : ''}><span>${g === CARDIO ? '❤️ ' : ''}${g}</span></label>`;
+  const opt = g => `<label><input type="${type}" name="${name}" value="${g}" ${checked(g) ? 'checked' : ''}><span>${g}</span></label>`;
   return `<div class="pick-h">Superiores</div><div class="groups">${UPPER.map(opt).join('')}</div>
-    <div class="pick-h">🦵 Pernas</div><div class="groups">${LEGS.map(opt).join('')}</div>
+    <div class="pick-h">Pernas</div><div class="groups">${LEGS.map(opt).join('')}</div>
     ${withCardio ? `<div class="pick-h">Cardio</div><div class="groups">${opt(CARDIO)}</div>` : ''}`;
 }
 function isComplete(exId) {
@@ -785,7 +785,7 @@ function cardioHtml(noBanner) {
   const ws = weekStart(ui.date), now = cardioBetween(ws, addDays(ws, 6)), before = cardioBetween(addDays(ws, -7), addDays(ws, -1));
   const day = profCardio().filter(c => c.date === ui.date);
   const w = ui.watch;
-  return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>❤️ Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>`}
+  return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>`}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Qual cardio você vai fazer?</h3></div></div>
       <div class="modes">${MODES.map(([id, label, e]) => `<button class="${ui.mode === id ? 'on' : ''}" data-act="mode" data-m="${id}"><span>${e}</span>${label}</button>`).join('')}</div>
@@ -1107,7 +1107,7 @@ function renderEvolution() {
     // Cardio: minutos por semana no período
     const cw = data.weeks.map(w => cardioBetween(w, addDays(w, 6)));
     const byMode = MODES.map(m => [m, profCardio().filter(c => c.mode === m[0] && c.date >= data.weeks[0]).reduce((a, c) => a + c.min, 0)]).filter(x => x[1]);
-    if (cw.some(Boolean)) html += `<section class="card"><div class="card-h"><div class="grow"><h3>❤️ Cardio · minutos por semana</h3>
+    if (cw.some(Boolean)) html += `<section class="card"><div class="card-h"><div class="grow"><h3>Cardio · minutos por semana</h3>
         <small>Total no período: ${cw.reduce((a, b) => a + b, 0)} min · ${byMode.map(([m, v]) => `${m[2]} ${m[1]} ${v} min`).join(' · ')}</small></div></div>
       ${sparkline(cw)}<table class="hist"><thead><tr><th>Semana</th><th>Minutos</th><th></th></tr></thead><tbody>
       ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${v} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
@@ -1371,7 +1371,7 @@ function renderPerfil() {
     const g = (p.division && p.division[d]) || [];
     const isT = toDate(today()).getDay() === d;
     return `<div class="plan-row"><div class="grow"><b>${name}</b>${isT ? ' <span class="pill up">hoje</span>' : ''}
-      <small>${g.length ? g.map(x => x === CARDIO ? '❤️ Cardio' : x).join(' + ') : 'Descanso'}</small></div>
+      <small>${g.length ? g.join(' + ') : 'Descanso'}</small></div>
       <button class="icon" data-act="edit-day" data-d="${d}" aria-label="Editar ${name}">✎</button></div>`;
   }).join('');
 
@@ -1411,7 +1411,7 @@ function renderPerfil() {
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
         <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
-      <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => x === CARDIO ? '❤️ Cardio' : x).join(' + ') : 'descanso'}</p>
+      <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.join(' + ') : 'descanso'}</p>
       ${division}
     </section>
     <section class="card">
