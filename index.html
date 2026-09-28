@@ -371,6 +371,20 @@ input,select,textarea{font-size:16px!important}
   </form>
 </dialog>
 
+<dialog id="dayDlg">
+  <form id="dayForm">
+    <h2 id="dayTitle">Treino de segunda</h2>
+    <p class="hint">Escolha o que o aluno vai treinar neste dia. O aluno verá só esses exercícios, sem precisar escolher.</p>
+    <div class="groups" id="dayPick" style="margin-bottom:16px"></div>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="dayRest">Descanso</button>
+      <span class="grow"></span>
+      <button type="button" class="btn" id="dayCancel">Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="stDialog">
   <form id="stForm">
     <h2 id="stTitle">Novo aluno</h2>
@@ -497,6 +511,9 @@ const prevSession = (exId, date) => history(exId).filter(s => s.date < date).pop
 const sessionOn = (exId, date) => db.sessions.find(s => s.exId === exId && s.date === date);
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
 const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0);
+// Divisão da semana do aluno (feita pelo professor): dia da semana (0=domingo) -> grupos
+const WEEK = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
+const dayPlan = (p, date) => (p.division && p.division[toDate(date).getDay()]) || [];
 function trainedDates(pid = ui.profile) {
   return [...new Set([...profSessions(pid).map(s => s.date), ...profCardio(pid).map(c => c.date)])].sort();
 }
@@ -607,8 +624,9 @@ function renderTreino() {
   const p = profile(ui.profile), lastMsg = ui.studentMode && (p.messages || []).slice(-1)[0];
   const greet = ui.studentMode && isToday ? `<div class="banner hello"><div class="grow"><h2>Olá, ${esc(firstName(p))}! 👋</h2>
       <small>Já treinou hoje? Não esquece do cardio :)</small>
-      ${lastMsg ? `<div class="note"><b>Recado do professor · ${fmtDate(lastMsg.date)}</b><br>${esc(lastMsg.text)}</div>` : ''}
-      <div class="actions"><button class="btn" data-group="${CARDIO}">❤️ Ir para o cardio</button>${lastMsg ? '<button class="btn" data-view="recados">Ver recados</button>' : ''}</div></div></div>` : '';
+      ${lastMsg ? `<div class="note"><b>Recado do professor · ${fmtDate(lastMsg.date)}</b><br>${esc(lastMsg.text)}</div>
+      <div class="actions"><button class="btn" data-view="recados">Ver recados</button></div>` : ''}</div></div>` : '';
+  if (ui.studentMode) return renderStudentTreino(p, greet, isToday);
   $main.innerHTML = `${greet}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
@@ -623,6 +641,30 @@ function renderTreino() {
       <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
     ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || `<p class="empty">${ui.studentMode ? 'Seu professor ainda não montou este treino.' : 'Nenhum exercício ainda. Adicione o primeiro'}</p>`}
     ${ui.studentMode ? '' : '<button class="add" data-act="new">＋ Adicionar exercício</button>'}`}`;
+  $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
+}
+// Aluno: vê só o treino que o professor passou para o dia (sem escolher grupo)
+function renderStudentTreino(p, greet, isToday) {
+  const plan = dayPlan(p, ui.date), groups = GROUPS.filter(g => plan.includes(g));
+  const blocks = groups.map(g => {
+    const exs = profExs().filter(e => e.group === g);
+    return `<h3 style="margin:18px 4px 10px">${g}</h3>` + (exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('')
+      || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>');
+  }).join('');
+  const label = [...groups, ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
+  $main.innerHTML = `${greet}
+    <div class="daynav">
+      <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
+      <div class="grow"><b>${weekday(ui.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(ui.date)}</b>
+        ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
+      <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
+    </div>
+    ${plan.length ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
+      ${groups.length ? `<div class="layout">Séries em:
+        <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
+        <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
+      ${blocks}${plan.includes(CARDIO) ? `<h3 style="margin:18px 4px 10px">❤️ Cardio</h3>${cardioHtml(true)}` : ''}`
+    : `<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 function isComplete(exId) {
@@ -698,15 +740,15 @@ function refreshCard(exId) {
 function refreshTop() {
   renderStats();
   const b = $main.querySelector('.banner:not(.hello)');
-  if (b && ui.view === 'treino' && ui.group !== CARDIO) b.innerHTML = bannerHtml(ui.group);
+  if (b && ui.view === 'treino' && ui.group !== CARDIO && !ui.studentMode) b.innerHTML = bannerHtml(ui.group);
 }
 
 // ---------- Cardio ----------
-function cardioHtml() {
+function cardioHtml(noBanner) {
   const ws = weekStart(ui.date), now = cardioBetween(ws, addDays(ws, 6)), before = cardioBetween(addDays(ws, -7), addDays(ws, -1));
   const day = profCardio().filter(c => c.date === ui.date);
   const w = ui.watch;
-  return `<div class="banner"><div class="grow"><h2>❤️ Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>
+  return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>❤️ Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>`}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Qual cardio você vai fazer?</h3></div></div>
       <div class="modes">${MODES.map(([id, label, e]) => `<button class="${ui.mode === id ? 'on' : ''}" data-act="mode" data-m="${id}"><span>${e}</span>${label}</button>`).join('')}</div>
@@ -1230,6 +1272,26 @@ function setStudentMode(on) {
 }
 document.getElementById('studentBar').addEventListener('click', e => { if (e.target.closest('[data-act-global="exit-student"]')) setStudentMode(false); });
 
+const $dayDlg = document.getElementById('dayDlg'), $dayForm = document.getElementById('dayForm');
+let dayEditing = null;
+function openDay(d) {
+  const p = profile(ui.profile), cur = (p.division && p.division[d]) || [];
+  dayEditing = d;
+  document.getElementById('dayTitle').textContent = `Treino de ${WEEK.find(w => w[0] === d)[1].toLowerCase()}`;
+  document.getElementById('dayPick').innerHTML = [...GROUPS, CARDIO].map(g =>
+    `<label><input type="checkbox" name="g" value="${g}" ${cur.includes(g) ? 'checked' : ''}><span>${g === CARDIO ? '❤️ ' : ''}${g}</span></label>`).join('');
+  $dayDlg.showModal();
+}
+function saveDay(groups) {
+  const p = profile(ui.profile);
+  p.division = p.division || {};
+  p.division[dayEditing] = groups;
+  $dayDlg.close(); save(); render();
+}
+$dayForm.addEventListener('submit', e => { e.preventDefault(); saveDay([...$dayForm.querySelectorAll('input[name=g]:checked')].map(i => i.value)); });
+document.getElementById('dayRest').onclick = () => saveDay([]);
+document.getElementById('dayCancel').onclick = () => $dayDlg.close();
+
 function renderPerfil() {
   const p = profile(ui.profile);
   if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
@@ -1267,6 +1329,15 @@ function renderPerfil() {
       <button class="link" style="margin-top:6px" data-act="new-in" data-g="${g}">＋ exercício em ${g}</button>`;
   }).join('');
 
+  const todayPlan = dayPlan(p, today());
+  const division = WEEK.map(([d, name]) => {
+    const g = (p.division && p.division[d]) || [];
+    const isT = toDate(today()).getDay() === d;
+    return `<div class="plan-row"><div class="grow"><b>${name}</b>${isT ? ' <span class="pill up">hoje</span>' : ''}
+      <small>${g.length ? g.map(x => x === CARDIO ? '❤️ Cardio' : x).join(' + ') : 'Descanso'}</small></div>
+      <button class="icon" data-act="edit-day" data-d="${d}" aria-label="Editar ${name}">✎</button></div>`;
+  }).join('');
+
   const log = (p.messages || []).slice().reverse().slice(0, 10);
   $main.innerHTML = `
     <section class="card">
@@ -1301,7 +1372,13 @@ function renderPerfil() {
     </section>
     ${marcacoesHtml(p)}
     <section class="card">
-      <div class="card-h"><div class="grow"><h3>Treino do aluno</h3><small>Monte o treino: toque em ⋯ para mudar séries, carga e repetições</small></div></div>
+      <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
+        <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
+      <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => x === CARDIO ? '❤️ Cardio' : x).join(' + ') : 'descanso'}</p>
+      ${division}
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Exercícios do aluno</h3><small>Crie os exercícios de cada grupo: toque em ⋯ para mudar séries, carga e repetições</small></div></div>
       ${plan}
     </section>
     <section class="card" id="msgCard">
@@ -1457,6 +1534,7 @@ $main.addEventListener('click', e => {
     case 'student-menu': return openStudent(profile(b.dataset.pid));
     case 'student-edit': return openStudent(profile(ui.profile));
     case 'student-mode': return setStudentMode(true);
+    case 'edit-day': return openDay(+b.dataset.d);
     case 'edit-ex': return openDialog(exById(b.dataset.id));
     case 'new-in': return openDialog(null, b.dataset.g);
     case 'goto-msg': return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
