@@ -13,6 +13,8 @@
   --up:#0e7490; --up-bg:#cffafe; --down:#be123c; --down-bg:#ffe4e6;
   --input:#f3f7ff; --shadow:0 4px 18px rgba(37,99,235,.10);
   --hero:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#38bdf8 100%);
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4;
+  --grid:#e6ecf7; --axis:#c3cde0;
 }
 @media (prefers-color-scheme: dark){
   :root{
@@ -21,6 +23,8 @@
     --up:#22d3ee; --up-bg:#083344; --down:#fb7185; --down-bg:#4c0519;
     --input:#0a1630; --shadow:0 4px 18px rgba(0,0,0,.35);
     --hero:linear-gradient(135deg,#0b1f55 0%,#1d4ed8 60%,#0ea5e9 100%);
+    --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
+    --grid:#1a2b52; --axis:#2a3f6e;
   }
 }
 *{box-sizing:border-box}
@@ -186,6 +190,32 @@ nav.bottom button.on i{filter:none;opacity:1}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--blue);vertical-align:middle;margin-right:4px}
 .legend i.p{background:var(--muted);opacity:.45;margin-left:10px}
 
+/* ---- gráficos de linha ---- */
+.seg{display:flex;gap:6px;margin-bottom:12px}
+.seg button{border:0;background:var(--card);box-shadow:var(--shadow);color:var(--muted);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px}
+.seg button.on{background:var(--blue);color:#fff}
+.lg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.lg button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--text)}
+.lg button.off{opacity:.45;text-decoration:line-through}
+.key{display:inline-block;width:14px;height:3px;border-radius:2px;flex:0 0 auto}
+.chart-wrap{position:relative;touch-action:pan-y}
+.chart-wrap svg{display:block;width:100%;overflow:visible}
+.chart-wrap text{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.chart-sub{font-size:12px;color:var(--muted);margin:-6px 0 8px}
+.tip{position:absolute;top:0;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:8px 10px;font-size:12px;min-width:130px;z-index:2}
+.tip .th{color:var(--muted);font-weight:600;margin-bottom:4px}
+.tip div.r{display:flex;align-items:center;gap:6px;line-height:1.6}
+.tip b{font-variant-numeric:tabular-nums}
+.tip span.n{color:var(--muted)}
+.an{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.an:last-child{border-bottom:0}
+.an .who2{display:flex;align-items:center;gap:6px;font-weight:700;grid-column:1/-1}
+.an .pills{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px}
+.an p{grid-column:1/-1;margin:0;font-size:13px;color:var(--muted)}
+details.tbl summary{cursor:pointer;color:var(--blue);font-weight:600;font-size:14px}
+.tbl-scroll{overflow-x:auto;margin-top:8px}
+.tbl-scroll table{font-size:12px;white-space:nowrap}
+
 /* ---- diálogo ---- */
 dialog{border:0;border-radius:20px;background:var(--card);color:var(--text);padding:18px;width:min(420px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.3)}
 dialog::backdrop{background:rgba(8,18,38,.6)}
@@ -308,7 +338,7 @@ function load() {
 function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
 
 let db = load();
-let ui = { view: 'treino', group: 'Peito', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '' };
+let ui = { view: 'treino', group: 'Peito', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set() };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
   if (VIEWS.some(v => v[0] === u.view)) ui.view = u.view;
@@ -567,19 +597,152 @@ function sparkline(values) {
     <polyline fill="none" stroke="#3b82f6" stroke-width="2.5" vector-effect="non-scaling-stroke" points="${line}"/>
     ${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#2563eb"/>`).join('')}</svg>`;
 }
+// ---------- Gráficos de carga e repetições por grupo ----------
+const COLOR = g => `var(--c${GROUPS.indexOf(g) + 1})`;
+function weeklySeries(n) {
+  const end = weekStart(ui.date);
+  const weeks = Array.from({ length: n }, (_, i) => addDays(end, -7 * (n - 1 - i)));
+  const idx = new Map(weeks.map((w, i) => [w, i]));
+  const exMap = new Map(profExs().map(e => [e.id, e]));
+  const acc = Object.fromEntries(GROUPS.map(g => [g, weeks.map(() => ({ sum: 0, cnt: 0, reps: 0, any: false }))]));
+  for (const s of db.sessions) {
+    const e = exMap.get(s.exId), i = idx.get(weekStart(s.date));
+    if (!e || i == null) continue;
+    for (const x of s.sets) if (x.done) {
+      const b = acc[e.group][i];
+      b.any = true; b.reps += x.reps || 0;
+      if (x.carga != null) { b.sum += x.carga; b.cnt++; }
+    }
+  }
+  return {
+    weeks,
+    carga: GROUPS.map(g => ({ g, values: acc[g].map(b => b.cnt ? Math.round(b.sum / b.cnt * 10) / 10 : null) })),
+    reps: GROUPS.map(g => ({ g, values: acc[g].map(b => b.any ? b.reps : null) })),
+  };
+}
+function niceStep(r) { const p = 10 ** Math.floor(Math.log10(r)), f = r / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function scale(values) {
+  let lo = Math.min(...values), hi = Math.max(...values);
+  if (!values.length) { lo = 0; hi = 10; }
+  if (lo === hi) { lo -= Math.max(1, lo * .1); hi += Math.max(1, hi * .1); }
+  const pad = (hi - lo) * .15; lo = Math.max(0, lo - pad); hi += pad;
+  const step = niceStep((hi - lo) / 4);
+  return { lo: Math.floor(lo / step) * step, hi: Math.ceil(hi / step) * step, step };
+}
+function lineChartSvg(c, W) {
+  const H = 210, m = { l: 36, r: 12, t: 10, b: 24 };
+  const vis = c.series.filter(s => !ui.hidden.has(s.g));
+  const sc = scale(vis.flatMap(s => s.values).filter(v => v != null));
+  const n = c.weeks.length;
+  const x = i => m.l + (n === 1 ? (W - m.l - m.r) / 2 : i * (W - m.l - m.r) / (n - 1));
+  const y = v => m.t + (1 - (v - sc.lo) / (sc.hi - sc.lo)) * (H - m.t - m.b);
+  c.x = x; c.W = W; c.H = H; c.m = m;
+  let g = '';
+  for (let v = sc.lo; v <= sc.hi + 1e-9; v += sc.step) {
+    g += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" style="stroke:${v === sc.lo ? 'var(--axis)' : 'var(--grid)'}" stroke-width="1"/>
+      <text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  const every = Math.ceil(n / 6);
+  c.weeks.forEach((w, i) => { if ((n - 1 - i) % every === 0) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${fmtDate(w)}</text>`; });
+  for (const s of vis) {
+    let d = '', pen = false;
+    s.values.forEach((v, i) => { if (v == null) { pen = false; return; } d += `${pen ? 'L' : 'M'}${x(i)},${y(v)}`; pen = true; });
+    g += `<path d="${d}" fill="none" style="stroke:${COLOR(s.g)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s.values.forEach((v, i) => { if (v != null) g += `<circle cx="${x(i)}" cy="${y(v)}" r="4" style="fill:${COLOR(s.g)};stroke:var(--card)" stroke-width="2"/>`; });
+  }
+  g += `<line class="xh" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" style="stroke:var(--muted)" stroke-width="1" visibility="hidden"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${c.title}">${g}
+    <rect x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent"/></svg><div class="tip" hidden></div>`;
+}
+let charts = {};
+function drawCharts() {
+  for (const id of ['carga', 'reps']) {
+    const wrap = document.getElementById('chart-' + id), c = charts[id];
+    if (!wrap || !c) continue;
+    wrap.innerHTML = lineChartSvg(c, Math.max(260, wrap.clientWidth));
+    const svg = wrap.querySelector('svg'), tip = wrap.querySelector('.tip'), xh = svg.querySelector('.xh');
+    const show = e => {
+      const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * c.W / r.width;
+      let i = 0, best = Infinity;
+      c.weeks.forEach((_, k) => { const d = Math.abs(c.x(k) - px); if (d < best) { best = d; i = k; } });
+      xh.setAttribute('x1', c.x(i)); xh.setAttribute('x2', c.x(i)); xh.setAttribute('visibility', 'visible');
+      const rows = c.series.filter(s => !ui.hidden.has(s.g)).map(s => [s, s.values[i]]).sort((a, b) => (b[1] ?? -1) - (a[1] ?? -1));
+      tip.innerHTML = `<div class="th">Semana de ${fmtDate(c.weeks[i])}</div>` + rows.map(([s, v]) =>
+        `<div class="r"><span class="key" style="background:${COLOR(s.g)}"></span><b>${v == null ? '—' : fmt(v) + c.unit}</b><span class="n">${s.g}</span></div>`).join('');
+      tip.hidden = false;
+      const left = c.x(i) * r.width / c.W, tw = tip.offsetWidth;
+      tip.style.left = Math.min(Math.max(0, left > r.width / 2 ? left - tw - 12 : left + 12), r.width - tw) + 'px';
+    };
+    svg.addEventListener('pointermove', show);
+    svg.addEventListener('pointerdown', show);
+    svg.addEventListener('pointerleave', () => { tip.hidden = true; xh.setAttribute('visibility', 'hidden'); });
+  }
+}
+window.addEventListener('resize', () => { if (ui.view === 'evolucao') drawCharts(); });
+
+// Compara a última semana treinada com a anterior, olhando carga e repetições juntas
+function analysis(data) {
+  const pct = (a, b) => b ? (a - b) / b * 100 : 0;
+  const pill = (label, p) => {
+    const cls = Math.abs(p) < 2 ? 'eq' : p > 0 ? 'up' : 'down';
+    return `<span class="pill ${cls}">${label} ${cls === 'eq' ? '=' : p > 0 ? '▲ +' : '▼ '}${cls === 'eq' ? '' : fmt(p) + '%'}</span>`;
+  };
+  return GROUPS.map((g, gi) => {
+    const reps = data.reps[gi].values, carga = data.carga[gi].values;
+    const idx = reps.map((v, i) => v == null ? -1 : i).filter(i => i >= 0);
+    const head = `<div class="who2"><span class="key" style="background:${COLOR(g)}"></span>${ICONS[g]} ${g}</div>`;
+    if (!idx.length) return `<div class="an">${head}<p>Sem treinos no período.</p></div>`;
+    if (idx.length === 1) return `<div class="an">${head}<p>Só 1 semana treinada no período — carga média ${fmt(carga[idx[0]])} kg, ${reps[idx[0]]} reps. Treine mais uma semana para comparar.</p></div>`;
+    const a = idx[idx.length - 1], b = idx[idx.length - 2];
+    const pc = pct(carga[a] ?? 0, carga[b] ?? 0), pr = pct(reps[a], reps[b]);
+    const up = v => v >= 2, down = v => v <= -2;
+    let msg;
+    if (up(pc) && up(pr)) msg = '🚀 Progresso completo: mais carga e mais repetições. Continue assim!';
+    else if (up(pc)) msg = '🏋️ Subiu a carga e as repetições caíram um pouco — normal. Mantenha o peso até recuperar as reps.';
+    else if (up(pr) && !down(pc)) msg = '💡 Mais repetições com a mesma carga — hora de subir o peso (+2,5 kg).';
+    else if (up(pr)) msg = '🔄 Carga menor com mais repetições — foco em volume e resistência.';
+    else if (down(pc) && down(pr)) msg = '⚠️ Caíram carga e repetições — atenção a descanso, sono e alimentação.';
+    else if (down(pc) || down(pr)) msg = '📉 Pequena queda — tente repetir a carga anterior e buscar +1 rep por série.';
+    else msg = '➖ Estável. Para progredir, tente +1 repetição por série ou +2,5 kg.';
+    return `<div class="an">${head}<div class="pills">${pill('Carga', pc)}${pill('Reps', pr)}
+      <span class="pill eq">${fmt(carga[b])} → ${fmt(carga[a])} kg</span><span class="pill eq">${reps[b]} → ${reps[a]} reps</span></div>
+      <p>${msg} <span style="opacity:.8">(sem. ${fmtDate(data.weeks[b])} → ${fmtDate(data.weeks[a])})</span></p></div>`;
+  }).join('');
+}
+
 function renderEvolution() {
-  const ws = weekStart(ui.date);
-  const rows = GROUPS.map(g => { const [now, before] = weekPair(g); return { g, now, before }; });
-  const max = Math.max(1, ...rows.flatMap(r => [r.now, r.before]));
+  const data = weeklySeries(ui.weeks);
+  charts = {
+    carga: { title: 'Carga média por série', unit: ' kg', weeks: data.weeks, series: data.carga },
+    reps: { title: 'Repetições na semana', unit: ' reps', weeks: data.weeks, series: data.reps },
+  };
+  const legend = `<div class="lg">${GROUPS.map(g => `<button class="${ui.hidden.has(g) ? 'off' : ''}" data-act="series" data-g="${g}" aria-pressed="${!ui.hidden.has(g)}"><span class="key" style="background:${COLOR(g)}"></span>${g}</button>`).join('')}</div>`;
+  const table = `<details class="tbl"><summary>📋 Ver dados em tabela</summary><div class="tbl-scroll"><table class="hist">
+    <thead><tr><th>Semana</th>${GROUPS.map(g => `<th>${g}</th>`).join('')}</tr></thead><tbody>
+    ${data.weeks.map((w, i) => `<tr><td>${fmtDate(w)}</td>${GROUPS.map((g, gi) => {
+      const c = data.carga[gi].values[i], r = data.reps[gi].values[i];
+      return `<td>${r == null ? '—' : `${c == null ? '–' : fmt(c) + ' kg'} · ${r} reps`}</td>`;
+    }).join('')}</tr>`).reverse().join('')}</tbody></table></div></details>`;
+
   let html = `<div class="banner"><span class="ico">📈</span><div class="grow"><h2>Evolução</h2>
-      <small>${esc(profile(ui.profile).name)} · semana de ${fmtDate(ws)} a ${fmtDate(addDays(ws, 6))} × anterior</small></div></div>
-    <section class="card"><div class="bars">${rows.map(r => `
-      <div class="bar-row"><span class="ico">${ICONS[r.g]}</span>
-        <div><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px"><b>${r.g}</b>${delta(r.now, r.before)}</div>
-        <div class="track"><div class="fill" style="width:${r.now / max * 100}%"></div></div>
-        <div class="track prev"><div class="fill" style="width:${r.before / max * 100}%"></div></div>
-        <small>${fmt(r.now)} kg · antes ${fmt(r.before)} kg</small></div></div>`).join('')}
-    </div><p class="legend"><i></i>esta semana <i class="p"></i>semana anterior</p></section>`;
+      <small>${esc(profile(ui.profile).name)} · últimas ${ui.weeks} semanas até ${fmtDate(addDays(weekStart(ui.date), 6))}</small></div></div>
+    <div class="seg">${[4, 8, 12].map(n => `<button class="${n === ui.weeks ? 'on' : ''}" data-act="weeks" data-n="${n}">${n} semanas</button>`).join('')}</div>
+    <section class="card">
+      <div class="card-h"><span style="font-size:22px">🏋️</span><div class="grow"><h3>Carga média por série</h3></div></div>
+      <p class="chart-sub">Média dos kg usados nas séries feitas de cada grupo, por semana. Toque no gráfico para ver os valores.</p>
+      ${legend}<div class="chart-wrap" id="chart-carga"></div>
+    </section>
+    <section class="card">
+      <div class="card-h"><span style="font-size:22px">🔁</span><div class="grow"><h3>Repetições por semana</h3></div></div>
+      <p class="chart-sub">Total de repetições feitas em cada grupo, por semana. Toque nos nomes para esconder ou mostrar uma linha.</p>
+      ${legend}<div class="chart-wrap" id="chart-reps"></div>
+      <div style="margin-top:10px">${table}</div>
+    </section>
+    <section class="card">
+      <div class="card-h"><span style="font-size:22px">🧠</span><div class="grow"><h3>Análise de carga × repetições</h3>
+        <small>Última semana treinada comparada com a anterior, por grupo</small></div></div>
+      ${analysis(data)}
+    </section>`;
 
   for (const g of GROUPS) {
     const blocks = profExs().filter(e => e.group === g).map(e => {
@@ -596,9 +759,10 @@ function renderEvolution() {
             <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
         }).join('')}</tbody></table>`;
     }).join('');
-    if (blocks) html += `<section class="card"><div class="card-h"><span style="font-size:22px">${ICONS[g]}</span><div class="grow"><h3>${g}</h3></div></div>${blocks}</section>`;
+    if (blocks) html += `<section class="card"><div class="card-h"><span style="font-size:22px">${ICONS[g]}</span><div class="grow"><h3>${g} · por exercício</h3></div></div>${blocks}</section>`;
   }
   $main.innerHTML = html;
+  drawCharts();
 }
 
 // ---------- Alunos (área do professor) ----------
@@ -783,6 +947,13 @@ $main.addEventListener('click', e => {
     }
     case 'goday': { const el = document.getElementById('day-' + b.dataset.d); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     case 'openday': ui.date = b.dataset.d; ui.group = b.dataset.g; return go('treino');
+    case 'weeks': ui.weeks = +b.dataset.n; return render();
+    case 'series': {
+      const g = b.dataset.g;
+      ui.hidden.has(g) ? ui.hidden.delete(g) : ui.hidden.add(g);
+      $main.querySelectorAll(`[data-act="series"][data-g="${g}"]`).forEach(x => { x.classList.toggle('off', ui.hidden.has(g)); x.setAttribute('aria-pressed', !ui.hidden.has(g)); });
+      return drawCharts();
+    }
   }
   const card = b.closest('[data-ex]');
   if (!card) return;

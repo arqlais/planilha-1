@@ -32,7 +32,10 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 - Coluna **Anterior**: carga × reps de cada série no último treino. A série fica verde se você superou, vermelha se ficou abaixo.
 - Abaixo de cada exercício: total de hoje × total anterior, com quanto falta para superar ou a % de evolução.
 - No topo de cada grupo: volume da semana atual × semana anterior.
-- Aba **📈 Evolução**: comparação semanal de todos os grupos e histórico de cada exercício com gráfico.
+- Aba **📈 Evolução**:
+  - **Gráfico de carga média por série** e **gráfico de repetições por semana**, com uma linha colorida por grupo (Costas, Peito, Ombros, Pernas, Braços). Período de 4, 8 ou 12 semanas; toque no gráfico para ver os valores e nos nomes para esconder/mostrar linhas; tabela com os dados.
+  - **Análise de carga × repetições** por grupo: compara a última semana com a anterior e sugere o próximo passo (ex.: "mais reps com a mesma carga — hora de subir o peso").
+  - Histórico de cada exercício com mini gráfico.
 
 ## Exercícios
 
