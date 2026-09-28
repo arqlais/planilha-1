@@ -552,6 +552,7 @@ function renderHero() {
   $who.innerHTML = ui.studentMode ? `<span class="av">${esc(initials(p.name))}</span><span>Olá, ${esc(firstName(p))}!</span>`
     : `<span class="av">${isMe ? 'EU' : esc(initials(p.name))}</span><span>${isMe ? 'Meu treino (particular)' : 'Aluno: ' + esc(p.name)}</span> ▾`;
   $who.dataset.view = ui.studentMode ? 'recados' : isMe ? 'alunos' : 'perfil';
+  if (ui.view === 'alunos') { $who.innerHTML = '<span>Alunos</span>'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
   document.getElementById('studentBar').hidden = !ui.studentMode;
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
   const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor' };
