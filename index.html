@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#2b4637">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Planilha de Treino</title>
@@ -299,6 +299,8 @@ label.f input{display:block;width:100%;margin-top:5px;background:var(--input);bo
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .hint{font-size:12px;color:var(--muted);margin:0 0 14px}
 .dlg-actions{display:flex;gap:8px;align-items:center}
+/* iPhone aproxima a tela ao tocar em campos com letra menor que 16px: todos os campos ficam com 16px */
+input,select,textarea{font-size:16px!important}
 </style>
 </head>
 <body>
