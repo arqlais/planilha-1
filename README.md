@@ -2,7 +2,7 @@
 
 > Para professores: tem uma área para o **seu treino particular** e uma para **acompanhar cada aluno**.
 
-App simples (um único arquivo `index.html`) para registrar treinos de musculação, separado por grupo muscular: **Costas, Peito, Ombros, Pernas e Braços**.
+App simples (um único arquivo `index.html`) para registrar treinos de musculação, separado por grupo muscular: **Costas, Peito, Ombros, Bíceps, Tríceps, Abdômen** e, em **Pernas**, **Quadríceps, Posteriores e Panturrilha**. (Exercícios antigos de "Braços" e "Pernas" são distribuídos automaticamente pelo nome.)
 
 ## Como usar
 
@@ -47,7 +47,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 - Abaixo de cada exercício: total de hoje × total do **treino anterior registrado** (com a data), com quanto falta para superar ou a % de evolução.
 - No topo de cada grupo: volume da semana atual × semana anterior.
 - Aba **Evolução**:
-  - **Gráfico de carga média por série** e **gráfico de repetições por semana**, com uma linha colorida por grupo (Costas, Peito, Ombros, Pernas, Braços). Período de 4, 8 ou 12 semanas; toque no gráfico para ver os valores e nos nomes para esconder/mostrar linhas; tabela com os dados.
+  - **Gráfico de carga média por série** e **gráfico de repetições por semana**, com uma linha colorida por grupo muscular. Período de 4, 8 ou 12 semanas; toque no gráfico para ver os valores e nos nomes para esconder/mostrar linhas; tabela com os dados.
   - **Ver exemplo de progressão**: animação com dados simulados mostrando as linhas se formando semana a semana.
   - **Análise de carga × repetições** por grupo: compara a última semana com a anterior e sugere o próximo passo (ex.: "mais reps com a mesma carga — hora de subir o peso").
   - **kg total por treino de cada grupo muscular** (soma de carga × reps de todos os exercícios do grupo no dia), com mini gráfico e detalhes por exercício.

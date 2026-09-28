@@ -14,6 +14,7 @@
   --input:#f7f8f5; --shadow:0 2px 10px rgba(31,38,33,.06);
   --hero:linear-gradient(160deg,#2b4637 0%,#3e6b52 100%);
   --c1:#23804f; --c2:#7f5fb0; --c3:#c0892a; --c4:#3d78b3; --c5:#b8533d;
+  --c6:#1f8f8c; --c7:#c24f8a; --c8:#6f7f22; --c9:#8a6243;
   --grid:#eceee9; --axis:#cfd4cc;
 }
 @media (prefers-color-scheme: dark){
@@ -24,6 +25,7 @@
     --input:#161b17; --shadow:0 2px 10px rgba(0,0,0,.3);
     --hero:linear-gradient(160deg,#1a2a21 0%,#2b4637 100%);
     --c1:#35975f; --c2:#9a74c4; --c3:#b98322; --c4:#4f8fd6; --c5:#cf6a52;
+    --c6:#33b0ac; --c7:#d56aa0; --c8:#94a83a; --c9:#b0876a;
     --grid:#232a25; --axis:#3a443c;
   }
 }
@@ -71,7 +73,11 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 2px 12px}
 .chips::-webkit-scrollbar{display:none}
 .chips button{flex:0 0 auto;border:0;background:var(--card);color:var(--muted);box-shadow:var(--shadow);padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px}
-.chips button.on{background:var(--acc);color:#fff}
+.chips button.on{background:var(--acc);color:var(--acc-ink)}
+.chips .lbl{align-self:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:0 2px}
+.chips.sub{padding-top:0}
+.pick-h{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin:10px 0 2px}
+.pick-h:first-child{margin-top:0}
 
 /* ---- faixa ---- */
 .banner{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
@@ -269,7 +275,7 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 .banner.demo{border:2px solid var(--acc-2)}
 .seg{display:flex;gap:6px;margin-bottom:12px}
 .seg button{border:0;background:var(--card);box-shadow:var(--shadow);color:var(--muted);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px}
-.seg button.on{background:var(--acc);color:#fff}
+.seg button.on{background:var(--acc);color:var(--acc-ink)}
 .lg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .lg button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--text)}
 .lg button.off{opacity:.45;text-decoration:line-through}
@@ -302,7 +308,7 @@ label.f input{display:block;width:100%;margin-top:5px;background:var(--input);bo
 .groups label{cursor:pointer}
 .groups input{position:absolute;opacity:0;pointer-events:none}
 .groups span{display:inline-block;padding:7px 12px;border-radius:999px;background:var(--acc-soft);color:var(--acc);font-weight:600;font-size:13px}
-.groups input:checked + span{background:var(--acc);color:#fff}
+.groups input:checked + span{background:var(--acc);color:var(--acc-ink)}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .hint{font-size:12px;color:var(--muted);margin:0 0 14px}
 .dlg-actions{display:flex;gap:8px;align-items:center}
@@ -355,7 +361,7 @@ input,select,textarea{font-size:16px!important}
   <form method="dialog" id="exForm">
     <h2 id="exTitle">Novo exercício</h2>
     <label class="f">Nome do exercício<input name="name" required placeholder="Ex.: Supino inclinado" autocomplete="off"></label>
-    <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Grupo muscular<div class="groups" id="groupPick"></div></div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Grupo muscular<div id="groupPick" style="margin-top:6px"></div></div>
     <div class="grid3">
       <label class="f">Séries<input name="sets" inputmode="numeric" value="4"></label>
       <label class="f">Carga (kg)<input name="carga" inputmode="decimal" placeholder="0"></label>
@@ -375,7 +381,7 @@ input,select,textarea{font-size:16px!important}
   <form id="dayForm">
     <h2 id="dayTitle">Treino de segunda</h2>
     <p class="hint">Escolha o que o aluno vai treinar neste dia. O aluno verá só esses exercícios, sem precisar escolher.</p>
-    <div class="groups" id="dayPick" style="margin-bottom:16px"></div>
+    <div id="dayPick" style="margin-bottom:16px"></div>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="dayRest">Descanso</button>
       <span class="grow"></span>
@@ -403,7 +409,18 @@ input,select,textarea{font-size:16px!important}
 </dialog>
 
 <script>
-const GROUPS = ['Costas', 'Peito', 'Ombros', 'Pernas', 'Braços'];
+const UPPER = ['Costas', 'Peito', 'Ombros', 'Bíceps', 'Tríceps', 'Abdômen'];
+const LEGS = ['Quadríceps', 'Posteriores', 'Panturrilha']; // grupos de pernas
+const GROUPS = [...UPPER, ...LEGS];
+// Grupos antigos (Pernas/Braços) viram os novos pelo nome do exercício
+function splitGroup(group, name) {
+  const n = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (group === 'Braços') return /tricep|frances|testa|coice|mergulho|paralela|pulley/.test(n) ? 'Tríceps' : 'Bíceps';
+  if (group === 'Pernas') return /panturrilha|gemeo|soleo/.test(n) ? 'Panturrilha'
+    : /flexora|stiff|posterior|mesa|terra|romeno|gluteo|good morning/.test(n) ? 'Posteriores' : 'Quadríceps';
+  return group;
+}
+const OLD_GROUPS = { 'Braços': ['Bíceps', 'Tríceps'], Pernas: LEGS };
 const SVG = {
   treino: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
   historico: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -455,11 +472,14 @@ function seed() {
   add('Peito', 'Cross Over Alto', [[15, 12], [20, 12], [25, 10], [25, 9], [25, 10]], '2026-06-22');
   add('Ombros', 'Desenvolvimento', [[null, 10], [null, 10], [null, 10], [null, 10]]);
   add('Ombros', 'Elevação lateral', [[null, 12], [null, 12], [null, 12], [null, 12]]);
-  add('Pernas', 'Agachamento', [[null, 10], [null, 10], [null, 10], [null, 10]]);
-  add('Pernas', 'Leg press', [[null, 12], [null, 12], [null, 12], [null, 12]]);
-  add('Braços', 'Tríceps barra', [[40, 9], [45, 10], [50, 10], [55, 7], [45, 10]], '2026-06-22');
-  add('Braços', 'Tríceps francês', [[25, null], [30, null], [35, null], [30, null], [35, null]]);
-  add('Braços', 'Rosca direta', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  add('Quadríceps', 'Agachamento', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  add('Quadríceps', 'Leg press', [[null, 12], [null, 12], [null, 12], [null, 12]]);
+  add('Posteriores', 'Mesa flexora', [[null, 12], [null, 12], [null, 12], [null, 12]]);
+  add('Panturrilha', 'Panturrilha em pé', [[null, 15], [null, 15], [null, 15], [null, 15]]);
+  add('Tríceps', 'Tríceps barra', [[40, 9], [45, 10], [50, 10], [55, 7], [45, 10]], '2026-06-22');
+  add('Tríceps', 'Tríceps francês', [[25, null], [30, null], [35, null], [30, null], [35, null]]);
+  add('Bíceps', 'Rosca direta', [[null, 10], [null, 10], [null, 10], [null, 10]]);
+  add('Abdômen', 'Abdominal supra', [[null, 15], [null, 15], [null, 15]]);
   return { profiles: [{ id: ME, name: MY_NAME }], exercises, sessions, cardio: [] };
 }
 // Versões antigas não tinham perfis: tudo vira o treino do professor
@@ -470,6 +490,10 @@ function migrate(d) {
   if (me.name === 'Meu treino') me.name = MY_NAME;
   d.exercises.forEach(e => { if (!e.profileId) e.profileId = ME; });
   if (!Array.isArray(d.cardio)) d.cardio = [];
+  d.exercises.forEach(e => { e.group = splitGroup(e.group, e.name); });
+  d.profiles.forEach(p => {
+    if (p.division) for (const k in p.division) p.division[k] = [...new Set(p.division[k].flatMap(g => OLD_GROUPS[g] || [g]))];
+  });
   d.profiles.forEach(p => { if (p.id !== ME && !Array.isArray(p.messages)) p.messages = []; });
   return d;
 }
@@ -486,6 +510,7 @@ try {
   if (VIEWS.some(v => v[0] === u.view) || u.view === 'perfil' || u.view === 'recados') ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
   if (GROUPS.includes(u.group) || u.group === CARDIO) ui.group = u.group;
+  else if (OLD_GROUPS[u.group]) ui.group = OLD_GROUPS[u.group][0];
   if (u.layout) ui.layout = u.layout;
   if (u.mode) ui.mode = u.mode;
   if (u.cardioMin) ui.cardioMin = u.cardioMin;
@@ -634,7 +659,7 @@ function renderTreino() {
         ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
-    <div class="chips">${[...GROUPS, CARDIO].map(g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? '❤️ ' : ''}${g}</button>`).join('')}</div>
+    ${groupChips(group)}
     ${group === CARDIO ? cardioHtml() : `<div class="banner">${bannerHtml(group)}</div>
     <div class="layout">Séries em:
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
@@ -666,6 +691,18 @@ function renderStudentTreino(p, greet, isToday) {
       ${blocks}${plan.includes(CARDIO) ? `<h3 style="margin:18px 4px 10px">❤️ Cardio</h3>${cardioHtml(true)}` : ''}`
     : `<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
+}
+function groupChips(group) {
+  const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? '❤️ ' : ''}${g}</button>`;
+  return `<div class="chips">${UPPER.map(chip).join('')}</div>
+    <div class="chips sub"><span class="lbl">🦵 Pernas</span>${LEGS.map(chip).join('')}${chip(CARDIO)}</div>`;
+}
+// Seletor por seções (superiores / pernas / cardio) para diálogos
+function groupPicker(type, name, checked, withCardio) {
+  const opt = g => `<label><input type="${type}" name="${name}" value="${g}" ${checked(g) ? 'checked' : ''}><span>${g === CARDIO ? '❤️ ' : ''}${g}</span></label>`;
+  return `<div class="pick-h">Superiores</div><div class="groups">${UPPER.map(opt).join('')}</div>
+    <div class="pick-h">🦵 Pernas</div><div class="groups">${LEGS.map(opt).join('')}</div>
+    ${withCardio ? `<div class="pick-h">Cardio</div><div class="groups">${opt(CARDIO)}</div>` : ''}`;
 }
 function isComplete(exId) {
   const s = sessionOn(exId, ui.date);
@@ -994,7 +1031,8 @@ function analysis(data) {
 function demoData(n) {
   const end = weekStart(today());
   const weeks = Array.from({ length: n }, (_, i) => addDays(end, -7 * (n - 1 - i)));
-  const cfg = { Costas: [40, 96, 2], Peito: [32, 90, 3], Ombros: [14, 76, 2], Pernas: [58, 120, 3], 'Braços': [22, 84, 2] };
+  const cfg = { Costas: [40, 96, 2], Peito: [32, 90, 3], Ombros: [14, 76, 2], 'Bíceps': [14, 70, 2], 'Tríceps': [22, 84, 2],
+    'Abdômen': [10, 110, 3], 'Quadríceps': [58, 120, 3], Posteriores: [35, 96, 2], Panturrilha: [40, 130, 3] };
   const carga = [], reps = [];
   GROUPS.forEach((g, gi) => {
     const [c0, r0, cycle] = cfg[g];
@@ -1002,7 +1040,7 @@ function demoData(n) {
     for (let i = 0; i < n; i++) {
       const phase = (i + gi) % cycle, step = Math.floor((i + gi) / cycle) - Math.floor(gi / cycle);
       let c = c0 + step * (c0 > 50 ? 5 : 2.5), r = r0 + phase * 8 - (phase === 0 && i > 0 ? 4 : 0);
-      if (g === 'Pernas' && i === n - 3) { c -= 10; r -= 12; }          // semana mais leve (deload)
+      if (g === 'Quadríceps' && i === n - 3) { c -= 10; r -= 12; }          // semana mais leve (deload)
       if (g === 'Ombros' && i === Math.floor(n / 2)) { cv.push(null); rv.push(null); continue; } // semana sem treino
       cv.push(Math.round(c * 10) / 10); rv.push(r);
     }
@@ -1278,8 +1316,7 @@ function openDay(d) {
   const p = profile(ui.profile), cur = (p.division && p.division[d]) || [];
   dayEditing = d;
   document.getElementById('dayTitle').textContent = `Treino de ${WEEK.find(w => w[0] === d)[1].toLowerCase()}`;
-  document.getElementById('dayPick').innerHTML = [...GROUPS, CARDIO].map(g =>
-    `<label><input type="checkbox" name="g" value="${g}" ${cur.includes(g) ? 'checked' : ''}><span>${g === CARDIO ? '❤️ ' : ''}${g}</span></label>`).join('');
+  document.getElementById('dayPick').innerHTML = groupPicker('checkbox', 'g', g => cur.includes(g), true);
   $dayDlg.showModal();
 }
 function saveDay(groups) {
@@ -1621,8 +1658,7 @@ $main.addEventListener('click', e => {
 
 // ---------- Diálogo de exercício ----------
 const $dlg = document.getElementById('exDialog'), $form = document.getElementById('exForm');
-document.getElementById('groupPick').innerHTML = GROUPS.map(g =>
-  `<label><input type="radio" name="group" value="${g}"><span>${g}</span></label>`).join('');
+document.getElementById('groupPick').innerHTML = groupPicker('radio', 'group', () => false, false);
 let editing = null, initialPlan = '';
 function openDialog(ex, group) {
   editing = ex;
