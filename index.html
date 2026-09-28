@@ -29,7 +29,8 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0}
+html,body{margin:0;max-width:100%;overflow-x:hidden;overflow-x:clip;overscroll-behavior-x:none}
+html{touch-action:pan-y}
 body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
 input,select,button{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -1013,9 +1014,9 @@ function renderEvolution() {
       html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por treino</h3>
           <small>Soma de carga × repetições de todos os exercícios de ${g.toLowerCase()} no dia</small></div></div>
         ${sparkline(rows.map(r => r.total))}
-        <table class="hist"><thead><tr><th>Data</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
+        <div class="tbl-scroll"><table class="hist"><thead><tr><th>Data</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
         ${rows.slice().reverse().map((r, i, arr) => `<tr><td>${fmtDate(r.d)}</td><td>${r.ex}</td><td>${r.sets}</td><td>${r.reps}</td>
-          <td><b>${fmt(r.total)}</b></td><td>${arr[i + 1] ? delta(r.total, arr[i + 1].total) : ''}</td></tr>`).join('')}</tbody></table>
+          <td><b>${fmt(r.total)}</b></td><td>${arr[i + 1] ? delta(r.total, arr[i + 1].total) : ''}</td></tr>`).join('')}</tbody></table></div>
         <details class="tbl" style="margin-top:10px"><summary>Ver por exercício</summary>${perEx}</details></section>`;
     }
   }
@@ -1312,7 +1313,7 @@ function confetti() {
   for (let i = 0; i < 40; i++) {
     const c = document.createElement('span');
     c.className = 'confetti';
-    c.style.left = Math.random() * 100 + 'vw';
+    c.style.left = Math.random() * 94 + 'vw';
     c.style.background = colors[i % colors.length];
     c.style.animationDelay = Math.random() * .4 + 's';
     c.style.animationDuration = 1.2 + Math.random() * .9 + 's';
