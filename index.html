@@ -399,7 +399,8 @@ const SVG = {
   alunos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2c1.9.6 3.1 2.2 3.5 4.8"/>',
 };
 const VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['alunos', 'Alunos']];
-const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['recados', 'Recados']];
+// O aluno não vê a evolução (o professor mostra no celular dele): só treino, calendário e recados
+const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Calendário'], ['recados', 'Recados']];
 const views = () => ui.studentMode ? STUDENT_VIEWS : VIEWS;
 const KEY = 'planilha-treino-v1';
 const UI_KEY = 'planilha-treino-ui';
@@ -559,6 +560,7 @@ function renderHero() {
   document.getElementById('studentBar').hidden = !ui.studentMode;
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
   const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor' };
+  if (ui.studentMode) titles.historico = 'Calendário';
   document.getElementById('heroTitle').textContent = titles[ui.view];
   document.getElementById('dateLabel').textContent = ui.date === today() ? 'Hoje' : fmtDate(ui.date);
   $date.value = ui.date;
@@ -794,6 +796,16 @@ function renderHistorico() {
       <div class="actions"><button class="btn primary" data-act="openday" data-d="${sel}" data-g="${ui.group}">Anotar treino neste dia</button></div>
     </section>`;
 
+  if (ui.studentMode) {
+    $main.innerHTML = `<section class="card">
+      <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
+        <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
+      <div class="cal">${cells}</div>
+      <p class="hint" style="margin:10px 0 0">Dias em verde: dias treinados. Toque em um dia para ver o que foi marcado.</p>
+      <div class="month-sum"><div><b>${monthDays.length}</b><span>${monthDays.length === 1 ? 'dia treinado' : 'dias treinados'}</span></div></div>
+    </section>${selHtml}`;
+    return;
+  }
   let html = `<div class="banner"><div class="grow"><h2>Histórico</h2>
       <small>${esc(profile(ui.profile).name)} · ${all.length} ${all.length === 1 ? 'dia' : 'dias'} de treino${all.length ? ` desde ${fmtDate(all[0])}/${all[0].slice(2, 4)}` : ''}</small></div></div>
     <section class="card">
@@ -1091,9 +1103,7 @@ function renderAlunos() {
   const q = ui.q.trim().toLowerCase();
   const shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   $main.innerHTML = `
-    <div class="banner"><div class="grow"><h2>Área do professor</h2>
-      <small>Acompanhamento de cada aluno</small>
-      ${ui.profile !== ME ? `<div class="actions"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}</div></div>
+    ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
     <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro '}</p>`}</div>
