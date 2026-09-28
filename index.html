@@ -54,6 +54,13 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 
 .av{width:40px;height:40px;border-radius:50%;background:var(--hero);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 auto}
 
+/* ---- modo aluno ---- */
+#studentBar{position:sticky;top:0;z-index:12;display:flex;align-items:center;justify-content:center;gap:8px;background:#c0892a;color:#fff;font-size:13px;padding:6px 12px;text-align:center}
+#studentBar button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;font-size:13px}
+.banner.hello{flex-direction:column;align-items:stretch}
+.by{display:inline-block;font-size:10px;font-weight:700;color:#8a5a0f;background:#f6ead3;border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:middle;white-space:nowrap}
+@media (prefers-color-scheme: dark){ .by{color:#f0c878;background:#3a2e17} }
+
 /* ---- navegação por dia ---- */
 .daynav{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:8px;box-shadow:var(--shadow);margin-bottom:10px;text-align:center}
 .daynav small{display:block;color:var(--muted);font-size:12px}
@@ -304,6 +311,7 @@ input,select,textarea{font-size:16px!important}
 </style>
 </head>
 <body>
+<div id="studentBar" hidden>👁 Vendo como <b id="studentBarName"></b> vê o app <button data-act-global="exit-student">Sair</button></div>
 <header class="hero">
   <div class="hero-in">
     <div class="hero-top">
@@ -387,9 +395,12 @@ const SVG = {
   historico: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   evolucao: '<path d="M4 19h16M5 15l4-4 4 3 6-7"/>',
   perfil: '',
+  recados: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
   alunos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2c1.9.6 3.1 2.2 3.5 4.8"/>',
 };
 const VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['alunos', 'Alunos']];
+const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['recados', 'Recados']];
+const views = () => ui.studentMode ? STUDENT_VIEWS : VIEWS;
 const KEY = 'planilha-treino-v1';
 const UI_KEY = 'planilha-treino-ui';
 const STEP = { carga: 2.5, reps: 1 };
@@ -454,7 +465,8 @@ let db = load();
 let ui = { view: 'treino', group: 'Peito', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view) || u.view === 'perfil') ui.view = u.view;
+  if (VIEWS.some(v => v[0] === u.view) || u.view === 'perfil' || u.view === 'recados') ui.view = u.view;
+  if (u.studentMode) ui.studentMode = true;
   if (GROUPS.includes(u.group) || u.group === CARDIO) ui.group = u.group;
   if (u.layout) ui.layout = u.layout;
   if (u.mode) ui.mode = u.mode;
@@ -462,7 +474,9 @@ try {
   if (db.profiles.some(p => p.id === u.profile)) ui.profile = u.profile;
   if (u.restSec) ui.rest = u.restSec;
 } catch (e) {}
-const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin })); } catch (e) {} };
+if (ui.profile === ME) ui.studentMode = false;
+if (!views().some(v => v[0] === ui.view) && !(ui.view === 'perfil' && !ui.studentMode)) ui.view = 'treino';
+const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode })); } catch (e) {} };
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
 const vol = sets => sets.reduce((a, s) => a + setVol(s), 0);
@@ -494,6 +508,7 @@ function working(ex, date) {
 function ensureSession(ex, date) {
   let s = sessionOn(ex.id, date);
   if (!s) { s = working(ex, date); s.id = uid(); db.sessions.push(s); }
+  if (ui.studentMode) s.by = 'aluno'; // marcação feita pelo aluno
   return s;
 }
 
@@ -534,9 +549,12 @@ const $date = document.getElementById('date');
 function renderHero() {
   const p = profile(ui.profile), isMe = ui.profile === ME;
   const $who = document.getElementById('who');
-  $who.innerHTML = `<span class="av">${isMe ? 'EU' : esc(initials(p.name))}</span><span>${isMe ? 'Meu treino (particular)' : 'Aluno: ' + esc(p.name)}</span> ▾`;
-  $who.dataset.view = isMe ? 'alunos' : 'perfil';
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno' };
+  $who.innerHTML = ui.studentMode ? `<span class="av">${esc(initials(p.name))}</span><span>Olá, ${esc(firstName(p))}!</span>`
+    : `<span class="av">${isMe ? 'EU' : esc(initials(p.name))}</span><span>${isMe ? 'Meu treino (particular)' : 'Aluno: ' + esc(p.name)}</span> ▾`;
+  $who.dataset.view = ui.studentMode ? 'recados' : isMe ? 'alunos' : 'perfil';
+  document.getElementById('studentBar').hidden = !ui.studentMode;
+  if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor' };
   document.getElementById('heroTitle').textContent = titles[ui.view];
   document.getElementById('dateLabel').textContent = ui.date === today() ? 'Hoje' : fmtDate(ui.date);
   $date.value = ui.date;
@@ -558,15 +576,17 @@ function renderStats() {
   document.getElementById('stats').innerHTML = cells.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 }
 function renderNav() {
-  $nav.innerHTML = VIEWS.map(([id, label]) =>
+  $nav.innerHTML = views().map(([id, label]) =>
     `<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' ? 'on' : ''}" data-view="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG[id]}</svg>${label}</button>`).join('');
 }
 function render() {
   renderHero();
   renderNav();
-  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos, perfil: renderPerfil })[ui.view]();
+  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos, perfil: renderPerfil, recados: renderRecados })[ui.view]();
 }
-function go(view) { stopDemo(); ui.demo = false; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function go(view) {
+  if (ui.studentMode && !STUDENT_VIEWS.some(v => v[0] === view)) view = 'treino';
+  stopDemo(); ui.demo = false; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 // ---------- Treino ----------
 function bannerHtml(group) {
@@ -578,7 +598,12 @@ function renderTreino() {
   const group = ui.group;
   const exs = profExs().filter(e => e.group === group);
   const isToday = ui.date === today();
-  $main.innerHTML = `
+  const p = profile(ui.profile), lastMsg = ui.studentMode && (p.messages || []).slice(-1)[0];
+  const greet = ui.studentMode && isToday ? `<div class="banner hello"><div class="grow"><h2>Olá, ${esc(firstName(p))}! 👋</h2>
+      <small>Já treinou hoje? Não esquece do cardio :)</small>
+      ${lastMsg ? `<div class="note"><b>Recado do professor · ${fmtDate(lastMsg.date)}</b><br>${esc(lastMsg.text)}</div>` : ''}
+      <div class="actions"><button class="btn" data-group="${CARDIO}">❤️ Ir para o cardio</button>${lastMsg ? '<button class="btn" data-view="recados">Ver recados</button>' : ''}</div></div></div>` : '';
+  $main.innerHTML = `${greet}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
       <div class="grow"><b>${weekday(ui.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(ui.date)}</b>
@@ -590,8 +615,8 @@ function renderTreino() {
     <div class="layout">Séries em:
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
       <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
-    ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Nenhum exercício ainda. Adicione o primeiro </p>'}
-    <button class="add" data-act="new">＋ Adicionar exercício</button>`}`;
+    ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || `<p class="empty">${ui.studentMode ? 'Seu professor ainda não montou este treino.' : 'Nenhum exercício ainda. Adicione o primeiro'}</p>`}
+    ${ui.studentMode ? '' : '<button class="add" data-act="new">＋ Adicionar exercício</button>'}`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 function isComplete(exId) {
@@ -630,7 +655,7 @@ function cardHtml(ex) {
       <div class="ring" style="--p:${n ? done / n * 100 : 0}">${done}/${n}</div>
       <div class="grow"><h3>${esc(ex.name)}</h3>
         <small>${prev ? `Último treino ${fmtDate(prev.date)}` : 'Primeiro treino deste exercício'}</small></div>
-      <button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>
+      ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
     ${tiles ? `<div class="tile-key">Em cada série: <b>carga (kg)</b> · <b>repetições</b> · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
@@ -666,7 +691,7 @@ function refreshCard(exId) {
 }
 function refreshTop() {
   renderStats();
-  const b = $main.querySelector('.banner');
+  const b = $main.querySelector('.banner:not(.hello)');
   if (b && ui.view === 'treino' && ui.group !== CARDIO) b.innerHTML = bannerHtml(ui.group);
 }
 
@@ -699,7 +724,7 @@ function cardioHtml() {
 function addCardio(mode, min) {
   min = Math.round(min);
   if (!(min > 0)) return toast('Informe os minutos.');
-  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min });
+  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
   save(); render();
   toast(`${modeOf(mode)[2]} <b>${modeOf(mode)[1]}</b>: ${min} min registrados`);
 }
@@ -730,10 +755,10 @@ function dayCard(d, list) {
     ${list.length ? `<table class="hist"><thead><tr><th>Exercício</th><th>Séries</th><th>Carga máx</th><th>Total</th><th></th></tr></thead><tbody>
     ${list.map(s => {
       const done = s.sets.filter(x => x.done), before = prevSession(s.exId, s.date);
-      return `<tr><td>${esc(exById(s.exId).name)}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
+      return `<tr><td>${esc(exById(s.exId).name)}${s.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
-    ${cardio.map(c => `<div class="list-row"><span class="e">${modeOf(c.mode)[2]}</span><div class="grow">${modeOf(c.mode)[1]}</div><b>${c.min} min</b></div>`).join('')}
+    ${cardio.map(c => `<div class="list-row"><span class="e">${modeOf(c.mode)[2]}</span><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${c.min} min</b></div>`).join('')}
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${groups[0]}">Abrir / editar este treino</button></div>
   </section>`;
 }
@@ -1160,6 +1185,37 @@ function updateWaLink() {
   const p = profile(ui.profile), a = document.getElementById('waSend');
   if (a && p) a.href = waLink(p, ui.msgDraft || '');
 }
+// O que o aluno marcou (no modo aluno): séries feitas e cardio, dia a dia
+function marcacoesHtml(p) {
+  const ss = profSessions(p.id).filter(x => x.by === 'aluno'), cc = profCardio(p.id).filter(c => c.by === 'aluno');
+  const days = [...new Set([...ss.map(x => x.date), ...cc.map(c => c.date)])].sort().reverse().slice(0, 5);
+  const body = days.map(d => {
+    const rows = ss.filter(x => x.date === d).map(x => {
+      const done = x.sets.filter(y => y.done);
+      return `<div class="plan-row"><div class="grow"><b>${esc(exById(x.exId).name)}</b>
+        <small>${done.length}/${x.sets.length} séries · ${done.map(y => `${fmt(y.carga)}×${y.reps ?? '–'}`).join('  ')}</small></div><b>${fmt(vol(x.sets))} kg</b></div>`;
+    }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[2]} ${modeOf(c.mode)[1]}</b><small>cardio</small></div><b>${c.min} min</b></div>`).join('');
+    return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}</p>${rows}`;
+  }).join('');
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Marcações do aluno</h3>
+      <small>Séries e cardio que ${esc(firstName(p))} marcou no app</small></div></div>
+    ${body || `<p class="empty" style="padding:8px 0">Nenhuma marcação ainda. Use <b>👁 Ver como o aluno</b> para ver o app como ${esc(firstName(p))} e marcar um treino.</p>`}</section>`;
+}
+function renderRecados() {
+  const p = profile(ui.profile), log = (p.messages || []).slice().reverse();
+  $main.innerHTML = `<div class="banner"><div class="grow"><h2>💬 Recados</h2><small>Mensagens do seu professor</small></div></div>
+    <section class="card">${log.map(m => `<div class="list-row" style="display:block"><small style="color:var(--muted)">${weekday(m.date)}, ${fmtDate(m.date)}</small>
+      <div style="white-space:pre-wrap;margin-top:2px">${esc(m.text)}</div></div>`).join('') || '<p class="empty">Nenhum recado ainda.</p>'}</section>`;
+}
+function setStudentMode(on) {
+  ui.studentMode = on; stopDemo(); ui.demo = false;
+  ui.view = on ? 'treino' : 'perfil'; ui.date = today(); ui.month = ui.date.slice(0, 7);
+  if (on && !GROUPS.includes(ui.group) && ui.group !== CARDIO) ui.group = GROUPS[0];
+  saveUi(); render(); window.scrollTo({ top: 0 });
+  if (on) toast(`Agora você vê o app como <b>${esc(firstName(profile(ui.profile)))}</b>. O que marcar aqui fica como marcação do aluno.`);
+}
+document.getElementById('studentBar').addEventListener('click', e => { if (e.target.closest('[data-act-global="exit-student"]')) setStudentMode(false); });
+
 function renderPerfil() {
   const p = profile(ui.profile);
   if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
@@ -1182,7 +1238,8 @@ function renderPerfil() {
     const ss = profSessions(p.id).filter(x => x.date === d), cc = profCardio(p.id).filter(c => c.date === d);
     const groups = [...new Set(ss.map(x => exById(x.exId).group))];
     const cmin = cc.reduce((a, c) => a + c.min, 0);
-    return `<div class="list-row"><div class="grow"><b>${fmtDate(d)}</b> <small style="color:var(--muted)">${weekday(d)}</small>
+    const byStudent = [...ss, ...cc].some(x => x.by === 'aluno');
+    return `<div class="list-row"><div class="grow"><b>${fmtDate(d)}</b> <small style="color:var(--muted)">${weekday(d)}</small>${byStudent ? '<span class="by">marcado pelo aluno</span>' : ''}
       <small style="display:block;color:var(--muted)">${[...groups, cmin ? `cardio ${cmin} min` : ''].filter(Boolean).join(' · ')}</small></div>
       <b>${fmt(ss.reduce((a, x) => a + vol(x.sets), 0))} kg</b>
       <button class="icon" data-act="openday" data-d="${d}" data-g="${groups[0] || CARDIO}" aria-label="Abrir treino">›</button></div>`;
@@ -1210,6 +1267,7 @@ function renderPerfil() {
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
         <button class="btn" data-act="goto-msg">💬 Mensagem</button>
+        <button class="btn" data-act="student-mode">👁 Ver como o aluno</button>
       </div>
     </section>
     <section class="card">
@@ -1227,6 +1285,7 @@ function renderPerfil() {
       <div class="card-h"><div class="grow"><h3>Últimos treinos</h3></div></div>
       ${recent || '<p class="empty">Ainda não treinou.</p>'}
     </section>
+    ${marcacoesHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Treino do aluno</h3><small>Monte o treino: toque em ⋯ para mudar séries, carga e repetições</small></div></div>
       ${plan}
@@ -1383,6 +1442,7 @@ $main.addEventListener('click', e => {
     case 'add-student': return openStudent(null);
     case 'student-menu': return openStudent(profile(b.dataset.pid));
     case 'student-edit': return openStudent(profile(ui.profile));
+    case 'student-mode': return setStudentMode(true);
     case 'edit-ex': return openDialog(exById(b.dataset.id));
     case 'new-in': return openDialog(null, b.dataset.g);
     case 'goto-msg': return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -28,6 +28,12 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 - Os botões **Perfil / Treino / Evolução** abrem a área do aluno. O nome no topo da tela mostra de quem é o treino aberto.
 - No **⋯** do aluno (ou ✎ no perfil) dá para editar os dados ou excluir.
 
+## Ver como o aluno
+
+- No perfil do aluno, toque em **👁 Ver como o aluno**: o app fica como o aluno veria (faixa laranja no topo, **Sair** para voltar).
+- O aluno vê: boas-vindas com o último recado ("Já treinou hoje? Não esquece do cardio :)"), o treino que você montou (sem poder editar o plano), cardio, histórico, evolução e a aba **Recados** com as mensagens enviadas.
+- Tudo o que for marcado nesse modo (séries e cardio) fica registrado como **marcado pelo aluno**: aparece no histórico com a etiqueta *aluno* e no perfil em **Marcações do aluno**.
+
 ## Histórico (aba Histórico)
 
 - Calendário do mês com os dias treinados em verde. Toque em **qualquer dia** (inclusive sem treino) para ver o treino ou anotar um treino passado.
