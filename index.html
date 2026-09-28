@@ -104,7 +104,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .step button{border:0;background:transparent;color:var(--acc);width:26px;height:100%;font-size:16px;font-weight:700;flex:0 0 auto;padding:0}
 .step button:active{background:var(--acc-soft)}
 .step input{flex:1;min-width:0;width:100%;border:0;background:transparent;text-align:center;font-weight:700;font-size:15px;padding:0;height:100%;outline:none}
-.chk{width:34px;height:34px;border-radius:50%;border:2px dashed var(--acc-2);background:transparent;color:var(--acc-2);font-size:15px;font-weight:700;justify-self:center;transition:transform .15s;padding:0}
+.chk{width:34px;height:34px;border-radius:50%;border:2px solid var(--acc-2);background:transparent;color:var(--acc-2);font-size:15px;font-weight:700;justify-self:center;transition:transform .15s;padding:0}
 .chk:active{transform:scale(.9)}
 .set.done .chk{background:var(--acc);border:2px solid var(--acc);color:#fff;animation:pop .3s}
 @keyframes pop{50%{transform:scale(1.18)}}
@@ -177,7 +177,7 @@ label.f textarea{display:block;width:100%;margin-top:5px;background:var(--input)
 .btn.danger-fill{background:var(--down);border-color:var(--down);color:#fff}
 .btn.danger{color:var(--down);border-color:transparent;background:transparent}
 
-.compare{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:grid;gap:6px}
+.compare{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:grid;gap:6px}
 .cmp-row{display:grid;grid-template-columns:78px 1fr auto;gap:8px;align-items:center;font-size:13px}
 .cmp-row span{color:var(--muted);line-height:1.15}
 .cmp-row span small{display:block;font-size:11px}
@@ -191,7 +191,7 @@ label.f textarea{display:block;width:100%;margin-top:5px;background:var(--input)
 .pill.down{background:var(--down-bg);color:var(--down)}
 .pill.eq{background:var(--input);color:var(--muted);border:1px solid var(--line)}
 
-.add{width:100%;padding:14px;border:2px dashed var(--acc-2);background:transparent;border-radius:18px;color:var(--acc);font-weight:700}
+.add{width:100%;padding:14px;border:2px solid var(--acc-2);background:var(--card);border-radius:18px;color:var(--acc);font-weight:700}
 .empty{color:var(--muted);text-align:center;padding:18px 0}
 
 /* ---- navegação inferior ---- */
@@ -266,7 +266,7 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 .legend i.p{background:var(--muted);opacity:.45;margin-left:10px}
 
 /* ---- gráficos de linha ---- */
-.banner.demo{border:2px dashed var(--acc-2)}
+.banner.demo{border:2px solid var(--acc-2)}
 .seg{display:flex;gap:6px;margin-bottom:12px}
 .seg button{border:0;background:var(--card);box-shadow:var(--shadow);color:var(--muted);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px}
 .seg button.on{background:var(--acc);color:#fff}
