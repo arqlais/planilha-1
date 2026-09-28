@@ -1154,11 +1154,19 @@ document.getElementById('exDelete').onclick = async () => {
 };
 
 // ---------- Backup ----------
-function exportData() {
-  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+async function exportData() {
+  const json = JSON.stringify(db, null, 2), filename = `treino-backup-${today()}.json`;
+  // Publicado no claude.ai: o download passa pelo visualizador
+  const downloads = window.claude?.use ? await window.claude.use('downloads').catch(() => null) : null;
+  if (downloads) {
+    try { await downloads.save({ filename, data: json }); toast('Backup salvo.'); }
+    catch (e) { if (e?.code !== 'declined') toast('Não foi possível salvar o backup aqui.'); }
+    return;
+  }
+  const blob = new Blob([json], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `treino-backup-${today()}.json`;
+  a.download = filename;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
