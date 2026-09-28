@@ -60,7 +60,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .link{border:0;background:none;padding:0;color:var(--acc);font-size:12px;font-weight:600;text-decoration:underline}
 
 /* ---- chips de grupo ---- */
-.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 2px 12px}
 .chips::-webkit-scrollbar{display:none}
 .chips button{flex:0 0 auto;border:0;background:var(--card);color:var(--muted);box-shadow:var(--shadow);padding:8px 14px;border-radius:999px;font-weight:700;font-size:14px}
 .chips button.on{background:var(--acc);color:#fff}
@@ -106,6 +106,63 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .set.up .meta .tot{color:var(--up)}
 .set.down .meta .tot{color:var(--down)}
 
+/* séries em quadrados */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:5px}
+.tile{border:1.5px solid var(--line);border-radius:12px;padding:4px;background:var(--input);display:grid;gap:4px;transition:background .2s,border-color .2s}
+.tile.done{background:var(--acc-soft);border-color:var(--acc-2)}
+.tile.up{border-color:var(--up)}
+.tile.down{border-color:var(--down)}
+.tile-h{display:flex;justify-content:space-between;align-items:center}
+.tile .chk{width:24px;height:24px;font-size:11px;border-width:1.5px}
+.tile.done .chk{border-width:1.5px}
+.tile .num{width:20px;height:20px;font-size:10px}
+.tile.done .num{background:var(--acc);color:#fff}
+.tile label{display:flex;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:8px;height:30px}
+.tile-key{font-size:11px;color:var(--muted);margin:-4px 0 6px}
+.tile input{width:100%;min-width:0;border:0;background:transparent;font-weight:700;font-size:16px;text-align:center;outline:none;padding:0}
+.tile label small{font-size:9px;color:var(--muted);flex:0 0 auto}
+.tile .ant{font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.up .ant{color:var(--up);font-weight:700}
+.tile.down .ant{color:var(--down);font-weight:700}
+.layout{display:flex;justify-content:flex-end;gap:4px;margin:-4px 0 10px;font-size:12px;color:var(--muted);align-items:center}
+.layout button{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:8px;padding:3px 9px;font-size:12px;font-weight:700}
+.layout button.on{background:var(--acc-soft);color:var(--acc);border-color:var(--acc-2)}
+
+/* cardio */
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.modes button{border:1.5px solid var(--line);background:var(--input);border-radius:14px;padding:10px 2px;display:grid;justify-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--text)}
+.modes button span{font-size:24px;line-height:1}
+.modes button.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc)}
+.cardio-time{display:flex;align-items:center;gap:10px;margin:12px 0 4px}
+.cardio-time .step{height:40px;width:150px}
+.cardio-time .step button{width:40px;font-size:20px}
+.stopwatch{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;margin:6px 0}
+.list-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.list-row:last-child{border-bottom:0}
+.list-row .e{font-size:22px;width:28px;text-align:center}
+
+/* perfil do aluno */
+.prof-h{display:flex;gap:12px;align-items:center}
+.prof-h .av{width:56px;height:56px;font-size:20px}
+.prof-h h2{margin:0;font-size:20px}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px}
+.kv div{background:var(--acc-soft);border-radius:12px;padding:8px 10px}
+.kv b{display:block;font-size:16px;color:var(--acc)}
+.kv span{font-size:12px;color:var(--muted)}
+.plan-g{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin:14px 0 2px}
+.plan-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.plan-row small{color:var(--muted);display:block}
+.plan-row .icon{width:30px;height:30px;font-size:15px}
+.note{background:var(--input);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:13px;margin-top:10px;white-space:pre-wrap}
+textarea.msg{width:100%;min-height:120px;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--text);font:inherit;font-size:15px;resize:vertical}
+.tpl{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+.tpl select{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 8px;color:var(--text)}
+a.btn{text-decoration:none;display:inline-block}
+.msg-log{margin-top:10px}
+.msg-log div{font-size:13px;padding:8px 0;border-bottom:1px solid var(--line);white-space:pre-wrap}
+.msg-log small{display:block;color:var(--muted);font-size:11px}
+label.f textarea{display:block;width:100%;margin-top:5px;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font:inherit;min-height:70px}
+
 .actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .btn{border:1px solid var(--line);background:var(--card);color:var(--acc);font-weight:600;border-radius:10px;padding:7px 12px;font-size:14px}
 .btn.primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
@@ -113,8 +170,9 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .btn.danger{color:var(--down);border-color:transparent;background:transparent}
 
 .compare{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:grid;gap:6px}
-.cmp-row{display:grid;grid-template-columns:62px 1fr auto;gap:8px;align-items:center;font-size:13px}
-.cmp-row span{color:var(--muted)}
+.cmp-row{display:grid;grid-template-columns:78px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.cmp-row span{color:var(--muted);line-height:1.15}
+.cmp-row span small{display:block;font-size:11px}
 .cmp-row b{font-variant-numeric:tabular-nums}
 .track{height:10px;border-radius:5px;background:var(--acc-soft);overflow:hidden}
 .fill{height:100%;border-radius:5px;background:var(--acc);transition:width .4s}
@@ -174,7 +232,7 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 .cal button:disabled{opacity:.35}
 .cal button small{position:absolute;left:0;right:0;bottom:2px;font-size:9px;opacity:.9}
 .month-sum{display:flex;gap:8px;margin-top:12px}
-.month-sum div{flex:1;background:var(--acc-soft);border-radius:12px;padding:8px 10px}
+.month-sum div{flex:1;min-width:0;background:var(--acc-soft);border-radius:12px;padding:8px}
 .month-sum b{display:block;font-size:17px;color:var(--acc)}
 .month-sum span{font-size:12px;color:var(--muted)}
 .day-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -302,12 +360,30 @@ label.f input{display:block;width:100%;margin-top:5px;background:var(--input);bo
   </form>
 </dialog>
 
+<dialog id="stDialog">
+  <form id="stForm">
+    <h2 id="stTitle">Novo aluno</h2>
+    <label class="f">Nome<input name="name" required autocomplete="off"></label>
+    <label class="f">WhatsApp (com DDD)<input name="phone" type="tel" inputmode="tel" placeholder="(11) 91234-5678" autocomplete="off"></label>
+    <label class="f">Objetivo<input name="goal" placeholder="Ex.: hipertrofia, emagrecimento" autocomplete="off"></label>
+    <label class="f">Observações<textarea name="notes" placeholder="Lesões, restrições, horários…"></textarea></label>
+    <p class="hint" id="stHint">O aluno começa com os mesmos exercícios do seu treino, sem as cargas. Depois é só ajustar no perfil dele.</p>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="stDelete">Excluir</button>
+      <span class="grow"></span>
+      <button type="button" class="btn" id="stCancel">Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
 const GROUPS = ['Costas', 'Peito', 'Ombros', 'Pernas', 'Braços'];
 const SVG = {
   treino: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
   historico: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   evolucao: '<path d="M4 19h16M5 15l4-4 4 3 6-7"/>',
+  perfil: '',
   alunos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2c1.9.6 3.1 2.2 3.5 4.8"/>',
 };
 const VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['alunos', 'Alunos']];
@@ -316,6 +392,9 @@ const UI_KEY = 'planilha-treino-ui';
 const STEP = { carga: 2.5, reps: 1 };
 const REST_DEFAULT = 120;
 const ME = 'me';
+const CARDIO = 'Cardio';
+const MODES = [['corrida', 'Corrida', '🏃'], ['bicicleta', 'Bicicleta', '🚴'], ['escada', 'Escada', '🪜'], ['eliptico', 'Elíptico', '⭕']];
+const modeOf = id => MODES.find(m => m[0] === id) || [id, id, '❤️'];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const pad = n => String(n).padStart(2, '0');
@@ -351,13 +430,15 @@ function seed() {
   add('Braços', 'Tríceps barra', [[40, 9], [45, 10], [50, 10], [55, 7], [45, 10]], '2026-06-22');
   add('Braços', 'Tríceps francês', [[25, null], [30, null], [35, null], [30, null], [35, null]]);
   add('Braços', 'Rosca direta', [[null, 10], [null, 10], [null, 10], [null, 10]]);
-  return { profiles: [{ id: ME, name: 'Meu treino' }], exercises, sessions };
+  return { profiles: [{ id: ME, name: 'Meu treino' }], exercises, sessions, cardio: [] };
 }
 // Versões antigas não tinham perfis: tudo vira "Meu treino"
 function migrate(d) {
   if (!Array.isArray(d.profiles)) d.profiles = [{ id: ME, name: 'Meu treino' }];
   if (!d.profiles.some(p => p.id === ME)) d.profiles.unshift({ id: ME, name: 'Meu treino' });
   d.exercises.forEach(e => { if (!e.profileId) e.profileId = ME; });
+  if (!Array.isArray(d.cardio)) d.cardio = [];
+  d.profiles.forEach(p => { if (p.id !== ME && !Array.isArray(p.messages)) p.messages = []; });
   return d;
 }
 function load() {
@@ -367,15 +448,18 @@ function load() {
 function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
 
 let db = load();
-let ui = { view: 'treino', group: 'Peito', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null };
+let ui = { view: 'treino', group: 'Peito', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view)) ui.view = u.view;
-  if (GROUPS.includes(u.group)) ui.group = u.group;
+  if (VIEWS.some(v => v[0] === u.view) || u.view === 'perfil') ui.view = u.view;
+  if (GROUPS.includes(u.group) || u.group === CARDIO) ui.group = u.group;
+  if (u.layout) ui.layout = u.layout;
+  if (u.mode) ui.mode = u.mode;
+  if (u.cardioMin) ui.cardioMin = u.cardioMin;
   if (db.profiles.some(p => p.id === u.profile)) ui.profile = u.profile;
   if (u.restSec) ui.rest = u.restSec;
 } catch (e) {}
-const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest })); } catch (e) {} };
+const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin })); } catch (e) {} };
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
 const vol = sets => sets.reduce((a, s) => a + setVol(s), 0);
@@ -390,6 +474,11 @@ function profSessions(pid = ui.profile) {
 const history = exId => db.sessions.filter(s => s.exId === exId && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date));
 const prevSession = (exId, date) => history(exId).filter(s => s.date < date).pop();
 const sessionOn = (exId, date) => db.sessions.find(s => s.exId === exId && s.date === date);
+const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
+const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0);
+function trainedDates(pid = ui.profile) {
+  return [...new Set([...profSessions(pid).map(s => s.date), ...profCardio(pid).map(c => c.date)])].sort();
+}
 
 // Sessão do dia: se ainda não existe, é montada a partir do último treino (ou do modelo do exercício)
 function working(ex, date) {
@@ -441,8 +530,10 @@ const $date = document.getElementById('date');
 
 function renderHero() {
   const p = profile(ui.profile), isMe = ui.profile === ME;
-  document.getElementById('who').innerHTML = `<span class="av">${isMe ? 'EU' : esc(initials(p.name))}</span><span>${isMe ? 'Meu treino (particular)' : 'Aluno: ' + esc(p.name)}</span> ▾`;
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor' };
+  const $who = document.getElementById('who');
+  $who.innerHTML = `<span class="av">${isMe ? 'EU' : esc(initials(p.name))}</span><span>${isMe ? 'Meu treino (particular)' : 'Aluno: ' + esc(p.name)}</span> ▾`;
+  $who.dataset.view = isMe ? 'alunos' : 'perfil';
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno' };
   document.getElementById('heroTitle').textContent = titles[ui.view];
   document.getElementById('dateLabel').textContent = ui.date === today() ? 'Hoje' : fmtDate(ui.date);
   $date.value = ui.date;
@@ -450,7 +541,7 @@ function renderHero() {
 }
 function renderStats() {
   let cells;
-  if (ui.view === 'alunos') {
+  if (ui.view === 'alunos' || ui.view === 'perfil' && ui.profile === ME) {
     const students = db.profiles.filter(p => p.id !== ME);
     const trainedToday = students.filter(p => profSessions(p.id).some(s => s.date === today())).length;
     const ws = weekStart(today());
@@ -458,22 +549,21 @@ function renderStats() {
     cells = [[students.length, students.length === 1 ? 'aluno' : 'alunos'], [trainedToday, 'treinaram hoje'], [activeWeek, 'ativos na semana']];
   } else {
     const day = profSessions().filter(s => s.date === ui.date);
-    const groups = new Set(day.map(s => exById(s.exId).group)).size;
     cells = [[day.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), 'séries feitas'],
-      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [groups, groups === 1 ? 'grupo' : 'grupos']];
+      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [cardioBetween(ui.date, ui.date), 'min de cardio']];
   }
   document.getElementById('stats').innerHTML = cells.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 }
 function renderNav() {
   $nav.innerHTML = VIEWS.map(([id, label]) =>
-    `<button class="${id === ui.view ? 'on' : ''}" data-view="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG[id]}</svg>${label}</button>`).join('');
+    `<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' ? 'on' : ''}" data-view="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG[id]}</svg>${label}</button>`).join('');
 }
 function render() {
   renderHero();
   renderNav();
-  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos })[ui.view]();
+  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos, perfil: renderPerfil })[ui.view]();
 }
-function go(view) { stopDemo(); ui.demo = false; ui.view = view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function go(view) { stopDemo(); ui.demo = false; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 // ---------- Treino ----------
 function bannerHtml(group) {
@@ -492,10 +582,13 @@ function renderTreino() {
         ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
-    <div class="chips">${GROUPS.map(g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g}</button>`).join('')}</div>
-    <div class="banner">${bannerHtml(group)}</div>
+    <div class="chips">${[...GROUPS, CARDIO].map(g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? '❤️ ' : ''}${g}</button>`).join('')}</div>
+    ${group === CARDIO ? cardioHtml() : `<div class="banner">${bannerHtml(group)}</div>
+    <div class="layout">Séries em:
+      <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
+      <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
     ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Nenhum exercício ainda. Adicione o primeiro </p>'}
-    <button class="add" data-act="new">＋ Adicionar exercício</button>`;
+    <button class="add" data-act="new">＋ Adicionar exercício</button>`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 function isComplete(exId) {
@@ -512,9 +605,16 @@ function cardHtml(ex) {
   const s = working(ex, ui.date);
   const prev = prevSession(ex.id, ui.date);
   const done = s.sets.filter(x => x.done).length, n = s.sets.length;
+  const tiles = ui.layout !== 'list';
   const rows = s.sets.map((x, i) => {
     const p = prev && prev.sets[i];
-    return `<div class="set ${rowClass(x, p)}" data-i="${i}">
+    if (tiles) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
+      <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></div>
+      <label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="kg" aria-label="carga da série ${i + 1}"></label>
+      <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps" aria-label="repetições da série ${i + 1}"></label>
+      <div class="ant">${p && p.done ? `${fmt(p.carga)}×${p.reps ?? '–'}` : 'novo'}</div>
+    </div>`;
+    return `<div class="set ${rowClass(x, p)}" data-i="${i}" data-base="set">
       <span class="num">${i + 1}</span>
       ${stepper('carga', x.carga, `carga da série ${i + 1}`)}
       ${stepper('reps', x.reps, `repetições da série ${i + 1}`)}
@@ -529,8 +629,8 @@ function cardHtml(ex) {
         <small>${prev ? `Último treino ${fmtDate(prev.date)}` : 'Primeiro treino deste exercício'}</small></div>
       <button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>
     </div>
-    <div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
-    ${rows}
+    ${tiles ? `<div class="tile-key">Em cada série: <b>carga (kg)</b> · <b>repetições</b> · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
+    ${rows}`}
     <div class="actions">
       <button class="btn" data-act="addset">＋ série</button>
       <button class="btn" data-act="rmset">− série</button>
@@ -548,10 +648,11 @@ function rowClass(x, p) {
 function compareHtml(s, prev) {
   const total = vol(s.sets), pt = prev ? vol(prev.sets) : 0, max = Math.max(total, pt, 1);
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
-  return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : fmtDate(ui.date)}</span>
+  return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}</small></span>
       <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${fmt(total)} kg</b></div>
-    ${prev ? `<div class="cmp-row prev"><span>${fmtDate(prev.date)}</span>
-      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${fmt(pt)} kg</b></div>` : ''}
+    ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}</small></span>
+      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${fmt(pt)} kg</b></div>`
+      : '<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>'}
     <div>${prev ? progress(total, pt, finished) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
 }
 function refreshCard(exId) {
@@ -563,29 +664,73 @@ function refreshCard(exId) {
 function refreshTop() {
   renderStats();
   const b = $main.querySelector('.banner');
-  if (b && ui.view === 'treino') b.innerHTML = bannerHtml(ui.group);
+  if (b && ui.view === 'treino' && ui.group !== CARDIO) b.innerHTML = bannerHtml(ui.group);
+}
+
+// ---------- Cardio ----------
+function cardioHtml() {
+  const ws = weekStart(ui.date), now = cardioBetween(ws, addDays(ws, 6)), before = cardioBetween(addDays(ws, -7), addDays(ws, -1));
+  const day = profCardio().filter(c => c.date === ui.date);
+  const w = ui.watch;
+  return `<div class="banner"><div class="grow"><h2>❤️ Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Qual cardio você vai fazer?</h3></div></div>
+      <div class="modes">${MODES.map(([id, label, e]) => `<button class="${ui.mode === id ? 'on' : ''}" data-act="mode" data-m="${id}"><span>${e}</span>${label}</button>`).join('')}</div>
+      ${w ? `<div class="stopwatch" id="watch">${mmss(Math.floor((Date.now() - w.start) / 1000))}</div>
+        <p class="hint" style="text-align:center;margin:0 0 8px">${modeOf(w.mode)[2]} ${modeOf(w.mode)[1]} em andamento</p>
+        <div class="actions" style="justify-content:center"><button class="btn primary" data-act="watch-stop">■ Parar e registrar</button><button class="btn danger" data-act="watch-cancel">Cancelar</button></div>`
+      : `<div class="cardio-time"><div class="step">
+          <button data-act="cmin" data-d="-5" aria-label="Menos 5 minutos">−</button>
+          <input id="cardioMin" inputmode="numeric" value="${ui.cardioMin}" aria-label="Minutos de cardio">
+          <button data-act="cmin" data-d="5" aria-label="Mais 5 minutos">+</button></div><b>minutos</b></div>
+        <div class="actions"><button class="btn primary" data-act="add-cardio">✓ Registrar ${ui.cardioMin} min</button>
+          <button class="btn" data-act="watch-start">▶ Cronometrar</button></div>`}
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Cardio ${ui.date === today() ? 'de hoje' : 'do dia ' + fmtDate(ui.date)}</h3>
+        <small>${day.length ? `Total: ${day.reduce((a, c) => a + c.min, 0)} min` : 'Nada registrado ainda'}</small></div></div>
+      ${day.map(c => `<div class="list-row"><span class="e">${modeOf(c.mode)[2]}</span><div class="grow"><b>${modeOf(c.mode)[1]}</b></div>
+        <b>${c.min} min</b><button class="icon" data-act="del-cardio" data-id="${c.id}" aria-label="Apagar">✕</button></div>`).join('')}
+    </section>`;
+}
+function addCardio(mode, min) {
+  min = Math.round(min);
+  if (!(min > 0)) return toast('Informe os minutos.');
+  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min });
+  save(); render();
+  toast(`${modeOf(mode)[2]} <b>${modeOf(mode)[1]}</b>: ${min} min registrados`);
+}
+let watchTimer = null;
+function tickWatch() {
+  const el = document.getElementById('watch');
+  if (!ui.watch) return clearInterval(watchTimer);
+  if (el) el.textContent = mmss(Math.floor((Date.now() - ui.watch.start) / 1000));
 }
 
 // ---------- Histórico ----------
 function dayMap(pid = ui.profile) {
   const m = {};
   for (const s of profSessions(pid)) (m[s.date] = m[s.date] || []).push(s);
+  for (const c of profCardio(pid)) m[c.date] = m[c.date] || [];
   return m;
 }
 function dayCard(d, list) {
   list = list.slice().sort((a, b) => GROUPS.indexOf(exById(a.exId).group) - GROUPS.indexOf(exById(b.exId).group));
   const groups = [...new Set(list.map(s => exById(s.exId).group))];
   const total = list.reduce((a, s) => a + vol(s.sets), 0);
+  const cardio = profCardio().filter(c => c.date === d);
+  if (cardio.length) groups.push(CARDIO);
   return `<section class="card" id="day-${d}">
     <div class="day-h"><div class="d">${d.slice(8)}<small>${toDate(d).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></div>
       <div class="grow"><h3>${weekday(d)}</h3><small style="color:var(--muted)">${groups.join(' · ')}</small></div>
       <b>${fmt(total)} kg</b></div>
-    <table class="hist"><thead><tr><th>Exercício</th><th>Séries</th><th>Carga máx</th><th>Total</th><th></th></tr></thead><tbody>
+    ${list.length ? `<table class="hist"><thead><tr><th>Exercício</th><th>Séries</th><th>Carga máx</th><th>Total</th><th></th></tr></thead><tbody>
     ${list.map(s => {
       const done = s.sets.filter(x => x.done), before = prevSession(s.exId, s.date);
       return `<tr><td>${esc(exById(s.exId).name)}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
-    }).join('')}</tbody></table>
+    }).join('')}</tbody></table>` : ''}
+    ${cardio.map(c => `<div class="list-row"><span class="e">${modeOf(c.mode)[2]}</span><div class="grow">${modeOf(c.mode)[1]}</div><b>${c.min} min</b></div>`).join('')}
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${groups[0]}">Abrir / editar este treino</button></div>
   </section>`;
 }
@@ -596,6 +741,7 @@ function renderHistorico() {
   const monthName = first.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
   const monthDays = Object.keys(days).filter(d => d.startsWith(ui.month)).sort().reverse();
   const monthVol = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + vol(s.sets), 0), 0);
+  const monthCardio = profCardio().filter(c => c.date.startsWith(ui.month)).reduce((a, c) => a + c.min, 0);
   const monthSets = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + s.sets.filter(x => x.done).length, 0), 0);
   const all = Object.keys(days).sort();
   const sel = ui.histDay && ui.histDay.startsWith(ui.month) ? ui.histDay : null;
@@ -623,8 +769,8 @@ function renderHistorico() {
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
       <p class="hint" style="margin:10px 0 0">Toque em qualquer dia para ver o treino ou anotar um treino passado. Dias em verde têm treino.</p>
-      <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos no mês</span></div>
-        <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(monthVol)}</b><span>kg no mês</span></div></div>
+      <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
+        <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(monthVol)}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
     ${selHtml}
     <h3 style="margin:18px 4px 10px">Treinos de ${monthName.split(' ')[0].toLowerCase()}</h3>`;
@@ -833,22 +979,45 @@ function renderEvolution() {
       ${analysis(data)}
     </section>`;
 
-  if (!ui.demo) for (const g of GROUPS) {
-    const blocks = profExs().filter(e => e.group === g).map(e => {
-      const h = history(e.id);
-      if (!h.length) return '';
-      const last = h.slice(-8);
-      return `<div class="ex-h">${esc(e.name)}</div>${sparkline(last.map(s => vol(s.sets)))}
-        <table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Carga máx</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>
-        ${last.slice().reverse().map((s, i, arr) => {
-          const done = s.sets.filter(x => x.done), before = arr[i + 1];
-          return `<tr><td>${fmtDate(s.date)}</td><td>${done.length}</td>
-            <td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
-            <td>${done.reduce((a, x) => a + (x.reps || 0), 0)}</td>
-            <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
-        }).join('')}</tbody></table>`;
-    }).join('');
-    if (blocks) html += `<section class="card"><div class="card-h"><div class="grow"><h3>${g} · por exercício</h3></div></div>${blocks}</section>`;
+  if (!ui.demo) {
+    // Cardio: minutos por semana no período
+    const cw = data.weeks.map(w => cardioBetween(w, addDays(w, 6)));
+    const byMode = MODES.map(m => [m, profCardio().filter(c => c.mode === m[0] && c.date >= data.weeks[0]).reduce((a, c) => a + c.min, 0)]).filter(x => x[1]);
+    if (cw.some(Boolean)) html += `<section class="card"><div class="card-h"><div class="grow"><h3>❤️ Cardio · minutos por semana</h3>
+        <small>Total no período: ${cw.reduce((a, b) => a + b, 0)} min · ${byMode.map(([m, v]) => `${m[2]} ${m[1]} ${v} min`).join(' · ')}</small></div></div>
+      ${sparkline(cw)}<table class="hist"><thead><tr><th>Semana</th><th>Minutos</th><th></th></tr></thead><tbody>
+      ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${v} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
+      </tbody></table></section>`;
+
+    // Por grupo: kg total de cada treino do grupo (soma de carga × reps de todos os exercícios)
+    for (const g of GROUPS) {
+      const exs = profExs().filter(e => e.group === g), ids = new Set(exs.map(e => e.id));
+      const byDay = {};
+      for (const s of db.sessions) if (ids.has(s.exId) && hasDone(s)) (byDay[s.date] = byDay[s.date] || []).push(s);
+      const days = Object.keys(byDay).sort().slice(-8);
+      if (!days.length) continue;
+      const rows = days.map(d => {
+        const ss = byDay[d], done = ss.flatMap(s => s.sets.filter(x => x.done));
+        return { d, ex: ss.length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0) };
+      });
+      const perEx = exs.map(e => {
+        const h = history(e.id).slice(-6);
+        if (!h.length) return '';
+        return `<div class="ex-h">${esc(e.name)}</div><table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>
+          ${h.slice().reverse().map((s, i, arr) => {
+            const done = s.sets.filter(x => x.done), before = arr[i + 1];
+            return `<tr><td>${fmtDate(s.date)}</td><td>${done.length}</td><td>${done.reduce((a, x) => a + (x.reps || 0), 0)}</td>
+              <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
+          }).join('')}</tbody></table>`;
+      }).join('');
+      html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por treino</h3>
+          <small>Soma de carga × repetições de todos os exercícios de ${g.toLowerCase()} no dia</small></div></div>
+        ${sparkline(rows.map(r => r.total))}
+        <table class="hist"><thead><tr><th>Data</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
+        ${rows.slice().reverse().map((r, i, arr) => `<tr><td>${fmtDate(r.d)}</td><td>${r.ex}</td><td>${r.sets}</td><td>${r.reps}</td>
+          <td><b>${fmt(r.total)}</b></td><td>${arr[i + 1] ? delta(r.total, arr[i + 1].total) : ''}</td></tr>`).join('')}</tbody></table>
+        <details class="tbl" style="margin-top:10px"><summary>Ver por exercício</summary>${perEx}</details></section>`;
+    }
   }
   $main.innerHTML = html;
   drawCharts();
@@ -857,12 +1026,12 @@ function renderEvolution() {
 // ---------- Alunos (área do professor) ----------
 function profileSummary(pid) {
   const sess = profSessions(pid);
-  const dates = [...new Set(sess.map(s => s.date))].sort();
+  const dates = trainedDates(pid);
   const last = dates[dates.length - 1];
   const ws = weekStart(today());
   const weekDays = dates.filter(d => d >= ws).length;
   const [now, before] = weekPair(null, pid, today());
-  const lastGroups = last ? '· ' + [...new Set(sess.filter(s => s.date === last).map(s => exById(s.exId).group))].join(', ') : '';
+  const lastGroups = last ? '· ' + [...new Set([...sess.filter(s => s.date === last).map(s => exById(s.exId).group), ...profCardio(pid).filter(c => c.date === last).map(() => CARDIO)])].join(', ') : '';
   let lastTxt = 'Ainda não treinou';
   if (last) { const n = daysBetween(last, today()); lastTxt = n === 0 ? 'Treinou hoje' : n === 1 ? 'Treinou ontem' : `Último treino há ${n} dias (${fmtDate(last)})`; }
   return { last, lastTxt, lastGroups, weekDays, now, before };
@@ -879,8 +1048,9 @@ function profileCard(p) {
       ${isMe ? '' : `<button class="icon" data-act="student-menu" data-pid="${p.id}" aria-label="Opções do aluno">⋯</button>`}
     </div>
     <div class="actions">
-      <button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button>
-      <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>
+      ${isMe ? '' : `<button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="perfil">Perfil</button>`}
+      <button class="btn ${isMe ? 'primary' : ''}" data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button>
+      ${isMe ? `<button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>` : ''}
       <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Evolução</button>
     </div></section>`;
 }
@@ -904,30 +1074,178 @@ function renderAlunos() {
         <label class="btn">⬆ Importar<input type="file" accept="application/json" id="importFile" hidden></label>
       </div></section>`;
 }
-async function addStudent() {
-  const r = await ask({ title: 'Novo aluno', field: 'Nome do aluno', ok: 'Adicionar',
-    msg: 'O aluno começa com os mesmos exercícios do seu treino, sem as cargas. Depois é só ajustar.' });
-  if (r.action !== 'ok') return;
+function createStudent({ name, phone = '', goal = '', notes = '' }) {
   const id = uid();
-  db.profiles.push({ id, name: r.value });
+  db.profiles.push({ id, name, phone, goal, notes, since: today(), messages: [] });
   for (const e of profExs(ME)) db.exercises.push({ id: uid(), profileId: id, group: e.group, name: e.name, sets: e.sets.map(s => ({ carga: null, reps: s.reps })) });
-  save(); toast(`<b>${esc(r.value)}</b> adicionado aos alunos`); render();
+  return id;
 }
-async function studentMenu(pid) {
-  const p = profile(pid);
-  const r = await ask({ title: 'Editar aluno', field: 'Nome do aluno', value: p.name, ok: 'Salvar', extra: 'Excluir aluno' });
-  if (r.action === 'ok') p.name = r.value;
-  else if (r.action === 'extra') {
-    if (!await confirmAsk(`Excluir ${p.name}?`, 'Todo o histórico de treinos deste aluno será apagado. Não dá para desfazer.')) return;
-    const ids = new Set(profExs(pid).map(e => e.id));
-    db.sessions = db.sessions.filter(s => !ids.has(s.exId));
-    db.exercises = db.exercises.filter(e => e.profileId !== pid);
-    db.profiles = db.profiles.filter(x => x.id !== pid);
-    if (ui.profile === pid) ui.profile = ME;
-  } else return;
+const $st = document.getElementById('stDialog'), $stForm = document.getElementById('stForm');
+let stEditing = null;
+function openStudent(p) {
+  stEditing = p;
+  document.getElementById('stTitle').textContent = p ? 'Dados do aluno' : 'Novo aluno';
+  document.getElementById('stHint').hidden = !!p;
+  document.getElementById('stDelete').style.visibility = p ? 'visible' : 'hidden';
+  for (const f of ['name', 'phone', 'goal', 'notes']) $stForm[f].value = p ? p[f] || '' : '';
+  $st.showModal();
+  if (!p) $stForm.name.focus();
+}
+$stForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const v = Object.fromEntries(['name', 'phone', 'goal', 'notes'].map(f => [f, $stForm[f].value.trim()]));
+  if (!v.name) return $stForm.name.focus();
+  $st.close();
+  if (stEditing) Object.assign(stEditing, v);
+  else {
+    ui.profile = createStudent(v); ui.view = 'perfil'; saveUi();
+    toast(`<b>${esc(v.name)}</b> adicionado aos alunos`);
+  }
+  save(); render();
+});
+document.getElementById('stCancel').onclick = () => $st.close();
+document.getElementById('stDelete').onclick = async () => {
+  const p = stEditing; if (!p) return;
+  $st.close();
+  if (!await confirmAsk(`Excluir ${p.name}?`, 'Todo o histórico de treinos deste aluno será apagado. Não dá para desfazer.')) return;
+  const ids = new Set(profExs(p.id).map(e => e.id));
+  db.sessions = db.sessions.filter(s => !ids.has(s.exId));
+  db.exercises = db.exercises.filter(e => e.profileId !== p.id);
+  db.cardio = db.cardio.filter(c => c.profileId !== p.id);
+  db.profiles = db.profiles.filter(x => x.id !== p.id);
+  if (ui.profile === p.id) { ui.profile = ME; if (ui.view === 'perfil') ui.view = 'alunos'; }
   save(); saveUi(); render();
-}
+};
 
+// ---------- Perfil do aluno ----------
+// Resumo do plano do exercício: usa o último treino (ou o modelo)
+function planText(ex) {
+  const sets = working(ex, today()).sets;
+  const range = (vals, unit) => {
+    vals = vals.filter(v => v != null);
+    if (!vals.length) return '';
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    return (lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`) + unit;
+  };
+  return [`${sets.length}×`, range(sets.map(x => x.reps), ' reps'), range(sets.map(x => x.carga), ' kg')].filter(Boolean).join(' ');
+}
+function waNumber(phone) {
+  let d = String(phone || '').replace(/\D/g, '');
+  if (d.length === 10 || d.length === 11) d = '55' + d;
+  return d;
+}
+const waLink = (p, text) => `https://wa.me/${waNumber(p.phone)}?text=${encodeURIComponent(text)}`;
+function firstName(p) { return p.name.trim().split(/\s+/)[0]; }
+function msgTemplate(kind, p) {
+  const n = firstName(p);
+  if (kind === 'treino') {
+    const g = ui.tplGroup || GROUPS[0];
+    const exs = profExs(p.id).filter(e => e.group === g);
+    return `Oi, ${n}! Seu treino de *${g}*:\n` + (exs.map(e => `• ${e.name}: ${planText(e)}`).join('\n') || '(ainda sem exercícios)') + '\n\nBom treino! 💪';
+  }
+  if (kind === 'semana') {
+    const [now, before] = weekPair(null, p.id, today());
+    const ws = weekStart(today()), dias = trainedDates(p.id).filter(d => d >= ws).length, cm = cardioBetween(ws, addDays(ws, 6), p.id);
+    const pc = before ? Math.round((now - before) / before * 100) : null;
+    return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${cm} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim! 🔥' : 'Vamos pra cima essa semana! 💪'}`;
+  }
+  if (kind === 'lembrete') return `Oi, ${n}! Passando pra lembrar do treino de hoje. Te espero! 💪`;
+  if (kind === 'parabens') return `Parabéns, ${n}! Você está evoluindo muito nos treinos. Continue assim! 🎉`;
+  return '';
+}
+function updateWaLink() {
+  const p = profile(ui.profile), a = document.getElementById('waSend');
+  if (a && p) a.href = waLink(p, ui.msgDraft || '');
+}
+function renderPerfil() {
+  const p = profile(ui.profile);
+  if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
+  const s = profileSummary(p.id), ws = weekStart(today());
+  const cm = cardioBetween(ws, addDays(ws, 6), p.id);
+  if (ui.msgDraft == null || ui.msgFor !== p.id) { ui.msgFor = p.id; ui.msgDraft = ''; }
+  if (!ui.tplGroup) ui.tplGroup = GROUPS[0];
+
+  const maxV = Math.max(1, ...GROUPS.flatMap(g => weekPair(g, p.id, today())));
+  const bars = GROUPS.map(g => {
+    const [n, b] = weekPair(g, p.id, today());
+    return `<div class="bar-row"><span class="key" style="background:${COLOR(g)};width:100%;height:4px"></span><div>
+      <small>${g}: <b>${fmt(n)} kg</b> · anterior ${fmt(b)} kg ${n || b ? delta(n, b) : ''}</small>
+      <div class="track"><div class="fill" style="width:${n / maxV * 100}%;background:${COLOR(g)}"></div></div>
+      <div class="track prev"><div class="fill" style="width:${b / maxV * 100}%"></div></div></div></div>`;
+  }).join('');
+
+  const days = trainedDates(p.id).reverse().slice(0, 5);
+  const recent = days.map(d => {
+    const ss = profSessions(p.id).filter(x => x.date === d), cc = profCardio(p.id).filter(c => c.date === d);
+    const groups = [...new Set(ss.map(x => exById(x.exId).group))];
+    const cmin = cc.reduce((a, c) => a + c.min, 0);
+    return `<div class="list-row"><div class="grow"><b>${fmtDate(d)}</b> <small style="color:var(--muted)">${weekday(d)}</small>
+      <small style="display:block;color:var(--muted)">${[...groups, cmin ? `cardio ${cmin} min` : ''].filter(Boolean).join(' · ')}</small></div>
+      <b>${fmt(ss.reduce((a, x) => a + vol(x.sets), 0))} kg</b>
+      <button class="icon" data-act="openday" data-d="${d}" data-g="${groups[0] || CARDIO}" aria-label="Abrir treino">›</button></div>`;
+  }).join('');
+
+  const plan = GROUPS.map(g => {
+    const exs = profExs(p.id).filter(e => e.group === g);
+    return `<div class="plan-g">${g}</div>
+      ${exs.map(e => `<div class="plan-row"><div class="grow"><b>${esc(e.name)}</b><small>${planText(e)}</small></div>
+        <button class="icon" data-act="edit-ex" data-id="${e.id}" aria-label="Editar ${esc(e.name)}">⋯</button></div>`).join('')}
+      <button class="link" style="margin-top:6px" data-act="new-in" data-g="${g}">＋ exercício em ${g}</button>`;
+  }).join('');
+
+  const log = (p.messages || []).slice().reverse().slice(0, 10);
+  $main.innerHTML = `
+    <section class="card">
+      <div class="prof-h"><span class="av">${esc(initials(p.name))}</span>
+        <div class="grow"><h2>${esc(p.name)}</h2>
+          <small style="color:var(--muted)">${p.since ? `Aluno desde ${fmtDate(p.since)}/${p.since.slice(2, 4)}` : 'Aluno'}${p.phone ? ' · ' + esc(p.phone) : ''}</small>
+          ${p.goal ? `<div class="tags" style="margin-top:4px"><span class="pill up">🎯 ${esc(p.goal)}</span></div>` : ''}</div>
+        <button class="icon" data-act="student-edit" aria-label="Editar dados">✎</button></div>
+      ${p.notes ? `<div class="note">${esc(p.notes)}</div>` : ''}
+      <div class="actions">
+        <button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button>
+        <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>
+        <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
+        <button class="btn" data-act="goto-msg">💬 Mensagem</button>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
+      <div class="kv">
+        <div><b>${s.weekDays}</b><span>treinos na semana</span></div>
+        <div><b>${fmt(s.now)} kg</b><span>na semana ${delta(s.now, s.before)}</span></div>
+        <div><b>${cm} min</b><span>cardio na semana</span></div>
+        <div><b>${trainedDates(p.id).length}</b><span>treinos no total</span></div>
+      </div>
+      <p class="plan-g" style="margin-top:14px">kg por grupo · semana atual × anterior</p>
+      <div class="bars">${bars}</div>
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Últimos treinos</h3></div></div>
+      ${recent || '<p class="empty">Ainda não treinou.</p>'}
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Treino do aluno</h3><small>Monte o treino: toque em ⋯ para mudar séries, carga e repetições</small></div></div>
+      ${plan}
+    </section>
+    <section class="card" id="msgCard">
+      <div class="card-h"><div class="grow"><h3>💬 Mensagem para ${esc(firstName(p))}</h3>
+        <small>${p.phone ? 'Abre o WhatsApp com a mensagem pronta' : 'Cadastre o WhatsApp do aluno (✎) para enviar direto para ele'}</small></div></div>
+      <div class="tpl">
+        <button class="btn" data-act="tpl" data-k="treino">📋 Treino de</button>
+        <select id="tplGroup" aria-label="Grupo do treino">${GROUPS.map(g => `<option ${g === ui.tplGroup ? 'selected' : ''}>${g}</option>`).join('')}</select>
+        <button class="btn" data-act="tpl" data-k="semana">📈 Resumo da semana</button>
+        <button class="btn" data-act="tpl" data-k="lembrete">⏰ Lembrete</button>
+        <button class="btn" data-act="tpl" data-k="parabens">🎉 Parabéns</button>
+      </div>
+      <textarea class="msg" id="msgText" placeholder="Escreva a mensagem ou escolha um modelo acima">${esc(ui.msgDraft)}</textarea>
+      <div class="actions">
+        <a class="btn primary" id="waSend" data-act="wa-send" target="_blank" rel="noopener" href="${waLink(p, ui.msgDraft)}">Enviar pelo WhatsApp</a>
+        <button class="btn" data-act="msg-copy">Copiar</button>
+      </div>
+      ${log.length ? `<div class="msg-log"><p class="plan-g">Mensagens enviadas</p>${log.map(m => `<div><small>${fmtDate(m.date)}/${m.date.slice(2, 4)}</small>${esc(m.text)}</div>`).join('')}</div>` : ''}
+    </section>`;
+}
 // ---------- Janela de pergunta (substitui prompt/confirm, que o navegador pode bloquear) ----------
 const $ask = document.getElementById('askDlg'), $askForm = document.getElementById('askForm');
 function ask({ title, msg = '', field = null, value = '', ok = 'OK', extra = null, danger = false }) {
@@ -1026,21 +1344,28 @@ $main.addEventListener('input', e => {
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(profileCard).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
     return;
   }
+  if (e.target.id === 'cardioMin') {
+    const n = parseInt(e.target.value);
+    if (n > 0) { ui.cardioMin = Math.min(300, n); saveUi(); const bt = $main.querySelector('[data-act="add-cardio"]'); if (bt) bt.textContent = `✓ Registrar ${ui.cardioMin} min`; }
+    return;
+  }
+  if (e.target.id === 'msgText') { ui.msgDraft = e.target.value; return updateWaLink(); }
   const inp = e.target.closest('input[data-f]');
   if (!inp) return;
   const card = inp.closest('[data-ex]'), ex = exById(card.dataset.ex);
-  const row = inp.closest('.set'), i = +row.dataset.i;
+  const row = inp.closest('[data-i]'), i = +row.dataset.i;
   const s = ensureSession(ex, ui.date);
   s.sets[i][inp.dataset.f] = parseNum(inp.value);
   save();
   const x = s.sets[i], prev = prevSession(ex.id, ui.date);
-  row.className = 'set ' + rowClass(x, prev && prev.sets[i]);
-  row.querySelector('.tot').textContent = setTotal(x);
+  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i]);
+  const tot = row.querySelector('.tot'); if (tot) tot.textContent = setTotal(x);
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
   refreshTop();
 });
 $main.addEventListener('change', e => {
   if (e.target.id === 'importFile') importData(e.target.files[0]);
+  if (e.target.id === 'tplGroup') { ui.tplGroup = e.target.value; ui.msgDraft = msgTemplate('treino', profile(ui.profile)); document.getElementById('msgText').value = ui.msgDraft; updateWaLink(); }
 });
 
 $main.addEventListener('click', e => {
@@ -1052,8 +1377,32 @@ $main.addEventListener('click', e => {
   switch (act) {
     case 'new': return openDialog(null);
     case 'export': return exportData();
-    case 'add-student': return addStudent();
-    case 'student-menu': return studentMenu(b.dataset.pid);
+    case 'add-student': return openStudent(null);
+    case 'student-menu': return openStudent(profile(b.dataset.pid));
+    case 'student-edit': return openStudent(profile(ui.profile));
+    case 'edit-ex': return openDialog(exById(b.dataset.id));
+    case 'new-in': return openDialog(null, b.dataset.g);
+    case 'goto-msg': return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    case 'tpl': {
+      ui.msgDraft = msgTemplate(b.dataset.k, profile(ui.profile));
+      document.getElementById('msgText').value = ui.msgDraft; return updateWaLink();
+    }
+    case 'wa-send': {
+      const p = profile(ui.profile), text = (ui.msgDraft || '').trim();
+      if (!text) { e.preventDefault(); return toast('Escreva a mensagem ou escolha um modelo.'); }
+      p.messages = p.messages || [];
+      p.messages.push({ date: today(), text });
+      save(); ui.msgDraft = ''; setTimeout(render, 300); return;
+    }
+    case 'msg-copy': {
+      const text = ui.msgDraft || '';
+      if (!text.trim()) return toast('Nada para copiar.');
+      const ta = document.getElementById('msgText');
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+        .catch(() => { ta.select(); if (!document.execCommand('copy')) throw 0; })
+        .then(() => toast('Mensagem copiada. Cole no WhatsApp.'), () => toast('Selecione o texto e copie manualmente.'));
+      return;
+    }
     case 'open-profile': ui.profile = b.dataset.pid; ui.date = today(); ui.month = ui.date.slice(0, 7); return go(b.dataset.v);
     case 'month': {
       const [y, m] = ui.month.split('-').map(Number), d = new Date(y, m - 1 + (+b.dataset.d), 1);
@@ -1065,6 +1414,17 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'openday': ui.date = b.dataset.d; ui.group = b.dataset.g; return go('treino');
+    case 'layout': ui.layout = b.dataset.l; saveUi(); return render();
+    case 'mode': ui.mode = b.dataset.m; saveUi(); return render();
+    case 'cmin': ui.cardioMin = Math.max(5, Math.min(300, (ui.cardioMin || 0) + +b.dataset.d)); saveUi(); return render();
+    case 'add-cardio': return addCardio(ui.mode, ui.cardioMin);
+    case 'del-cardio': db.cardio = db.cardio.filter(c => c.id !== b.dataset.id); save(); return render();
+    case 'watch-start': ui.watch = { start: Date.now(), mode: ui.mode }; clearInterval(watchTimer); watchTimer = setInterval(tickWatch, 500); return render();
+    case 'watch-cancel': ui.watch = null; clearInterval(watchTimer); return render();
+    case 'watch-stop': {
+      const w = ui.watch; ui.watch = null; clearInterval(watchTimer);
+      return addCardio(w.mode, Math.max(1, Math.round((Date.now() - w.start) / 60000)));
+    }
     case 'shiftday': ui.date = addDays(ui.date, +b.dataset.d); if (ui.date > today()) ui.date = today(); ui.month = ui.date.slice(0, 7); return render();
     case 'today': ui.date = today(); ui.month = ui.date.slice(0, 7); return render();
     case 'weeks': ui.weeks = +b.dataset.n; return ui.demo ? startDemo() : render();
@@ -1084,11 +1444,11 @@ $main.addEventListener('click', e => {
   const s = ensureSession(ex, ui.date);
   const wasComplete = s.sets.every(x => x.done);
   if (act === 'done') {
-    const x = s.sets[+b.closest('.set').dataset.i];
+    const x = s.sets[+b.closest('[data-i]').dataset.i];
     x.done = !x.done;
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(); }
   } else if (act === 'inc' || act === 'dec') {
-    const x = s.sets[+b.closest('.set').dataset.i], f = b.dataset.f;
+    const x = s.sets[+b.closest('[data-i]').dataset.i], f = b.dataset.f;
     const v = (x[f] || 0) + STEP[f] * (act === 'inc' ? 1 : -1);
     x[f] = Math.max(0, Math.round(v * 10) / 10);
   } else if (act === 'alldone') {
@@ -1109,13 +1469,13 @@ const $dlg = document.getElementById('exDialog'), $form = document.getElementByI
 document.getElementById('groupPick').innerHTML = GROUPS.map(g =>
   `<label><input type="radio" name="group" value="${g}"><span>${g}</span></label>`).join('');
 let editing = null, initialPlan = '';
-function openDialog(ex) {
+function openDialog(ex, group) {
   editing = ex;
   document.getElementById('exTitle').textContent = ex ? 'Editar exercício' : 'Novo exercício';
   document.getElementById('exDelete').style.visibility = ex ? 'visible' : 'hidden';
   const w = ex ? working(ex, ui.date) : null;
   $form.name.value = ex ? ex.name : '';
-  $form.group.value = ex ? ex.group : ui.group;
+  $form.group.value = ex ? ex.group : group || (GROUPS.includes(ui.group) ? ui.group : GROUPS[0]);
   $form.sets.value = w ? w.sets.length : 4;
   $form.carga.value = w && w.sets[0] ? numVal(w.sets[0].carga) : '';
   $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : 10;
@@ -1140,8 +1500,8 @@ $form.addEventListener('submit', () => {
   } else {
     db.exercises.push({ id: uid(), profileId: ui.profile, group, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
   }
-  ui.group = group; saveUi();
-  save(); render();
+  if (ui.view === 'treino') ui.group = group;
+  saveUi(); save(); render();
 });
 document.getElementById('exCancel').onclick = () => $dlg.close();
 document.getElementById('exDelete').onclick = async () => {
@@ -1182,6 +1542,12 @@ function importData(file) {
   }).catch(() => toast('Arquivo de backup inválido.'));
 }
 
+// Aluno cadastrado a pedido do professor (só uma vez; se for excluído, não volta)
+if (!db.seeded) db.seeded = [];
+if (!db.seeded.includes('lais')) {
+  if (!db.profiles.some(p => p.name === 'Laís')) createStudent({ name: 'Laís' });
+  db.seeded.push('lais'); save();
+}
 render();
 </script>
 </body>
