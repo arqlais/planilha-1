@@ -35,7 +35,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 - **Cardio do aluno**: em todo dia de treino, o aluno vê o cartão **Cardio** logo acima do Treino A. Ele escolhe o tipo (corrida, bicicleta, escada, elíptico) e toca no tempo que fez (ex.: 5, 10, 15 min ou **✓ Completo**); a barra anima até o tempo marcado e fica listrada ao concluir. A meta (minutos) é definida por você em cada dia da divisão da semana.
 - Aluno novo começa **sem exercícios**; no diálogo de exercício, séries e repetições começam vazias (séries é obrigatório).
 - A série só é confirmada com **carga e repetições** anotadas.
-- O aluno escolhe a **cor do app** em ⚙ **Configurações** (canto superior direito); o professor fica no verde.
+- Professor e alunos escolhem a **cor do app** em ⚙ **Configurações** (canto superior direito); cada conta tem a sua cor. Nas Configurações do professor também fica a **meta diária de cardio** dele.
 - O login do aluno fica salvo no aparelho e o app abre direto no treino de hoje (melhor ainda instalando na tela de início).
 - O aluno vê: boas-vindas com o último recado ("Já treinou hoje? Não esquece do cardio :)"), o treino que você montou (sem poder editar o plano), cardio, o **Calendário** com os dias treinados marcados e a aba **Recados** com as mensagens enviadas. A evolução não aparece para o aluno (fica só com o professor).
 - Tudo o que for marcado nesse modo (séries e cardio) fica registrado como **marcado pelo aluno**: aparece no histórico com a etiqueta *aluno* e no perfil em **Marcações do aluno**.

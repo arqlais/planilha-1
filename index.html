@@ -453,6 +453,7 @@ input,select,textarea{font-size:16px!important}
   <h2>Configurações</h2>
   <p class="hint" style="margin-bottom:8px">Cor do app</p>
   <div class="swatches" id="swatches"></div>
+  <div id="setGoalBox"></div>
   <div id="setAccount"></div>
   <div class="dlg-actions"><span class="grow"></span><button class="btn" id="setCancel">Cancelar</button><button class="btn primary" id="setClose">Salvar</button></div>
 </dialog>
@@ -718,7 +719,7 @@ function renderHero() {
   document.getElementById('dateLabel').textContent = ui.date === today() ? 'Hoje' : fmtDate(ui.date);
   // Aluno: no canto de cima fica o botão de Configurações (cor do app) no lugar da data
   document.getElementById('dateChip').hidden = !!ui.studentMode;
-  document.getElementById('settingsBtn').hidden = !ui.studentMode;
+  document.getElementById('settingsBtn').hidden = false;
   applyColor();
   $date.value = ui.date;
   renderStats();
@@ -743,9 +744,11 @@ function paintColor(c) {
   for (const el of document.querySelectorAll('.hero, nav.bottom, #rest')) { el.style.background = 'none'; void el.offsetHeight; el.style.background = ''; }
   void document.body.offsetHeight;
 }
+// De quem é a cor: no modo aluno, do aluno; senão, do professor (cada um com a sua)
+const colorOwner = () => ui.studentMode ? profile(ui.profile) : profile(ME);
 function savedColor() {
-  const p = profile(ui.profile), pick = (p && p.id !== ME && p.color) || ui.color;
-  return ui.studentMode && COLORS.some(x => x[0] === pick) ? pick : 'verde';
+  const o = colorOwner(), pick = o && o.color;
+  return COLORS.some(x => x[0] === pick) ? pick : 'verde';
 }
 function applyColor() { if (savedColor() !== shownColor) paintColor(savedColor()); }
 darkMq.addEventListener && darkMq.addEventListener('change', () => paintColor(shownColor));
@@ -756,15 +759,23 @@ function renderSwatches() {
 }
 function openSettings() {
   renderSwatches();
+  const me = profile(ME);
+  document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
+    ? `<label class="f">Minha meta de cardio por dia (minutos)<input id="setGoal" inputmode="numeric" placeholder="ex.: 20" value="${me.cardioDaily || ''}"></label>` : '';
   document.getElementById('setAccount').innerHTML = cloud && cloud.user
     ? `<p class="hint" style="margin-bottom:8px">Conta: ${esc(cloud.user.email || '')}</p><button class="btn" id="setLogout" style="margin-bottom:14px">Sair da conta</button>` : '';
   if (!$setDlg.open) $setDlg.showModal();
 }
 document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('setClose').onclick = () => {
-  const c = shownColor, p = profile(ui.profile);
+  const c = shownColor, o = colorOwner();
   ui.color = c; saveUi();
-  if (p && p.id !== ME) { p.color = c; save(); }
+  if (o) {
+    o.color = c;
+    const g = parseInt(document.getElementById('setGoal') ? document.getElementById('setGoal').value : '');
+    if (!ui.studentMode && document.getElementById('setGoal')) { if (g > 0) o.cardioDaily = Math.min(300, g); else delete o.cardioDaily; }
+    save();
+  }
   $setDlg.close();
   paintColor(c); render(); // redesenha o app inteiro já na cor nova
   toast('Cor salva ✓');
@@ -816,6 +827,7 @@ function bannerHtml(L) {
 }
 function renderTreino() {
   const group = ui.group;
+  setTimeout(animateBars);
   const exs = letterExs(group);
   const loose = profExs().filter(e => !isLetter(e.letter)).sort(byGroupOrder);
   const isToday = ui.date === today();
@@ -834,6 +846,7 @@ function renderTreino() {
     </div>
     ${groupChips(group)}
     ${group === CARDIO ? cardioHtml() : `<div class="banner">${bannerHtml(group)}</div>
+    ${cardioGoalHtml(profile(ui.profile))}
     <div class="layout">Séries em:
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
       <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
@@ -874,7 +887,7 @@ function renderStudentTreino(p, greet, isToday) {
 }
 // Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
 // Cartão de cardio do aluno, como um exercício: ele toca no tempo que fez e a barra anima até lá
-const cardioGoalOf = (p, date) => (p.cardioGoal && p.cardioGoal[toDate(date).getDay()]) || 0;
+const cardioGoalOf = (p, date) => (p.cardioGoal && p.cardioGoal[toDate(date).getDay()]) || p.cardioDaily || 0;
 function cardioGoalHtml(p) {
   const goal = cardioGoalOf(p, ui.date);
   const today_ = profCardio().filter(c => c.date === ui.date);
