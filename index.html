@@ -59,6 +59,35 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 
 .av{width:40px;height:40px;border-radius:50%;background:var(--hero);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 auto}
 
+/* ---- cores que o aluno pode escolher (Configurações) ---- */
+:root[data-color="azul"]{--acc:#2f5fa7;--acc-2:#4a78bf;--acc-soft:#e6edf7;--hero:linear-gradient(160deg,#1e3a66 0%,#2f5fa7 100%)}
+:root[data-color="roxo"]{--acc:#6a4c9c;--acc-2:#8467b5;--acc-soft:#eee8f6;--hero:linear-gradient(160deg,#3d2a5c 0%,#6a4c9c 100%)}
+:root[data-color="rosa"]{--acc:#b0457a;--acc-2:#c4638f;--acc-soft:#f7e7ef;--hero:linear-gradient(160deg,#6e2449 0%,#b0457a 100%)}
+:root[data-color="laranja"]{--acc:#b8641f;--acc-2:#cf7c38;--acc-soft:#f8ecdf;--hero:linear-gradient(160deg,#7a3d10 0%,#b8641f 100%)}
+:root[data-color="vermelho"]{--acc:#b23b3b;--acc-2:#c85656;--acc-soft:#f7e5e5;--hero:linear-gradient(160deg,#6d1f1f 0%,#b23b3b 100%)}
+:root[data-color="grafite"]{--acc:#3f4a55;--acc-2:#5a6570;--acc-soft:#e8ebee;--hero:linear-gradient(160deg,#1f262d 0%,#3f4a55 100%)}
+@media (prefers-color-scheme: dark){
+  :root[data-color="azul"]{--acc:#86a9e0;--acc-2:#6f95d4;--acc-soft:#1d2738;--acc-ink:#0f1a2b;--hero:linear-gradient(160deg,#152238 0%,#1e3a66 100%)}
+  :root[data-color="roxo"]{--acc:#b39ce0;--acc-2:#9f86d4;--acc-soft:#2a2338;--acc-ink:#1c1428;--hero:linear-gradient(160deg,#251b36 0%,#3d2a5c 100%)}
+  :root[data-color="rosa"]{--acc:#e79bbf;--acc-2:#d985ab;--acc-soft:#36212c;--acc-ink:#2a1320;--hero:linear-gradient(160deg,#3a1a2b 0%,#6e2449 100%)}
+  :root[data-color="laranja"]{--acc:#eba468;--acc-2:#de9150;--acc-soft:#3a2a1c;--acc-ink:#2b1a0b;--hero:linear-gradient(160deg,#3b230f 0%,#7a3d10 100%)}
+  :root[data-color="vermelho"]{--acc:#ea8f8f;--acc-2:#dc7777;--acc-soft:#3a2020;--acc-ink:#2b1111;--hero:linear-gradient(160deg,#3a1616 0%,#6d1f1f 100%)}
+  :root[data-color="grafite"]{--acc:#a9b6c2;--acc-2:#95a3b0;--acc-soft:#262b31;--acc-ink:#15191d;--hero:linear-gradient(160deg,#181d22 0%,#2c343c 100%)}
+}
+.gear{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.16);color:#fff;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;flex:0 0 auto}
+.gear svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.swatches button{border:2px solid transparent;background:none;padding:4px 0;border-radius:14px;display:grid;justify-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text)}
+.swatches i{width:40px;height:40px;border-radius:50%;display:block}
+.swatches button.on{border-color:var(--text)}
+.install-tip{background:var(--acc-soft);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
+.install-tip button{border:0;background:none;color:var(--muted);font-size:16px;padding:0 2px}
+.goal-bar{height:16px;border-radius:8px;background:var(--acc-soft);overflow:hidden;margin-top:4px}
+.goal-bar .fill{height:100%;border-radius:8px;background:var(--acc);transition:width .4s}
+.goal-bar.full .fill{background:var(--acc)}
+.goal-txt{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.goal-txt b{color:var(--text);font-size:18px}
+
 /* ---- login ---- */
 body.locked > header, body.locked > main, body.locked > nav, body.locked > #studentBar, body.locked > #rest{display:none!important}
 #auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--hero)}
@@ -358,7 +387,8 @@ input,select,textarea{font-size:16px!important}
         <button class="who" id="who" data-view="alunos"></button>
         <h1 id="heroTitle">Treino de hoje</h1>
       </div>
-      <label class="date-chip"><span id="dateLabel"></span><input type="date" id="date" aria-label="Data do treino"></label>
+      <label class="date-chip" id="dateChip"><span id="dateLabel"></span><input type="date" id="date" aria-label="Data do treino"></label>
+      <button class="gear" id="settingsBtn" hidden aria-label="Configurações"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     </div>
     <div class="stats" id="stats"></div>
   </div>
@@ -397,9 +427,9 @@ input,select,textarea{font-size:16px!important}
     <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Treino<div id="letterPick" style="margin-top:6px"></div></div>
     <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Grupo muscular<div id="groupPick" style="margin-top:6px"></div></div>
     <div class="grid3">
-      <label class="f">Séries<input name="sets" inputmode="numeric" value="4"></label>
+      <label class="f">Séries<input name="sets" inputmode="numeric" placeholder="ex.: 4"></label>
       <label class="f">Carga (kg)<input name="carga" inputmode="decimal" placeholder="0"></label>
-      <label class="f">Repetições<input name="reps" inputmode="numeric" value="10"></label>
+      <label class="f">Repetições<input name="reps" inputmode="numeric" placeholder="opcional"></label>
     </div>
     <p class="hint">É só o ponto de partida: depois do primeiro treino, o app já preenche tudo com os valores da última vez.</p>
     <div class="dlg-actions">
@@ -411,11 +441,20 @@ input,select,textarea{font-size:16px!important}
   </form>
 </dialog>
 
+<dialog id="setDlg">
+  <h2>Configurações</h2>
+  <p class="hint" style="margin-bottom:8px">Cor do app</p>
+  <div class="swatches" id="swatches"></div>
+  <div id="setAccount"></div>
+  <div class="dlg-actions"><span class="grow"></span><button class="btn primary" id="setClose">Pronto</button></div>
+</dialog>
+
 <dialog id="dayDlg">
   <form id="dayForm">
     <h2 id="dayTitle">Treino de segunda</h2>
     <p class="hint">Escolha o que o aluno vai treinar neste dia. O aluno verá só esses exercícios, sem precisar escolher.</p>
-    <div id="dayPick" style="margin-bottom:16px"></div>
+    <div id="dayPick" style="margin-bottom:12px"></div>
+    <label class="f" id="dayCardioF">Meta de cardio (minutos)<input name="cmin" inputmode="numeric" placeholder="ex.: 20" autocomplete="off"></label>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="dayRest">Descanso</button>
       <span class="grow"></span>
@@ -432,7 +471,7 @@ input,select,textarea{font-size:16px!important}
     <label class="f">WhatsApp (com DDD)<input name="phone" type="tel" inputmode="tel" placeholder="(11) 91234-5678" autocomplete="off"></label>
     <label class="f">Objetivo<input name="goal" placeholder="Ex.: hipertrofia, emagrecimento" autocomplete="off"></label>
     <label class="f">Observações<textarea name="notes" placeholder="Lesões, restrições, horários…"></textarea></label>
-    <p class="hint" id="stHint">O aluno começa com os mesmos exercícios do seu treino, sem as cargas. Depois é só ajustar no perfil dele.</p>
+    <p class="hint" id="stHint">O aluno começa sem exercícios. Depois, no perfil dele, você monta os treinos A, B, C e D.</p>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="stDelete">Excluir</button>
       <span class="grow"></span>
@@ -570,12 +609,13 @@ try {
   if (u.layout) ui.layout = u.layout;
   if (u.mode) ui.mode = u.mode;
   if (u.cardioMin) ui.cardioMin = u.cardioMin;
+  if (u.color) ui.color = u.color;
   if (db.profiles.some(p => p.id === u.profile)) ui.profile = u.profile;
   if (u.restSec) ui.rest = u.restSec;
 } catch (e) {}
 if (ui.profile === ME) ui.studentMode = false;
 if (!views().some(v => v[0] === ui.view) && !(ui.view === 'perfil' && !ui.studentMode)) ui.view = 'treino';
-const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode })); } catch (e) {} };
+const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode, color: ui.color })); } catch (e) {} };
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
 const vol = sets => sets.reduce((a, s) => a + setVol(s), 0);
@@ -665,11 +705,40 @@ function renderHero() {
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
   const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor' };
   if (ui.studentMode) titles.historico = 'Calendário';
+  if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
   document.getElementById('heroTitle').textContent = titles[ui.view];
   document.getElementById('dateLabel').textContent = ui.date === today() ? 'Hoje' : fmtDate(ui.date);
+  // Aluno: no canto de cima fica o botão de Configurações (cor do app) no lugar da data
+  document.getElementById('dateChip').hidden = !!ui.studentMode;
+  document.getElementById('settingsBtn').hidden = !ui.studentMode;
+  applyColor();
   $date.value = ui.date;
   renderStats();
 }
+// Cores do app do aluno (o professor fica sempre no verde)
+const COLORS = [['verde', 'Verde', '#3e6b52'], ['azul', 'Azul', '#4a78bf'], ['roxo', 'Roxo', '#8467b5'], ['rosa', 'Rosa', '#c4638f'], ['laranja', 'Laranja', '#cf7c38'], ['vermelho', 'Vermelho', '#c85656'], ['grafite', 'Grafite', '#5a6570']];
+function applyColor() {
+  const c = ui.studentMode && COLORS.some(x => x[0] === ui.color) ? ui.color : 'verde';
+  if (c === 'verde') delete document.documentElement.dataset.color; else document.documentElement.dataset.color = c;
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.content = { verde: '#2b4637' }[c] || getComputedStyle(document.documentElement).getPropertyValue('--acc').trim();
+}
+const $setDlg = document.getElementById('setDlg');
+function openSettings() {
+  document.getElementById('swatches').innerHTML = COLORS.map(([id, label, hex]) =>
+    `<button class="${(ui.color || 'verde') === id ? 'on' : ''}" data-color="${id}"><i style="background:${hex}"></i>${label}</button>`).join('');
+  document.getElementById('setAccount').innerHTML = cloud && cloud.user
+    ? `<p class="hint" style="margin-bottom:8px">Conta: ${esc(cloud.user.email || '')}</p><button class="btn" id="setLogout" style="margin-bottom:14px">Sair da conta</button>` : '';
+  $setDlg.showModal();
+}
+document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('setClose').onclick = () => $setDlg.close();
+$setDlg.addEventListener('click', e => {
+  const b = e.target.closest('[data-color]');
+  if (b) { ui.color = b.dataset.color; saveUi(); applyColor(); openSettings(); return; }
+  if (e.target.id === 'setLogout') logout();
+});
+const statsDay = () => ui.view === 'historico' && ui.histDay ? ui.histDay : ui.date;
 function renderStats() {
   let cells;
   if (ui.view === 'alunos' || ui.view === 'perfil' && ui.profile === ME) {
@@ -679,9 +748,11 @@ function renderStats() {
     const activeWeek = students.filter(p => profSessions(p.id).some(s => s.date >= ws)).length;
     cells = [[students.length, students.length === 1 ? 'aluno' : 'alunos'], [trainedToday, 'treinaram hoje'], [activeWeek, 'ativos na semana']];
   } else {
-    const day = profSessions().filter(s => s.date === ui.date);
+    // No calendário, os números mostram o dia tocado; nas outras telas, o dia do treino aberto
+    const d = statsDay();
+    const day = profSessions().filter(s => s.date === d);
     cells = [[day.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), 'séries feitas'],
-      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [cardioBetween(ui.date, ui.date), 'min de cardio']];
+      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [cardioBetween(d, d), 'min de cardio']];
   }
   document.getElementById('stats').innerHTML = cells.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 }
@@ -751,13 +822,40 @@ function renderStudentTreino(p, greet, isToday) {
         ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
+    ${installTipHtml()}
     ${plan.length ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
+      ${plan.includes(CARDIO) ? cardioGoalHtml(p) : ''}
       ${groups.length ? `<div class="layout">Séries em:
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
-      ${blocks}${plan.includes(CARDIO) ? `<h3 style="margin:18px 4px 10px">Cardio</h3>${cardioHtml(true)}` : ''}`
+      ${blocks}`
     : `<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
+}
+// Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
+function cardioGoalHtml(p) {
+  const goal = (p.cardioGoal && p.cardioGoal[toDate(ui.date).getDay()]) || 0;
+  const done = profCardio().filter(c => c.date === ui.date).reduce((a, c) => a + c.min, 0);
+  if (goal && ui.goalInit !== ui.date + goal) { ui.goalInit = ui.date + goal; ui.cardioMin = goal - done > 0 ? goal - done : goal; }
+  const full = goal && done >= goal;
+  return `<section class="card">
+      <div class="card-h"><div class="grow"><h3>Exercício cardiovascular</h3>
+        <small>${goal ? `Meta do dia: <b>${goal} min</b>` : 'Escolha o cardio e registre o tempo'}</small></div>
+        ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
+      ${goal ? `<div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${Math.min(done, goal)}">
+        <div class="fill" style="width:${Math.min(100, done / goal * 100)}%"></div></div>
+        <p class="goal-txt"><b>${done}</b> de ${goal} min${full ? '' : ` · faltam ${goal - done} min`}</p>` : ''}
+    </section>${cardioHtml(true)}`;
+}
+// Dica para o aluno instalar na tela de início (assim o login fica salvo e o app abre direto no treino)
+function installTipHtml() {
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  let hidden = false; try { hidden = localStorage.getItem('planilha-dica-app') === '1'; } catch (e) {}
+  if (!CLOUD || standalone || hidden) return '';
+  const ios = /iphone|ipad/i.test(navigator.userAgent);
+  return `<div class="install-tip"><div class="grow"><b>Dica:</b> para abrir direto no seu treino, sem precisar entrar toda vez, instale o app:
+    ${ios ? 'abra este link no <b>Safari</b>, toque em <b>Compartilhar</b> e em <b>Adicionar à Tela de Início</b>.' : 'no menu do navegador (⋮), toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.'}</div>
+    <button data-act="hide-tip" aria-label="Fechar dica">✕</button></div>`;
 }
 function groupChips(group) {
   const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? g : 'Treino ' + g}</button>`;
@@ -951,7 +1049,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">Dias em verde: dias treinados. Toque em um dia para ver o que foi marcado.</p>
+      <p class="hint" style="margin:10px 0 0">Dias destacados: dias treinados. Toque em um dia para ver o que foi marcado.</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>${monthDays.length === 1 ? 'dia treinado' : 'dias treinados'}</span></div></div>
     </section>${selHtml}`;
     return;
@@ -962,7 +1060,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">Toque em qualquer dia para ver o treino ou anotar um treino passado. Dias em verde têm treino.</p>
+      <p class="hint" style="margin:10px 0 0">Toque em qualquer dia para ver o treino ou anotar um treino passado. Dias destacados têm treino.</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
         <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(monthVol)}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
@@ -1271,7 +1369,6 @@ function renderAlunos() {
 function createStudent({ name, phone = '', goal = '', notes = '' }) {
   const id = uid();
   db.profiles.push({ id, name, phone, goal, notes, since: today(), messages: [], uid: null, inviteCode: newInviteCode() });
-  for (const e of profExs(ME)) db.exercises.push({ id: uid(), profileId: id, group: e.group, letter: e.letter ?? null, name: e.name, sets: e.sets.map(s => ({ carga: null, reps: s.reps })) });
   return id;
 }
 const $st = document.getElementById('stDialog'), $stForm = document.getElementById('stForm');
@@ -1403,12 +1500,19 @@ function openDay(d) {
   dayEditing = d;
   document.getElementById('dayTitle').textContent = `Treino de ${WEEK.find(w => w[0] === d)[1].toLowerCase()}`;
   document.getElementById('dayPick').innerHTML = letterPicker('checkbox', 'g', g => cur.includes(g), true, p.id);
+  $dayForm.cmin.value = (p.cardioGoal && p.cardioGoal[d]) || '';
+  const sync = () => document.getElementById('dayCardioF').hidden = !$dayForm.querySelector('input[name=g][value="Cardio"]').checked;
+  $dayForm.querySelectorAll('input[name=g]').forEach(i => i.onchange = sync); sync();
   $dayDlg.showModal();
 }
 function saveDay(groups) {
   const p = profile(ui.profile);
   p.division = p.division || {};
   p.division[dayEditing] = groups;
+  // meta de cardio do dia (minutos): o aluno vê uma barra que completa ao atingir
+  const cmin = parseInt($dayForm.cmin.value);
+  p.cardioGoal = p.cardioGoal || {};
+  if (groups.includes(CARDIO) && cmin > 0) p.cardioGoal[dayEditing] = Math.min(300, cmin); else delete p.cardioGoal[dayEditing];
   $dayDlg.close(); save(); render();
 }
 $dayForm.addEventListener('submit', e => { e.preventDefault(); saveDay([...$dayForm.querySelectorAll('input[name=g]:checked')].map(i => i.value)); });
@@ -1450,14 +1554,15 @@ function renderPerfil() {
   const plan = LETTERS.map(L => `<div class="plan-g">Treino ${L}${letterDesc(L, p.id) ? ' · ' + esc(letterDesc(L, p.id)) : ''}</div>
       ${letterExs(L, p.id).map(exRow).join('')}
       <button class="link" style="margin-top:6px" data-act="new-in" data-g="${L}">＋ exercício no Treino ${L}</button>`).join('')
-    + (loose.length ? `<div class="plan-g">Sem treino (toque em ⋯ para escolher a letra)</div>${loose.map(exRow).join('')}` : '');
+    + (loose.length ? `<div class="plan-g">Sem treino (toque em ⋯ para escolher a letra)</div>${loose.map(exRow).join('')}
+      <button class="btn danger" style="margin-top:8px;padding-left:0" data-act="clear-loose">Apagar os exercícios sem treino</button>` : '');
 
   const todayPlan = dayPlan(p, today());
   const division = WEEK.map(([d, name]) => {
     const g = (p.division && p.division[d]) || [];
     const isT = toDate(today()).getDay() === d;
     return `<div class="plan-row"><div class="grow"><b>${name}</b>${isT ? ' <span class="pill up">hoje</span>' : ''}
-      <small>${g.length ? g.map(x => planLabel(x, p.id)).join(' + ') : 'Descanso'}</small></div>
+      <small>${g.length ? g.map(x => x === CARDIO && p.cardioGoal && p.cardioGoal[d] ? `Cardio ${p.cardioGoal[d]} min` : planLabel(x, p.id)).join(' + ') : 'Descanso'}</small></div>
       <button class="icon" data-act="edit-day" data-d="${d}" aria-label="Editar ${name}">✎</button></div>`;
   }).join('');
 
@@ -1687,6 +1792,19 @@ $main.addEventListener('click', e => {
     case 'edit-day': return openDay(+b.dataset.d);
     case 'edit-ex': return openDialog(exById(b.dataset.id));
     case 'new-in': return openDialog(null, b.dataset.g);
+    case 'hide-tip': { try { localStorage.setItem('planilha-dica-app', '1'); } catch (e) {} return b.closest('.install-tip').remove(); }
+    case 'clear-loose': {
+      const pid = ui.profile, loose = profExs(pid).filter(e => !isLetter(e.letter) && !exHistory(e.id).length);
+      if (!loose.length) return toast('Os exercícios sem treino já têm histórico e foram mantidos.');
+      confirmAsk(`Apagar ${loose.length} exercícios sem treino?`, 'Somem da lista os exercícios que não estão em nenhum treino (A, B, C, D) e nunca foram feitos.').then(ok => {
+        if (!ok) return;
+        const ids = new Set(loose.map(e => e.id));
+        db.exercises = db.exercises.filter(e => !ids.has(e.id));
+        db.sessions = db.sessions.filter(x => !ids.has(x.exId));
+        save(); render();
+      });
+      return;
+    }
     case 'set-letter': { const ex = exById(b.dataset.id); ex.letter = b.dataset.l; save(); toast(`<b>${esc(ex.name)}</b> agora está no Treino ${ex.letter}`); return render(); }
     case 'goto-msg': return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     case 'tpl': {
@@ -1751,6 +1869,7 @@ $main.addEventListener('click', e => {
   const wasComplete = s.sets.every(x => x.done);
   if (act === 'done') {
     const x = s.sets[+b.closest('[data-i]').dataset.i];
+    if (!x.done && (x.carga == null || x.reps == null)) return toast('Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
     x.done = !x.done;
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(); }
   } else if (act === 'inc' || act === 'dec') {
@@ -1758,8 +1877,13 @@ $main.addEventListener('click', e => {
     const v = (x[f] || 0) + STEP[f] * (act === 'inc' ? 1 : -1);
     x[f] = Math.max(0, Math.round(v * 10) / 10);
   } else if (act === 'alldone') {
-    const all = s.sets.every(x => x.done);
-    s.sets.forEach(x => x.done = !all);
+    if (s.sets.every(x => x.done)) s.sets.forEach(x => x.done = false);
+    else {
+      const ok = s.sets.filter(x => x.carga != null && x.reps != null);
+      if (!ok.length) return toast('Anote a <b>carga</b> e as <b>repetições</b> para confirmar as séries.');
+      ok.forEach(x => x.done = true);
+      if (ok.length < s.sets.length) toast('Só foram confirmadas as séries com carga e repetições anotadas.');
+    }
   } else if (act === 'addset') {
     const last = s.sets[s.sets.length - 1] || { carga: null, reps: null };
     s.sets.push({ carga: last.carga, reps: last.reps, done: false });
@@ -1783,9 +1907,9 @@ function openDialog(ex, letter) {
   $form.name.value = ex ? ex.name : '';
   $form.letter.value = ex ? ex.letter || '' : letter || (isLetter(ui.group) ? ui.group : 'A');
   $form.group.value = ex ? ex.group : '';
-  $form.sets.value = w ? w.sets.length : 4;
+  $form.sets.value = w ? w.sets.length : '';
   $form.carga.value = w && w.sets[0] ? numVal(w.sets[0].carga) : '';
-  $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : 10;
+  $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : '';
   initialPlan = [$form.sets.value, $form.carga.value, $form.reps.value].join('|');
   $dlg.showModal();
   if (!ex) $form.name.focus();
@@ -1794,7 +1918,8 @@ $form.addEventListener('submit', e => {
   const name = $form.name.value.trim();
   if (!name) return;
   if (!$form.group.value) { e.preventDefault(); return toast('Escolha o grupo muscular do exercício.'); }
-  const n = Math.max(1, Math.min(20, parseInt($form.sets.value) || 4));
+  if (!(parseInt($form.sets.value) > 0)) { e.preventDefault(); $form.sets.focus(); return toast('Informe o número de séries.'); }
+  const n = Math.max(1, Math.min(20, parseInt($form.sets.value)));
   const carga = parseNum($form.carga.value), reps = parseNum($form.reps.value);
   const group = $form.group.value || GROUPS[0], letter = $form.letter.value || null;
   if (editing) {
@@ -1873,6 +1998,7 @@ async function cloudBoot() {
   const auth = firebase.auth(), fs = firebase.firestore();
   if (CFG.emulator) { auth.useEmulator(CFG.emulator.auth); fs.useEmulator(CFG.emulator.host, CFG.emulator.port); }
   else { try { await fs.enablePersistence({ synchronizeTabs: true }); } catch (e) {} } // funciona offline
+  try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {} // login fica salvo no aparelho
   cloud = { auth, fs, role: null, ready: false, unsubs: [] };
   auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() ? 'signup' : 'login'); });
 }
@@ -1925,6 +2051,8 @@ function startAdmin() {
   }, err => cloudError(err)));
 }
 function startStudent(pid) {
+  // o aluno sempre abre direto no treino de hoje
+  ui.view = 'treino'; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
   cloud.pid = pid; cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
   cloud.unsubs.push(cloud.fs.doc('profiles/' + pid).onSnapshot(doc => {
     if (!doc.exists) return showAuth('noprofile');
