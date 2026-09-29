@@ -48,8 +48,8 @@ button{cursor:pointer}
 .who .av{width:24px;height:24px;font-size:11px;background:#fff;color:var(--acc)}
 .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hero h1{margin:8px 0 0;font-size:24px;letter-spacing:-.3px}
-.date-chip{position:relative;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;white-space:nowrap}
-.date-chip input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.date-chip{position:relative;overflow:hidden;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;white-space:nowrap}
+.date-chip input{position:absolute;inset:0;opacity:0;width:100%;max-width:100%;min-width:0;height:100%;cursor:pointer;-webkit-appearance:none;appearance:none}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .stats div{background:rgba(255,255,255,.14);border-radius:14px;padding:10px 12px}
 .stats b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
@@ -74,7 +74,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
   :root[data-color="vermelho"]{--acc:#ea8f8f;--acc-2:#dc7777;--acc-soft:#3a2020;--acc-ink:#2b1111;--hero:linear-gradient(160deg,#3a1616 0%,#6d1f1f 100%)}
   :root[data-color="grafite"]{--acc:#a9b6c2;--acc-2:#95a3b0;--acc-soft:#262b31;--acc-ink:#15191d;--hero:linear-gradient(160deg,#181d22 0%,#2c343c 100%)}
 }
-.gear{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.16);color:#fff;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;flex:0 0 auto}
+.gear{position:relative;z-index:2;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.16);color:#fff;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;flex:0 0 auto}
 .gear svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 .swatches button{border:2px solid transparent;background:none;padding:4px 0;border-radius:14px;display:grid;justify-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text)}
@@ -82,13 +82,11 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .swatches button.on{border-color:var(--text)}
 .install-tip{background:var(--acc-soft);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
 .install-tip button{border:0;background:none;color:var(--muted);font-size:16px;padding:0 2px}
-.goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px;position:relative}
-.goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:width 1s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden}
-/* concluído: listras andando + brilho */
-.goal-bar.full .fill{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.22) 0 10px,transparent 10px 20px);background-size:28px 28px;animation:stripes 1s linear infinite}
-.goal-bar.full .fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-100%);animation:shine 2.2s ease-in-out infinite}
-@keyframes stripes{to{background-position:28px 0}}
-@keyframes shine{60%,100%{transform:translateX(100%)}}
+.goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px;display:flex;justify-content:flex-end}
+.goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:none}
+.goal-txt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.time-in{width:96px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--input);color:var(--text);text-align:center;font-weight:700}
+.cardio-card .unit{color:var(--muted);font-weight:600;margin:0 4px 0 -2px}
 .modes.sm button{padding:6px 2px;font-size:11px;border-radius:12px}
 .modes.sm button span{font-size:20px}
 .cardio-card .actions .btn.on{background:var(--acc-soft);border-color:var(--acc)}
@@ -527,8 +525,8 @@ const REST_DEFAULT = 120;
 const ME = 'me';
 const MY_NAME = 'Igor Pedro';
 const CARDIO = 'Cardio';
-const MODES = [['corrida', 'Corrida', '🏃'], ['bicicleta', 'Bicicleta', '🚴'], ['escada', 'Escada', '🪜'], ['eliptico', 'Elíptico', '⭕']];
-const modeOf = id => MODES.find(m => m[0] === id) || [id, id, '•'];
+const MODES = [['corrida', 'Corrida'], ['bicicleta', 'Bicicleta'], ['escada', 'Escada'], ['eliptico', 'Elíptico']];
+const modeOf = id => MODES.find(m => m[0] === id) || [id, id];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const newInviteCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random() * 32 | 0]).join('');
@@ -804,7 +802,7 @@ function renderStats() {
     const d = statsDay();
     const day = profSessions().filter(s => s.date === d);
     cells = [[day.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), 'séries feitas'],
-      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [cardioBetween(d, d), 'min de cardio']];
+      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [fmt(cardioBetween(d, d)), 'min de cardio']];
   }
   document.getElementById('stats').innerHTML = cells.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 }
@@ -829,7 +827,6 @@ function bannerHtml(L) {
 }
 function renderTreino() {
   const group = ui.group;
-  setTimeout(animateBars);
   const exs = letterExs(group);
   const loose = profExs().filter(e => !isLetter(e.letter)).sort(byGroupOrder);
   const isToday = ui.date === today();
@@ -869,7 +866,6 @@ function renderStudentTreino(p, greet, isToday) {
       || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>');
   }).join('');
   const label = [...groups.map(g => 'Treino ' + g), ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
-  setTimeout(animateBars);
   $main.innerHTML = `${greet}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
@@ -893,49 +889,37 @@ const cardioGoalOf = (p, date) => (p.cardioGoal && p.cardioGoal[toDate(date).get
 function cardioGoalHtml(p) {
   const goal = cardioGoalOf(p, ui.date);
   const today_ = profCardio().filter(c => c.date === ui.date);
-  const done = today_.reduce((a, c) => a + c.min, 0);
+  const done = Math.round(today_.reduce((a, c) => a + c.min, 0) * 10) / 10;
   const full = goal ? done >= goal : done > 0;
   const pct = goal ? Math.min(100, done / goal * 100) : done ? 100 : 0;
-  const from = ui.cardioPct && ui.cardioPct.key === ui.date ? ui.cardioPct.v : 0; // anima a partir do valor anterior
-  ui.cardioPct = { key: ui.date, v: pct };
-  const round5 = v => Math.max(5, Math.round(v / 5) * 5);
-  const opts = goal ? [...new Set([round5(goal * .25), round5(goal * .5), round5(goal * .75)])].filter(v => v < goal) : [10, 15, 20, 30];
   const mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
-  const chip = (v, label, cls = '') => `<button class="btn ${cls} ${done === v ? 'on' : ''}" data-act="cardio-set" data-min="${v}">${label}</button>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h"><div class="ring" style="--p:${pct}">${full ? '✓' : goal ? Math.round(pct) + '%' : '0'}</div>
-        <div class="grow"><h3>Cardio</h3><small>${goal ? `Meta do dia: <b>${goal} min</b>` : 'Registre quanto tempo você fez'}</small></div>
+        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmt(done)} min` : 'Escolha o cardio e anote o tempo'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
-      <div class="modes sm">${MODES.map(([id, label, e]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}"><span>${e}</span>${label}</button>`).join('')}</div>
-      <p class="plan-g" style="margin:12px 0 6px">Quanto tempo você fez?</p>
-      <div class="actions" style="margin-top:0">
-        ${opts.map(v => chip(v, v + ' min')).join('')}
-        ${goal ? chip(goal, `✓ Completo (${goal} min)`, 'primary') : ''}
+      <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
+      <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Tempo realizado</label>
+      <div class="actions" style="margin-top:0;align-items:center">
+        <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="0" value="${done ? numVal(done) : ''}" aria-label="Tempo realizado em minutos"><span class="unit">min</span>
+        <button class="btn primary" data-act="cardio-save">Salvar</button>
+        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Desmarcar</button>' : ''}
       </div>
-      <div class="actions"><div class="step" style="height:38px;width:130px">
-          <button data-act="cmin" data-d="-5" aria-label="Menos 5 minutos">−</button>
-          <input id="cardioMin" inputmode="numeric" value="${ui.cardioMin}" aria-label="Outro tempo em minutos">
-          <button data-act="cmin" data-d="5" aria-label="Mais 5 minutos">+</button></div>
-        <button class="btn" data-act="cardio-set-custom">Marcar outro tempo</button>
-        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Desmarcar</button>' : ''}</div>
       <div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal || 100}" aria-valuenow="${goal ? Math.min(done, goal) : pct}">
-        <div class="fill" data-w="${pct}" style="width:${from}%"></div></div>
-      <p class="goal-txt">${done ? `<b>${done}</b>${goal ? ` de ${goal}` : ''} min feitos${goal && !full ? ` · faltam ${goal - done} min` : ''}` : 'Nenhum cardio marcado ainda'}</p>
+        <div class="fill" style="width:${pct}%"></div></div>
+      <div class="goal-txt"><span>${done ? `<b>${fmt(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
+        <span>Meta: <b>${goal ? fmt(goal) + ' min' : '—'}</b></span></div>
     </section>`;
 }
-// Marca o tempo total de cardio do dia (substitui o que estava marcado)
+// Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
 function setCardio(min) {
   const p = profile(ui.profile), mode = ui.mode;
+  min = Math.min(300, Math.round((min || 0) * 10) / 10);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
-  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min: Math.min(300, Math.round(min)), ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
   save(); render();
   const goal = cardioGoalOf(p, ui.date);
-  if (min > 0 && goal && min >= goal) { confetti(); toast(`Cardio concluído! ${modeOf(mode)[2]} ${min} min 🎉`); }
-  else if (min > 0) toast(`${modeOf(mode)[2]} ${min} min de cardio marcados`);
-}
-// Anima as barras de cardio até o valor novo
-function animateBars() {
-  requestAnimationFrame(() => requestAnimationFrame(() => $main.querySelectorAll('.goal-bar .fill[data-w]').forEach(f => f.style.width = f.dataset.w + '%')));
+  if (min > 0 && goal && min >= goal) toast(`Cardio concluído! ${modeOf(mode)[1]} ${fmt(min)} min`);
+  else if (min > 0) toast(`${modeOf(mode)[1]}: ${fmt(min)} min de cardio salvos`);
 }
 // Dica para o aluno instalar na tela de início (assim o login fica salvo e o app abre direto no treino)
 function installTipHtml() {
@@ -1047,9 +1031,9 @@ function cardioHtml(noBanner) {
   return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>`}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Qual cardio você vai fazer?</h3></div></div>
-      <div class="modes">${MODES.map(([id, label, e]) => `<button class="${ui.mode === id ? 'on' : ''}" data-act="mode" data-m="${id}"><span>${e}</span>${label}</button>`).join('')}</div>
+      <div class="modes">${MODES.map(([id, label]) => `<button class="${ui.mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
       ${w ? `<div class="stopwatch" id="watch">${mmss(Math.floor((Date.now() - w.start) / 1000))}</div>
-        <p class="hint" style="text-align:center;margin:0 0 8px">${modeOf(w.mode)[2]} ${modeOf(w.mode)[1]} em andamento</p>
+        <p class="hint" style="text-align:center;margin:0 0 8px">${modeOf(w.mode)[1]} em andamento</p>
         <div class="actions" style="justify-content:center"><button class="btn primary" data-act="watch-stop">■ Parar e registrar</button><button class="btn danger" data-act="watch-cancel">Cancelar</button></div>`
       : `<div class="cardio-time"><div class="step">
           <button data-act="cmin" data-d="-5" aria-label="Menos 5 minutos">−</button>
@@ -1061,8 +1045,8 @@ function cardioHtml(noBanner) {
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Cardio ${ui.date === today() ? 'de hoje' : 'do dia ' + fmtDate(ui.date)}</h3>
         <small>${day.length ? `Total: ${day.reduce((a, c) => a + c.min, 0)} min` : 'Nada registrado ainda'}</small></div></div>
-      ${day.map(c => `<div class="list-row"><span class="e">${modeOf(c.mode)[2]}</span><div class="grow"><b>${modeOf(c.mode)[1]}</b></div>
-        <b>${c.min} min</b><button class="icon" data-act="del-cardio" data-id="${c.id}" aria-label="Apagar">✕</button></div>`).join('')}
+      ${day.map(c => `<div class="list-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b></div>
+        <b>${fmt(c.min)} min</b><button class="icon" data-act="del-cardio" data-id="${c.id}" aria-label="Apagar">✕</button></div>`).join('')}
     </section>`;
 }
 function addCardio(mode, min) {
@@ -1070,7 +1054,7 @@ function addCardio(mode, min) {
   if (!(min > 0)) return toast('Informe os minutos.');
   db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
   save(); render();
-  toast(`${modeOf(mode)[2]} <b>${modeOf(mode)[1]}</b>: ${min} min registrados`);
+  toast(`<b>${modeOf(mode)[1]}</b>: ${min} min registrados`);
 }
 let watchTimer = null;
 function tickWatch() {
@@ -1102,7 +1086,7 @@ function dayCard(d, list) {
       return `<tr><td>${esc(exById(s.exId).name)}${s.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
-    ${cardio.map(c => `<div class="list-row"><span class="e">${modeOf(c.mode)[2]}</span><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${c.min} min</b></div>`).join('')}
+    ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${fmt(c.min)} min</b></div>`).join('')}
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">Abrir / editar este treino</button></div>
   </section>`;
 }
@@ -1367,7 +1351,7 @@ function renderEvolution() {
     const cw = data.weeks.map(w => cardioBetween(w, addDays(w, 6)));
     const byMode = MODES.map(m => [m, profCardio().filter(c => c.mode === m[0] && c.date >= data.weeks[0]).reduce((a, c) => a + c.min, 0)]).filter(x => x[1]);
     if (cw.some(Boolean)) html += `<section class="card"><div class="card-h"><div class="grow"><h3>Cardio · minutos por semana</h3>
-        <small>Total no período: ${cw.reduce((a, b) => a + b, 0)} min · ${byMode.map(([m, v]) => `${m[2]} ${m[1]} ${v} min`).join(' · ')}</small></div></div>
+        <small>Total no período: ${cw.reduce((a, b) => a + b, 0)} min · ${byMode.map(([m, v]) => `${m[1]} ${fmt(v)} min`).join(' · ')}</small></div></div>
       ${sparkline(cw)}<table class="hist"><thead><tr><th>Semana</th><th>Minutos</th><th></th></tr></thead><tbody>
       ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${v} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
       </tbody></table></section>`;
@@ -1547,7 +1531,7 @@ function marcacoesHtml(p) {
       const done = x.sets.filter(y => y.done);
       return `<div class="plan-row"><div class="grow"><b>${esc(exById(x.exId).name)}</b>
         <small>${done.length}/${x.sets.length} séries · ${done.map(y => `${fmt(y.carga)}×${y.reps ?? '–'}`).join('  ')}</small></div><b>${fmt(vol(x.sets))} kg</b></div>`;
-    }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[2]} ${modeOf(c.mode)[1]}</b><small>cardio</small></div><b>${c.min} min</b></div>`).join('');
+    }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b><small>cardio</small></div><b>${fmt(c.min)} min</b></div>`).join('');
     return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}</p>${rows}`;
   }).join('');
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Marcações do aluno</h3>
@@ -1937,7 +1921,11 @@ $main.addEventListener('click', e => {
     case 'cmin': ui.cardioMin = Math.max(5, Math.min(300, (ui.cardioMin || 0) + +b.dataset.d)); saveUi(); return render();
     case 'add-cardio': return addCardio(ui.mode, ui.cardioMin);
     case 'cardio-set': return setCardio(+b.dataset.min);
-    case 'cardio-set-custom': return setCardio(ui.cardioMin);
+    case 'cardio-save': {
+      const v = parseNum(document.getElementById('cardioDone').value);
+      if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
+      return setCardio(v);
+    }
     case 'del-cardio': db.cardio = db.cardio.filter(c => c.id !== b.dataset.id); save(); return render();
     case 'watch-start': ui.watch = { start: Date.now(), mode: ui.mode }; clearInterval(watchTimer); watchTimer = setInterval(tickWatch, 500); return render();
     case 'watch-cancel': ui.watch = null; clearInterval(watchTimer); return render();
@@ -2342,7 +2330,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-20:43';
+const APP_VERSION = '29/09-20:52';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
