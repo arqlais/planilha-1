@@ -361,6 +361,7 @@ input,select,textarea{font-size:16px!important}
   <form method="dialog" id="exForm">
     <h2 id="exTitle">Novo exercício</h2>
     <label class="f">Nome do exercício<input name="name" required placeholder="Ex.: Supino inclinado" autocomplete="off"></label>
+    <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Treino<div id="letterPick" style="margin-top:6px"></div></div>
     <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Grupo muscular<div id="groupPick" style="margin-top:6px"></div></div>
     <div class="grid3">
       <label class="f">Séries<input name="sets" inputmode="numeric" value="4"></label>
@@ -421,6 +422,9 @@ function splitGroup(group, name) {
   return group;
 }
 const OLD_GROUPS = { 'Braços': ['Bíceps', 'Tríceps'], Pernas: LEGS };
+// Treinos por letra (A, B, C, D); cada exercício tem a letra do treino e o grupo muscular
+const LETTERS = ['A', 'B', 'C', 'D'];
+const isLetter = v => LETTERS.includes(v);
 const SVG = {
   treino: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
   historico: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -461,7 +465,7 @@ const daysBetween = (a, b) => Math.round((toDate(b) - toDate(a)) / 864e5);
 function seed() {
   const exercises = [], sessions = [];
   const add = (group, name, sets, histDate) => {
-    const ex = { id: uid(), profileId: ME, group, name, sets: sets.map(([carga, reps]) => ({ carga, reps })) };
+    const ex = { id: uid(), profileId: ME, group, letter: ['Peito', 'Costas'].includes(group) ? 'A' : null, name, sets: sets.map(([carga, reps]) => ({ carga, reps })) };
     exercises.push(ex);
     if (histDate) sessions.push({ id: uid(), exId: ex.id, date: histDate, sets: ex.sets.map(s => ({ ...s, done: true })) });
   };
@@ -480,7 +484,7 @@ function seed() {
   add('Tríceps', 'Tríceps francês', [[25, null], [30, null], [35, null], [30, null], [35, null]]);
   add('Bíceps', 'Rosca direta', [[null, 10], [null, 10], [null, 10], [null, 10]]);
   add('Abdômen', 'Abdominal supra', [[null, 15], [null, 15], [null, 15]]);
-  return { profiles: [{ id: ME, name: MY_NAME }], exercises, sessions, cardio: [] };
+  return { profiles: [{ id: ME, name: MY_NAME }], exercises, sessions, cardio: [], letters: true };
 }
 // Versões antigas não tinham perfis: tudo vira o treino do professor
 function migrate(d) {
@@ -491,6 +495,17 @@ function migrate(d) {
   d.exercises.forEach(e => { if (!e.profileId) e.profileId = ME; });
   if (!Array.isArray(d.cardio)) d.cardio = [];
   d.exercises.forEach(e => { e.group = splitGroup(e.group, e.name); });
+  // Passagem para treinos A/B/C/D: Peito e Costas viram o Treino A; os outros ficam sem letra
+  if (!d.letters) {
+    d.exercises.forEach(e => { if (!('letter' in e)) e.letter = ['Peito', 'Costas'].includes(e.group) ? 'A' : null; });
+    d.profiles.forEach(p => {
+      if (p.division) for (const k in p.division) {
+        const g = p.division[k];
+        p.division[k] = [...(g.some(x => x === 'Peito' || x === 'Costas') ? ['A'] : []), ...(g.includes('Cardio') ? ['Cardio'] : [])];
+      }
+    });
+    d.letters = true;
+  }
   d.profiles.forEach(p => {
     if (p.division) for (const k in p.division) p.division[k] = [...new Set(p.division[k].flatMap(g => OLD_GROUPS[g] || [g]))];
   });
@@ -504,13 +519,12 @@ function load() {
 function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
 
 let db = load();
-let ui = { view: 'treino', group: 'Peito', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
+let ui = { view: 'treino', group: 'A', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
   if (VIEWS.some(v => v[0] === u.view) || u.view === 'perfil' || u.view === 'recados') ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
-  if (GROUPS.includes(u.group) || u.group === CARDIO) ui.group = u.group;
-  else if (OLD_GROUPS[u.group]) ui.group = OLD_GROUPS[u.group][0];
+  ui.group = isLetter(u.group) || u.group === CARDIO ? u.group : 'A';
   if (u.layout) ui.layout = u.layout;
   if (u.mode) ui.mode = u.mode;
   if (u.cardioMin) ui.cardioMin = u.cardioMin;
@@ -539,6 +553,11 @@ const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c =
 // Divisão da semana do aluno (feita pelo professor): dia da semana (0=domingo) -> grupos
 const WEEK = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
 const dayPlan = (p, date) => (p.division && p.division[toDate(date).getDay()]) || [];
+const byGroupOrder = (a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group);
+const letterExs = (L, pid = ui.profile) => profExs(pid).filter(e => e.letter === L).sort(byGroupOrder);
+// "Peito · Costas": grupos musculares que o treino tem
+const letterDesc = (L, pid = ui.profile) => [...new Set(letterExs(L, pid).map(e => e.group))].join(' · ');
+const planLabel = (x, pid) => x === CARDIO ? 'Cardio' : `Treino ${x}${letterDesc(x, pid) ? ` (${letterDesc(x, pid)})` : ''}`;
 function trainedDates(pid = ui.profile) {
   return [...new Set([...profSessions(pid).map(s => s.date), ...profCardio(pid).map(c => c.date)])].sort();
 }
@@ -566,7 +585,8 @@ function weekStart(dateStr) {
 }
 function addDays(dateStr, n) { const d = toDate(dateStr); d.setDate(d.getDate() + n); return isoDate(d); }
 function volumeBetween(from, to, group, pid = ui.profile) {
-  const ids = new Set(profExs(pid).filter(e => !group || e.group === group).map(e => e.id));
+  const match = typeof group === 'function' ? group : e => !group || e.group === group;
+  const ids = new Set(profExs(pid).filter(match).map(e => e.id));
   return db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to).reduce((a, s) => a + vol(s.sets), 0);
 }
 function weekPair(group, pid = ui.profile, ref = ui.date) {
@@ -637,14 +657,15 @@ function go(view) {
   stopDemo(); ui.demo = false; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 // ---------- Treino ----------
-function bannerHtml(group) {
-  const [now, before] = weekPair(group);
-  return `<div class="grow"><h2>${esc(group)}</h2><small>Semana: <b>${fmt(now)} kg</b> · anterior ${fmt(before)} kg</small></div>
+function bannerHtml(L) {
+  const [now, before] = weekPair(e => e.letter === L);
+  return `<div class="grow"><h2>Treino ${L}</h2><small>${esc(letterDesc(L)) || 'Sem exercícios ainda'}<br>Semana: <b>${fmt(now)} kg</b> · anterior ${fmt(before)} kg</small></div>
     ${delta(now, before)}`;
 }
 function renderTreino() {
   const group = ui.group;
-  const exs = profExs().filter(e => e.group === group);
+  const exs = letterExs(group);
+  const loose = profExs().filter(e => !isLetter(e.letter)).sort(byGroupOrder);
   const isToday = ui.date === today();
   const p = profile(ui.profile), lastMsg = ui.studentMode && (p.messages || []).slice(-1)[0];
   const greet = ui.studentMode && isToday ? `<div class="banner hello"><div class="grow"><h2>Olá, ${esc(firstName(p))}! 👋</h2>
@@ -664,19 +685,23 @@ function renderTreino() {
     <div class="layout">Séries em:
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
       <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
-    ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || `<p class="empty">${ui.studentMode ? 'Seu professor ainda não montou este treino.' : 'Nenhum exercício ainda. Adicione o primeiro'}</p>`}
-    ${ui.studentMode ? '' : '<button class="add" data-act="new">＋ Adicionar exercício</button>'}`}`;
+    ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || `<p class="empty">Nenhum exercício no Treino ${group} ainda. Adicione abaixo.</p>`}
+    <button class="add" data-act="new">＋ Adicionar exercício no Treino ${group}</button>
+    ${loose.length ? `<section class="card" style="margin-top:14px"><details class="tbl"><summary>Exercícios sem treino (${loose.length}) · mover para o Treino ${group}</summary>
+      ${loose.map(e => `<div class="plan-row"><div class="grow"><b>${esc(e.name)}</b><small>${e.group} · ${planText(e)}</small></div>
+        <button class="btn" data-act="set-letter" data-id="${e.id}" data-l="${group}">＋ ${group}</button></div>`).join('')}</details></section>` : ''}`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 // Aluno: vê só o treino que o professor passou para o dia (sem escolher grupo)
 function renderStudentTreino(p, greet, isToday) {
-  const plan = dayPlan(p, ui.date), groups = GROUPS.filter(g => plan.includes(g));
+  const plan = dayPlan(p, ui.date), groups = LETTERS.filter(g => plan.includes(g));
   const blocks = groups.map(g => {
-    const exs = profExs().filter(e => e.group === g);
-    return `<h3 style="margin:18px 4px 10px">${g}</h3>` + (exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('')
+    const exs = letterExs(g);
+    return `<h3 style="margin:18px 4px 10px">Treino ${g}${letterDesc(g) ? ` <small style="color:var(--muted);font-weight:600">${esc(letterDesc(g))}</small>` : ''}</h3>`
+      + (exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('')
       || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>');
   }).join('');
-  const label = [...groups, ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
+  const label = [...groups.map(g => 'Treino ' + g), ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
   $main.innerHTML = `${greet}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
@@ -693,9 +718,13 @@ function renderStudentTreino(p, greet, isToday) {
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 function groupChips(group) {
-  const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g}</button>`;
-  return `<div class="chips">${UPPER.map(chip).join('')}</div>
-    <div class="chips sub"><span class="lbl">Pernas</span>${LEGS.map(chip).join('')}${chip(CARDIO)}</div>`;
+  const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? g : 'Treino ' + g}</button>`;
+  return `<div class="chips">${LETTERS.map(chip).join('')}${chip(CARDIO)}</div>`;
+}
+function letterPicker(type, name, checked, withCardio, pid) {
+  const opt = g => `<label><input type="${type}" name="${name}" value="${g}" ${checked(g) ? 'checked' : ''}><span>${g === CARDIO ? g : 'Treino ' + g}</span></label>`;
+  return `<div class="groups">${LETTERS.map(opt).join('')}${withCardio ? opt(CARDIO) : ''}</div>
+    ${pid ? `<p class="hint" style="margin:8px 0 0">${LETTERS.map(L => `<b>${L}</b>: ${esc(letterDesc(L, pid)) || 'vazio'}`).join(' · ')}</p>` : ''}`;
 }
 // Seletor por seções (superiores / pernas / cardio) para diálogos
 function groupPicker(type, name, checked, withCardio) {
@@ -739,7 +768,7 @@ function cardHtml(ex) {
     <div class="card-h">
       <div class="ring" style="--p:${n ? done / n * 100 : 0}">${done}/${n}</div>
       <div class="grow"><h3>${esc(ex.name)}</h3>
-        <small>${prev ? `Último treino ${fmtDate(prev.date)}` : 'Primeiro treino deste exercício'}</small></div>
+        <small>${ex.group} · ${prev ? `último treino ${fmtDate(prev.date)}` : 'primeiro treino'}</small></div>
       ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
     ${tiles ? `<div class="tile-key">Em cada série: <b>carga (kg)</b> · <b>repetições</b> · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
@@ -844,7 +873,7 @@ function dayCard(d, list) {
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
     ${cardio.map(c => `<div class="list-row"><span class="e">${modeOf(c.mode)[2]}</span><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${c.min} min</b></div>`).join('')}
-    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${groups[0]}">Abrir / editar este treino</button></div>
+    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">Abrir / editar este treino</button></div>
   </section>`;
 }
 function renderHistorico() {
@@ -1261,9 +1290,9 @@ function firstName(p) { return p.name.trim().split(/\s+/)[0]; }
 function msgTemplate(kind, p) {
   const n = firstName(p);
   if (kind === 'treino') {
-    const g = ui.tplGroup || GROUPS[0];
-    const exs = profExs(p.id).filter(e => e.group === g);
-    return `Oi, ${n}! Seu treino de *${g}*:\n` + (exs.map(e => `• ${e.name}: ${planText(e)}`).join('\n') || '(ainda sem exercícios)') + '\n\nBom treino! 💪';
+    const g = isLetter(ui.tplGroup) ? ui.tplGroup : 'A';
+    const exs = letterExs(g, p.id);
+    return `Oi, ${n}! Seu *Treino ${g}*${letterDesc(g, p.id) ? ` (${letterDesc(g, p.id)})` : ''}:\n` + (exs.map(e => `• ${e.name}: ${planText(e)}`).join('\n') || '(ainda sem exercícios)') + '\n\nBom treino! 💪';
   }
   if (kind === 'semana') {
     const [now, before] = weekPair(null, p.id, today());
@@ -1304,7 +1333,7 @@ function renderRecados() {
 function setStudentMode(on) {
   ui.studentMode = on; stopDemo(); ui.demo = false;
   ui.view = on ? 'treino' : 'perfil'; ui.date = today(); ui.month = ui.date.slice(0, 7);
-  if (on && !GROUPS.includes(ui.group) && ui.group !== CARDIO) ui.group = GROUPS[0];
+  if (on && !isLetter(ui.group) && ui.group !== CARDIO) ui.group = 'A';
   saveUi(); render(); window.scrollTo({ top: 0 });
   if (on) toast(`Agora você vê o app como <b>${esc(firstName(profile(ui.profile)))}</b>. O que marcar aqui fica como marcação do aluno.`);
 }
@@ -1316,7 +1345,7 @@ function openDay(d) {
   const p = profile(ui.profile), cur = (p.division && p.division[d]) || [];
   dayEditing = d;
   document.getElementById('dayTitle').textContent = `Treino de ${WEEK.find(w => w[0] === d)[1].toLowerCase()}`;
-  document.getElementById('dayPick').innerHTML = groupPicker('checkbox', 'g', g => cur.includes(g), true);
+  document.getElementById('dayPick').innerHTML = letterPicker('checkbox', 'g', g => cur.includes(g), true, p.id);
   $dayDlg.showModal();
 }
 function saveDay(groups) {
@@ -1335,7 +1364,7 @@ function renderPerfil() {
   const s = profileSummary(p.id), ws = weekStart(today());
   const cm = cardioBetween(ws, addDays(ws, 6), p.id);
   if (ui.msgDraft == null || ui.msgFor !== p.id) { ui.msgFor = p.id; ui.msgDraft = ''; }
-  if (!ui.tplGroup) ui.tplGroup = GROUPS[0];
+  if (!isLetter(ui.tplGroup)) ui.tplGroup = 'A';
 
   const maxV = Math.max(1, ...GROUPS.flatMap(g => weekPair(g, p.id, today())));
   const bars = GROUPS.map(g => {
@@ -1355,23 +1384,23 @@ function renderPerfil() {
     return `<div class="list-row"><div class="grow"><b>${fmtDate(d)}</b> <small style="color:var(--muted)">${weekday(d)}</small>${byStudent ? '<span class="by">marcado pelo aluno</span>' : ''}
       <small style="display:block;color:var(--muted)">${[...groups, cmin ? `cardio ${cmin} min` : ''].filter(Boolean).join(' · ')}</small></div>
       <b>${fmt(ss.reduce((a, x) => a + vol(x.sets), 0))} kg</b>
-      <button class="icon" data-act="openday" data-d="${d}" data-g="${groups[0] || CARDIO}" aria-label="Abrir treino">›</button></div>`;
+      <button class="icon" data-act="openday" data-d="${d}" data-g="${ss.length ? exById(ss[0].exId).letter || 'A' : CARDIO}" aria-label="Abrir treino">›</button></div>`;
   }).join('');
 
-  const plan = GROUPS.map(g => {
-    const exs = profExs(p.id).filter(e => e.group === g);
-    return `<div class="plan-g">${g}</div>
-      ${exs.map(e => `<div class="plan-row"><div class="grow"><b>${esc(e.name)}</b><small>${planText(e)}</small></div>
-        <button class="icon" data-act="edit-ex" data-id="${e.id}" aria-label="Editar ${esc(e.name)}">⋯</button></div>`).join('')}
-      <button class="link" style="margin-top:6px" data-act="new-in" data-g="${g}">＋ exercício em ${g}</button>`;
-  }).join('');
+  const exRow = e => `<div class="plan-row"><div class="grow"><b>${esc(e.name)}</b><small>${e.group} · ${planText(e)}</small></div>
+        <button class="icon" data-act="edit-ex" data-id="${e.id}" aria-label="Editar ${esc(e.name)}">⋯</button></div>`;
+  const loose = profExs(p.id).filter(e => !isLetter(e.letter)).sort(byGroupOrder);
+  const plan = LETTERS.map(L => `<div class="plan-g">Treino ${L}${letterDesc(L, p.id) ? ' · ' + esc(letterDesc(L, p.id)) : ''}</div>
+      ${letterExs(L, p.id).map(exRow).join('')}
+      <button class="link" style="margin-top:6px" data-act="new-in" data-g="${L}">＋ exercício no Treino ${L}</button>`).join('')
+    + (loose.length ? `<div class="plan-g">Sem treino (toque em ⋯ para escolher a letra)</div>${loose.map(exRow).join('')}` : '');
 
   const todayPlan = dayPlan(p, today());
   const division = WEEK.map(([d, name]) => {
     const g = (p.division && p.division[d]) || [];
     const isT = toDate(today()).getDay() === d;
     return `<div class="plan-row"><div class="grow"><b>${name}</b>${isT ? ' <span class="pill up">hoje</span>' : ''}
-      <small>${g.length ? g.join(' + ') : 'Descanso'}</small></div>
+      <small>${g.length ? g.map(x => planLabel(x, p.id)).join(' + ') : 'Descanso'}</small></div>
       <button class="icon" data-act="edit-day" data-d="${d}" aria-label="Editar ${name}">✎</button></div>`;
   }).join('');
 
@@ -1411,19 +1440,19 @@ function renderPerfil() {
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
         <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
-      <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.join(' + ') : 'descanso'}</p>
+      <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => planLabel(x, p.id)).join(' + ') : 'descanso'}</p>
       ${division}
     </section>
     <section class="card">
-      <div class="card-h"><div class="grow"><h3>Exercícios do aluno</h3><small>Crie os exercícios de cada grupo: toque em ⋯ para mudar séries, carga e repetições</small></div></div>
+      <div class="card-h"><div class="grow"><h3>Treinos do aluno</h3><small>Monte os treinos A, B, C e D: toque em ⋯ para mudar séries, carga, repetições ou a letra</small></div></div>
       ${plan}
     </section>
     <section class="card" id="msgCard">
       <div class="card-h"><div class="grow"><h3>💬 Mensagem para ${esc(firstName(p))}</h3>
         <small>${p.phone ? 'Abre o WhatsApp com a mensagem pronta' : 'Cadastre o WhatsApp do aluno (✎) para enviar direto para ele'}</small></div></div>
       <div class="tpl">
-        <button class="btn" data-act="tpl" data-k="treino">📋 Treino de</button>
-        <select id="tplGroup" aria-label="Grupo do treino">${GROUPS.map(g => `<option ${g === ui.tplGroup ? 'selected' : ''}>${g}</option>`).join('')}</select>
+        <button class="btn" data-act="tpl" data-k="treino">📋 Enviar</button>
+        <select id="tplGroup" aria-label="Treino">${LETTERS.map(g => `<option value="${g}" ${g === ui.tplGroup ? 'selected' : ''}>Treino ${g}</option>`).join('')}</select>
         <button class="btn" data-act="tpl" data-k="semana">📈 Resumo da semana</button>
         <button class="btn" data-act="tpl" data-k="lembrete">⏰ Lembrete</button>
         <button class="btn" data-act="tpl" data-k="parabens">🎉 Parabéns</button>
@@ -1594,6 +1623,7 @@ $main.addEventListener('click', e => {
     case 'edit-day': return openDay(+b.dataset.d);
     case 'edit-ex': return openDialog(exById(b.dataset.id));
     case 'new-in': return openDialog(null, b.dataset.g);
+    case 'set-letter': { const ex = exById(b.dataset.id); ex.letter = b.dataset.l; save(); toast(`<b>${esc(ex.name)}</b> agora está no Treino ${ex.letter}`); return render(); }
     case 'goto-msg': return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     case 'tpl': {
       ui.msgDraft = msgTemplate(b.dataset.k, profile(ui.profile));
@@ -1679,14 +1709,16 @@ $main.addEventListener('click', e => {
 // ---------- Diálogo de exercício ----------
 const $dlg = document.getElementById('exDialog'), $form = document.getElementById('exForm');
 document.getElementById('groupPick').innerHTML = groupPicker('radio', 'group', () => false, false);
+document.getElementById('letterPick').innerHTML = letterPicker('radio', 'letter', () => false, false);
 let editing = null, initialPlan = '';
-function openDialog(ex, group) {
+function openDialog(ex, letter) {
   editing = ex;
   document.getElementById('exTitle').textContent = ex ? 'Editar exercício' : 'Novo exercício';
   document.getElementById('exDelete').style.visibility = ex ? 'visible' : 'hidden';
   const w = ex ? working(ex, ui.date) : null;
   $form.name.value = ex ? ex.name : '';
-  $form.group.value = ex ? ex.group : group || (GROUPS.includes(ui.group) ? ui.group : GROUPS[0]);
+  $form.letter.value = ex ? ex.letter || '' : letter || (isLetter(ui.group) ? ui.group : 'A');
+  $form.group.value = ex ? ex.group : '';
   $form.sets.value = w ? w.sets.length : 4;
   $form.carga.value = w && w.sets[0] ? numVal(w.sets[0].carga) : '';
   $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : 10;
@@ -1694,14 +1726,15 @@ function openDialog(ex, group) {
   $dlg.showModal();
   if (!ex) $form.name.focus();
 }
-$form.addEventListener('submit', () => {
+$form.addEventListener('submit', e => {
   const name = $form.name.value.trim();
   if (!name) return;
+  if (!$form.group.value) { e.preventDefault(); return toast('Escolha o grupo muscular do exercício.'); }
   const n = Math.max(1, Math.min(20, parseInt($form.sets.value) || 4));
   const carga = parseNum($form.carga.value), reps = parseNum($form.reps.value);
-  const group = $form.group.value || GROUPS[0];
+  const group = $form.group.value || GROUPS[0], letter = $form.letter.value || null;
   if (editing) {
-    editing.name = name; editing.group = group;
+    editing.name = name; editing.group = group; editing.letter = letter;
     // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
     if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
       editing.sets = Array.from({ length: n }, () => ({ carga, reps }));
@@ -1709,9 +1742,9 @@ $form.addEventListener('submit', () => {
       s.sets = Array.from({ length: n }, (_, i) => ({ carga, reps, done: !!(s.sets[i] && s.sets[i].done) }));
     }
   } else {
-    db.exercises.push({ id: uid(), profileId: ui.profile, group, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
+    db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
   }
-  if (ui.view === 'treino') ui.group = group;
+  if (ui.view === 'treino' && letter) ui.group = letter;
   saveUi(); save(); render();
 });
 document.getElementById('exCancel').onclick = () => $dlg.close();
