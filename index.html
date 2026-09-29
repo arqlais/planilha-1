@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#2b4637">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Planilha de Treino</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="Treino">
 <style>
 :root{
   --bg:#f2f3f0; --card:#fff; --text:#1f2621; --muted:#6b736d; --line:#e1e4de;
@@ -55,6 +58,17 @@ button{cursor:pointer}
 main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 
 .av{width:40px;height:40px;border-radius:50%;background:var(--hero);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 auto}
+
+/* ---- login ---- */
+body.locked > header, body.locked > main, body.locked > nav, body.locked > #studentBar, body.locked > #rest{display:none!important}
+#auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--hero)}
+.auth-card{width:min(400px,100%);background:var(--card);border-radius:22px;padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.auth-card h1{margin:10px 0 2px;font-size:22px}
+.auth-card #authSub{margin:0 0 16px;color:var(--muted)}
+.auth-logo{width:52px;height:52px;border-radius:16px;background:var(--acc-soft);display:grid;place-items:center}
+.auth-logo svg{width:30px;height:30px;fill:none;stroke:var(--acc);stroke-width:1.8;stroke-linecap:round}
+.auth-links{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
+.auth-links .link{font-size:14px}
 
 /* ---- modo aluno ---- */
 #studentBar{position:sticky;top:0;z-index:12;display:flex;align-items:center;justify-content:center;gap:8px;background:#c0892a;color:#fff;font-size:13px;padding:6px 12px;text-align:center}
@@ -317,6 +331,25 @@ input,select,textarea{font-size:16px!important}
 </style>
 </head>
 <body>
+<div id="auth" hidden>
+  <div class="auth-card">
+    <div class="auth-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg></div>
+    <h1>Planilha de Treino</h1>
+    <p id="authSub">Carregando…</p>
+    <form id="authForm" hidden>
+      <label class="f" id="authCodeF" hidden>Código de convite (enviado pelo professor)<input name="code" autocomplete="off" autocapitalize="off" placeholder="ex.: k3j9x2ab-7QF2KD"></label>
+      <label class="f">E-mail<input name="email" type="email" autocomplete="email" autocapitalize="off"></label>
+      <label class="f">Senha<input name="pass" type="password" autocomplete="current-password" minlength="6"></label>
+      <p class="hint" id="authMsg" role="status"></p>
+      <button class="btn primary" id="authOk" style="width:100%;padding:12px">Entrar</button>
+    </form>
+    <div class="auth-links">
+      <button class="link" id="authToggle" type="button">Primeiro acesso? Criar conta</button>
+      <button class="link" id="authForgot" type="button">Esqueci a senha</button>
+      <button class="link" id="authOut" type="button" hidden>Sair desta conta</button>
+    </div>
+  </div>
+</div>
 <div id="studentBar" hidden>👁 Vendo como <b id="studentBarName"></b> vê o app <button data-act-global="exit-student">Sair</button></div>
 <header class="hero">
   <div class="hero-in">
@@ -409,6 +442,7 @@ input,select,textarea{font-size:16px!important}
   </form>
 </dialog>
 
+<script src="config.js"></script>
 <script>
 const UPPER = ['Costas', 'Peito', 'Ombros', 'Bíceps', 'Tríceps', 'Abdômen'];
 const LEGS = ['Quadríceps', 'Posteriores', 'Panturrilha']; // grupos de pernas
@@ -448,6 +482,11 @@ const MODES = [['corrida', 'Corrida', '🏃'], ['bicicleta', 'Bicicleta', '🚴'
 const modeOf = id => MODES.find(m => m[0] === id) || [id, id, '•'];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+const newInviteCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random() * 32 | 0]).join('');
+// Configuração da nuvem (config.js). Sem ela, o app guarda tudo só neste aparelho.
+const CFG = window.PLANILHA_CONFIG || {};
+const CLOUD = !!(CFG.firebase && CFG.firebase.apiKey);
+const ADMIN_EMAIL = String(CFG.adminEmail || '').trim().toLowerCase();
 const pad = n => String(n).padStart(2, '0');
 const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const today = () => isoDate(new Date());
@@ -516,7 +555,10 @@ function load() {
   try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.exercises)) return migrate(d); } catch (e) {}
   return seed();
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
+function save() {
+  if (CLOUD) return scheduleSync(); // com login, os dados vão para a nuvem
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+}
 
 let db = load();
 let ui = { view: 'treino', group: 'A', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
@@ -545,8 +587,8 @@ function profSessions(pid = ui.profile) {
   const ids = new Set(profExs(pid).map(e => e.id));
   return db.sessions.filter(s => ids.has(s.exId) && hasDone(s));
 }
-const history = exId => db.sessions.filter(s => s.exId === exId && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date));
-const prevSession = (exId, date) => history(exId).filter(s => s.date < date).pop();
+const exHistory = exId => db.sessions.filter(s => s.exId === exId && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date));
+const prevSession = (exId, date) => exHistory(exId).filter(s => s.date < date).pop();
 const sessionOn = (exId, date) => db.sessions.find(s => s.exId === exId && s.date === date);
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
 const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0);
@@ -619,7 +661,7 @@ function renderHero() {
     : `<span class="av">${esc(initials(p.name))}</span><span>${isMe ? esc(p.name) : 'Aluno: ' + esc(p.name)}</span> ▾`;
   $who.dataset.view = ui.studentMode ? 'recados' : isMe ? 'alunos' : 'perfil';
   if (ui.view === 'alunos') { $who.innerHTML = '<span>Alunos</span>'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
-  document.getElementById('studentBar').hidden = !ui.studentMode;
+  document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
   const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor' };
   if (ui.studentMode) titles.historico = 'Calendário';
@@ -1154,7 +1196,7 @@ function renderEvolution() {
         return { d, ex: ss.length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0) };
       });
       const perEx = exs.map(e => {
-        const h = history(e.id).slice(-6);
+        const h = exHistory(e.id).slice(-6);
         if (!h.length) return '';
         return `<div class="ex-h">${esc(e.name)}</div><table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>
           ${h.slice().reverse().map((s, i, arr) => {
@@ -1219,16 +1261,17 @@ function renderAlunos() {
     <button class="add" data-act="add-student">＋ Adicionar aluno</button>
     <section class="card" style="margin-top:14px">
       <div class="card-h"><div class="grow"><h3>Backup</h3>
-        <small>Os dados (seus e dos alunos) ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.</small></div></div>
+        <small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou importe um backup (ex.: dados de outro aparelho).' : 'Os dados (seus e dos alunos) ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.'}</small></div></div>
       <div class="actions">
         <button class="btn" data-act="export">⬇ Exportar</button>
         <label class="btn">⬆ Importar<input type="file" accept="application/json" id="importFile" hidden></label>
-      </div></section>`;
+      </div></section>
+    ${accountHtml()}`;
 }
 function createStudent({ name, phone = '', goal = '', notes = '' }) {
   const id = uid();
-  db.profiles.push({ id, name, phone, goal, notes, since: today(), messages: [] });
-  for (const e of profExs(ME)) db.exercises.push({ id: uid(), profileId: id, group: e.group, name: e.name, sets: e.sets.map(s => ({ carga: null, reps: s.reps })) });
+  db.profiles.push({ id, name, phone, goal, notes, since: today(), messages: [], uid: null, inviteCode: newInviteCode() });
+  for (const e of profExs(ME)) db.exercises.push({ id: uid(), profileId: id, group: e.group, letter: e.letter ?? null, name: e.name, sets: e.sets.map(s => ({ carga: null, reps: s.reps })) });
   return id;
 }
 const $st = document.getElementById('stDialog'), $stForm = document.getElementById('stForm');
@@ -1324,11 +1367,25 @@ function marcacoesHtml(p) {
       <small>Séries e cardio que ${esc(firstName(p))} marcou no app</small></div></div>
     ${body || `<p class="empty" style="padding:8px 0">Nenhuma marcação ainda. Use <b>👁 Ver como o aluno</b> para ver o app como ${esc(firstName(p))} e marcar um treino.</p>`}</section>`;
 }
+// Convite para o aluno criar a conta dele e entrar no portal
+const inviteLink = p => `${location.origin}${location.pathname}?convite=${p.id}-${p.inviteCode}`;
+function inviteHtml(p) {
+  if (!CLOUD) return '';
+  if (p.uid) return `<section class="card"><div class="card-h"><div class="grow"><h3>Portal do aluno</h3>
+      <small>✅ ${esc(firstName(p))} já tem conta e acessa o portal dele.</small></div></div></section>`;
+  const text = `Oi, ${firstName(p)}! Crie sua conta na minha planilha de treino por este link: ${inviteLink(p)}`;
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Portal do aluno</h3>
+      <small>${esc(firstName(p))} ainda não tem conta. Envie o convite: ele cria o login dele e já cai no portal.</small></div></div>
+    <p class="note" style="word-break:break-all;margin-top:0">${esc(inviteLink(p))}<br><small style="color:var(--muted)">Código: <b>${p.id}-${p.inviteCode}</b></small></p>
+    <div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="${waLink(p, text)}">Enviar convite pelo WhatsApp</a>
+      <button class="btn" data-act="copy-invite">Copiar link</button></div></section>`;
+}
 function renderRecados() {
   const p = profile(ui.profile), log = (p.messages || []).slice().reverse();
   $main.innerHTML = `<div class="banner"><div class="grow"><h2>💬 Recados</h2><small>Mensagens do seu professor</small></div></div>
     <section class="card">${log.map(m => `<div class="list-row" style="display:block"><small style="color:var(--muted)">${weekday(m.date)}, ${fmtDate(m.date)}</small>
-      <div style="white-space:pre-wrap;margin-top:2px">${esc(m.text)}</div></div>`).join('') || '<p class="empty">Nenhum recado ainda.</p>'}</section>`;
+      <div style="white-space:pre-wrap;margin-top:2px">${esc(m.text)}</div></div>`).join('') || '<p class="empty">Nenhum recado ainda.</p>'}</section>
+    ${cloud && cloud.role === 'student' ? accountHtml() : ''}`;
 }
 function setStudentMode(on) {
   ui.studentMode = on; stopDemo(); ui.demo = false;
@@ -1436,6 +1493,7 @@ function renderPerfil() {
       <div class="card-h"><div class="grow"><h3>Últimos treinos</h3></div></div>
       ${recent || '<p class="empty">Ainda não treinou.</p>'}
     </section>
+    ${inviteHtml(p)}
     ${marcacoesHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
@@ -1620,6 +1678,12 @@ $main.addEventListener('click', e => {
     case 'student-menu': return openStudent(profile(b.dataset.pid));
     case 'student-edit': return openStudent(profile(ui.profile));
     case 'student-mode': return setStudentMode(true);
+    case 'logout': return logout();
+    case 'copy-invite': {
+      const t = inviteLink(profile(ui.profile));
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('Link copiado.'), () => toast('Copie o link acima manualmente.'));
+      return;
+    }
     case 'edit-day': return openDay(+b.dataset.d);
     case 'edit-ex': return openDialog(exById(b.dataset.id));
     case 'new-in': return openDialog(null, b.dataset.g);
@@ -1786,13 +1850,278 @@ function importData(file) {
   }).catch(() => toast('Arquivo de backup inválido.'));
 }
 
-// Aluno cadastrado a pedido do professor (só uma vez; se for excluído, não volta)
-if (!db.seeded) db.seeded = [];
-if (!db.seeded.includes('lais')) {
-  if (!db.profiles.some(p => p.name === 'Laís')) createStudent({ name: 'Laís' });
-  db.seeded.push('lais'); save();
+// ---------- Nuvem (Firebase): login do professor (administrador) e portal de cada aluno ----------
+// Firestore: profiles/{id} = dados do perfil + exercícios; profiles/{id}/months/{AAAA-MM} = séries e cardio do mês.
+let cloud = null, remote = new Map(), lastSynced = new Map(), syncTimer = null;
+const INVITE_KEY = 'planilha-convite';
+// JSON com chaves em ordem fixa, para comparar o que está na nuvem com o que está no app
+const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x)
+  ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
+const plain = v => JSON.parse(JSON.stringify(v));
+const writable = path => cloud.role === 'admin' || path.includes('/months/');
+
+function loadScript(src) {
+  return new Promise((ok, fail) => { const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = fail; document.head.appendChild(el); });
 }
-render();
+async function cloudBoot() {
+  const inv = new URLSearchParams(location.search).get('convite');
+  if (inv) { try { localStorage.setItem(INVITE_KEY, inv.trim()); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  showAuth('loading');
+  try { for (const f of ['app', 'auth', 'firestore']) await loadScript(`vendor/firebase/firebase-${f}-compat.js`); }
+  catch (e) { return showAuth('login', 'Sem conexão para carregar o app. Tente de novo.'); }
+  firebase.initializeApp(CFG.firebase);
+  const auth = firebase.auth(), fs = firebase.firestore();
+  if (CFG.emulator) { auth.useEmulator(CFG.emulator.auth); fs.useEmulator(CFG.emulator.host, CFG.emulator.port); }
+  else { try { await fs.enablePersistence({ synchronizeTabs: true }); } catch (e) {} } // funciona offline
+  cloud = { auth, fs, role: null, ready: false, unsubs: [] };
+  auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() ? 'signup' : 'login'); });
+}
+function pendingInvite() {
+  let v = ''; try { v = localStorage.getItem(INVITE_KEY) || ''; } catch (e) {}
+  const m = v.match(/^([a-z0-9]+)-([A-Z0-9]{6})$/i);
+  return m ? { pid: m[1], code: m[2].toUpperCase(), raw: v } : null;
+}
+const clearInvite = () => { try { localStorage.removeItem(INVITE_KEY); } catch (e) {} };
+
+async function startSession(user) {
+  cloud.user = user;
+  showAuth('loading');
+  if (ADMIN_EMAIL && (user.email || '').toLowerCase() === ADMIN_EMAIL) { cloud.role = 'admin'; return startAdmin(); }
+  cloud.role = 'student';
+  const inv = pendingInvite();
+  if (inv) {
+    try { await cloud.fs.doc('profiles/' + inv.pid).update({ uid: user.uid, claim: inv.code }); } catch (e) {}
+    clearInvite();
+  }
+  const q = await cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).get();
+  if (q.empty) return showAuth('noprofile');
+  startStudent(q.docs[0].id);
+}
+function subscribeMonths(pid) {
+  cloud.waiting.add(pid);
+  const un = cloud.fs.collection(`profiles/${pid}/months`).onSnapshot(snap => {
+    snap.docChanges().forEach(ch => {
+      const path = `profiles/${pid}/months/${ch.doc.id}`;
+      ch.type === 'removed' ? remote.delete(path) : remote.set(path, ch.doc.data());
+    });
+    cloud.waiting.delete(pid); onRemote();
+  }, err => cloudError(err));
+  cloud.months.set(pid, un);
+}
+function dropProfile(pid) {
+  const un = cloud.months.get(pid); if (un) un(); cloud.months.delete(pid); cloud.waiting.delete(pid);
+  for (const k of [...remote.keys()]) if (k === 'profiles/' + pid || k.startsWith(`profiles/${pid}/`)) remote.delete(k);
+}
+function startAdmin() {
+  cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
+  cloud.unsubs.push(cloud.fs.collection('profiles').onSnapshot(snap => {
+    snap.docChanges().forEach(ch => {
+      const pid = ch.doc.id;
+      if (ch.type === 'removed') return dropProfile(pid);
+      remote.set('profiles/' + pid, ch.doc.data());
+      if (!cloud.months.has(pid)) subscribeMonths(pid);
+    });
+    cloud.gotProfiles = true; onRemote();
+  }, err => cloudError(err)));
+}
+function startStudent(pid) {
+  cloud.pid = pid; cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
+  cloud.unsubs.push(cloud.fs.doc('profiles/' + pid).onSnapshot(doc => {
+    if (!doc.exists) return showAuth('noprofile');
+    remote.set('profiles/' + pid, doc.data());
+    cloud.gotProfiles = true; onRemote();
+  }, err => cloudError(err)));
+  subscribeMonths(pid);
+}
+async function onRemote() {
+  if (cloud.ready) return applyRemote();
+  if (!cloud.gotProfiles || cloud.waiting.size) return;
+  cloud.ready = true;
+  if (cloud.role === 'admin' && !remote.size) return firstRun();
+  db = assemble();
+  lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
+  enterApp();
+  // perfis antigos sem código de convite ganham um (e já sobem para a nuvem)
+  if (cloud.role === 'admin' && db.profiles.some(p => p.id !== ME && !p.inviteCode)) { ensureCloudFields(db); scheduleSync(); }
+}
+// Primeira vez do professor: a nuvem está vazia. Oferece enviar os dados deste aparelho.
+async function firstRun() {
+  let local = null;
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.exercises)) local = migrate(d); } catch (e) {}
+  enterApp(true);
+  const up = local && (await ask({ title: 'Enviar seus dados para a nuvem?', ok: 'Enviar',
+    msg: 'Encontramos treinos salvos neste aparelho. Eles vão para a sua conta e ficam disponíveis em qualquer celular.' })).action === 'ok';
+  db = up ? local : seed();
+  db.seeded = ['lais'];
+  ensureCloudFields(db);
+  lastSynced = new Map();
+  await syncNow(); render();
+  toast(up ? 'Dados enviados para a nuvem.' : 'Conta pronta! Cadastre seus alunos na aba Alunos.');
+}
+function ensureCloudFields(d) {
+  d.profiles.forEach(p => {
+    if (p.uid === undefined) p.uid = null;
+    if (p.id !== ME && !p.inviteCode) p.inviteCode = newInviteCode();
+  });
+}
+function assemble() {
+  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true };
+  for (const [path, v0] of remote) {
+    const v = plain(v0), m = path.split('/');
+    if (m.length === 2) {
+      const { exercises = [], claim, ...meta } = v;
+      d.profiles.push({ ...meta, id: m[1] });
+      exercises.forEach(e => d.exercises.push({ ...e, profileId: m[1] }));
+    } else {
+      (v.sessions || []).forEach(x => d.sessions.push(x));
+      (v.cardio || []).forEach(c => d.cardio.push({ ...c, profileId: m[1] }));
+    }
+  }
+  migrate(d);
+  if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
+  d.profiles.sort((a, b) => a.id === ME ? -1 : b.id === ME ? 1 : 0);
+  return d;
+}
+// O app (db) dividido nos documentos da nuvem
+function splitDb() {
+  const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
+  if (cloud.role === 'admin') for (const p of db.profiles) {
+    const { id, ...meta } = p;
+    const exercises = db.exercises.filter(e => e.profileId === id).map(({ profileId, ...e }) => e);
+    const rem = remote.get('profiles/' + id);
+    out.set('profiles/' + id, plain({ ...meta, uid: p.uid ?? null, inviteCode: p.inviteCode ?? null, exercises, ...(rem && rem.claim ? { claim: rem.claim } : {}) }));
+  }
+  const months = {};
+  const put = (pid, date, key, item) => {
+    const path = `profiles/${pid}/months/${date.slice(0, 7)}`;
+    (months[path] = months[path] || { sessions: [], cardio: [] })[key].push(item);
+  };
+  for (const x of db.sessions) { const e = exById(x.exId); if (e && own.has(e.profileId)) put(e.profileId, x.date, 'sessions', x); }
+  for (const c of db.cardio) if (own.has(c.profileId)) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
+  for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
+  return out;
+}
+function scheduleSync() {
+  if (!cloud || !cloud.ready) return;
+  clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 700);
+  setSyncState('Salvando…');
+}
+async function syncNow() {
+  clearTimeout(syncTimer); syncTimer = null;
+  if (!cloud || !cloud.ready) return;
+  const cur = splitDb(), ops = [];
+  for (const [path, doc] of cur) { const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); } }
+  for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) { ops.push(['delete', path]); lastSynced.delete(path); }
+  try {
+    for (let i = 0; i < ops.length; i += 400) {
+      const b = cloud.fs.batch();
+      for (const [op, path, doc] of ops.slice(i, i + 400)) op === 'set' ? b.set(cloud.fs.doc(path), doc) : b.delete(cloud.fs.doc(path));
+      await b.commit();
+    }
+    setSyncState('Tudo salvo na nuvem ✓');
+  } catch (err) { cloudError(err); }
+  if (cloud.remoteDirty) { cloud.remoteDirty = false; applyRemote(); }
+}
+const isTyping = () => document.querySelector('dialog[open]') || (document.activeElement && $main.contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+// Chegou algo da nuvem (outro aparelho, aluno marcando treino...): atualiza a tela sem perder o que está sendo digitado
+function applyRemote() {
+  if (!cloud.ready) return;
+  let changed = [...remote].some(([k, v]) => lastSynced.get(k) !== canon(v)) || [...lastSynced.keys()].some(k => !remote.has(k));
+  if (!changed) return;
+  if (syncTimer || isTyping()) { cloud.remoteDirty = true; return; }
+  db = assemble();
+  lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
+  fixUi(); render();
+}
+$main.addEventListener('focusout', () => setTimeout(() => { if (cloud && cloud.remoteDirty && !isTyping() && !syncTimer) { cloud.remoteDirty = false; applyRemote(); } }, 50));
+document.addEventListener('close', () => setTimeout(() => { if (cloud && cloud.remoteDirty && !isTyping() && !syncTimer) { cloud.remoteDirty = false; applyRemote(); } }, 50), true);
+document.addEventListener('visibilitychange', () => { if (document.hidden && syncTimer) syncNow(); });
+let lastErrToast = 0;
+function cloudError(err) {
+  console.error(err);
+  setSyncState('Erro ao salvar na nuvem');
+  if (Date.now() - lastErrToast > 10000) { lastErrToast = Date.now(); toast('Não foi possível salvar na nuvem (' + (err.code || 'erro') + ').'); }
+}
+function setSyncState(t) { cloud && (cloud.syncState = t); const el = document.getElementById('syncState'); if (el) el.textContent = t; }
+function fixUi() {
+  if (cloud.role === 'student') { ui.profile = cloud.pid; ui.studentMode = true; if (!STUDENT_VIEWS.some(v => v[0] === ui.view)) ui.view = 'treino'; }
+  else if (!profile(ui.profile)) { ui.profile = ME; if (ui.view === 'perfil') ui.view = 'alunos'; }
+  if (!isLetter(ui.group) && ui.group !== CARDIO) ui.group = 'A';
+}
+function enterApp(skipRender) {
+  document.body.classList.remove('locked');
+  document.getElementById('auth').hidden = true;
+  fixUi();
+  if (!skipRender) render();
+}
+async function logout() {
+  if (syncTimer) await syncNow();
+  await cloud.auth.signOut(); location.reload();
+}
+const accountHtml = () => CLOUD && cloud && cloud.user ? `<section class="card" style="margin-top:14px">
+    <div class="card-h"><div class="grow"><h3>Sua conta</h3><small>${esc(cloud.user.email || '')} · <span id="syncState">${esc(cloud.syncState || 'Tudo salvo na nuvem ✓')}</span></small></div></div>
+    <div class="actions"><button class="btn" data-act="logout">Sair da conta</button></div></section>` : '';
+
+// ---------- Tela de login ----------
+const $auth = document.getElementById('auth'), $authForm = document.getElementById('authForm');
+let authMode = 'login';
+function showAuth(mode, msg = '') {
+  authMode = mode;
+  document.body.classList.add('locked'); $auth.hidden = false;
+  const inv = pendingInvite(), isSignup = mode === 'signup';
+  document.getElementById('authSub').textContent = { loading: 'Carregando…', login: 'Entre na sua conta', signup: inv ? 'Você recebeu um convite! Crie sua conta.' : 'Criar conta', noprofile: 'Sua conta ainda não está ligada a nenhum aluno.' }[mode];
+  $authForm.hidden = mode === 'loading' || mode === 'noprofile';
+  document.getElementById('authCodeF').hidden = !isSignup;
+  if (isSignup && inv) $authForm.code.value = inv.raw;
+  $authForm.pass.autocomplete = isSignup ? 'new-password' : 'current-password';
+  document.getElementById('authOk').textContent = isSignup ? 'Criar conta' : 'Entrar';
+  document.getElementById('authToggle').hidden = mode === 'loading' || mode === 'noprofile';
+  document.getElementById('authToggle').textContent = isSignup ? 'Já tenho conta: entrar' : 'Primeiro acesso? Criar conta';
+  document.getElementById('authForgot').hidden = mode !== 'login';
+  document.getElementById('authOut').hidden = mode !== 'noprofile';
+  document.getElementById('authMsg').textContent = mode === 'noprofile' ? 'Peça ao seu professor o link de convite e abra por ele, ou digite o código abaixo.' : msg;
+  if (mode === 'noprofile') { $authForm.hidden = false; document.getElementById('authCodeF').hidden = false; document.getElementById('authOk').textContent = 'Usar código'; $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = true; }
+  else $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = false;
+}
+const AUTH_ERR = {
+  'auth/invalid-credential': 'E-mail ou senha incorretos.', 'auth/wrong-password': 'E-mail ou senha incorretos.', 'auth/user-not-found': 'E-mail ou senha incorretos.',
+  'auth/email-already-in-use': 'Já existe uma conta com este e-mail. Toque em "Já tenho conta: entrar".', 'auth/weak-password': 'A senha precisa ter pelo menos 6 caracteres.',
+  'auth/invalid-email': 'E-mail inválido.', 'auth/too-many-requests': 'Muitas tentativas. Espere um pouco e tente de novo.', 'auth/network-request-failed': 'Sem internet.',
+};
+$authForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $authForm.email.value.trim(), pass = $authForm.pass.value, code = $authForm.code.value.trim();
+  const say = t => document.getElementById('authMsg').textContent = t;
+  try {
+    if (authMode === 'noprofile' || authMode === 'signup') {
+      if (code) { try { localStorage.setItem(INVITE_KEY, code); } catch (err) {} }
+      if (authMode === 'signup' && email.toLowerCase() !== ADMIN_EMAIL && !pendingInvite()) return say('Digite o código de convite que o professor enviou.');
+    }
+    if (authMode === 'noprofile') { if (!pendingInvite()) return say('Código inválido.'); return startSession(cloud.user); }
+    say('Aguarde…');
+    if (authMode === 'signup') await cloud.auth.createUserWithEmailAndPassword(email, pass);
+    else await cloud.auth.signInWithEmailAndPassword(email, pass);
+  } catch (err) { say(AUTH_ERR[err.code] || 'Não foi possível entrar (' + (err.code || err.message) + ').'); }
+});
+document.getElementById('authToggle').onclick = () => showAuth(authMode === 'signup' ? 'login' : 'signup');
+document.getElementById('authOut').onclick = () => cloud.auth.signOut();
+document.getElementById('authForgot').onclick = async () => {
+  const email = $authForm.email.value.trim();
+  if (!email) return document.getElementById('authMsg').textContent = 'Digite seu e-mail acima e toque em "Esqueci a senha" de novo.';
+  try { await cloud.auth.sendPasswordResetEmail(email); document.getElementById('authMsg').textContent = 'Enviamos um e-mail para você criar uma nova senha.'; }
+  catch (err) { document.getElementById('authMsg').textContent = AUTH_ERR[err.code] || 'Não foi possível enviar o e-mail.'; }
+};
+
+if (CLOUD) cloudBoot();
+else {
+  // Aluno cadastrado a pedido do professor (só uma vez; se for excluído, não volta)
+  if (!db.seeded) db.seeded = [];
+  if (!db.seeded.includes('lais')) {
+    if (!db.profiles.some(p => p.name === 'Laís')) createStudent({ name: 'Laís' });
+    db.seeded.push('lais'); save();
+  }
+  render();
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Planilha de Treino
+// - Administrador (professor): acesso total. Troque o e-mail abaixo pelo seu (o mesmo de config.js).
+// - Aluno: lê o próprio perfil (treinos, divisão, recados) e lê/grava as próprias marcações.
+// - Convite: o aluno liga a conta dele a um perfil informando o código de convite daquele perfil.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'COLOQUE_SEU_EMAIL_AQUI';
+    }
+    function isOwner(pid) {
+      return request.auth != null
+        && get(/databases/$(database)/documents/profiles/$(pid)).data.uid == request.auth.uid;
+    }
+
+    match /profiles/{pid} {
+      allow read, write: if isAdmin();
+
+      // Aluno lê só o próprio perfil (inclusive a busca "where uid == meu uid")
+      allow get, list: if request.auth != null && resource.data.uid == request.auth.uid;
+
+      // Aluno usa o convite: só pode preencher o próprio uid num perfil ainda sem dono,
+      // e só se informar o código de convite certo
+      allow update: if request.auth != null
+        && resource.data.uid == null
+        && resource.data.inviteCode is string
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'claim'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.claim == resource.data.inviteCode;
+
+      // Marcações (séries e cardio), um documento por mês
+      match /months/{month} {
+        allow read, write: if isAdmin() || isOwner(pid);
+      }
+    }
+  }
+}

@@ -60,6 +60,43 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 - **+ série / − série** para ajustar só o treino do dia.
 - O campo de data no topo permite lançar ou ver treinos de outros dias.
 
+## Publicar com login (professor + portal dos alunos) — grátis
+
+Com o Firebase (Google, plano gratuito), o app ganha login e tudo fica salvo na nuvem:
+
+- **Você (administrador)** entra com o seu e-mail e vê tudo: seu treino, alunos, divisão da semana, marcações e recados.
+- **Cada aluno** cria a própria conta pelo **link de convite** (perfil do aluno → *Portal do aluno* → *Enviar convite pelo WhatsApp*) e entra num portal só dele: treino do dia, calendário e recados.
+- O que o aluno marca aparece para você na hora, e o treino que você monta aparece para ele.
+- Regras de segurança (`firestore.rules`): o aluno só consegue ler e gravar os próprios dados.
+
+### 1. Criar o projeto no Firebase (uma vez)
+
+1. Acesse **console.firebase.google.com** → **Criar projeto** (ex.: `planilha-igor`). Pode desativar o Google Analytics.
+2. **Authentication → Começar → E-mail/senha → Ativar**.
+3. **Firestore Database → Criar banco de dados** → região `southamerica-east1` → modo produção.
+4. **Firestore Database → Regras**: cole o conteúdo de `firestore.rules`, trocando `COLOQUE_SEU_EMAIL_AQUI` pelo seu e-mail, e **Publicar**.
+5. **Configurações do projeto → Seus apps → `</>` (Web)** → registre o app e copie o `firebaseConfig`.
+6. Em `config.js`, coloque o seu e-mail em `adminEmail` e cole o `firebaseConfig` em `firebase`.
+
+### 2. Colocar no ar
+
+**Opção A — pelo computador (Firebase Hosting, endereço `seu-projeto.web.app`):**
+
+```
+npm install -g firebase-tools
+firebase login
+firebase deploy --project SEU_PROJETO
+```
+
+**Opção B — só pelo celular (GitHub Pages):** no GitHub, **Settings → Pages → Branch** = este branch, pasta `/ (root)`. Depois, no Firebase: **Authentication → Configurações → Domínios autorizados → Adicionar** `SEU_USUARIO.github.io`.
+
+### 3. Primeiro acesso
+
+1. Abra o endereço, toque em **Primeiro acesso? Criar conta** e cadastre-se **com o e-mail de administrador** (faça isso antes de divulgar o link).
+2. O app oferece enviar os dados do aparelho para a nuvem. Se os seus treinos estão em outro endereço (ex.: o link do claude.ai), use lá **Alunos → ⬇ Exportar** e aqui **⬆ Importar**.
+3. Cadastre os alunos e envie o convite de cada um.
+4. No celular: **Compartilhar → Adicionar à Tela de Início** para abrir como app.
+
 ## Dados
 
 Os dados ficam salvos no navegador (localStorage) do aparelho. Use **Exportar/Importar** na aba Evolução para fazer backup ou passar os dados para outro aparelho.
