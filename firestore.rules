@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Planilha de Treino
-// - Administrador (professor): acesso total. Troque o e-mail abaixo pelo seu (o mesmo de config.js).
+// - Administrador (professor): acesso total. E-mail igual ao de config.js.
 // - Aluno: lê o próprio perfil (treinos, divisão, recados) e lê/grava as próprias marcações.
 // - Convite: o aluno liga a conta dele a um perfil informando o código de convite daquele perfil.
 service cloud.firestore {
@@ -9,7 +9,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == 'COLOQUE_SEU_EMAIL_AQUI';
+        && request.auth.token.email == 'igorpedrodeoliveira15@gmail.com';
     }
     function isOwner(pid) {
       return request.auth != null
