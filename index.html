@@ -1553,7 +1553,27 @@ $main.addEventListener('input', e => {
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
   refreshTop();
 });
+// Ao terminar de digitar (sair do campo), se a série tem kg e repetições, ela é marcada como feita sozinha.
+// Atualiza só partes do cartão para não tirar o foco do próximo campo.
+function autoCheck(inp) {
+  const card = inp.closest('[data-ex]'), row = inp.closest('[data-i]');
+  if (!card || !row) return;
+  const ex = exById(card.dataset.ex), s = ensureSession(ex, ui.date), i = +row.dataset.i, x = s.sets[i];
+  if (x.done || x.carga == null || x.reps == null) return;
+  const wasComplete = s.sets.every(y => y.done);
+  x.done = true; save();
+  if (navigator.vibrate) navigator.vibrate(30);
+  const prev = prevSession(ex.id, ui.date), done = s.sets.filter(y => y.done).length, n = s.sets.length;
+  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i]);
+  const ring = card.querySelector('.ring'); if (ring) { ring.style.setProperty('--p', done / n * 100); ring.textContent = `${done}/${n}`; }
+  const all = card.querySelector('[data-act="alldone"]'); if (all) all.textContent = done === n ? 'Desmarcar todas' : '✓ Marcar todas';
+  card.querySelector('.compare').innerHTML = compareHtml(s, prev);
+  card.classList.toggle('complete', isComplete(ex.id));
+  refreshTop();
+  if (!wasComplete && done === n) celebrate(ex, s); else startRest();
+}
 $main.addEventListener('change', e => {
+  if (e.target.matches('input[data-f]')) return autoCheck(e.target);
   if (e.target.id === 'importFile') importData(e.target.files[0]);
   if (e.target.id === 'tplGroup') { ui.tplGroup = e.target.value; ui.msgDraft = msgTemplate('treino', profile(ui.profile)); document.getElementById('msgText').value = ui.msgDraft; updateWaLink(); }
 });
