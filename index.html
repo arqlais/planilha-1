@@ -455,6 +455,7 @@ input,select,textarea{font-size:16px!important}
   <div class="swatches" id="swatches"></div>
   <div id="setGoalBox"></div>
   <div id="setAccount"></div>
+  <p class="hint" id="setVersion" style="margin:0 0 12px"></p>
   <div class="dlg-actions"><span class="grow"></span><button class="btn" id="setCancel">Cancelar</button><button class="btn primary" id="setClose">Salvar</button></div>
 </dialog>
 
@@ -759,6 +760,7 @@ function renderSwatches() {
 }
 function openSettings() {
   renderSwatches();
+  document.getElementById('setVersion').textContent = 'Versão do app: ' + APP_VERSION;
   const me = profile(ME);
   document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
     ? `<label class="f">Minha meta de cardio por dia (minutos)<input id="setGoal" inputmode="numeric" placeholder="ex.: 20" value="${me.cardioDaily || ''}"></label>` : '';
@@ -2337,6 +2339,25 @@ document.getElementById('authForgot').onclick = async () => {
   try { await cloud.auth.sendPasswordResetEmail(email); document.getElementById('authMsg').textContent = 'Enviamos um e-mail para você criar uma nova senha.'; }
   catch (err) { document.getElementById('authMsg').textContent = AUTH_ERR[err.code] || 'Não foi possível enviar o e-mail.'; }
 };
+
+// ---------- Atualização automática ----------
+// O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
+const APP_VERSION = '29/09-20:43';
+async function checkUpdate() {
+  if (!/^https?:/.test(location.protocol)) return;
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    const { v } = await r.json();
+    if (!v || v === APP_VERSION) return;
+    let tried = ''; try { tried = sessionStorage.getItem('planilha-atualizou') || ''; } catch (e) {}
+    if (tried === v) return; // já tentou esta versão nesta sessão: evita recarregar sem parar
+    try { sessionStorage.setItem('planilha-atualizou', v); } catch (e) {}
+    if (typeof syncTimer !== 'undefined' && syncTimer) await syncNow(); // salva o que estiver pendente antes
+    location.replace(location.pathname + '?v=' + encodeURIComponent(v)); // endereço novo = baixa a versão nova
+  } catch (e) {}
+}
+checkUpdate();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
 
 if (CLOUD) cloudBoot();
 else {
