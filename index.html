@@ -717,36 +717,56 @@ function renderHero() {
 }
 // Cores do app do aluno (o professor fica sempre no verde)
 const COLORS = [['verde', 'Verde', '#3e6b52'], ['azul', 'Azul', '#4a78bf'], ['roxo', 'Roxo', '#8467b5'], ['rosa', 'Rosa', '#c4638f'], ['laranja', 'Laranja', '#cf7c38'], ['vermelho', 'Vermelho', '#c85656'], ['grafite', 'Grafite', '#5a6570']];
-function applyColor() {
-  const p = profile(ui.profile), pick = (p && p.id !== ME && p.color) || ui.color;
-  const c = ui.studentMode && COLORS.some(x => x[0] === pick) ? pick : 'verde';
-  if (c === 'verde') delete document.documentElement.dataset.color; else document.documentElement.dataset.color = c;
+// Valores de cada cor (claro/escuro). São aplicados direto no <html>, porque o iPhone
+// nem sempre redesenha a tela quando só muda um atributo.
+const THEMES = {"azul": {"light": {"--acc": "#2f5fa7", "--acc-2": "#4a78bf", "--acc-soft": "#e6edf7", "--hero": "linear-gradient(160deg,#1e3a66 0%,#2f5fa7 100%)"}, "dark": {"--acc": "#86a9e0", "--acc-2": "#6f95d4", "--acc-soft": "#1d2738", "--acc-ink": "#0f1a2b", "--hero": "linear-gradient(160deg,#152238 0%,#1e3a66 100%)"}}, "roxo": {"light": {"--acc": "#6a4c9c", "--acc-2": "#8467b5", "--acc-soft": "#eee8f6", "--hero": "linear-gradient(160deg,#3d2a5c 0%,#6a4c9c 100%)"}, "dark": {"--acc": "#b39ce0", "--acc-2": "#9f86d4", "--acc-soft": "#2a2338", "--acc-ink": "#1c1428", "--hero": "linear-gradient(160deg,#251b36 0%,#3d2a5c 100%)"}}, "rosa": {"light": {"--acc": "#b0457a", "--acc-2": "#c4638f", "--acc-soft": "#f7e7ef", "--hero": "linear-gradient(160deg,#6e2449 0%,#b0457a 100%)"}, "dark": {"--acc": "#e79bbf", "--acc-2": "#d985ab", "--acc-soft": "#36212c", "--acc-ink": "#2a1320", "--hero": "linear-gradient(160deg,#3a1a2b 0%,#6e2449 100%)"}}, "laranja": {"light": {"--acc": "#b8641f", "--acc-2": "#cf7c38", "--acc-soft": "#f8ecdf", "--hero": "linear-gradient(160deg,#7a3d10 0%,#b8641f 100%)"}, "dark": {"--acc": "#eba468", "--acc-2": "#de9150", "--acc-soft": "#3a2a1c", "--acc-ink": "#2b1a0b", "--hero": "linear-gradient(160deg,#3b230f 0%,#7a3d10 100%)"}}, "vermelho": {"light": {"--acc": "#b23b3b", "--acc-2": "#c85656", "--acc-soft": "#f7e5e5", "--hero": "linear-gradient(160deg,#6d1f1f 0%,#b23b3b 100%)"}, "dark": {"--acc": "#ea8f8f", "--acc-2": "#dc7777", "--acc-soft": "#3a2020", "--acc-ink": "#2b1111", "--hero": "linear-gradient(160deg,#3a1616 0%,#6d1f1f 100%)"}}, "grafite": {"light": {"--acc": "#3f4a55", "--acc-2": "#5a6570", "--acc-soft": "#e8ebee", "--hero": "linear-gradient(160deg,#1f262d 0%,#3f4a55 100%)"}, "dark": {"--acc": "#a9b6c2", "--acc-2": "#95a3b0", "--acc-soft": "#262b31", "--acc-ink": "#15191d", "--hero": "linear-gradient(160deg,#181d22 0%,#2c343c 100%)"}}};
+const THEME_VARS = ['--acc', '--acc-2', '--acc-soft', '--acc-ink', '--hero'];
+const darkMq = matchMedia('(prefers-color-scheme: dark)');
+let shownColor = 'verde';
+function paintColor(c) {
+  const root = document.documentElement, t = THEMES[c];
+  shownColor = t ? c : 'verde';
+  THEME_VARS.forEach(v => root.style.removeProperty(v));
+  if (t) { for (const [k, v] of Object.entries(t[darkMq.matches ? 'dark' : 'light'])) root.style.setProperty(k, v); root.dataset.color = c; }
+  else delete root.dataset.color;
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.content = { verde: '#2b4637' }[c] || getComputedStyle(document.documentElement).getPropertyValue('--acc').trim();
+  if (m) m.content = t ? t[darkMq.matches ? 'dark' : 'light']['--acc'] : '#2b4637';
+  // força o navegador a redesenhar agora (o topo colorido não é recriado pelo render)
+  for (const el of document.querySelectorAll('.hero, nav.bottom, #rest')) { el.style.background = 'none'; void el.offsetHeight; el.style.background = ''; }
+  void document.body.offsetHeight;
 }
+function savedColor() {
+  const p = profile(ui.profile), pick = (p && p.id !== ME && p.color) || ui.color;
+  return ui.studentMode && COLORS.some(x => x[0] === pick) ? pick : 'verde';
+}
+function applyColor() { if (savedColor() !== shownColor) paintColor(savedColor()); }
+darkMq.addEventListener && darkMq.addEventListener('change', () => paintColor(shownColor));
 const $setDlg = document.getElementById('setDlg');
-const curColor = () => document.documentElement.dataset.color || 'verde';
-function openSettings() {
+function renderSwatches() {
   document.getElementById('swatches').innerHTML = COLORS.map(([id, label, hex]) =>
-    `<button class="${curColor() === id ? 'on' : ''}" data-color="${id}"><i style="background:${hex}"></i>${label}</button>`).join('');
+    `<button type="button" class="${shownColor === id ? 'on' : ''}" data-color="${id}"><i style="background:${hex}"></i>${label}</button>`).join('');
+}
+function openSettings() {
+  renderSwatches();
   document.getElementById('setAccount').innerHTML = cloud && cloud.user
     ? `<p class="hint" style="margin-bottom:8px">Conta: ${esc(cloud.user.email || '')}</p><button class="btn" id="setLogout" style="margin-bottom:14px">Sair da conta</button>` : '';
-  $setDlg.showModal();
+  if (!$setDlg.open) $setDlg.showModal();
 }
 document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('setClose').onclick = () => {
-  const c = curColor(), p = profile(ui.profile);
+  const c = shownColor, p = profile(ui.profile);
   ui.color = c; saveUi();
   if (p && p.id !== ME) { p.color = c; save(); }
-  $setDlg.close(); applyColor();
+  $setDlg.close();
+  paintColor(c); render(); // redesenha o app inteiro já na cor nova
   toast('Cor salva ✓');
 };
-document.getElementById('setCancel').onclick = () => { $setDlg.close(); applyColor(); };
-$setDlg.addEventListener('cancel', () => setTimeout(applyColor));
+document.getElementById('setCancel').onclick = () => { $setDlg.close(); paintColor(savedColor()); render(); };
+$setDlg.addEventListener('cancel', () => setTimeout(() => { paintColor(savedColor()); render(); }));
 $setDlg.addEventListener('click', e => {
   const b = e.target.closest('[data-color]');
-  // escolher mostra a cor na hora; "Salvar" grava na conta do aluno
-  if (b) { document.documentElement.dataset.color = b.dataset.color; if (b.dataset.color === 'verde') delete document.documentElement.dataset.color; openSettings(); return; }
+  // tocar numa cor já mostra o app nela; "Salvar" grava na conta do aluno
+  if (b) { paintColor(b.dataset.color); renderSwatches(); return; }
   if (e.target.id === 'setLogout') logout();
 });
 const statsDay = () => ui.view === 'historico' && ui.histDay ? ui.histDay : ui.date;
