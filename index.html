@@ -446,7 +446,7 @@ input,select,textarea{font-size:16px!important}
   <p class="hint" style="margin-bottom:8px">Cor do app</p>
   <div class="swatches" id="swatches"></div>
   <div id="setAccount"></div>
-  <div class="dlg-actions"><span class="grow"></span><button class="btn primary" id="setClose">Pronto</button></div>
+  <div class="dlg-actions"><span class="grow"></span><button class="btn" id="setCancel">Cancelar</button><button class="btn primary" id="setClose">Salvar</button></div>
 </dialog>
 
 <dialog id="dayDlg">
@@ -718,24 +718,35 @@ function renderHero() {
 // Cores do app do aluno (o professor fica sempre no verde)
 const COLORS = [['verde', 'Verde', '#3e6b52'], ['azul', 'Azul', '#4a78bf'], ['roxo', 'Roxo', '#8467b5'], ['rosa', 'Rosa', '#c4638f'], ['laranja', 'Laranja', '#cf7c38'], ['vermelho', 'Vermelho', '#c85656'], ['grafite', 'Grafite', '#5a6570']];
 function applyColor() {
-  const c = ui.studentMode && COLORS.some(x => x[0] === ui.color) ? ui.color : 'verde';
+  const p = profile(ui.profile), pick = (p && p.id !== ME && p.color) || ui.color;
+  const c = ui.studentMode && COLORS.some(x => x[0] === pick) ? pick : 'verde';
   if (c === 'verde') delete document.documentElement.dataset.color; else document.documentElement.dataset.color = c;
   const m = document.querySelector('meta[name="theme-color"]');
   if (m) m.content = { verde: '#2b4637' }[c] || getComputedStyle(document.documentElement).getPropertyValue('--acc').trim();
 }
 const $setDlg = document.getElementById('setDlg');
+const curColor = () => document.documentElement.dataset.color || 'verde';
 function openSettings() {
   document.getElementById('swatches').innerHTML = COLORS.map(([id, label, hex]) =>
-    `<button class="${(ui.color || 'verde') === id ? 'on' : ''}" data-color="${id}"><i style="background:${hex}"></i>${label}</button>`).join('');
+    `<button class="${curColor() === id ? 'on' : ''}" data-color="${id}"><i style="background:${hex}"></i>${label}</button>`).join('');
   document.getElementById('setAccount').innerHTML = cloud && cloud.user
     ? `<p class="hint" style="margin-bottom:8px">Conta: ${esc(cloud.user.email || '')}</p><button class="btn" id="setLogout" style="margin-bottom:14px">Sair da conta</button>` : '';
   $setDlg.showModal();
 }
 document.getElementById('settingsBtn').onclick = openSettings;
-document.getElementById('setClose').onclick = () => $setDlg.close();
+document.getElementById('setClose').onclick = () => {
+  const c = curColor(), p = profile(ui.profile);
+  ui.color = c; saveUi();
+  if (p && p.id !== ME) { p.color = c; save(); }
+  $setDlg.close(); applyColor();
+  toast('Cor salva ✓');
+};
+document.getElementById('setCancel').onclick = () => { $setDlg.close(); applyColor(); };
+$setDlg.addEventListener('cancel', () => setTimeout(applyColor));
 $setDlg.addEventListener('click', e => {
   const b = e.target.closest('[data-color]');
-  if (b) { ui.color = b.dataset.color; saveUi(); applyColor(); openSettings(); return; }
+  // escolher mostra a cor na hora; "Salvar" grava na conta do aluno
+  if (b) { document.documentElement.dataset.color = b.dataset.color; if (b.dataset.color === 'verde') delete document.documentElement.dataset.color; openSettings(); return; }
   if (e.target.id === 'setLogout') logout();
 });
 const statsDay = () => ui.view === 'historico' && ui.histDay ? ui.histDay : ui.date;
@@ -2093,10 +2104,11 @@ function ensureCloudFields(d) {
   });
 }
 function assemble() {
-  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true };
+  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {};
   for (const [path, v0] of remote) {
     const v = plain(v0), m = path.split('/');
-    if (m.length === 2) {
+    if (m[3] === 'prefs') prefs[m[1]] = v; // preferências do aluno (ex.: cor do app)
+    else if (m.length === 2) {
       const { exercises = [], claim, ...meta } = v;
       d.profiles.push({ ...meta, id: m[1] });
       exercises.forEach(e => d.exercises.push({ ...e, profileId: m[1] }));
@@ -2105,6 +2117,7 @@ function assemble() {
       (v.cardio || []).forEach(c => d.cardio.push({ ...c, profileId: m[1] }));
     }
   }
+  d.profiles.forEach(p => { delete p.color; if (prefs[p.id] && prefs[p.id].color) p.color = prefs[p.id].color; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
   d.profiles.sort((a, b) => a.id === ME ? -1 : b.id === ME ? 1 : 0);
@@ -2114,7 +2127,7 @@ function assemble() {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, ...meta } = p;
+    const { id, color, ...meta } = p;
     const exercises = db.exercises.filter(e => e.profileId === id).map(({ profileId, ...e }) => e);
     const rem = remote.get('profiles/' + id);
     out.set('profiles/' + id, plain({ ...meta, uid: p.uid ?? null, inviteCode: p.inviteCode ?? null, exercises, ...(rem && rem.claim ? { claim: rem.claim } : {}) }));
@@ -2127,6 +2140,8 @@ function splitDb() {
   for (const x of db.sessions) { const e = exById(x.exId); if (e && own.has(e.profileId)) put(e.profileId, x.date, 'sessions', x); }
   for (const c of db.cardio) if (own.has(c.profileId)) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
+  // A cor do app do aluno fica num documento que o próprio aluno pode gravar
+  for (const p of db.profiles) if (own.has(p.id) && p.color) out.set(`profiles/${p.id}/months/prefs`, { color: p.color });
   return out;
 }
 function scheduleSync() {
