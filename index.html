@@ -82,9 +82,17 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .swatches button.on{border-color:var(--text)}
 .install-tip{background:var(--acc-soft);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
 .install-tip button{border:0;background:none;color:var(--muted);font-size:16px;padding:0 2px}
-.goal-bar{height:16px;border-radius:8px;background:var(--acc-soft);overflow:hidden;margin-top:4px}
-.goal-bar .fill{height:100%;border-radius:8px;background:var(--acc);transition:width .4s}
-.goal-bar.full .fill{background:var(--acc)}
+.goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px;position:relative}
+.goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:width 1s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden}
+/* concluído: listras andando + brilho */
+.goal-bar.full .fill{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.22) 0 10px,transparent 10px 20px);background-size:28px 28px;animation:stripes 1s linear infinite}
+.goal-bar.full .fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-100%);animation:shine 2.2s ease-in-out infinite}
+@keyframes stripes{to{background-position:28px 0}}
+@keyframes shine{60%,100%{transform:translateX(100%)}}
+.modes.sm button{padding:6px 2px;font-size:11px;border-radius:12px}
+.modes.sm button span{font-size:20px}
+.cardio-card .actions .btn.on{background:var(--acc-soft);border-color:var(--acc)}
+.cardio-card .actions .btn.primary.on{background:var(--acc)}
 .goal-txt{margin:6px 0 0;font-size:14px;color:var(--muted)}
 .goal-txt b{color:var(--text);font-size:18px}
 
@@ -454,7 +462,7 @@ input,select,textarea{font-size:16px!important}
     <h2 id="dayTitle">Treino de segunda</h2>
     <p class="hint">Escolha o que o aluno vai treinar neste dia. O aluno verá só esses exercícios, sem precisar escolher.</p>
     <div id="dayPick" style="margin-bottom:12px"></div>
-    <label class="f" id="dayCardioF">Meta de cardio (minutos)<input name="cmin" inputmode="numeric" placeholder="ex.: 20" autocomplete="off"></label>
+    <label class="f" id="dayCardioF">Meta de cardio do dia, em minutos (opcional)<input name="cmin" inputmode="numeric" placeholder="ex.: 20" autocomplete="off"></label>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="dayRest">Descanso</button>
       <span class="grow"></span>
@@ -846,6 +854,7 @@ function renderStudentTreino(p, greet, isToday) {
       || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>');
   }).join('');
   const label = [...groups.map(g => 'Treino ' + g), ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
+  setTimeout(animateBars);
   $main.innerHTML = `${greet}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
@@ -855,7 +864,7 @@ function renderStudentTreino(p, greet, isToday) {
     </div>
     ${installTipHtml()}
     ${plan.length ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
-      ${plan.includes(CARDIO) ? cardioGoalHtml(p) : ''}
+      ${cardioGoalHtml(p)}
       ${groups.length ? `<div class="layout">Séries em:
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
@@ -864,19 +873,54 @@ function renderStudentTreino(p, greet, isToday) {
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 // Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
+// Cartão de cardio do aluno, como um exercício: ele toca no tempo que fez e a barra anima até lá
+const cardioGoalOf = (p, date) => (p.cardioGoal && p.cardioGoal[toDate(date).getDay()]) || 0;
 function cardioGoalHtml(p) {
-  const goal = (p.cardioGoal && p.cardioGoal[toDate(ui.date).getDay()]) || 0;
-  const done = profCardio().filter(c => c.date === ui.date).reduce((a, c) => a + c.min, 0);
-  if (goal && ui.goalInit !== ui.date + goal) { ui.goalInit = ui.date + goal; ui.cardioMin = goal - done > 0 ? goal - done : goal; }
-  const full = goal && done >= goal;
-  return `<section class="card">
-      <div class="card-h"><div class="grow"><h3>Exercício cardiovascular</h3>
-        <small>${goal ? `Meta do dia: <b>${goal} min</b>` : 'Escolha o cardio e registre o tempo'}</small></div>
+  const goal = cardioGoalOf(p, ui.date);
+  const today_ = profCardio().filter(c => c.date === ui.date);
+  const done = today_.reduce((a, c) => a + c.min, 0);
+  const full = goal ? done >= goal : done > 0;
+  const pct = goal ? Math.min(100, done / goal * 100) : done ? 100 : 0;
+  const from = ui.cardioPct && ui.cardioPct.key === ui.date ? ui.cardioPct.v : 0; // anima a partir do valor anterior
+  ui.cardioPct = { key: ui.date, v: pct };
+  const round5 = v => Math.max(5, Math.round(v / 5) * 5);
+  const opts = goal ? [...new Set([round5(goal * .25), round5(goal * .5), round5(goal * .75)])].filter(v => v < goal) : [10, 15, 20, 30];
+  const mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
+  const chip = (v, label, cls = '') => `<button class="btn ${cls} ${done === v ? 'on' : ''}" data-act="cardio-set" data-min="${v}">${label}</button>`;
+  return `<section class="card cardio-card ${full ? 'complete' : ''}">
+      <div class="card-h"><div class="ring" style="--p:${pct}">${full ? '✓' : goal ? Math.round(pct) + '%' : '0'}</div>
+        <div class="grow"><h3>Cardio</h3><small>${goal ? `Meta do dia: <b>${goal} min</b>` : 'Registre quanto tempo você fez'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
-      ${goal ? `<div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${Math.min(done, goal)}">
-        <div class="fill" style="width:${Math.min(100, done / goal * 100)}%"></div></div>
-        <p class="goal-txt"><b>${done}</b> de ${goal} min${full ? '' : ` · faltam ${goal - done} min`}</p>` : ''}
-    </section>${cardioHtml(true)}`;
+      <div class="modes sm">${MODES.map(([id, label, e]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}"><span>${e}</span>${label}</button>`).join('')}</div>
+      <p class="plan-g" style="margin:12px 0 6px">Quanto tempo você fez?</p>
+      <div class="actions" style="margin-top:0">
+        ${opts.map(v => chip(v, v + ' min')).join('')}
+        ${goal ? chip(goal, `✓ Completo (${goal} min)`, 'primary') : ''}
+      </div>
+      <div class="actions"><div class="step" style="height:38px;width:130px">
+          <button data-act="cmin" data-d="-5" aria-label="Menos 5 minutos">−</button>
+          <input id="cardioMin" inputmode="numeric" value="${ui.cardioMin}" aria-label="Outro tempo em minutos">
+          <button data-act="cmin" data-d="5" aria-label="Mais 5 minutos">+</button></div>
+        <button class="btn" data-act="cardio-set-custom">Marcar outro tempo</button>
+        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Desmarcar</button>' : ''}</div>
+      <div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal || 100}" aria-valuenow="${goal ? Math.min(done, goal) : pct}">
+        <div class="fill" data-w="${pct}" style="width:${from}%"></div></div>
+      <p class="goal-txt">${done ? `<b>${done}</b>${goal ? ` de ${goal}` : ''} min feitos${goal && !full ? ` · faltam ${goal - done} min` : ''}` : 'Nenhum cardio marcado ainda'}</p>
+    </section>`;
+}
+// Marca o tempo total de cardio do dia (substitui o que estava marcado)
+function setCardio(min) {
+  const p = profile(ui.profile), mode = ui.mode;
+  db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
+  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min: Math.min(300, Math.round(min)), ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  save(); render();
+  const goal = cardioGoalOf(p, ui.date);
+  if (min > 0 && goal && min >= goal) { confetti(); toast(`Cardio concluído! ${modeOf(mode)[2]} ${min} min 🎉`); }
+  else if (min > 0) toast(`${modeOf(mode)[2]} ${min} min de cardio marcados`);
+}
+// Anima as barras de cardio até o valor novo
+function animateBars() {
+  requestAnimationFrame(() => requestAnimationFrame(() => $main.querySelectorAll('.goal-bar .fill[data-w]').forEach(f => f.style.width = f.dataset.w + '%')));
 }
 // Dica para o aluno instalar na tela de início (assim o login fica salvo e o app abre direto no treino)
 function installTipHtml() {
@@ -1532,8 +1576,7 @@ function openDay(d) {
   document.getElementById('dayTitle').textContent = `Treino de ${WEEK.find(w => w[0] === d)[1].toLowerCase()}`;
   document.getElementById('dayPick').innerHTML = letterPicker('checkbox', 'g', g => cur.includes(g), true, p.id);
   $dayForm.cmin.value = (p.cardioGoal && p.cardioGoal[d]) || '';
-  const sync = () => document.getElementById('dayCardioF').hidden = !$dayForm.querySelector('input[name=g][value="Cardio"]').checked;
-  $dayForm.querySelectorAll('input[name=g]').forEach(i => i.onchange = sync); sync();
+  document.getElementById('dayCardioF').hidden = false;
   $dayDlg.showModal();
 }
 function saveDay(groups) {
@@ -1543,7 +1586,7 @@ function saveDay(groups) {
   // meta de cardio do dia (minutos): o aluno vê uma barra que completa ao atingir
   const cmin = parseInt($dayForm.cmin.value);
   p.cardioGoal = p.cardioGoal || {};
-  if (groups.includes(CARDIO) && cmin > 0) p.cardioGoal[dayEditing] = Math.min(300, cmin); else delete p.cardioGoal[dayEditing];
+  if (groups.length && cmin > 0) p.cardioGoal[dayEditing] = Math.min(300, cmin); else delete p.cardioGoal[dayEditing];
   $dayDlg.close(); save(); render();
 }
 $dayForm.addEventListener('submit', e => { e.preventDefault(); saveDay([...$dayForm.querySelectorAll('input[name=g]:checked')].map(i => i.value)); });
@@ -1593,7 +1636,7 @@ function renderPerfil() {
     const g = (p.division && p.division[d]) || [];
     const isT = toDate(today()).getDay() === d;
     return `<div class="plan-row"><div class="grow"><b>${name}</b>${isT ? ' <span class="pill up">hoje</span>' : ''}
-      <small>${g.length ? g.map(x => x === CARDIO && p.cardioGoal && p.cardioGoal[d] ? `Cardio ${p.cardioGoal[d]} min` : planLabel(x, p.id)).join(' + ') : 'Descanso'}</small></div>
+      <small>${g.length ? [...g.filter(x => x !== CARDIO).map(x => planLabel(x, p.id)), ...(g.includes(CARDIO) || (p.cardioGoal && p.cardioGoal[d]) ? [`Cardio${p.cardioGoal && p.cardioGoal[d] ? ` ${p.cardioGoal[d]} min` : ''}`] : [])].join(' + ') : 'Descanso'}</small></div>
       <button class="icon" data-act="edit-day" data-d="${d}" aria-label="Editar ${name}">✎</button></div>`;
   }).join('');
 
@@ -1870,9 +1913,16 @@ $main.addEventListener('click', e => {
     }
     case 'openday': ui.date = b.dataset.d; ui.group = b.dataset.g; return go('treino');
     case 'layout': ui.layout = b.dataset.l; saveUi(); return render();
-    case 'mode': ui.mode = b.dataset.m; saveUi(); return render();
+    case 'mode': {
+      ui.mode = b.dataset.m; saveUi();
+      // no cartão do aluno, trocar o tipo também corrige o cardio já marcado no dia
+      if (b.closest('.cardio-card')) { const done = db.cardio.filter(c => c.profileId === ui.profile && c.date === ui.date); if (done.length) { done.forEach(c => c.mode = ui.mode); save(); } }
+      return render();
+    }
     case 'cmin': ui.cardioMin = Math.max(5, Math.min(300, (ui.cardioMin || 0) + +b.dataset.d)); saveUi(); return render();
     case 'add-cardio': return addCardio(ui.mode, ui.cardioMin);
+    case 'cardio-set': return setCardio(+b.dataset.min);
+    case 'cardio-set-custom': return setCardio(ui.cardioMin);
     case 'del-cardio': db.cardio = db.cardio.filter(c => c.id !== b.dataset.id); save(); return render();
     case 'watch-start': ui.watch = { start: Date.now(), mode: ui.mode }; clearInterval(watchTimer); watchTimer = setInterval(tickWatch, 500); return render();
     case 'watch-cancel': ui.watch = null; clearInterval(watchTimer); return render();
