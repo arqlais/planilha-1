@@ -1114,6 +1114,8 @@ function dayCard(d, list) {
   </section>`;
 }
 function renderHistorico() {
+  const loadingOld = isOldMonth(ui.profile, ui.month);
+  if (loadingOld) ensureFull(ui.profile);
   const days = dayMap();
   const [y, m] = ui.month.split('-').map(Number);
   const first = new Date(y, m - 1, 1), nDays = new Date(y, m, 0).getDate(), offset = (first.getDay() + 6) % 7;
@@ -1157,7 +1159,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">Toque em qualquer dia para ver o treino ou anotar um treino passado. Dias destacados têm treino.</p>
+      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : 'Toque em qualquer dia para ver o treino ou anotar um treino passado. Dias destacados têm treino.'}</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
         <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(monthVol)}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
@@ -1466,6 +1468,7 @@ function renderAlunos() {
 function createStudent({ name, phone = '', goal = '', notes = '' }) {
   const id = uid();
   db.profiles.push({ id, name, phone, goal, notes, since: today(), messages: [], uid: null, inviteCode: newInviteCode() });
+  if (typeof cloud !== 'undefined' && cloud && cloud.fullLoaded) cloud.fullLoaded.add(id);
   return id;
 }
 const $st = document.getElementById('stDialog'), $stForm = document.getElementById('stForm');
@@ -2064,6 +2067,7 @@ document.getElementById('exDelete').onclick = async () => {
 
 // ---------- Backup ----------
 async function exportData() {
+  if (CLOUD) { toast('Preparando o backup completo…'); await ensureFullAll(); }
   const json = JSON.stringify(db, null, 2), filename = `treino-backup-${today()}.json`;
   // Publicado no claude.ai: o download passa pelo visualizador
   const downloads = window.claude?.use ? await window.claude.use('downloads').catch(() => null) : null;
@@ -2085,7 +2089,9 @@ function importData(file) {
     const d = JSON.parse(t);
     if (!d || !Array.isArray(d.exercises) || !Array.isArray(d.sessions)) throw new Error('formato');
     if (!await confirmAsk('Importar backup?', 'Os dados atuais serão substituídos pelos do arquivo.', 'Importar')) return;
+    if (CLOUD) await ensureFullAll(); // para substituir também os meses antigos que estão na nuvem
     db = migrate(d);
+    if (CLOUD) { ensureCloudFields(db); db.profiles.forEach(p => cloud && cloud.fullLoaded && cloud.fullLoaded.add(p.id)); }
     if (!profile(ui.profile)) ui.profile = ME;
     save(); render();
   }).catch(() => toast('Arquivo de backup inválido.'));
@@ -2139,9 +2145,16 @@ async function startSession(user) {
   if (q.empty) return showAuth('noprofile');
   startStudent(q.docs[0].id);
 }
+// Professor: carrega só os meses recentes de cada aluno (os antigos vêm quando precisar).
+// Assim as leituras do Firebase não crescem com os anos. O aluno carrega os dele inteiros (são poucos).
+const WINDOW_MONTHS = 6;
+function windowStartMonth() { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - (WINDOW_MONTHS - 1)); return isoDate(d).slice(0, 7); }
+const isOldMonth = (pid, ym) => cloud && cloud.role === 'admin' && ym < cloud.windowStart && !cloud.fullLoaded.has(pid);
 function subscribeMonths(pid) {
   cloud.waiting.add(pid);
-  const un = cloud.fs.collection(`profiles/${pid}/months`).onSnapshot(snap => {
+  let ref = cloud.fs.collection(`profiles/${pid}/months`);
+  if (cloud.role === 'admin') ref = ref.where(firebase.firestore.FieldPath.documentId(), '>=', cloud.windowStart); // "prefs" também entra
+  const un = ref.onSnapshot(snap => {
     snap.docChanges().forEach(ch => {
       const path = `profiles/${pid}/months/${ch.doc.id}`;
       ch.type === 'removed' ? remote.delete(path) : remote.set(path, ch.doc.data());
@@ -2150,12 +2163,34 @@ function subscribeMonths(pid) {
   }, err => cloudError(err));
   cloud.months.set(pid, un);
 }
+// Busca (uma vez) os meses antigos de um aluno: calendário antigo, backup, importação
+function ensureFull(pid) {
+  if (!cloud || cloud.role !== 'admin' || !cloud.ready || cloud.fullLoaded.has(pid)) return Promise.resolve();
+  if (cloud.loadingOld.has(pid)) return cloud.loadingOld.get(pid);
+  const job = (async () => {
+    const snap = await cloud.fs.collection(`profiles/${pid}/months`).where(firebase.firestore.FieldPath.documentId(), '<', cloud.windowStart).get();
+    // Junta os treinos antigos ao que já está no app, sem apagar nada que foi anotado enquanto carregava
+    const haveS = new Set(db.sessions.map(x => x.id)), haveC = new Set(db.cardio.map(x => x.id));
+    snap.forEach(d => {
+      const path = `profiles/${pid}/months/${d.id}`, v = d.data();
+      remote.set(path, v); lastSynced.set(path, canon(v));
+      (v.sessions || []).forEach(x => { if (!haveS.has(x.id)) db.sessions.push(plain(x)); });
+      (v.cardio || []).forEach(c => { if (!haveC.has(c.id)) db.cardio.push({ ...plain(c), profileId: pid }); });
+    });
+    cloud.fullLoaded.add(pid); // só agora os meses antigos desse aluno podem ser gravados
+    scheduleSync(); render();
+  })().catch(err => cloudError(err)).finally(() => cloud.loadingOld.delete(pid));
+  cloud.loadingOld.set(pid, job);
+  return job;
+}
+const ensureFullAll = () => cloud && cloud.role === 'admin' ? Promise.all(db.profiles.map(p => ensureFull(p.id))) : Promise.resolve();
 function dropProfile(pid) {
   const un = cloud.months.get(pid); if (un) un(); cloud.months.delete(pid); cloud.waiting.delete(pid);
   for (const k of [...remote.keys()]) if (k === 'profiles/' + pid || k.startsWith(`profiles/${pid}/`)) remote.delete(k);
 }
 function startAdmin() {
   cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
+  cloud.windowStart = windowStartMonth(); cloud.fullLoaded = new Set(); cloud.loadingOld = new Map();
   cloud.unsubs.push(cloud.fs.collection('profiles').onSnapshot(snap => {
     snap.docChanges().forEach(ch => {
       const pid = ch.doc.id;
@@ -2198,6 +2233,7 @@ async function firstRun() {
   db = up ? local : seed();
   db.seeded = ['lais'];
   ensureCloudFields(db);
+  db.profiles.forEach(p => cloud.fullLoaded && cloud.fullLoaded.add(p.id)); // a nuvem estava vazia: nada a buscar
   lastSynced = new Map();
   await syncNow(); render();
   toast(up ? 'Dados enviados para a nuvem.' : 'Conta pronta! Cadastre seus alunos na aba Alunos.');
@@ -2242,8 +2278,8 @@ function splitDb() {
     const path = `profiles/${pid}/months/${date.slice(0, 7)}`;
     (months[path] = months[path] || { sessions: [], cardio: [] })[key].push(item);
   };
-  for (const x of db.sessions) { const e = exById(x.exId); if (e && own.has(e.profileId)) put(e.profileId, x.date, 'sessions', x); }
-  for (const c of db.cardio) if (own.has(c.profileId)) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
+  for (const x of db.sessions) { const e = exById(x.exId); if (e && own.has(e.profileId) && !isOldMonth(e.profileId, x.date.slice(0, 7))) put(e.profileId, x.date, 'sessions', x); }
+  for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id) && p.color) out.set(`profiles/${p.id}/months/prefs`, { color: p.color });
@@ -2258,8 +2294,8 @@ async function syncNow() {
   clearTimeout(syncTimer); syncTimer = null;
   if (!cloud || !cloud.ready) return;
   const cur = splitDb(), ops = [];
-  for (const [path, doc] of cur) { const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); } }
-  for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) { ops.push(['delete', path]); lastSynced.delete(path); }
+  for (const [path, doc] of cur) { const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
+  for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) { ops.push(['delete', path]); lastSynced.delete(path); remote.delete(path); }
   try {
     for (let i = 0; i < ops.length; i += 400) {
       const b = cloud.fs.batch();
@@ -2362,7 +2398,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-21:19';
+const APP_VERSION = '29/09-21:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

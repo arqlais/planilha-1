@@ -102,6 +102,10 @@ firebase deploy --project SEU_PROJETO
 3. Cadastre os alunos e envie o convite de cada um.
 4. No celular: **Compartilhar → Adicionar à Tela de Início** para abrir como app.
 
+### Limites do plano gratuito
+
+Para as leituras do Firebase não crescerem com os anos, o app do professor carrega só os **últimos 6 meses** de cada aluno ao abrir. Meses mais antigos são buscados na hora em que forem necessários (calendário de meses antigos, backup e importação). O aluno carrega só os próprios dados.
+
 ## Dados
 
 Os dados ficam salvos no navegador (localStorage) do aparelho. Use **Exportar/Importar** na aba Evolução para fazer backup ou passar os dados para outro aparelho.
