@@ -1530,12 +1530,26 @@ function profileCard(p) {
       <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Evolução</button>
     </div></section>`;
 }
+// Cartão do professor na aba Alunos: o perfil dele (histórico antigo e medidas)
+function myProfileHtml() {
+  const me = profile(ME), list = bodyOf(me), n = trainedDates(ME).length;
+  return `<section class="card" style="margin-top:4px">
+    <div class="card-h"><span class="av">${esc(initials(me.name))}</span><div class="grow"><h3>Meu perfil · ${esc(me.name)}</h3>
+      <small>${n} ${n === 1 ? 'dia' : 'dias'} de treino${list.length ? ` · medidas de ${fmtDate(list[list.length - 1].date)}/${list[list.length - 1].date.slice(2, 4)}` : ''}</small></div></div>
+    <p class="hint" style="margin:0 0 10px">Traga os treinos que você anotou antes do app (arquivo <b>historico-….json</b>). Junta com o que já existe, sem apagar nada.</p>
+    <div class="actions">
+      <label class="btn primary">⬆ Importar meu histórico<input type="file" id="histFileMe" hidden></label>
+      <button class="btn" data-act="open-medidas" data-pid="${ME}">Minhas medidas</button>
+      <button class="btn" data-act="open-profile" data-pid="${ME}" data-v="historico">Meu histórico</button>
+    </div></section>`;
+}
 function renderAlunos() {
   const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const q = ui.q.trim().toLowerCase();
   const shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   $main.innerHTML = `
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
+    ${myProfileHtml()}
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
     <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro '}</p>`}</div>
@@ -2029,6 +2043,7 @@ $main.addEventListener('change', e => {
   if (e.target.matches('input[data-f]')) return autoCheck(e.target);
   if (e.target.id === 'importFile') importData(e.target.files[0]);
   if (e.target.id === 'histFile') { importHistory(e.target.files[0]); e.target.value = ''; }
+  if (e.target.id === 'histFileMe') { ui.profile = ME; importHistory(e.target.files[0]); e.target.value = ''; }
   if (e.target.id === 'bodyDate') { ui.bodyDate = e.target.value; return render(); }
   if (e.target.id === 'tplGroup') { ui.tplGroup = e.target.value; ui.msgDraft = msgTemplate('treino', profile(ui.profile)); document.getElementById('msgText').value = ui.msgDraft; updateWaLink(); }
 });
@@ -2129,7 +2144,7 @@ $main.addEventListener('click', e => {
         .finally(() => { b.disabled = false; b.textContent = `✓ Salvar treino de ${firstName(p)}`; });
       return;
     }
-    case 'open-medidas': ui.bodyDate = null; return go('medidas');
+    case 'open-medidas': ui.bodyDate = null; if (b.dataset.pid) ui.profile = b.dataset.pid; return go('medidas');
     case 'save-body': return saveBody();
     case 'edit-body': ui.bodyDate = b.dataset.d; render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'del-body': {
@@ -2649,7 +2664,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-22:41';
+const APP_VERSION = '29/09-22:46';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

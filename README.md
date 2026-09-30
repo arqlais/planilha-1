@@ -48,7 +48,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 
 ## Histórico antigo do aluno
 
-- No perfil do aluno (ou, para o seu próprio treino, no fim da aba **Evolução**), **⬆ Importar histórico** traz os treinos anotados antes do app (arquivo de histórico preparado a partir da planilha antiga).
+- No perfil do aluno (ou, para o seu próprio treino, no cartão **Meu perfil** no topo da aba **Alunos** ou no fim da aba **Evolução**), **⬆ Importar histórico** traz os treinos anotados antes do app (arquivo de histórico preparado a partir da planilha antiga).
 - Junta com o que já existe, sem apagar nada: cria os treinos e a divisão da semana (só nos dias que estiverem vazios), os exercícios e as séries de cada data, e as medidas. Importar o mesmo arquivo de novo não duplica.
 - O mesmo exercício em dois treinos (ex.: Cadeira flexora na segunda e na quinta) usa um só histórico para comparar as cargas.
 
