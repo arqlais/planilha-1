@@ -7,7 +7,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 ## Como usar
 
 1. Abra o `index.html` no navegador (celular ou computador). Para usar no celular, ative o **GitHub Pages** do repositório (Settings → Pages → branch principal) e salve o link na tela inicial.
-2. Escolha o treino: **Treino A, B, C ou D** (ou **Cardio**). Cada treino reúne exercícios de um ou mais grupos musculares (ex.: Treino A = Peito e Costas). Exercícios que ainda não estão em nenhum treino ficam em **Exercícios sem treino**, com botão para mover para o treino aberto. Use **‹ ›** para ir para outros dias (ou toque na data no topo).
+2. Escolha o treino pelo nome (ou **Cardio**). Os treinos têm o **nome que você quiser** (ex.: Superiores, Inferiores, Full body, Treino A): toque em **＋ Novo treino** para criar, e em **✎ Renomear** / **Excluir treino** no topo do treino. Cada treino reúne exercícios de um ou mais grupos musculares. Exercícios que ainda não estão em nenhum treino ficam em **Exercícios sem treino**, com botão para mover para o treino aberto. Use **‹ ›** para ir para outros dias (ou toque na data no topo).
 3. Cada exercício já vem preenchido com as cargas e repetições do **último treino**. Ao digitar kg e repetições de uma série e sair do campo, ela é **marcada como feita automaticamente** (o ✓ continua servindo para marcar ou desmarcar). As séries aparecem em **quadrados** (carga em cima, repetições embaixo e o valor do treino anterior); digite e toque em **✓** em cada série feita. Em **☰ Lista** voltam os botões **− / +**.
 4. O total (carga × repetições) é somado automaticamente.
 5. Ao marcar uma série, abre um **timer de descanso** de 2 minutos (ajuste com −15s / +15s; o app lembra o tempo preferido).
@@ -31,7 +31,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 ## Ver como o aluno
 
 - No perfil do aluno, toque em **👁 Ver como o aluno**: o app fica como o aluno veria (faixa laranja no topo, **Sair** para voltar).
-- **📅 Divisão da semana** (no perfil do aluno): você escolhe o que o aluno treina em cada dia (ex.: segunda = Treino A + Cardio). Os exercícios são criados por você em **Treinos do aluno** (A, B, C, D). O aluno não escolhe o treino: vê só o treino do dia (ou "dia de descanso").
+- **📅 Divisão da semana** (no perfil do aluno): você escolhe o que o aluno treina em cada dia (ex.: segunda = Superiores + Cardio). Os treinos (com o nome que você quiser) e os exercícios são criados por você em **Treinos do aluno**. O aluno não escolhe o treino: vê só o treino do dia (ou "dia de descanso").
 - **Cardio do aluno**: em todo dia de treino, o aluno vê o cartão **Cardio** logo acima do Treino A. Ele escolhe o tipo (Corrida, Bicicleta, Escada, Elíptico) e digita o **Tempo realizado** (aceita número quebrado, ex.: 12,5); a barra enche da esquerda para a direita e embaixo dela aparece a **Meta**. A meta é definida por você no perfil do aluno (**Meta de cardio**, minutos por dia; um dia da divisão pode ter meta própria). A linha vai de 0 a 100% da meta (ex.: 5 de 20 min = 25%) e anima até o tempo feito.
 - Aluno novo começa **sem exercícios**; no diálogo de exercício, séries e repetições começam vazias (séries é obrigatório).
 - A série só é confirmada com **carga e repetições** anotadas.
@@ -60,7 +60,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 
 ## Exercícios
 
-- **+ Adicionar exercício**: nome, treino (A/B/C/D), grupo muscular, nº de séries, carga e repetições iniciais.
+- **+ Adicionar exercício**: nome, treino, grupo muscular, nº de séries, carga e repetições iniciais.
 - **⋯** no exercício: renomear, mudar de treino ou de grupo, alterar o plano (séries/carga/reps) ou excluir.
 - **+ série / − série** para ajustar só o treino do dia.
 - O campo de data no topo permite lançar ou ver treinos de outros dias.
