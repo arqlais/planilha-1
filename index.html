@@ -901,6 +901,22 @@ function cardioGoalHtml(p) {
   ui.cardioBar = { key, v: pct };
   if (from !== pct) setTimeout(() => { const f = $main.querySelector('.cardio-card .goal-bar .fill'); if (f) requestAnimationFrame(() => requestAnimationFrame(() => f.style.width = pct + '%')); });
   const mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
+  const bar = `<div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal || 100}" aria-valuenow="${goal ? Math.min(done, goal) : pct}">
+        <div class="fill" style="width:${from}%"></div></div>`;
+  if (p.id !== ME && !ui.studentMode) return `<section class="card cardio-card">
+      <div class="card-h"><div class="grow"><h3>Cardio de ${esc(firstName(p))}</h3>
+        <small>Você define a meta; o tempo realizado quem anota é o aluno, no app dele</small></div>
+        ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
+      <label class="plan-g" for="goalDaily" style="display:block;margin:4px 0 6px">Meta de cardio (minutos por dia)</label>
+      <div class="actions" style="margin-top:0;align-items:center">
+        <input id="goalDaily" class="time-in" inputmode="decimal" placeholder="ex.: 20" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}"><span class="unit">min</span>
+        <button class="btn primary" data-act="save-goal">Salvar meta</button>
+      </div>
+      ${bar}
+      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados pelo aluno` : 'O aluno ainda não fez cardio neste dia'}</span>
+        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
+      ${done && today_.some(c => c.by !== 'aluno') ? '<div class="actions"><button class="btn danger" style="padding-left:0" data-act="cardio-set" data-min="0">Apagar tempo marcado por engano</button></div>' : ''}
+    </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
         <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Escolha o cardio e anote o tempo'}</small></div>
@@ -912,10 +928,9 @@ function cardioGoalHtml(p) {
         <button class="btn primary" data-act="cardio-save">Salvar</button>
         ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Desmarcar</button>' : ''}
       </div>
-      <div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal || 100}" aria-valuenow="${goal ? Math.min(done, goal) : pct}">
-        <div class="fill" style="width:${from}%"></div></div>
+      ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
-        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : 'não definida'}</b></span></div>
+        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
     </section>`;
 }
 // Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
@@ -2347,7 +2362,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-21:03';
+const APP_VERSION = '29/09-21:11';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
