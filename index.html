@@ -848,7 +848,7 @@ function renderTreino() {
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
     ${groupChips(group)}
-    ${group === CARDIO ? cardioHtml() : `<div class="banner">${bannerHtml(group)}</div>
+    ${group === CARDIO ? (ui.profile !== ME ? cardioGoalHtml(profile(ui.profile)) : cardioHtml()) : `<div class="banner">${bannerHtml(group)}</div>
     ${cardioGoalHtml(profile(ui.profile))}
     <div class="layout">Séries em:
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
@@ -2362,7 +2362,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-21:11';
+const APP_VERSION = '29/09-21:17';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
