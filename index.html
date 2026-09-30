@@ -392,6 +392,7 @@ input,select,textarea{font-size:16px!important}
     <div class="auth-links">
       <button class="link" id="authToggle" type="button">Primeiro acesso? Criar conta</button>
       <button class="link" id="authForgot" type="button">Esqueci a senha</button>
+      <button class="btn" id="authRescue" type="button" hidden style="width:100%;margin-top:10px">⬇ Baixar cópia dos meus treinos (envie ao professor)</button>
       <button class="link" id="authOut" type="button" hidden>Sair desta conta</button>
     </div>
   </div>
@@ -1549,6 +1550,7 @@ function renderAlunos() {
   const shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   $main.innerHTML = `
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
+    ${rescueHtml()}
     ${myProfileHtml()}
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
@@ -1603,6 +1605,7 @@ document.getElementById('stDelete').onclick = async () => {
   db.cardio = db.cardio.filter(c => c.profileId !== p.id);
   db.profiles = db.profiles.filter(x => x.id !== p.id);
   deletedProfiles.add(p.id); // só assim o aluno sai da nuvem
+  { const r = readRescue(); delete r[p.id]; writeRescue(r); }
   if (ui.profile === p.id) { ui.profile = ME; if (ui.view === 'perfil') ui.view = 'alunos'; }
   save(); saveUi(); render();
 };
@@ -2110,6 +2113,13 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'open-profile': ui.profile = b.dataset.pid; ui.date = today(); ui.month = ui.date.slice(0, 7); return go(b.dataset.v);
+    case 'rescue': {
+      const pids = rescuable(), r = readRescue(), docs = {};
+      pids.forEach(pid => Object.assign(docs, r[pid].docs));
+      const n = restoreFromDocs(docs, pids);
+      return toast(n ? `✓ ${n === 1 ? 'Aluno recuperado' : n + ' alunos recuperados'}. Já está salvo na nuvem.` : 'Nada para recuperar.');
+    }
+    case 'rescue-file': return downloadText(`resgate-alunos-${today()}.json`, rescueFile(rescuable()));
     case 'gomonth': ui.month = b.dataset.m; ui.histDay = null; return render();
     case 'month': {
       const [y, m] = ui.month.split('-').map(Number), d = new Date(y, m - 1 + (+b.dataset.d), 1);
@@ -2351,6 +2361,15 @@ function importData(file) {
   if (!file) return;
   file.text().then(async t => {
     let d = null; try { d = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) {}
+    if (d && d.kind === 'resgate' && d.docs) {
+      if (CLOUD) await ensureFullAll();
+      const pids = (d.pids || []).filter(pid => pid !== ME && d.docs['profiles/' + pid] && (!profile(pid) || profSessions(pid).length === 0));
+      if (!pids.length) return toast('Os alunos deste arquivo já estão no app.');
+      const names = pids.map(pid => (d.docs['profiles/' + pid] || {}).name || 'Aluno');
+      if (!await confirmAsk(`Recuperar ${names.join(', ')}?`, 'Traz de volta perfil, treinos e marcações. Nada do que já existe é apagado.', 'Recuperar')) return;
+      const n = restoreFromDocs(d.docs, pids);
+      return toast(`✓ ${n} ${n === 1 ? 'aluno recuperado' : 'alunos recuperados'}.`);
+    }
     if (d && d.kind === 'historico-aluno') {
       // Arquivo de histórico escolhido no botão de backup: junta no perfil certo, sem apagar nada
       const who = d.aluno ? db.profiles.find(p => p.id !== ME && sameName(firstName(p), firstName({ name: d.aluno }))) : null;
@@ -2364,8 +2383,9 @@ function importData(file) {
     if (!await confirmAsk('Restaurar backup?', `Os dados atuais serão trocados pelos do arquivo.${gone.length ? ` Não estão no arquivo: ${gone.join(', ')} (continuam salvos).` : ''} Antes, o app baixa uma cópia do que existe agora.`, 'Restaurar')) return;
     await exportData(); // cópia de segurança do que existe agora
     if (CLOUD) await ensureFullAll(); // para substituir também os meses antigos que estão na nuvem
-    const old = db;
+    const old = db, fileHasMe = d.profiles.some(p => p.id === ME);
     db = migrate(d);
+    if (!fileHasMe) { const ids = new Set(profExs(ME).map(e => e.id)); db.profiles = db.profiles.filter(p => p.id !== ME); db.exercises = db.exercises.filter(e => e.profileId !== ME); db.sessions = db.sessions.filter(x => !ids.has(x.exId)); db.cardio = db.cardio.filter(c => c.profileId !== ME); }
     // Quem não está no arquivo continua no app (nunca some por causa de um backup)
     old.profiles.filter(p => !profile(p.id)).forEach(p => {
       const exs = old.exercises.filter(e => e.profileId === p.id), ids = new Set(exs.map(e => e.id));
@@ -2374,6 +2394,7 @@ function importData(file) {
       db.sessions.push(...old.sessions.filter(x => ids.has(x.exId) && !hasS.has(x.id)));
       db.cardio.push(...old.cardio.filter(c => c.profileId === p.id && !hasC.has(c.id)));
     });
+    db.profiles.sort((a, b) => a.id === ME ? -1 : b.id === ME ? 1 : 0);
     if (CLOUD) { ensureCloudFields(db); db.profiles.forEach(p => cloud && cloud.fullLoaded && cloud.fullLoaded.add(p.id)); }
     if (!profile(ui.profile)) ui.profile = ME;
     save(); render();
@@ -2405,7 +2426,7 @@ async function cloudBoot() {
   firebase.initializeApp(CFG.firebase);
   const auth = firebase.auth(), fs = firebase.firestore();
   if (CFG.emulator) { auth.useEmulator(CFG.emulator.auth); fs.useEmulator(CFG.emulator.host, CFG.emulator.port); }
-  else { try { await fs.enablePersistence({ synchronizeTabs: true }); } catch (e) {} } // funciona offline
+  if (!CFG.emulator || CFG.emulator.persist) { try { await fs.enablePersistence({ synchronizeTabs: true }); } catch (e) {} } // funciona offline e guarda a cópia do resgate
   try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {} // login fica salvo no aparelho
   cloud = { auth, fs, role: null, ready: false, unsubs: [] };
   auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() ? 'signup' : 'login'); });
@@ -2420,7 +2441,9 @@ const clearInvite = () => { try { localStorage.removeItem(INVITE_KEY); } catch (
 async function startSession(user) {
   cloud.user = user;
   showAuth('loading');
-  if (ADMIN_EMAIL && (user.email || '').toLowerCase() === ADMIN_EMAIL) { cloud.role = 'admin'; return startAdmin(); }
+  const isAdm = !!ADMIN_EMAIL && (user.email || '').toLowerCase() === ADMIN_EMAIL;
+  await saveRescueFromCache(user, isAdm);
+  if (isAdm) { cloud.role = 'admin'; return startAdmin(); }
   cloud.role = 'student';
   const inv = pendingInvite();
   if (inv) {
@@ -2431,6 +2454,79 @@ async function startSession(user) {
   if (q.empty) return showAuth('noprofile');
   startStudent(q.docs[0].id);
 }
+// ---------- Resgate ----------
+// O Firebase guarda neste aparelho uma cópia do que já foi visto. Ao abrir, antes de falar com a nuvem,
+// o app copia isso para cá. Se um aluno sumir da nuvem sem ter sido excluído, dá para trazê-lo de volta.
+const RESCUE_KEY = 'planilha-resgate';
+function readRescue() { try { return JSON.parse(localStorage.getItem(RESCUE_KEY)) || {}; } catch (e) { return {}; } }
+function writeRescue(r) { try { localStorage.setItem(RESCUE_KEY, JSON.stringify(r)); } catch (e) {} }
+async function saveRescueFromCache(user, admin) {
+  try {
+    const fs = cloud.fs;
+    const ps = admin ? await fs.collection('profiles').get({ source: 'cache' })
+      : await fs.collection('profiles').where('uid', '==', user.uid).get({ source: 'cache' });
+    if (ps.empty) return;
+    const r = readRescue();
+    for (const d of ps.docs) {
+      const docs = { ['profiles/' + d.id]: plain(d.data()) };
+      const ms = await fs.collection(`profiles/${d.id}/months`).get({ source: 'cache' });
+      ms.forEach(m => { docs[`profiles/${d.id}/months/${m.id}`] = plain(m.data()); });
+      const old = r[d.id] && r[d.id].docs || {};
+      r[d.id] = { at: Date.now(), docs: { ...old, ...docs } }; // junta: nunca perde meses já guardados
+    }
+    writeRescue(r);
+  } catch (e) { console.warn('resgate:', e); }
+}
+// Alunos que estão na cópia deste aparelho mas não estão mais na nuvem (e não foram excluídos pelo professor)
+// (ou que voltaram só com a ficha, sem nenhum treino, enquanto a cópia tem treinos)
+const rescueSessions = e => Object.entries(e.docs).reduce((n, [k, v]) => n + (/\/months\/\d{4}-\d{2}$/.test(k) ? (v.sessions || []).length : 0), 0);
+const rescuable = () => { const r = readRescue(); return Object.keys(r).filter(pid => pid !== ME && !deletedProfiles.has(pid) && r[pid].docs['profiles/' + pid]
+  && (!profile(pid) || (profSessions(pid).length === 0 && rescueSessions(r[pid]) > 0))); };
+function restoreFromDocs(docs, pids) {
+  const got = assemble(new Map(Object.entries(docs)));
+  let n = 0;
+  got.profiles.filter(p => pids.includes(p.id)).forEach(p => {
+    const exs = got.exercises.filter(e => e.profileId === p.id), ids = new Set(exs.map(e => e.id));
+    const hasE = new Set(db.exercises.map(e => e.id)), hasS = new Set(db.sessions.map(x => x.id)), hasC = new Set(db.cardio.map(c => c.id));
+    const cur = profile(p.id);
+    if (!cur) db.profiles.push(p);
+    else { // a ficha voltou vazia: completa com o que faltava
+      if (!(cur.workouts && cur.workouts.length) && p.workouts) cur.workouts = p.workouts;
+      if (!(cur.division && Object.keys(cur.division).length) && p.division) cur.division = p.division;
+      if (!(cur.body && cur.body.length) && p.body) cur.body = p.body;
+    }
+    db.exercises.push(...exs.filter(e => !hasE.has(e.id)));
+    db.sessions.push(...got.sessions.filter(x => ids.has(x.exId) && !hasS.has(x.id)));
+    db.cardio.push(...got.cardio.filter(c => c.profileId === p.id && !hasC.has(c.id)));
+    if (cloud && cloud.fullLoaded) cloud.fullLoaded.add(p.id);
+    if (cloud && cloud.removed) cloud.removed.delete(p.id);
+    n++;
+  });
+  save(); render();
+  return n;
+}
+function rescueHtml() {
+  const pids = CLOUD && cloud && cloud.role === 'admin' ? rescuable() : [];
+  if (!pids.length) return '';
+  const r = readRescue(), names = pids.map(pid => (r[pid].docs['profiles/' + pid] || {}).name || 'Aluno');
+  const when = new Date(Math.max(...pids.map(pid => r[pid].at))).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return `<section class="card" style="border:2px solid var(--acc)"><div class="card-h"><div class="grow"><h3>Alunos para recuperar</h3>
+      <small>Este aparelho guardou uma cópia (${when}) de alunos que sumiram da nuvem (ou voltaram sem treinos): <b>${names.map(esc).join(', ')}</b>.</small></div></div>
+    <p class="hint" style="margin:0 0 10px">Restaurar traz de volta o perfil, os treinos, a divisão, as marcações e as medidas. O aluno continua entrando com o mesmo login.</p>
+    <div class="actions"><button class="btn primary" data-act="rescue">Restaurar ${pids.length === 1 ? esc(names[0]) : 'estes alunos'}</button>
+      <button class="btn" data-act="rescue-file">Baixar cópia</button></div></section>`;
+}
+function rescueFile(pids) {
+  const r = readRescue(), docs = {};
+  pids.forEach(pid => Object.assign(docs, r[pid].docs));
+  return JSON.stringify({ kind: 'resgate', at: today(), pids, docs });
+}
+function downloadText(filename, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 // Professor: carrega só os meses recentes de cada aluno (os antigos vêm quando precisar).
 // Assim as leituras do Firebase não crescem com os anos. O aluno carrega os dele inteiros (são poucos).
 const WINDOW_MONTHS = 6;
@@ -2471,17 +2567,18 @@ function ensureFull(pid) {
 }
 const ensureFullAll = () => cloud && cloud.role === 'admin' ? Promise.all(db.profiles.map(p => ensureFull(p.id))) : Promise.resolve();
 function dropProfile(pid) {
+  cloud.removed.add(pid); // apagado na nuvem: este aparelho não grava de novo (só pelo "Restaurar")
   const un = cloud.months.get(pid); if (un) un(); cloud.months.delete(pid); cloud.waiting.delete(pid);
   for (const k of [...remote.keys()]) if (k === 'profiles/' + pid || k.startsWith(`profiles/${pid}/`)) remote.delete(k);
 }
 function startAdmin() {
   cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
-  cloud.windowStart = windowStartMonth(); cloud.fullLoaded = new Set(); cloud.loadingOld = new Map();
+  cloud.windowStart = windowStartMonth(); cloud.fullLoaded = new Set(); cloud.loadingOld = new Map(); cloud.removed = new Set();
   cloud.unsubs.push(cloud.fs.collection('profiles').onSnapshot(snap => {
     snap.docChanges().forEach(ch => {
       const pid = ch.doc.id;
       if (ch.type === 'removed') return dropProfile(pid);
-      remote.set('profiles/' + pid, ch.doc.data());
+      remote.set('profiles/' + pid, ch.doc.data()); cloud.removed.delete(pid);
       if (!cloud.months.has(pid)) subscribeMonths(pid);
     });
     cloud.gotProfiles = true; onRemote();
@@ -2530,9 +2627,9 @@ function ensureCloudFields(d) {
     if (p.id !== ME && !p.inviteCode) p.inviteCode = newInviteCode();
   });
 }
-function assemble() {
+function assemble(src = remote) {
   const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {};
-  for (const [path, v0] of remote) {
+  for (const [path, v0] of src) {
     const v = plain(v0), m = path.split('/');
     if (m[3] === 'prefs') prefs[m[1]] = v; // preferências do aluno (ex.: cor do app)
     else if (m[3] === 'body') bodies[m[1]] = v.entries || []; // medidas do corpo
@@ -2583,7 +2680,9 @@ async function syncNow() {
   clearTimeout(syncTimer); syncTimer = null;
   if (!cloud || !cloud.ready) return;
   const cur = splitDb(), ops = [];
-  for (const [path, doc] of cur) { const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
+  for (const [path, doc] of cur) {
+    if (cloud.removed && cloud.removed.has(pidOfPath(path))) continue;
+    const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
   for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) {
     const pid = pidOfPath(path);
     if (!profile(pid) && !deletedProfiles.has(pid)) { console.warn('não apagado (aluno não foi excluído):', path); continue; }
@@ -2656,6 +2755,7 @@ function showAuth(mode, msg = '') {
   document.getElementById('authToggle').textContent = isSignup ? 'Já tenho conta: entrar' : 'Primeiro acesso? Criar conta';
   document.getElementById('authForgot').hidden = mode !== 'login';
   document.getElementById('authOut').hidden = mode !== 'noprofile';
+  document.getElementById('authRescue').hidden = !(mode === 'noprofile' && myRescuePids().length);
   document.getElementById('authMsg').textContent = mode === 'noprofile' ? 'Peça ao seu professor o link de convite e abra por ele, ou digite o código abaixo.' : msg;
   if (mode === 'noprofile') { $authForm.hidden = false; document.getElementById('authCodeF').hidden = false; document.getElementById('authOk').textContent = 'Usar código'; $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = true; }
   else $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = false;
@@ -2682,6 +2782,9 @@ $authForm.addEventListener('submit', async e => {
 });
 document.getElementById('authToggle').onclick = () => showAuth(authMode === 'signup' ? 'login' : 'signup');
 document.getElementById('authOut').onclick = () => cloud.auth.signOut();
+// Aluno cujo perfil sumiu da nuvem: baixa a cópia que ficou no aparelho para o professor recuperar
+const myRescuePids = () => { const r = readRescue(), me = cloud && cloud.user && cloud.user.uid; return me ? Object.keys(r).filter(pid => (r[pid].docs['profiles/' + pid] || {}).uid === me) : []; };
+document.getElementById('authRescue').onclick = () => downloadText(`resgate-${today()}.json`, rescueFile(myRescuePids()));
 document.getElementById('authForgot').onclick = async () => {
   const email = $authForm.email.value.trim();
   if (!email) return document.getElementById('authMsg').textContent = 'Digite seu e-mail acima e toque em "Esqueci a senha" de novo.';
@@ -2691,7 +2794,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-23:13';
+const APP_VERSION = '29/09-23:28';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

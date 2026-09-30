@@ -122,6 +122,7 @@ Para as leituras do Firebase não crescerem com os anos, o app do professor carr
 ## Segurança dos dados
 
 - Um aluno só é apagado da nuvem quando você usa **Excluir** no aluno. Nenhuma outra ação (importar, restaurar backup, erro de sincronização) apaga alunos.
+- **Resgate:** cada aparelho guarda uma cópia do que já viu. Se um aluno sumir da nuvem sem ter sido excluído, aparece na aba Alunos o cartão **Alunos para recuperar** com o botão **Restaurar**. Se só o celular do aluno tiver a cópia, ele vê **⬇ Baixar cópia dos meus treinos** na tela de entrada e manda o arquivo ao professor, que usa **⬆ Restaurar backup**.
 - **⬆ Restaurar backup** (aba Alunos) só aceita o arquivo de backup do app (`treino-backup-….json`) e, antes de trocar os dados, baixa uma cópia do que existe. Se escolher um arquivo de histórico ali, ele é importado no perfil certo, juntando, sem apagar nada.
 
 ## Dados
