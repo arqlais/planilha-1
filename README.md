@@ -119,6 +119,11 @@ firebase deploy --project SEU_PROJETO
 
 Para as leituras do Firebase não crescerem com os anos, o app do professor carrega só os **últimos 6 meses** de cada aluno ao abrir. Meses mais antigos são buscados na hora em que forem necessários (calendário de meses antigos, backup e importação). O aluno carrega só os próprios dados.
 
+## Segurança dos dados
+
+- Um aluno só é apagado da nuvem quando você usa **Excluir** no aluno. Nenhuma outra ação (importar, restaurar backup, erro de sincronização) apaga alunos.
+- **⬆ Restaurar backup** (aba Alunos) só aceita o arquivo de backup do app (`treino-backup-….json`) e, antes de trocar os dados, baixa uma cópia do que existe. Se escolher um arquivo de histórico ali, ele é importado no perfil certo, juntando, sem apagar nada.
+
 ## Dados
 
 Os dados ficam salvos no navegador (localStorage) do aparelho. Use **Exportar/Importar** na aba Evolução para fazer backup ou passar os dados para outro aparelho.

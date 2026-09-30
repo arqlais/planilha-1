@@ -1559,7 +1559,7 @@ function renderAlunos() {
         <small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou importe um backup (ex.: dados de outro aparelho).' : 'Os dados (seus e dos alunos) ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.'}</small></div></div>
       <div class="actions">
         <button class="btn" data-act="export">⬇ Exportar</button>
-        <label class="btn">⬆ Importar<input type="file" accept="application/json" id="importFile" hidden></label>
+        <label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label>
       </div></section>
     ${accountHtml()}`;
 }
@@ -1602,6 +1602,7 @@ document.getElementById('stDelete').onclick = async () => {
   db.exercises = db.exercises.filter(e => e.profileId !== p.id);
   db.cardio = db.cardio.filter(c => c.profileId !== p.id);
   db.profiles = db.profiles.filter(x => x.id !== p.id);
+  deletedProfiles.add(p.id); // só assim o aluno sai da nuvem
   if (ui.profile === p.id) { ui.profile = ME; if (ui.view === 'perfil') ui.view = 'alunos'; }
   save(); saveUi(); render();
 };
@@ -2349,11 +2350,30 @@ function importHistory(file) {
 function importData(file) {
   if (!file) return;
   file.text().then(async t => {
-    const d = JSON.parse(t);
-    if (!d || !Array.isArray(d.exercises) || !Array.isArray(d.sessions)) throw new Error('formato');
-    if (!await confirmAsk('Importar backup?', 'Os dados atuais serão substituídos pelos do arquivo.', 'Importar')) return;
+    let d = null; try { d = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) {}
+    if (d && d.kind === 'historico-aluno') {
+      // Arquivo de histórico escolhido no botão de backup: junta no perfil certo, sem apagar nada
+      const who = d.aluno ? db.profiles.find(p => p.id !== ME && sameName(firstName(p), firstName({ name: d.aluno }))) : null;
+      ui.profile = who ? who.id : ME;
+      return importHistory(file);
+    }
+    const ok = d && Array.isArray(d.profiles) && Array.isArray(d.exercises) && Array.isArray(d.sessions)
+      && d.exercises.every(e => e && e.id && e.profileId) && d.sessions.every(x => x && x.exId && x.date);
+    if (!ok) return toast(`O arquivo ${esc(file.name)} não é um backup do app. Use o arquivo <b>treino-backup-….json</b>.`);
+    const gone = db.profiles.filter(p => !d.profiles.some(x => x.id === p.id)).map(p => p.name);
+    if (!await confirmAsk('Restaurar backup?', `Os dados atuais serão trocados pelos do arquivo.${gone.length ? ` Não estão no arquivo: ${gone.join(', ')} (continuam salvos).` : ''} Antes, o app baixa uma cópia do que existe agora.`, 'Restaurar')) return;
+    await exportData(); // cópia de segurança do que existe agora
     if (CLOUD) await ensureFullAll(); // para substituir também os meses antigos que estão na nuvem
+    const old = db;
     db = migrate(d);
+    // Quem não está no arquivo continua no app (nunca some por causa de um backup)
+    old.profiles.filter(p => !profile(p.id)).forEach(p => {
+      const exs = old.exercises.filter(e => e.profileId === p.id), ids = new Set(exs.map(e => e.id));
+      const hasE = new Set(db.exercises.map(e => e.id)), hasS = new Set(db.sessions.map(x => x.id)), hasC = new Set(db.cardio.map(c => c.id));
+      db.profiles.push(p); db.exercises.push(...exs.filter(e => !hasE.has(e.id)));
+      db.sessions.push(...old.sessions.filter(x => ids.has(x.exId) && !hasS.has(x.id)));
+      db.cardio.push(...old.cardio.filter(c => c.profileId === p.id && !hasC.has(c.id)));
+    });
     if (CLOUD) { ensureCloudFields(db); db.profiles.forEach(p => cloud && cloud.fullLoaded && cloud.fullLoaded.add(p.id)); }
     if (!profile(ui.profile)) ui.profile = ME;
     save(); render();
@@ -2363,6 +2383,9 @@ function importData(file) {
 // ---------- Nuvem (Firebase): login do professor (administrador) e portal de cada aluno ----------
 // Firestore: profiles/{id} = dados do perfil + exercícios; profiles/{id}/months/{AAAA-MM} = séries e cardio do mês.
 let cloud = null, remote = new Map(), lastSynced = new Map(), syncTimer = null;
+// Trava: um aluno só é apagado da nuvem quando o professor usa "Excluir aluno"
+const deletedProfiles = new Set();
+const pidOfPath = path => path.split('/')[1];
 const INVITE_KEY = 'planilha-convite';
 // JSON com chaves em ordem fixa, para comparar o que está na nuvem com o que está no app
 const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x)
@@ -2561,7 +2584,11 @@ async function syncNow() {
   if (!cloud || !cloud.ready) return;
   const cur = splitDb(), ops = [];
   for (const [path, doc] of cur) { const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
-  for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) { ops.push(['delete', path]); lastSynced.delete(path); remote.delete(path); }
+  for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) {
+    const pid = pidOfPath(path);
+    if (!profile(pid) && !deletedProfiles.has(pid)) { console.warn('não apagado (aluno não foi excluído):', path); continue; }
+    ops.push(['delete', path]); lastSynced.delete(path); remote.delete(path);
+  }
   try {
     for (let i = 0; i < ops.length; i += 400) {
       const b = cloud.fs.batch();
@@ -2664,7 +2691,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-22:46';
+const APP_VERSION = '29/09-23:13';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
