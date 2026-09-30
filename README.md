@@ -83,6 +83,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 Com o Firebase (Google, plano gratuito), o app ganha login e tudo fica salvo na nuvem:
 
 - **Você (administrador)** entra com o seu e-mail e vê tudo: seu treino, alunos, divisão da semana, marcações e recados.
+- **Conta sem código:** a pessoa pode abrir o site, tocar em **Criar conta** e informar nome, e-mail e senha. O pedido aparece na aba **Alunos** em **Pedidos de novos alunos**; ela só entra quando você toca em **Aceitar** (dá para ligar a um aluno que você já cadastrou). Se a pessoa já era aluna e o perfil sumiu, o pedido leva junto a cópia dos treinos que ficou no celular dela e, ao aceitar, ela volta com tudo.
 - **Cada aluno** cria a própria conta pelo **link de convite** (perfil do aluno → *Portal do aluno* → *Enviar convite pelo WhatsApp*) e entra num portal só dele: treino do dia, calendário e recados.
 - O que o aluno marca aparece para você na hora, e o treino que você monta aparece para ele.
 - Regras de segurança (`firestore.rules`): o aluno só consegue ler e gravar os próprios dados.

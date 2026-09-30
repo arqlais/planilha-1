@@ -4,6 +4,7 @@ rules_version = '2';
 // - Administrador (professor): acesso total. E-mail igual ao de config.js.
 // - Aluno: lê o próprio perfil (treinos, divisão, recados) e lê/grava as próprias marcações.
 // - Convite: o aluno liga a conta dele a um perfil informando o código de convite daquele perfil.
+// - Pedido de acesso: quem cria conta sem código manda um pedido; o professor aceita no app.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -14,6 +15,13 @@ service cloud.firestore {
     function isOwner(pid) {
       return request.auth != null
         && get(/databases/$(database)/documents/profiles/$(pid)).data.uid == request.auth.uid;
+    }
+
+    // Pedido de acesso: quem criou conta sem código pede para ser aluno; só o professor aceita
+    match /requests/{uid} {
+      allow read, delete: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.uid == uid;
     }
 
     match /profiles/{pid} {

@@ -383,7 +383,8 @@ input,select,textarea{font-size:16px!important}
     <h1>Planilha de Treino</h1>
     <p id="authSub">Carregando…</p>
     <form id="authForm" hidden>
-      <label class="f" id="authCodeF" hidden>Código de convite (enviado pelo professor)<input name="code" autocomplete="off" autocapitalize="off" placeholder="ex.: k3j9x2ab-7QF2KD"></label>
+      <label class="f" id="authNameF" hidden>Seu nome<input name="nome" autocomplete="name" placeholder="ex.: Maria Souza"></label>
+      <label class="f" id="authCodeF" hidden><span id="authCodeL">Código de convite (se recebeu do professor)</span><input name="code" autocomplete="off" autocapitalize="off" placeholder="ex.: k3j9x2ab-7QF2KD"></label>
       <label class="f">E-mail<input name="email" type="email" autocomplete="email" autocapitalize="off"></label>
       <label class="f">Senha<input name="pass" type="password" autocomplete="current-password" minlength="6"></label>
       <p class="hint" id="authMsg" role="status"></p>
@@ -392,6 +393,7 @@ input,select,textarea{font-size:16px!important}
     <div class="auth-links">
       <button class="link" id="authToggle" type="button">Primeiro acesso? Criar conta</button>
       <button class="link" id="authForgot" type="button">Esqueci a senha</button>
+      <button class="link" id="authCodeT" type="button" hidden>Tenho um código de convite</button>
       <button class="btn" id="authRescue" type="button" hidden style="width:100%;margin-top:10px">⬇ Baixar cópia dos meus treinos (envie ao professor)</button>
       <button class="link" id="authOut" type="button" hidden>Sair desta conta</button>
     </div>
@@ -1550,6 +1552,7 @@ function renderAlunos() {
   const shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   $main.innerHTML = `
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
+    ${CLOUD && cloud ? requestsHtml() : ''}
     ${rescueHtml()}
     ${myProfileHtml()}
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
@@ -2113,6 +2116,13 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'open-profile': ui.profile = b.dataset.pid; ui.date = today(); ui.month = ui.date.slice(0, 7); return go(b.dataset.v);
+    case 'req-ok': b.disabled = true; return acceptRequest(b.dataset.uid).catch(err => { b.disabled = false; cloudError(err); });
+    case 'req-no': {
+      const q = (cloud.requests || []).find(x => x.uid === b.dataset.uid);
+      confirmAsk(`Recusar ${q ? q.name : 'este pedido'}?`, 'A pessoa não terá acesso. Ela pode pedir de novo depois.', 'Recusar')
+        .then(ok => ok && cloud.fs.doc('requests/' + b.dataset.uid).delete().catch(cloudError));
+      return;
+    }
     case 'rescue': {
       const pids = rescuable(), r = readRescue(), docs = {};
       pids.forEach(pid => Object.assign(docs, r[pid].docs));
@@ -2451,7 +2461,7 @@ async function startSession(user) {
     clearInvite();
   }
   const q = await cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).get();
-  if (q.empty) return showAuth('noprofile');
+  if (q.empty) return noProfile(user);
   startStudent(q.docs[0].id);
 }
 // ---------- Resgate ----------
@@ -2527,6 +2537,71 @@ function downloadText(filename, text) {
   a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+// ---------- Pedido de acesso (conta criada sem código de convite) ----------
+const NAME_KEY = 'planilha-nome';
+const rememberName = n => { try { if (n) localStorage.setItem(NAME_KEY, n); } catch (e) {} };
+const savedName = () => { try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; } };
+async function noProfile(user) {
+  cloud.useCode = false;
+  try { const r = await cloud.fs.doc('requests/' + user.uid).get(); cloud.myRequest = r.exists ? r.data() : null; } catch (e) { cloud.myRequest = null; }
+  // Quem já era aluno e tem a cópia dos treinos no aparelho: pede acesso sozinho, levando a cópia
+  const pids = myRescuePids(), r = readRescue();
+  const oldName = pids.length ? (r[pids[0]].docs['profiles/' + pids[0]] || {}).name : '';
+  if (!cloud.myRequest && (savedName() || oldName)) { try { await sendAccessRequest(savedName() || oldName); } catch (e) {} }
+  else if (cloud.myRequest && pids.length && !cloud.myRequest.rescue) { try { await sendAccessRequest(cloud.myRequest.name); } catch (e) {} }
+  showAuth('noprofile');
+  // Quando o professor aceitar, o app abre sozinho
+  if (cloud.waitProfile) cloud.waitProfile();
+  cloud.waitProfile = cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).onSnapshot(snap => {
+    if (snap.empty) return;
+    cloud.waitProfile(); cloud.waitProfile = null;
+    startStudent(snap.docs[0].id);
+  }, () => {});
+}
+async function sendAccessRequest(name) {
+  const user = cloud.user, pids = myRescuePids();
+  const req = { uid: user.uid, name: name.slice(0, 60), email: user.email || '', at: new Date().toISOString() };
+  if (pids.length) { const txt = rescueFile(pids); if (txt.length < 900000) req.rescue = txt; } // cópia dos treinos antigos
+  await cloud.fs.doc('requests/' + user.uid).set(req);
+  cloud.myRequest = req;
+}
+// Professor: pedidos de acesso
+function requestsHtml() {
+  const list = (cloud && cloud.requests) || [];
+  if (!list.length) return '';
+  const free = db.profiles.filter(p => p.id !== ME && !p.uid);
+  return `<section class="card" style="border:2px solid var(--acc)"><div class="card-h"><div class="grow"><h3>Pedidos de novos alunos (${list.length})</h3>
+      <small>Pessoas que criaram conta e pediram para entrar. Só entram se você aceitar.</small></div></div>
+    ${list.map(q => {
+      let old = null; try { old = q.rescue ? JSON.parse(q.rescue) : null; } catch (e) {}
+      const n = old ? Object.entries(old.docs).reduce((a, [k, v]) => a + (/\/months\/\d{4}-\d{2}$/.test(k) ? (v.sessions || []).length : 0), 0) : 0;
+      const match = free.find(p => sameName(firstName(p), firstName({ name: q.name || '?' })));
+      return `<div class="list-row" style="flex-wrap:wrap;gap:8px"><div class="grow" style="min-width:160px"><b>${esc(q.name || 'Sem nome')}</b>
+          <small style="display:block;color:var(--muted)">${esc(q.email)}${old ? ` · traz a cópia dos treinos antigos (${n})` : ''}</small></div>
+        ${!old && free.length ? `<select data-req-link="${q.uid}" aria-label="Ligar a"><option value="">Aluno novo</option>${free.map(p => `<option value="${p.id}" ${match && match.id === p.id ? 'selected' : ''}>Ligar a ${esc(p.name)}</option>`).join('')}</select>` : ''}
+        <button class="btn primary" data-act="req-ok" data-uid="${q.uid}">Aceitar</button>
+        <button class="btn" data-act="req-no" data-uid="${q.uid}">Recusar</button></div>`;
+    }).join('')}</section>`;
+}
+async function acceptRequest(uidReq) {
+  const q = (cloud.requests || []).find(x => x.uid === uidReq); if (!q) return;
+  let old = null; try { old = q.rescue ? JSON.parse(q.rescue) : null; } catch (e) {}
+  let name = q.name;
+  const oldPid = old && (old.pids || []).find(pid => (old.docs['profiles/' + pid] || {}).uid === q.uid);
+  if (oldPid) { // já era aluno: volta com tudo o que estava no celular dele
+    await ensureFull(oldPid);
+    restoreFromDocs(old.docs, [oldPid]);
+    const p = profile(oldPid); if (p) { p.uid = q.uid; name = p.name; }
+  } else {
+    const sel = document.querySelector(`[data-req-link="${q.uid}"]`), link = sel && sel.value && profile(sel.value);
+    if (link) { link.uid = q.uid; name = link.name; }
+    else { const id = createStudent({ name: q.name || 'Aluno' }); profile(id).uid = q.uid; }
+  }
+  save(); await syncNow();
+  try { await cloud.fs.doc('requests/' + q.uid).delete(); } catch (e) {}
+  toast(`✓ ${esc(name)} aceito${oldPid ? ', com os treinos antigos' : ''}. O app já abre para essa pessoa.`);
+}
+
 // Professor: carrega só os meses recentes de cada aluno (os antigos vêm quando precisar).
 // Assim as leituras do Firebase não crescem com os anos. O aluno carrega os dele inteiros (são poucos).
 const WINDOW_MONTHS = 6;
@@ -2583,6 +2658,11 @@ function startAdmin() {
     });
     cloud.gotProfiles = true; onRemote();
   }, err => cloudError(err)));
+  cloud.requests = [];
+  cloud.unsubs.push(cloud.fs.collection('requests').onSnapshot(snap => {
+    cloud.requests = snap.docs.map(d => d.data()).sort((a, b) => (a.at || '').localeCompare(b.at || ''));
+    if (cloud.ready && ui.view === 'alunos' && !isTyping()) render();
+  }, err => console.warn('pedidos (atualize as regras do Firebase):', err.code)));
 }
 function startStudent(pid) {
   // o aluno sempre abre direto no treino de hoje
@@ -2745,9 +2825,11 @@ function showAuth(mode, msg = '') {
   authMode = mode;
   document.body.classList.add('locked'); $auth.hidden = false;
   const inv = pendingInvite(), isSignup = mode === 'signup';
-  document.getElementById('authSub').textContent = { loading: 'Carregando…', login: 'Entre na sua conta', signup: inv ? 'Você recebeu um convite! Crie sua conta.' : 'Criar conta', noprofile: 'Sua conta ainda não está ligada a nenhum aluno.' }[mode];
+  document.getElementById('authSub').textContent = { loading: 'Carregando…', login: 'Entre na sua conta', signup: inv ? 'Você recebeu um convite! Crie sua conta.' : 'Criar conta', noprofile: 'Falta o professor liberar seu acesso.' }[mode];
   $authForm.hidden = mode === 'loading' || mode === 'noprofile';
   document.getElementById('authCodeF').hidden = !isSignup;
+  document.getElementById('authNameF').hidden = !(isSignup && !inv);
+  document.getElementById('authCodeT').hidden = true;
   if (isSignup && inv) $authForm.code.value = inv.raw;
   $authForm.pass.autocomplete = isSignup ? 'new-password' : 'current-password';
   document.getElementById('authOk').textContent = isSignup ? 'Criar conta' : 'Entrar';
@@ -2755,10 +2837,20 @@ function showAuth(mode, msg = '') {
   document.getElementById('authToggle').textContent = isSignup ? 'Já tenho conta: entrar' : 'Primeiro acesso? Criar conta';
   document.getElementById('authForgot').hidden = mode !== 'login';
   document.getElementById('authOut').hidden = mode !== 'noprofile';
-  document.getElementById('authRescue').hidden = !(mode === 'noprofile' && myRescuePids().length);
-  document.getElementById('authMsg').textContent = mode === 'noprofile' ? 'Peça ao seu professor o link de convite e abra por ele, ou digite o código abaixo.' : msg;
-  if (mode === 'noprofile') { $authForm.hidden = false; document.getElementById('authCodeF').hidden = false; document.getElementById('authOk').textContent = 'Usar código'; $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = true; }
-  else $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = false;
+  document.getElementById('authRescue').hidden = !(mode === 'noprofile' && myRescuePids().length && !(cloud && cloud.myRequest)); // se o pedido não foi, dá para mandar o arquivo
+  document.getElementById('authMsg').textContent = msg;
+  if (mode === 'noprofile') {
+    // Conta sem aluno: pede acesso ao professor (ou usa um código de convite)
+    $authForm.hidden = false; $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = true;
+    const sent = !!(cloud && cloud.myRequest), useCode = !!(cloud && cloud.useCode);
+    document.getElementById('authCodeF').hidden = !useCode;
+    document.getElementById('authNameF').hidden = sent || useCode;
+    if (!$authForm.nome.value) $authForm.nome.value = savedName();
+    document.getElementById('authOk').hidden = sent && !useCode;
+    document.getElementById('authOk').textContent = useCode ? 'Usar código' : 'Pedir acesso ao professor';
+    document.getElementById('authCodeT').hidden = useCode;
+    document.getElementById('authMsg').innerHTML = msg || (sent ? '✅ <b>Pedido enviado.</b> Assim que o professor aceitar, o app abre sozinho.' : 'Toque para pedir acesso: o pedido chega para o seu professor aceitar.');
+  } else { $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = false; document.getElementById('authOk').hidden = false; }
 }
 const AUTH_ERR = {
   'auth/invalid-credential': 'E-mail ou senha incorretos.', 'auth/wrong-password': 'E-mail ou senha incorretos.', 'auth/user-not-found': 'E-mail ou senha incorretos.',
@@ -2772,15 +2864,22 @@ $authForm.addEventListener('submit', async e => {
   try {
     if (authMode === 'noprofile' || authMode === 'signup') {
       if (code) { try { localStorage.setItem(INVITE_KEY, code); } catch (err) {} }
-      if (authMode === 'signup' && email.toLowerCase() !== ADMIN_EMAIL && !pendingInvite()) return say('Digite o código de convite que o professor enviou.');
+      if (authMode === 'signup' && email.toLowerCase() !== ADMIN_EMAIL && !pendingInvite() && !$authForm.nome.value.trim()) return say('Digite seu nome.');
+      if (authMode === 'signup') rememberName($authForm.nome.value.trim());
     }
-    if (authMode === 'noprofile') { if (!pendingInvite()) return say('Código inválido.'); return startSession(cloud.user); }
+    if (authMode === 'noprofile') {
+      if (cloud.useCode) { if (!pendingInvite()) return say('Código inválido.'); cloud.useCode = false; return startSession(cloud.user); }
+      const nome = $authForm.nome.value.trim(); if (!nome) return say('Digite seu nome.');
+      rememberName(nome); say('Enviando…');
+      return sendAccessRequest(nome).then(() => showAuth('noprofile'), err => say('Não foi possível enviar o pedido (' + (err.code || 'erro') + '). Tente de novo.'));
+    }
     say('Aguarde…');
     if (authMode === 'signup') await cloud.auth.createUserWithEmailAndPassword(email, pass);
     else await cloud.auth.signInWithEmailAndPassword(email, pass);
   } catch (err) { say(AUTH_ERR[err.code] || 'Não foi possível entrar (' + (err.code || err.message) + ').'); }
 });
 document.getElementById('authToggle').onclick = () => showAuth(authMode === 'signup' ? 'login' : 'signup');
+document.getElementById('authCodeT').onclick = () => { cloud.useCode = true; showAuth('noprofile'); };
 document.getElementById('authOut').onclick = () => cloud.auth.signOut();
 // Aluno cujo perfil sumiu da nuvem: baixa a cópia que ficou no aparelho para o professor recuperar
 const myRescuePids = () => { const r = readRescue(), me = cloud && cloud.user && cloud.user.uid; return me ? Object.keys(r).filter(pid => (r[pid].docs['profiles/' + pid] || {}).uid === me) : []; };
@@ -2794,7 +2893,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-23:28';
+const APP_VERSION = '29/09-23:46';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
