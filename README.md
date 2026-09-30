@@ -54,6 +54,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 
 ## Histórico (aba Histórico)
 
+- Atalhos com os **meses que têm treino** (ex.: Jun/26 · Mai/26) acima do calendário, para ir direto a um mês antigo.
 - Calendário do mês com os dias treinados em verde. Toque em **qualquer dia** (inclusive sem treino) para ver o treino ou anotar um treino passado.
 - Resumo do mês: treinos, séries e kg.
 - Cada dia mostra os exercícios, séries, carga máxima, total e evolução. Use **Abrir este treino** para ver ou corrigir.

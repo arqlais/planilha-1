@@ -291,6 +291,11 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+.months{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;scrollbar-width:none}
+.months button{flex:none;border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:999px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.months button small{color:var(--muted);font-weight:600;margin-left:3px}
+.months button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.months button.on small{color:inherit;opacity:.8}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
 .cal .wd{font-size:11px;font-weight:700;color:var(--muted);padding-bottom:2px}
 .cal button{aspect-ratio:1;border:0;border-radius:10px;background:transparent;font-weight:600;font-size:14px;color:var(--text);padding:0;position:relative}
@@ -1185,7 +1190,7 @@ function dayCard(d, list) {
 }
 function renderHistorico() {
   const loadingOld = isOldMonth(ui.profile, ui.month);
-  if (loadingOld) ensureFull(ui.profile);
+  ensureFull(ui.profile); // traz também os meses antigos, para aparecerem em "meses com treino
   const days = dayMap();
   const [y, m] = ui.month.split('-').map(Number);
   const first = new Date(y, m - 1, 1), nDays = new Date(y, m, 0).getDate(), offset = (first.getDay() + 6) % 7;
@@ -1196,6 +1201,13 @@ function renderHistorico() {
   const monthSets = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + s.sets.filter(x => x.done).length, 0), 0);
   const all = Object.keys(days).sort();
   const sel = ui.histDay && ui.histDay.startsWith(ui.month) ? ui.histDay : null;
+  // Atalho para os meses que têm treino (ex.: histórico importado de meses atrás)
+  const perMonth = all.reduce((o, d) => (o[d.slice(0, 7)] = (o[d.slice(0, 7)] || 0) + 1, o), {});
+  const monthsHtml = Object.keys(perMonth).length > 1 || (Object.keys(perMonth).length === 1 && !perMonth[ui.month])
+    ? `<div class="months" aria-label="Meses com treino">${Object.keys(perMonth).sort().reverse().map(k => {
+      const nm = new Date(+k.slice(0, 4), +k.slice(5) - 1, 1).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+      return `<button class="${k === ui.month ? 'on' : ''}" data-act="gomonth" data-m="${k}">${nm.replace(/^./, c => c.toUpperCase())}/${k.slice(2, 4)}<small>${perMonth[k]}</small></button>`;
+    }).join('')}</div>` : '';
 
   let cells = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map(w => `<span class="wd">${w}</span>`).join('');
   cells += '<span></span>'.repeat(offset);
@@ -1214,7 +1226,7 @@ function renderHistorico() {
     </section>`;
 
   if (ui.studentMode) {
-    $main.innerHTML = `<section class="card">
+    $main.innerHTML = `<section class="card">${monthsHtml}
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
@@ -1225,13 +1237,13 @@ function renderHistorico() {
   }
   let html = `<div class="banner"><div class="grow"><h2>Histórico</h2>
       <small>${esc(profile(ui.profile).name)} · ${all.length} ${all.length === 1 ? 'dia' : 'dias'} de treino${all.length ? ` desde ${fmtDate(all[0])}/${all[0].slice(2, 4)}` : ''}</small></div></div>
-    <section class="card">
+    <section class="card">${monthsHtml}
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
       <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : 'Toque em qualquer dia para ver o treino ou anotar um treino passado. Dias destacados têm treino.'}</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
-        <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(monthVol)}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
+        <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(Math.round(monthVol))}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
     ${selHtml}
     <h3 style="margin:18px 4px 10px">Treinos de ${monthName.split(' ')[0].toLowerCase()}</h3>`;
@@ -2082,6 +2094,7 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'open-profile': ui.profile = b.dataset.pid; ui.date = today(); ui.month = ui.date.slice(0, 7); return go(b.dataset.v);
+    case 'gomonth': ui.month = b.dataset.m; ui.histDay = null; return render();
     case 'month': {
       const [y, m] = ui.month.split('-').map(Number), d = new Date(y, m - 1 + (+b.dataset.d), 1);
       ui.month = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; return render();
@@ -2309,8 +2322,10 @@ function importHistory(file) {
       BODY_FIELDS.forEach(([k]) => { if (typeof b[k] === 'number') e[k] = b[k]; });
       p.body.push(e); nB++;
     });
-    save(); render();
-    toast(`Importado para ${esc(firstName(p))}: ${nS} exercícios treinados, ${nW} treinos novos, ${nE} exercícios novos${nB ? `, ${nB} avaliação` : ''}.`);
+    save();
+    const lastDate = d.sessions.map(x => x.date).sort().pop();
+    if (nS && lastDate) { ui.month = lastDate.slice(0, 7); ui.histDay = null; ui.profile = p.id; go('historico'); } else render();
+    toast(`Importado para ${esc(firstName(p))}: ${nS} exercícios treinados, ${nW} treinos novos, ${nE} exercícios novos${nB ? `, ${nB} avaliação` : ''}.${nS ? ' Use os meses no topo do Histórico para navegar.' : ''}`);
   }).catch(() => toast('Arquivo de histórico inválido.'));
 }
 function importData(file) {
@@ -2631,7 +2646,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-22:28';
+const APP_VERSION = '29/09-22:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
