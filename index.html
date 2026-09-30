@@ -83,8 +83,11 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .install-tip{background:var(--acc-soft);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
 .install-tip button{border:0;background:none;color:var(--muted);font-size:16px;padding:0 2px}
 .goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px;display:flex;justify-content:flex-end}
-.goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:none}
+.goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:width .9s ease-out}
 .goal-txt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.goal-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--acc-soft);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.goal-set label{flex:1 1 140px;display:grid}
+.goal-set small{color:var(--muted);font-size:12px}
 .time-in{width:96px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--input);color:var(--text);text-align:center;font-weight:700}
 .cardio-card .unit{color:var(--muted);font-weight:600;margin:0 4px 0 -2px}
 .modes.sm button{padding:6px 2px;font-size:11px;border-radius:12px}
@@ -462,7 +465,7 @@ input,select,textarea{font-size:16px!important}
     <h2 id="dayTitle">Treino de segunda</h2>
     <p class="hint">Escolha o que o aluno vai treinar neste dia. O aluno verá só esses exercícios, sem precisar escolher.</p>
     <div id="dayPick" style="margin-bottom:12px"></div>
-    <label class="f" id="dayCardioF">Meta de cardio do dia, em minutos (opcional)<input name="cmin" inputmode="numeric" placeholder="ex.: 20" autocomplete="off"></label>
+    <label class="f" id="dayCardioF">Meta de cardio só neste dia (opcional; se vazio, vale a meta diária do aluno)<input name="cmin" inputmode="decimal" placeholder="ex.: 20" autocomplete="off"></label>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="dayRest">Descanso</button>
       <span class="grow"></span>
@@ -540,6 +543,7 @@ const today = () => isoDate(new Date());
 const toDate = s => new Date(s + 'T12:00:00');
 const parseNum = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null; };
 const fmt = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const fmtMin = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 }); // minutos de cardio (ex.: 13,25)
 const fmtDate = s => { const [y, m, d] = s.split('-'); return `${d}/${m}`; };
 const weekday = s => toDate(s).toLocaleDateString('pt-BR', { weekday: 'long' });
 const numVal = v => v == null ? '' : String(v).replace('.', ',');
@@ -802,7 +806,7 @@ function renderStats() {
     const d = statsDay();
     const day = profSessions().filter(s => s.date === d);
     cells = [[day.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), 'séries feitas'],
-      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [fmt(cardioBetween(d, d)), 'min de cardio']];
+      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [fmtMin(cardioBetween(d, d)), 'min de cardio']];
   }
   document.getElementById('stats').innerHTML = cells.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 }
@@ -880,7 +884,7 @@ function renderStudentTreino(p, greet, isToday) {
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${blocks}`
-    : `<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
+    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
 }
 // Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
@@ -889,37 +893,41 @@ const cardioGoalOf = (p, date) => (p.cardioGoal && p.cardioGoal[toDate(date).get
 function cardioGoalHtml(p) {
   const goal = cardioGoalOf(p, ui.date);
   const today_ = profCardio().filter(c => c.date === ui.date);
-  const done = Math.round(today_.reduce((a, c) => a + c.min, 0) * 10) / 10;
+  const done = Math.round(today_.reduce((a, c) => a + c.min, 0) * 100) / 100;
   const full = goal ? done >= goal : done > 0;
+  // a linha vai de 0 a 100% da meta: 5 de 20 min = 25%, 13,25 de 20 = 66,25%
   const pct = goal ? Math.min(100, done / goal * 100) : done ? 100 : 0;
+  const key = ui.profile + ui.date, from = ui.cardioBar && ui.cardioBar.key === key ? ui.cardioBar.v : 0;
+  ui.cardioBar = { key, v: pct };
+  if (from !== pct) setTimeout(() => { const f = $main.querySelector('.cardio-card .goal-bar .fill'); if (f) requestAnimationFrame(() => requestAnimationFrame(() => f.style.width = pct + '%')); });
   const mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
-      <div class="card-h"><div class="ring" style="--p:${pct}">${full ? '✓' : goal ? Math.round(pct) + '%' : '0'}</div>
-        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmt(done)} min` : 'Escolha o cardio e anote o tempo'}</small></div>
+      <div class="card-h">
+        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Escolha o cardio e anote o tempo'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
       <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Tempo realizado</label>
       <div class="actions" style="margin-top:0;align-items:center">
-        <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="0" value="${done ? numVal(done) : ''}" aria-label="Tempo realizado em minutos"><span class="unit">min</span>
+        <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="0" value="${done ? fmtMin(done) : ''}" aria-label="Tempo realizado em minutos"><span class="unit">min</span>
         <button class="btn primary" data-act="cardio-save">Salvar</button>
         ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Desmarcar</button>' : ''}
       </div>
       <div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal || 100}" aria-valuenow="${goal ? Math.min(done, goal) : pct}">
-        <div class="fill" style="width:${pct}%"></div></div>
-      <div class="goal-txt"><span>${done ? `<b>${fmt(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
-        <span>Meta: <b>${goal ? fmt(goal) + ' min' : '—'}</b></span></div>
+        <div class="fill" style="width:${from}%"></div></div>
+      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
+        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : 'não definida'}</b></span></div>
     </section>`;
 }
 // Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
 function setCardio(min) {
   const p = profile(ui.profile), mode = ui.mode;
-  min = Math.min(300, Math.round((min || 0) * 10) / 10);
+  min = Math.min(300, Math.round((min || 0) * 100) / 100);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
   if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
   save(); render();
   const goal = cardioGoalOf(p, ui.date);
-  if (min > 0 && goal && min >= goal) toast(`Cardio concluído! ${modeOf(mode)[1]} ${fmt(min)} min`);
-  else if (min > 0) toast(`${modeOf(mode)[1]}: ${fmt(min)} min de cardio salvos`);
+  if (min > 0 && goal && min >= goal) toast(`Cardio concluído! ${modeOf(mode)[1]} ${fmtMin(min)} min`);
+  else if (min > 0) toast(`${modeOf(mode)[1]}: ${fmtMin(min)} min de cardio salvos`);
 }
 // Dica para o aluno instalar na tela de início (assim o login fica salvo e o app abre direto no treino)
 function installTipHtml() {
@@ -1046,7 +1054,7 @@ function cardioHtml(noBanner) {
       <div class="card-h"><div class="grow"><h3>Cardio ${ui.date === today() ? 'de hoje' : 'do dia ' + fmtDate(ui.date)}</h3>
         <small>${day.length ? `Total: ${day.reduce((a, c) => a + c.min, 0)} min` : 'Nada registrado ainda'}</small></div></div>
       ${day.map(c => `<div class="list-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b></div>
-        <b>${fmt(c.min)} min</b><button class="icon" data-act="del-cardio" data-id="${c.id}" aria-label="Apagar">✕</button></div>`).join('')}
+        <b>${fmtMin(c.min)} min</b><button class="icon" data-act="del-cardio" data-id="${c.id}" aria-label="Apagar">✕</button></div>`).join('')}
     </section>`;
 }
 function addCardio(mode, min) {
@@ -1086,7 +1094,7 @@ function dayCard(d, list) {
       return `<tr><td>${esc(exById(s.exId).name)}${s.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
-    ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${fmt(c.min)} min</b></div>`).join('')}
+    ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">Abrir / editar este treino</button></div>
   </section>`;
 }
@@ -1531,7 +1539,7 @@ function marcacoesHtml(p) {
       const done = x.sets.filter(y => y.done);
       return `<div class="plan-row"><div class="grow"><b>${esc(exById(x.exId).name)}</b>
         <small>${done.length}/${x.sets.length} séries · ${done.map(y => `${fmt(y.carga)}×${y.reps ?? '–'}`).join('  ')}</small></div><b>${fmt(vol(x.sets))} kg</b></div>`;
-    }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b><small>cardio</small></div><b>${fmt(c.min)} min</b></div>`).join('');
+    }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b><small>cardio</small></div><b>${fmtMin(c.min)} min</b></div>`).join('');
     return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}</p>${rows}`;
   }).join('');
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Marcações do aluno</h3>
@@ -1583,7 +1591,7 @@ function saveDay(groups) {
   p.division = p.division || {};
   p.division[dayEditing] = groups;
   // meta de cardio do dia (minutos): o aluno vê uma barra que completa ao atingir
-  const cmin = parseInt($dayForm.cmin.value);
+  const cmin = parseNum($dayForm.cmin.value);
   p.cardioGoal = p.cardioGoal || {};
   if (groups.length && cmin > 0) p.cardioGoal[dayEditing] = Math.min(300, cmin); else delete p.cardioGoal[dayEditing];
   $dayDlg.close(); save(); render();
@@ -1676,7 +1684,10 @@ function renderPerfil() {
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
         <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
-      <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => planLabel(x, p.id)).join(' + ') : 'descanso'}</p>
+      <div class="goal-set"><label for="goalDaily"><b>Meta de cardio</b><small>minutos por dia, vale todos os dias</small></label>
+        <input id="goalDaily" class="time-in" inputmode="decimal" placeholder="ex.: 20" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}"><span class="unit">min</span>
+        <button class="btn primary" data-act="save-goal">Salvar</button></div>
+      <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => planLabel(x, p.id)).join(' + ') : 'descanso'}${cardioGoalOf(p, today()) ? ` · cardio ${fmtMin(cardioGoalOf(p, today()))} min` : ''}</p>
       ${division}
     </section>
     <section class="card">
@@ -1921,6 +1932,12 @@ $main.addEventListener('click', e => {
     case 'cmin': ui.cardioMin = Math.max(5, Math.min(300, (ui.cardioMin || 0) + +b.dataset.d)); saveUi(); return render();
     case 'add-cardio': return addCardio(ui.mode, ui.cardioMin);
     case 'cardio-set': return setCardio(+b.dataset.min);
+    case 'save-goal': {
+      const p = profile(ui.profile), v = parseNum(document.getElementById('goalDaily').value);
+      if (v > 0) p.cardioDaily = Math.min(300, Math.round(v * 100) / 100); else delete p.cardioDaily;
+      save(); render();
+      return toast(v > 0 ? `Meta de cardio de ${esc(firstName(p))}: <b>${fmtMin(p.cardioDaily)} min</b> por dia` : 'Meta de cardio removida');
+    }
     case 'cardio-save': {
       const v = parseNum(document.getElementById('cardioDone').value);
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
@@ -2330,7 +2347,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-20:52';
+const APP_VERSION = '29/09-21:03';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
