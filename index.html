@@ -855,6 +855,7 @@ function renderTreino() {
       <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
     ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || `<p class="empty">Nenhum exercício no Treino ${group} ainda. Adicione abaixo.</p>`}
     <button class="add" data-act="new">＋ Adicionar exercício no Treino ${group}</button>
+    ${ui.profile !== ME ? savePlanHtml(profile(ui.profile)) : ''}
     ${loose.length ? `<section class="card" style="margin-top:14px"><details class="tbl"><summary>Exercícios sem treino (${loose.length}) · mover para o Treino ${group}</summary>
       ${loose.map(e => `<div class="plan-row"><div class="grow"><b>${esc(e.name)}</b><small>${e.group} · ${planText(e)}</small></div>
         <button class="btn" data-act="set-letter" data-id="${e.id}" data-l="${group}">＋ ${group}</button></div>`).join('')}</details></section>` : ''}`}`;
@@ -953,6 +954,14 @@ function installTipHtml() {
   return `<div class="install-tip"><div class="grow"><b>Dica:</b> para abrir direto no seu treino, sem precisar entrar toda vez, instale o app:
     ${ios ? 'abra este link no <b>Safari</b>, toque em <b>Compartilhar</b> e em <b>Adicionar à Tela de Início</b>.' : 'no menu do navegador (⋮), toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.'}</div>
     <button data-act="hide-tip" aria-label="Fechar dica">✕</button></div>`;
+}
+// Professor confirma o treino montado: grava na hora e mostra o que o aluno vê hoje
+function savePlanHtml(p, inline) {
+  const plan = dayPlan(p, today()), goal = cardioGoalOf(p, today());
+  const parts = [...LETTERS.filter(L => plan.includes(L)).map(L => 'Treino ' + L), ...(goal ? [`cardio ${fmtMin(goal)} min`] : plan.includes(CARDIO) ? ['cardio'] : [])];
+  const body = `<p class="hint" style="margin:0 0 8px"><b>Hoje ${esc(firstName(p))} vê:</b> ${parts.length ? parts.join(' + ') : 'dia de descanso (defina na Divisão da semana, no perfil)'}</p>
+    <button class="btn primary save-plan" data-act="save-plan" style="width:100%;padding:12px">✓ Salvar treino de ${esc(firstName(p))}</button>`;
+  return inline ? `<div style="margin-top:14px">${body}</div>` : `<section class="card" style="margin-top:14px">${body}</section>`;
 }
 function groupChips(group) {
   const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? g : 'Treino ' + g}</button>`;
@@ -1711,6 +1720,7 @@ function renderPerfil() {
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Treinos do aluno</h3><small>Monte os treinos A, B, C e D: toque em ⋯ para mudar séries, carga, repetições ou a letra</small></div></div>
       ${plan}
+      ${savePlanHtml(p, true)}
     </section>
     <section class="card" id="msgCard">
       <div class="card-h"><div class="grow"><h3>💬 Mensagem para ${esc(firstName(p))}</h3>
@@ -1815,7 +1825,12 @@ function celebrate(ex, s) {
 // ---------- Eventos ----------
 document.addEventListener('click', e => {
   const v = e.target.closest('[data-view]');
-  if (v) go(v.dataset.view);
+  if (!v) return;
+  // Professor: Treino, Histórico e Evolução da barra de baixo são sempre os dele (o do aluno abre pelo perfil)
+  if (v.closest('#nav') && !ui.studentMode && ui.profile !== ME && ['treino', 'historico', 'evolucao'].includes(v.dataset.view)) {
+    ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
+  }
+  go(v.dataset.view);
 });
 $date.addEventListener('change', () => { if ($date.value) { ui.date = $date.value; ui.month = ui.date.slice(0, 7); render(); } });
 
@@ -1950,6 +1965,14 @@ $main.addEventListener('click', e => {
     case 'cmin': ui.cardioMin = Math.max(5, Math.min(300, (ui.cardioMin || 0) + +b.dataset.d)); saveUi(); return render();
     case 'add-cardio': return addCardio(ui.mode, ui.cardioMin);
     case 'cardio-set': return setCardio(+b.dataset.min);
+    case 'save-plan': {
+      const p = profile(ui.profile), name = esc(firstName(p));
+      b.disabled = true; b.textContent = 'Salvando…';
+      (CLOUD && cloud && cloud.ready ? syncNow().then(() => { if ((cloud.syncState || '').startsWith('Erro')) throw 0; }) : Promise.resolve(save()))
+        .then(() => toast(`✓ Treino de <b>${name}</b> salvo.${CLOUD ? ' Já aparece no app do aluno.' : ''}`), () => toast('Não foi possível salvar agora. Confira a internet e tente de novo.'))
+        .finally(() => { b.disabled = false; b.textContent = `✓ Salvar treino de ${firstName(p)}`; });
+      return;
+    }
     case 'save-goal': {
       const p = profile(ui.profile), v = parseNum(document.getElementById('goalDaily').value);
       if (v > 0) p.cardioDaily = Math.min(300, Math.round(v * 100) / 100); else delete p.cardioDaily;
@@ -2398,7 +2421,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-21:35';
+const APP_VERSION = '29/09-21:48';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
