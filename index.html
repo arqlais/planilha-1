@@ -1482,6 +1482,7 @@ function renderEvolution() {
         <details class="tbl" style="margin-top:10px"><summary>Ver por exercício</summary>${perEx}</details></section>`;
     }
   }
+  if (!ui.demo && !ui.studentMode) html += histImportHtml(profile(ui.profile));
   $main.innerHTML = html;
   drawCharts();
 }
@@ -1653,6 +1654,11 @@ function bodySummaryHtml(p) {
       <small>${last ? `Última avaliação: ${fmtDate(last.date)}/${last.date.slice(2, 4)}${imc(lb) ? ` · IMC ${fmt(imc(lb))}` : ''}` : 'Peso, altura, idade e medidas'}</small></div></div>
     ${bits ? `<div class="tags" style="margin-bottom:6px">${bits}</div>` : ''}
     <button class="btn primary" data-act="open-medidas">${last ? 'Ver medidas' : 'Anotar medidas'}</button></section>`;
+}
+function histImportHtml(p) {
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
+      <small>Traga os treinos que ${p.id === ME ? 'você anotou' : esc(firstName(p)) + ' anotou'} antes do app (arquivo de histórico). Junta com o que já existe, sem apagar nada.</small></div></div>
+      <label class="btn">⬆ Importar histórico<input type="file" accept="application/json,.json" id="histFile" hidden></label></section>`;
 }
 function renderMedidas() {
   const p = profile(ui.profile), list = bodyOf(p), last = list[list.length - 1], prev = list[list.length - 2];
@@ -1832,9 +1838,7 @@ function renderPerfil() {
     </section>
     ${inviteHtml(p)}
     ${bodySummaryHtml(p)}
-    <section class="card"><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
-      <small>Traga os treinos que ${esc(firstName(p))} anotou antes do app (arquivo de histórico). Junta com o que já existe, sem apagar nada.</small></div></div>
-      <label class="btn">⬆ Importar histórico<input type="file" accept="application/json,.json" id="histFile" hidden></label></section>
+    ${histImportHtml(p)}
     ${marcacoesHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
@@ -2627,7 +2631,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-22:17';
+const APP_VERSION = '29/09-22:28';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
