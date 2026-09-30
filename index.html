@@ -959,8 +959,12 @@ function installTipHtml() {
 function savePlanHtml(p, inline) {
   const plan = dayPlan(p, today()), goal = cardioGoalOf(p, today());
   const parts = [...LETTERS.filter(L => plan.includes(L)).map(L => 'Treino ' + L), ...(goal ? [`cardio ${fmtMin(goal)} min`] : plan.includes(CARDIO) ? ['cardio'] : [])];
-  const body = `<p class="hint" style="margin:0 0 8px"><b>Hoje ${esc(firstName(p))} vê:</b> ${parts.length ? parts.join(' + ') : 'dia de descanso (defina na Divisão da semana, no perfil)'}</p>
-    <button class="btn primary save-plan" data-act="save-plan" style="width:100%;padding:12px">✓ Salvar treino de ${esc(firstName(p))}</button>`;
+  // montando um treino (A/B/C/D) que não está na divisão de hoje: o botão também libera para hoje
+  const L = !inline && isLetter(ui.group) && letterExs(ui.group, p.id).length && !plan.includes(ui.group) ? ui.group : '';
+  const wd = WEEK.find(w => w[0] === toDate(today()).getDay())[1].toLowerCase();
+  const body = `<p class="hint" style="margin:0 0 8px"><b>Hoje ${esc(firstName(p))} vê:</b> ${parts.length ? parts.join(' + ') : 'dia de descanso'}</p>
+    ${L ? `<p class="hint" style="margin:0 0 8px;color:var(--down)">O Treino ${L} ainda não está liberado para hoje. Salvando por aqui, ele entra na divisão de ${wd} de ${esc(firstName(p))}.</p>` : ''}
+    <button class="btn primary save-plan" data-act="save-plan" data-release="${L}" style="width:100%;padding:12px">✓ ${L ? `Salvar e liberar Treino ${L} hoje` : `Salvar treino de ${esc(firstName(p))}`}</button>`;
   return inline ? `<div style="margin-top:14px">${body}</div>` : `<section class="card" style="margin-top:14px">${body}</section>`;
 }
 function groupChips(group) {
@@ -1966,10 +1970,16 @@ $main.addEventListener('click', e => {
     case 'add-cardio': return addCardio(ui.mode, ui.cardioMin);
     case 'cardio-set': return setCardio(+b.dataset.min);
     case 'save-plan': {
-      const p = profile(ui.profile), name = esc(firstName(p));
+      const p = profile(ui.profile), name = esc(firstName(p)), L = b.dataset.release;
+      if (L) { // coloca o treino na divisão do dia da semana de hoje
+        const d = toDate(today()).getDay();
+        p.division = p.division || {};
+        p.division[d] = [...new Set([...(p.division[d] || []), L])];
+        save(); render();
+      }
       b.disabled = true; b.textContent = 'Salvando…';
       (CLOUD && cloud && cloud.ready ? syncNow().then(() => { if ((cloud.syncState || '').startsWith('Erro')) throw 0; }) : Promise.resolve(save()))
-        .then(() => toast(`✓ Treino de <b>${name}</b> salvo.${CLOUD ? ' Já aparece no app do aluno.' : ''}`), () => toast('Não foi possível salvar agora. Confira a internet e tente de novo.'))
+        .then(() => toast(`✓ Treino de <b>${name}</b> salvo${L ? ` e Treino ${L} liberado para hoje` : ''}.${CLOUD ? ' Já aparece no app do aluno.' : ''}`), () => toast('Não foi possível salvar agora. Confira a internet e tente de novo.'))
         .finally(() => { b.disabled = false; b.textContent = `✓ Salvar treino de ${firstName(p)}`; });
       return;
     }
@@ -2421,7 +2431,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-21:48';
+const APP_VERSION = '29/09-21:54';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
