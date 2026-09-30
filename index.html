@@ -1688,8 +1688,8 @@ function bodySummaryHtml(p) {
     ${bits ? `<div class="tags" style="margin-bottom:6px">${bits}</div>` : ''}
     <button class="btn primary" data-act="open-medidas">${last ? 'Ver medidas' : 'Anotar medidas'}</button></section>`;
 }
-function histImportHtml(p) {
-  return `<section class="card"><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
+function histImportHtml(p, top) {
+  return `<section class="card"${top ? ' style="border:2px solid var(--acc)"' : ''}><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
       <small>Traga os treinos que ${p.id === ME ? 'você anotou' : esc(firstName(p)) + ' anotou'} antes do app (arquivo de histórico). Junta com o que já existe, sem apagar nada.</small></div></div>
       <label class="btn">⬆ Importar histórico<input type="file" id="histFile" hidden></label></section>`;
 }
@@ -1791,7 +1791,7 @@ document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 function renderPerfil() {
   const p = profile(ui.profile);
   if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
-  const s = profileSummary(p.id), ws = weekStart(today());
+  const s = profileSummary(p.id), ws = weekStart(today()), noHist = !trainedDates(p.id).length;
   const cm = cardioBetween(ws, addDays(ws, 6), p.id);
   if (ui.msgDraft == null || ui.msgFor !== p.id) { ui.msgFor = p.id; ui.msgDraft = ''; }
   if (!isLetter(ui.tplGroup, p.id)) ui.tplGroup = firstWorkout(p.id);
@@ -1854,6 +1854,7 @@ function renderPerfil() {
         <button class="btn" data-act="student-mode">👁 Ver como o aluno</button>
       </div>
     </section>
+    ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
       <div class="kv">
@@ -1871,7 +1872,7 @@ function renderPerfil() {
     </section>
     ${inviteHtml(p)}
     ${bodySummaryHtml(p)}
-    ${histImportHtml(p)}
+    ${noHist ? '' : histImportHtml(p)}
     ${marcacoesHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
@@ -2893,7 +2894,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-23:46';
+const APP_VERSION = '30/09-00:02';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
