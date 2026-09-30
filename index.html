@@ -17,7 +17,7 @@
   --input:#f7f8f5; --shadow:0 2px 10px rgba(31,38,33,.06);
   --hero:linear-gradient(160deg,#2b4637 0%,#3e6b52 100%);
   --c1:#23804f; --c2:#7f5fb0; --c3:#c0892a; --c4:#3d78b3; --c5:#b8533d;
-  --c6:#1f8f8c; --c7:#c24f8a; --c8:#6f7f22; --c9:#8a6243;
+  --c6:#1f8f8c; --c7:#c24f8a; --c8:#6f7f22; --c9:#8a6243; --c10:#b03a5b;
   --grid:#eceee9; --axis:#cfd4cc;
 }
 @media (prefers-color-scheme: dark){
@@ -28,7 +28,7 @@
     --input:#161b17; --shadow:0 2px 10px rgba(0,0,0,.3);
     --hero:linear-gradient(160deg,#1a2a21 0%,#2b4637 100%);
     --c1:#35975f; --c2:#9a74c4; --c3:#b98322; --c4:#4f8fd6; --c5:#cf6a52;
-    --c6:#33b0ac; --c7:#d56aa0; --c8:#94a83a; --c9:#b0876a;
+    --c6:#33b0ac; --c7:#d56aa0; --c8:#94a83a; --c9:#b0876a; --c10:#e0708f;
     --grid:#232a25; --axis:#3a443c;
   }
 }
@@ -88,6 +88,8 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .goal-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--acc-soft);border-radius:14px;padding:10px 12px;margin-bottom:12px}
 .goal-set label{flex:1 1 140px;display:grid}
 .goal-set small{color:var(--muted);font-size:12px}
+.body-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.body-grid label.f small{font-weight:500}
 .time-in{width:96px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--input);color:var(--text);text-align:center;font-weight:700}
 .cardio-card .unit{color:var(--muted);font-weight:600;margin:0 4px 0 -2px}
 .modes.sm button{padding:6px 2px;font-size:11px;border-radius:12px}
@@ -496,7 +498,7 @@ input,select,textarea{font-size:16px!important}
 <script src="config.js"></script>
 <script>
 const UPPER = ['Costas', 'Peito', 'Ombros', 'Bíceps', 'Tríceps', 'Abdômen'];
-const LEGS = ['Quadríceps', 'Posteriores', 'Panturrilha']; // grupos de pernas
+const LEGS = ['Quadríceps', 'Posteriores', 'Glúteos', 'Panturrilha']; // grupos de pernas
 const GROUPS = [...UPPER, ...LEGS];
 // Grupos antigos (Pernas/Braços) viram os novos pelo nome do exercício
 function splitGroup(group, name) {
@@ -520,11 +522,12 @@ const SVG = {
   evolucao: '<path d="M4 19h16M5 15l4-4 4 3 6-7"/>',
   perfil: '',
   recados: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+  medidas: '<path d="M3 16l13-13 5 5L8 21z"/><path d="M7 12l2 2M10 9l2 2M13 6l2 2"/>',
   alunos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2c1.9.6 3.1 2.2 3.5 4.8"/>',
 };
 const VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['alunos', 'Alunos']];
 // O aluno não vê a evolução (o professor mostra no celular dele): só treino, calendário e recados
-const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Calendário'], ['recados', 'Recados']];
+const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Calendário'], ['medidas', 'Medidas'], ['recados', 'Recados']];
 const views = () => ui.studentMode ? STUDENT_VIEWS : VIEWS;
 const KEY = 'planilha-treino-v1';
 const UI_KEY = 'planilha-treino-ui';
@@ -627,7 +630,7 @@ let db = load();
 let ui = { view: 'treino', group: '', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view) || u.view === 'perfil' || u.view === 'recados') ui.view = u.view;
+  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas'].includes(u.view)) ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
   ui.group = u.group || '';
   if (u.layout) ui.layout = u.layout;
@@ -651,7 +654,13 @@ function profSessions(pid = ui.profile) {
   const ids = new Set(profExs(pid).map(e => e.id));
   return db.sessions.filter(s => ids.has(s.exId) && hasDone(s));
 }
-const exHistory = exId => db.sessions.filter(s => s.exId === exId && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date));
+// Mesmo exercício em dois treinos (ex.: Cadeira flexora na segunda e na quinta): o histórico é um só
+const sameName = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+function twinIds(exId) {
+  const e = exById(exId);
+  return new Set(e ? db.exercises.filter(x => x.profileId === e.profileId && sameName(x.name, e.name)).map(x => x.id) : [exId]);
+}
+const exHistory = exId => { const ids = twinIds(exId); return db.sessions.filter(s => ids.has(s.exId) && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date)); };
 const prevSession = (exId, date) => exHistory(exId).filter(s => s.date < date).pop();
 const sessionOn = (exId, date) => db.sessions.find(s => s.exId === exId && s.date === date);
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
@@ -727,7 +736,7 @@ function renderHero() {
   if (ui.view === 'alunos') { $who.innerHTML = '<span>Alunos</span>'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor' };
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor', medidas: 'Medidas do corpo' };
   if (ui.studentMode) titles.historico = 'Calendário';
   if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
   document.getElementById('heroTitle').textContent = titles[ui.view];
@@ -830,7 +839,7 @@ function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
   renderHero();
   renderNav();
-  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos, perfil: renderPerfil, recados: renderRecados })[ui.view]();
+  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas })[ui.view]();
 }
 function go(view) {
   if (ui.studentMode && !STUDENT_VIEWS.some(v => v[0] === view)) view = 'treino';
@@ -1361,7 +1370,7 @@ function demoData(n) {
   const end = weekStart(today());
   const weeks = Array.from({ length: n }, (_, i) => addDays(end, -7 * (n - 1 - i)));
   const cfg = { Costas: [40, 96, 2], Peito: [32, 90, 3], Ombros: [14, 76, 2], 'Bíceps': [14, 70, 2], 'Tríceps': [22, 84, 2],
-    'Abdômen': [10, 110, 3], 'Quadríceps': [58, 120, 3], Posteriores: [35, 96, 2], Panturrilha: [40, 130, 3] };
+    'Abdômen': [10, 110, 3], 'Quadríceps': [58, 120, 3], Posteriores: [35, 96, 2], 'Glúteos': [60, 100, 2], Panturrilha: [40, 130, 3] };
   const carga = [], reps = [];
   GROUPS.forEach((g, gi) => {
     const [c0, r0, cycle] = cfg[g];
@@ -1414,6 +1423,7 @@ function renderEvolution() {
       <small>${esc(profile(ui.profile).name)} · últimas ${ui.weeks} semanas até ${fmtDate(addDays(weekStart(ui.date), 6))}</small>
       <div class="actions"><button class="btn" data-act="demo">Ver exemplo de progressão</button></div></div></div>`;
   let html = `${top}
+    ${ui.demo ? '' : bodySummaryHtml(profile(ui.profile))}
     <div class="seg">${[4, 8, 12].map(n => `<button class="${n === ui.weeks ? 'on' : ''}" data-act="weeks" data-n="${n}">${n} semanas</button>`).join('')}</div>
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Carga média por série</h3></div></div>
@@ -1625,6 +1635,66 @@ function marcacoesHtml(p) {
       <small>Séries e cardio que ${esc(firstName(p))} marcou no app</small></div></div>
     ${body || `<p class="empty" style="padding:8px 0">Nenhuma marcação ainda. Use <b>👁 Ver como o aluno</b> para ver o app como ${esc(firstName(p))} e marcar um treino.</p>`}</section>`;
 }
+// ---------- Medidas do corpo (aluno e professor) ----------
+const BODY_FIELDS = [['peso', 'Peso', 'kg'], ['altura', 'Altura', 'cm'], ['idade', 'Idade', 'anos'],
+  ['busto', 'Busto / peito', 'cm'], ['cintura', 'Cintura', 'cm'], ['abdomen', 'Abdômen', 'cm'], ['quadril', 'Quadril', 'cm'], ['dorsal', 'Dorsal', 'cm'],
+  ['bracoD', 'Braço direito', 'cm'], ['bracoE', 'Braço esquerdo', 'cm'], ['coxaD', 'Coxa direita', 'cm'], ['coxaE', 'Coxa esquerda', 'cm'],
+  ['pantD', 'Panturrilha direita', 'cm'], ['pantE', 'Panturrilha esquerda', 'cm']];
+const bodyOf = p => (p && p.body ? p.body.slice().sort((a, b) => a.date.localeCompare(b.date)) : []);
+const imc = e => e && e.peso && e.altura ? e.peso / ((e.altura / 100) ** 2) : null;
+// Último valor anotado de cada medida (a última avaliação pode ter só algumas)
+const latestBody = list => list.reduce((o, e) => { BODY_FIELDS.forEach(([k]) => { if (e[k] != null) o[k] = e[k]; }); return o; }, {});
+function bodySummaryHtml(p) {
+  if (!p) return '';
+  const list = bodyOf(p), last = list[list.length - 1];
+  const lb = latestBody(list);
+  const bits = last ? BODY_FIELDS.filter(([k]) => lb[k] != null).slice(0, 4).map(([k, l, u]) => `<span class="pill eq">${l}: ${fmtMin(lb[k])} ${u}</span>`).join(' ') : '';
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Medidas do corpo</h3>
+      <small>${last ? `Última avaliação: ${fmtDate(last.date)}/${last.date.slice(2, 4)}${imc(lb) ? ` · IMC ${fmt(imc(lb))}` : ''}` : 'Peso, altura, idade e medidas'}</small></div></div>
+    ${bits ? `<div class="tags" style="margin-bottom:6px">${bits}</div>` : ''}
+    <button class="btn primary" data-act="open-medidas">${last ? 'Ver medidas' : 'Anotar medidas'}</button></section>`;
+}
+function renderMedidas() {
+  const p = profile(ui.profile), list = bodyOf(p), last = list[list.length - 1], prev = list[list.length - 2];
+  const d = ui.bodyDate || today(), cur = list.find(e => e.date === d) || {};
+  $main.innerHTML = `
+    <div class="banner"><div class="grow"><h2>Medidas do corpo</h2><small>${esc(p.name)}${last ? ` · ${list.length} ${list.length === 1 ? 'avaliação' : 'avaliações'}` : ''}</small></div></div>
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>${cur.id ? 'Editar avaliação' : 'Nova avaliação'}</h3><small>Preencha só o que tiver medido. Aceita número quebrado (ex.: 58,5)</small></div></div>
+      <label class="f">Data<input type="date" id="bodyDate" value="${d}" max="${today()}"></label>
+      <div class="body-grid">${BODY_FIELDS.map(([k, l, u]) => `<label class="f">${l} <small>(${u})</small>
+        <input data-body="${k}" inputmode="decimal" value="${cur[k] != null ? fmtMin(cur[k]) : ''}" placeholder="${latestBody(list)[k] != null ? fmtMin(latestBody(list)[k]) : ''}"></label>`).join('')}</div>
+      <button class="btn primary" style="width:100%;padding:12px" data-act="save-body">Salvar avaliação</button>
+    </section>
+    ${last ? `<section class="card"><div class="card-h"><div class="grow"><h3>Medidas mais recentes</h3>
+        <small>Cada medida comparada com a vez anterior em que foi anotada${imc(latestBody(list)) ? ` · IMC ${fmt(imc(latestBody(list)))}` : ''}</small></div></div>
+      <table class="hist"><thead><tr><th>Medida</th><th>Atual</th><th>Anterior</th><th>Diferença</th></tr></thead><tbody>
+      ${BODY_FIELDS.filter(([k]) => list.some(e => e[k] != null)).map(([k, l, u]) => {
+        const vals = list.filter(e => e[k] != null), cur = vals[vals.length - 1], old = vals[vals.length - 2];
+        const df = old ? Math.round((cur[k] - old[k]) * 100) / 100 : null;
+        return `<tr><td>${l}</td><td><b style="white-space:nowrap">${fmtMin(cur[k])} ${u}</b><small style="display:block;color:var(--muted)">${fmtDate(cur.date)}/${cur.date.slice(2, 4)}</small></td>
+          <td>${old ? `${fmtMin(old[k])} ${u}<small style="display:block;color:var(--muted)">${fmtDate(old.date)}/${old.date.slice(2, 4)}</small>` : '—'}</td>
+          <td>${df == null ? '' : `<span class="pill eq">${df > 0 ? '+' : ''}${fmtMin(df)} ${u}</span>`}</td></tr>`;
+      }).join('')}</tbody></table></section>` : ''}
+    ${list.length ? `<section class="card"><div class="card-h"><div class="grow"><h3>Histórico</h3></div></div>
+      ${list.slice().reverse().map(e => `<div class="list-row"><div class="grow"><b>${fmtDate(e.date)}/${e.date.slice(2, 4)}</b>
+        <small style="display:block;color:var(--muted)">${BODY_FIELDS.filter(([k]) => e[k] != null).map(([k, l, u]) => `${l} ${fmtMin(e[k])}`).join(' · ')}</small></div>
+        <button class="icon" data-act="edit-body" data-d="${e.date}" aria-label="Editar">✎</button>
+        <button class="icon" data-act="del-body" data-id="${e.id}" aria-label="Apagar">✕</button></div>`).join('')}</section>` : ''}`;
+}
+function saveBody() {
+  const p = profile(ui.profile), date = document.getElementById('bodyDate').value || today();
+  const entry = { date };
+  let any = false;
+  $main.querySelectorAll('[data-body]').forEach(i => { const v = parseNum(i.value); if (v != null && v > 0) { entry[i.dataset.body] = Math.round(v * 100) / 100; any = true; } });
+  if (!any) return toast('Preencha pelo menos uma medida.');
+  const old = (p.body || []).find(e => e.date === date);
+  p.body = (p.body || []).filter(e => e.date !== date);
+  p.body.push({ id: (old && old.id) || uid(), ...entry, ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  ui.bodyDate = null; save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Avaliação salva ✓');
+}
+
 // Convite para o aluno criar a conta dele e entrar no portal
 const inviteLink = p => `${location.origin}${location.pathname}?convite=${p.id}-${p.inviteCode}`;
 function inviteHtml(p) {
@@ -1761,6 +1831,10 @@ function renderPerfil() {
       ${recent || '<p class="empty">Ainda não treinou.</p>'}
     </section>
     ${inviteHtml(p)}
+    ${bodySummaryHtml(p)}
+    <section class="card"><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
+      <small>Traga os treinos que ${esc(firstName(p))} anotou antes do app (arquivo de histórico). Junta com o que já existe, sem apagar nada.</small></div></div>
+      <label class="btn">⬆ Importar histórico<input type="file" accept="application/json,.json" id="histFile" hidden></label></section>
     ${marcacoesHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
@@ -1938,6 +2012,8 @@ function autoCheck(inp) {
 $main.addEventListener('change', e => {
   if (e.target.matches('input[data-f]')) return autoCheck(e.target);
   if (e.target.id === 'importFile') importData(e.target.files[0]);
+  if (e.target.id === 'histFile') { importHistory(e.target.files[0]); e.target.value = ''; }
+  if (e.target.id === 'bodyDate') { ui.bodyDate = e.target.value; return render(); }
   if (e.target.id === 'tplGroup') { ui.tplGroup = e.target.value; ui.msgDraft = msgTemplate('treino', profile(ui.profile)); document.getElementById('msgText').value = ui.msgDraft; updateWaLink(); }
 });
 
@@ -2034,6 +2110,14 @@ $main.addEventListener('click', e => {
       (CLOUD && cloud && cloud.ready ? syncNow().then(() => { if ((cloud.syncState || '').startsWith('Erro')) throw 0; }) : Promise.resolve(save()))
         .then(() => toast(`✓ Treino de <b>${name}</b> salvo${L ? ` e ${esc(wName(L, p.id))} liberado para hoje` : ''}.${CLOUD ? ' Já aparece no app do aluno.' : ''}`), () => toast('Não foi possível salvar agora. Confira a internet e tente de novo.'))
         .finally(() => { b.disabled = false; b.textContent = `✓ Salvar treino de ${firstName(p)}`; });
+      return;
+    }
+    case 'open-medidas': ui.bodyDate = null; return go('medidas');
+    case 'save-body': return saveBody();
+    case 'edit-body': ui.bodyDate = b.dataset.d; render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
+    case 'del-body': {
+      const p = profile(ui.profile);
+      confirmAsk('Apagar esta avaliação?', 'As medidas desta data serão apagadas.').then(ok => { if (!ok) return; p.body = (p.body || []).filter(e => e.id !== b.dataset.id); save(); render(); });
       return;
     }
     case 'save-goal': {
@@ -2169,6 +2253,61 @@ async function exportData() {
   a.download = filename;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+// Importar histórico de um aluno (arquivo preparado a partir da planilha antiga). Junta sem apagar nada.
+function importHistory(file) {
+  if (!file) return;
+  const p = profile(ui.profile);
+  file.text().then(async t => {
+    const d = JSON.parse(t);
+    if (!d || d.kind !== 'historico-aluno' || !Array.isArray(d.sessions)) throw new Error('formato');
+    if (!await confirmAsk(`Importar histórico para ${firstName(p)}?`, `${d.sessions.length} exercícios treinados${d.body && d.body.length ? `, ${d.body.length} avaliação de medidas` : ''}${d.workouts && d.workouts.length ? ` e os treinos ${d.workouts.map(w => w.name).join(', ')}` : ''}. Nada do que já existe é apagado.`, 'Importar')) return;
+    if (CLOUD) { toast('Carregando o histórico antigo…'); await ensureFull(p.id); }
+    p.workouts = p.workouts || [];
+    const info = new Map((d.exercises || []).map(e => [e.name.trim().toLowerCase(), e]));
+    const mine = () => profExs(p.id);
+    const newEx = (name, letter) => {
+      const e = info.get(name.trim().toLowerCase()) || {};
+      const ex = { id: uid(), profileId: p.id, name, group: GROUPS.includes(e.group) ? e.group : GROUPS[0], letter: letter || null,
+        sets: (e.sets && e.sets.length ? e.sets : [{ carga: null, reps: null }]).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })) };
+      db.exercises.push(ex); return ex;
+    };
+    let nW = 0, nE = 0, nS = 0, nB = 0;
+    (d.workouts || []).forEach(w => {
+      let wk = p.workouts.find(x => sameName(x.name, w.name));
+      if (!wk) { wk = { id: uid(), name: w.name.slice(0, 40) }; p.workouts.push(wk); nW++; }
+      (w.exercises || []).forEach(name => {
+        const same = mine().filter(e => sameName(e.name, name));
+        if (same.some(e => e.letter === wk.id)) return;
+        const free = same.find(e => !isLetter(e.letter, p.id));
+        if (free) free.letter = wk.id; else { newEx(name, wk.id); nE++; }
+      });
+    });
+    const div = p.division = p.division || {};
+    Object.entries(d.division || {}).forEach(([wd, names]) => {
+      const cur = div[wd] || [];
+      if (cur.some(x => x !== CARDIO)) return; // o dia já tem treino: não mexe
+      const ids = names.map(n => (p.workouts.find(x => sameName(x.name, n)) || {}).id).filter(Boolean);
+      if (ids.length) div[wd] = [...ids, ...cur.filter(x => x === CARDIO)];
+    });
+    d.sessions.forEach(x => {
+      let ex = mine().find(e => sameName(e.name, x.ex));
+      if (!ex) { ex = newEx(x.ex, null); nE++; }
+      const ids = twinIds(ex.id);
+      if (db.sessions.some(s => ids.has(s.exId) && s.date === x.date)) return;
+      db.sessions.push({ id: uid(), exId: ex.id, date: x.date, sets: x.sets.map(y => ({ carga: y.carga, reps: y.reps, done: true })) });
+      nS++;
+    });
+    (d.body || []).forEach(b => {
+      p.body = p.body || [];
+      if (p.body.some(e => e.date === b.date)) return;
+      const e = { id: uid(), date: b.date };
+      BODY_FIELDS.forEach(([k]) => { if (typeof b[k] === 'number') e[k] = b[k]; });
+      p.body.push(e); nB++;
+    });
+    save(); render();
+    toast(`Importado para ${esc(firstName(p))}: ${nS} exercícios treinados, ${nW} treinos novos, ${nE} exercícios novos${nB ? `, ${nB} avaliação` : ''}.`);
+  }).catch(() => toast('Arquivo de histórico inválido.'));
 }
 function importData(file) {
   if (!file) return;
@@ -2332,10 +2471,11 @@ function ensureCloudFields(d) {
   });
 }
 function assemble() {
-  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {};
+  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {};
   for (const [path, v0] of remote) {
     const v = plain(v0), m = path.split('/');
     if (m[3] === 'prefs') prefs[m[1]] = v; // preferências do aluno (ex.: cor do app)
+    else if (m[3] === 'body') bodies[m[1]] = v.entries || []; // medidas do corpo
     else if (m.length === 2) {
       const { exercises = [], claim, ...meta } = v;
       d.profiles.push({ ...meta, id: m[1] });
@@ -2346,6 +2486,7 @@ function assemble() {
     }
   }
   d.profiles.forEach(p => { delete p.color; if (prefs[p.id] && prefs[p.id].color) p.color = prefs[p.id].color; });
+  d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
   d.profiles.sort((a, b) => a.id === ME ? -1 : b.id === ME ? 1 : 0);
@@ -2355,7 +2496,7 @@ function assemble() {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, ...meta } = p;
+    const { id, color, body, ...meta } = p;
     const exercises = db.exercises.filter(e => e.profileId === id).map(({ profileId, ...e }) => e);
     const rem = remote.get('profiles/' + id);
     out.set('profiles/' + id, plain({ ...meta, uid: p.uid ?? null, inviteCode: p.inviteCode ?? null, exercises, ...(rem && rem.claim ? { claim: rem.claim } : {}) }));
@@ -2370,6 +2511,7 @@ function splitDb() {
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id) && p.color) out.set(`profiles/${p.id}/months/prefs`, { color: p.color });
+  for (const p of db.profiles) if (own.has(p.id) && p.body && p.body.length) out.set(`profiles/${p.id}/months/body`, plain({ entries: p.body }));
   return out;
 }
 function scheduleSync() {
@@ -2485,7 +2627,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-22:04';
+const APP_VERSION = '29/09-22:17';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

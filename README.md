@@ -40,6 +40,18 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 - O aluno vê: boas-vindas com o último recado ("Já treinou hoje? Não esquece do cardio :)"), o treino que você montou (sem poder editar o plano), cardio, o **Calendário** com os dias treinados marcados e a aba **Recados** com as mensagens enviadas. A evolução não aparece para o aluno (fica só com o professor).
 - Tudo o que for marcado nesse modo (séries e cardio) fica registrado como **marcado pelo aluno**: aparece no histórico com a etiqueta *aluno* e no perfil em **Marcações do aluno**.
 
+## Medidas do corpo
+
+- Professor e alunos anotam **peso, altura, idade** e as medidas (busto, cintura, abdômen, quadril, dorsal, braços, coxas e panturrilhas, direita e esquerda). Aceita número quebrado (58,5).
+- O aluno tem a aba **Medidas** embaixo; o professor abre pelo cartão **Medidas do corpo** na aba Evolução (as dele) ou no perfil do aluno (as do aluno).
+- Cada avaliação fica com a data. A tabela mostra o valor mais recente de cada medida, o anterior e a diferença; com peso e altura aparece o IMC.
+
+## Histórico antigo do aluno
+
+- No perfil do aluno, **⬆ Importar histórico** traz os treinos anotados antes do app (arquivo de histórico preparado a partir da planilha antiga).
+- Junta com o que já existe, sem apagar nada: cria os treinos e a divisão da semana (só nos dias que estiverem vazios), os exercícios e as séries de cada data, e as medidas. Importar o mesmo arquivo de novo não duplica.
+- O mesmo exercício em dois treinos (ex.: Cadeira flexora na segunda e na quinta) usa um só histórico para comparar as cargas.
+
 ## Histórico (aba Histórico)
 
 - Calendário do mês com os dias treinados em verde. Toque em **qualquer dia** (inclusive sem treino) para ver o treino ou anotar um treino passado.
