@@ -24,8 +24,15 @@ service cloud.firestore {
         && request.resource.data.uid == uid;
     }
 
-    match /profiles/{pid} {
+    // Cópias automáticas diárias (só o professor)
+    match /backups/{id} {
       allow read, write: if isAdmin();
+    }
+
+    match /profiles/{pid} {
+      // Ninguém apaga aluno na nuvem (nem por erro do app): "Excluir" manda para a lixeira
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
 
       // Aluno lê só o próprio perfil (inclusive a busca "where uid == meu uid")
       allow get, list: if request.auth != null && resource.data.uid == request.auth.uid;
@@ -41,7 +48,8 @@ service cloud.firestore {
 
       // Marcações (séries e cardio), um documento por mês
       match /months/{month} {
-        allow read, write: if isAdmin() || isOwner(pid);
+        allow read, create, update: if isAdmin() || isOwner(pid);
+        allow delete: if false;
       }
     }
   }

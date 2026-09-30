@@ -291,6 +291,11 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+.card.locked input[data-f]{opacity:.75}
+.card.locked .chk,.card.locked .step button{pointer-events:none;opacity:.6}
+.lock-note{margin:10px 0 0;font-size:13px;font-weight:700;color:var(--muted)}
+.send-card button[disabled]{opacity:.45}
+.sent-card{border:2px solid var(--up)}
 .months{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;scrollbar-width:none}
 .months button{flex:none;border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:999px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .months button small{color:var(--muted);font-weight:600;margin-left:3px}
@@ -863,7 +868,7 @@ function bannerHtml(L) {
 function renderTreino() {
   const group = ui.group;
   const exs = letterExs(group);
-  const loose = profExs().filter(e => !isLetter(e.letter)).sort(byGroupOrder);
+  const loose = profExs().filter(e => !isLetter(e.letter) && !e.archived).sort(byGroupOrder);
   const isToday = ui.date === today();
   const p = profile(ui.profile), lastMsg = ui.studentMode && (p.messages || []).slice(-1)[0];
   const greet = ui.studentMode && isToday ? `<div class="banner hello"><div class="grow"><h2>Olá, ${esc(firstName(p))}! 👋</h2>
@@ -887,12 +892,21 @@ function renderTreino() {
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
       <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
     ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || `<p class="empty">Nenhum exercício em ${esc(wName(group))} ainda. Adicione abaixo.</p>`}
+    ${sendHtml()}
     <button class="add" data-act="new">＋ Adicionar exercício em ${esc(wName(group))}</button>
     ${ui.profile !== ME ? savePlanHtml(profile(ui.profile)) : ''}
     ${loose.length ? `<section class="card" style="margin-top:14px"><details class="tbl"><summary>Exercícios sem treino (${loose.length}) · mover para ${esc(wName(group))}</summary>
       ${loose.map(e => `<div class="plan-row"><div class="grow"><b>${esc(e.name)}</b><small>${e.group} · ${planText(e)}</small></div>
         <button class="btn" data-act="set-letter" data-id="${e.id}" data-l="${group}">＋ mover</button></div>`).join('')}</details></section>` : ''}`}`;
-  $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
+  markLocked();
+}
+function markLocked() {
+  $main.querySelectorAll('[data-ex]').forEach(c => {
+    c.classList.toggle('complete', isComplete(c.dataset.ex));
+    const lock = !!lockReason(c.dataset.ex);
+    c.classList.toggle('locked', lock);
+    if (lock) c.querySelectorAll('input[data-f], [data-act="done"], [data-act="inc"], [data-act="dec"]').forEach(x => x.disabled = true);
+  });
 }
 // Aluno: vê só o treino que o professor passou para o dia (sem escolher grupo)
 function renderStudentTreino(p, greet, isToday) {
@@ -917,9 +931,10 @@ function renderStudentTreino(p, greet, isToday) {
       ${groups.length ? `<div class="layout">Séries em:
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
-      ${blocks}`
+      ${blocks}
+      ${sendHtml()}`
     : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
-  $main.querySelectorAll('[data-ex]').forEach(c => c.classList.toggle('complete', isComplete(c.dataset.ex)));
+  markLocked();
 }
 // Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
 // Cartão de cardio do aluno, como um exercício: ele toca no tempo que fez e a barra anima até lá
@@ -969,6 +984,7 @@ function cardioGoalHtml(p) {
 }
 // Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
 function setCardio(min) {
+  if (dayLocked()) return toast(LOCK_MSG.past);
   const p = profile(ui.profile), mode = ui.mode;
   min = Math.min(300, Math.round((min || 0) * 100) / 100);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
@@ -1048,6 +1064,39 @@ function groupPicker(type, name, checked, withCardio) {
     <div class="pick-h">Pernas</div><div class="groups">${LEGS.map(opt).join('')}</div>
     ${withCardio ? `<div class="pick-h">Cardio</div><div class="groups">${opt(CARDIO)}</div>` : ''}`;
 }
+// ---------- Treino enviado / trava ----------
+// Só dá para mexer no treino de HOJE que ainda não foi enviado. Dias passados e treinos enviados ficam só para consulta.
+const sentAt = (exId, date = ui.date) => { const s = sessionOn(exId, date); return s && s.fin; };
+const lockReason = (exId, date = ui.date) => date !== today() ? 'past' : sentAt(exId, date) ? 'sent' : '';
+const LOCK_MSG = { past: 'Dias passados ficam só para consulta: só dá para alterar o treino de hoje.', sent: 'Este treino já foi enviado: as cargas e repetições não podem mais ser alteradas.' };
+const dayLocked = (date = ui.date) => date !== today();
+// Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
+function sendableExs() {
+  if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return workoutsOf(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
+  return isLetter(ui.group) ? letterExs(ui.group) : [];
+}
+function sendHtml() {
+  if (ui.date !== today() || (ui.profile !== ME && !ui.studentMode)) return '';
+  const exs = sendableExs(); if (!exs.length) return '';
+  const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
+  if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
+      <small>Enviado às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Está salvo e registrado${ui.studentMode ? ' para você e seu professor' : ''}; não dá mais para alterar.</small></div></div></section>`;
+  const open = exs.filter(e => !sentAt(e.id)), ready = open.every(e => isComplete(e.id));
+  const missing = open.filter(e => !isComplete(e.id)).length;
+  return `<section class="card send-card"><button class="btn primary" style="width:100%;padding:14px;font-size:16px" data-act="send-workout" ${ready ? '' : 'disabled'}>✓ Enviar treino</button>
+    <p class="hint" style="margin:8px 0 0;text-align:center">${ready ? 'Tudo confirmado. Ao enviar, o treino fica salvo e registrado e ninguém consegue mais alterar.' : `Confirme todas as séries (carga e repetições) para enviar. Falta${missing === 1 ? '' : 'm'} ${missing} exercício${missing === 1 ? '' : 's'}.`}</p></section>`;
+}
+async function sendWorkout() {
+  const exs = sendableExs().filter(e => !sentAt(e.id));
+  if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
+  if (!await confirmAsk('Enviar treino?', `Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas e repetições.`, 'Enviar')) return;
+  const at = new Date().toISOString();
+  exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode) s.by = 'aluno'; });
+  save(); render();
+  if (CLOUD && cloud && cloud.ready) await syncNow();
+  toast(ui.studentMode ? '✓ Treino enviado! Seu professor já pode ver.' : '✓ Treino enviado e registrado.');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 function isComplete(exId) {
   const s = sessionOn(exId, ui.date);
   return !!s && s.sets.length > 0 && s.sets.every(x => x.done);
@@ -1059,6 +1108,8 @@ const stepper = (f, v, label) => `<div class="step">
   <button data-act="inc" data-f="${f}" aria-label="Aumentar ${label}">+</button></div>`;
 
 function cardHtml(ex) {
+  const lock = lockReason(ex.id);
+  if (lock === 'past' && !sessionOn(ex.id, ui.date)) return `<div class="card-h"><div class="grow"><h3>${esc(ex.name)}</h3><small>${ex.group} · sem registro neste dia</small></div></div>`;
   const s = working(ex, ui.date);
   const prev = prevSession(ex.id, ui.date);
   const done = s.sets.filter(x => x.done).length, n = s.sets.length;
@@ -1088,11 +1139,11 @@ function cardHtml(ex) {
     </div>
     ${tiles ? `<div class="tile-key">Em cada série: <b>carga (kg)</b> · <b>repetições</b> · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
-    <div class="actions">
+    ${lock ? `<p class="lock-note">🔒 ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}</p>` : `<div class="actions">
       <button class="btn" data-act="addset">＋ série</button>
       <button class="btn" data-act="rmset">− série</button>
       <button class="btn" data-act="alldone">${done === n ? 'Desmarcar todas' : '✓ Marcar todas'}</button>
-    </div>
+    </div>`}
     <div class="compare">${compareHtml(s, prev)}</div>`;
 }
 const setTotal = x => x.carga != null && x.reps != null ? `${fmt(x.carga * x.reps)} kg` : '';
@@ -1151,6 +1202,7 @@ function cardioHtml(noBanner) {
     </section>`;
 }
 function addCardio(mode, min) {
+  if (dayLocked()) return toast(LOCK_MSG.past);
   min = Math.round(min);
   if (!(min > 0)) return toast('Informe os minutos.');
   db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
@@ -1179,7 +1231,7 @@ function dayCard(d, list) {
   if (cardio.length) groups.push(CARDIO);
   return `<section class="card" id="day-${d}">
     <div class="day-h"><div class="d">${d.slice(8)}<small>${toDate(d).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></div>
-      <div class="grow"><h3>${weekday(d)}</h3><small style="color:var(--muted)">${groups.join(' · ')}</small></div>
+      <div class="grow"><h3>${weekday(d)}${list.length && list.every(x => x.fin) ? ' <span class="pill up">✓ enviado</span>' : ''}</h3><small style="color:var(--muted)">${groups.join(' · ')}</small></div>
       <b>${fmt(total)} kg</b></div>
     ${list.length ? `<table class="hist"><thead><tr><th>Exercício</th><th>Séries</th><th>Carga máx</th><th>Total</th><th></th></tr></thead><tbody>
     ${list.map(s => {
@@ -1188,7 +1240,7 @@ function dayCard(d, list) {
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
     ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
-    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">Abrir / editar este treino</button></div>
+    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button></div>
   </section>`;
 }
 function renderHistorico() {
@@ -1225,7 +1277,7 @@ function renderHistorico() {
   else if (sel) selHtml = `<section class="card" id="day-${sel}">
       <div class="day-h"><div class="d">${sel.slice(8)}<small>${toDate(sel).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></div>
         <div class="grow"><h3>${weekday(sel)}</h3><small style="color:var(--muted)">Nenhum treino anotado neste dia</small></div></div>
-      <div class="actions"><button class="btn primary" data-act="openday" data-d="${sel}" data-g="${ui.group}">Anotar treino neste dia</button></div>
+      ${sel === today() ? `<div class="actions"><button class="btn primary" data-act="openday" data-d="${sel}" data-g="${ui.group}">Anotar treino de hoje</button></div>` : '<p class="hint" style="margin:6px 0 0">Dias passados ficam só para consulta.</p>'}
     </section>`;
 
   if (ui.studentMode) {
@@ -1565,7 +1617,8 @@ function renderAlunos() {
       <div class="actions">
         <button class="btn" data-act="export">⬇ Exportar</button>
         <label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label>
-      </div></section>
+      </div>${backupsHtml()}</section>
+    ${trashHtml()}
     ${accountHtml()}`;
 }
 function createStudent({ name, phone = '', goal = '', notes = '' }) {
@@ -1601,6 +1654,14 @@ document.getElementById('stCancel').onclick = () => $st.close();
 document.getElementById('stDelete').onclick = async () => {
   const p = stEditing; if (!p) return;
   $st.close();
+  if (CLOUD && cloud && cloud.ready) {
+    if (!await confirmAsk(`Excluir ${p.name}?`, 'O aluno vai para a lixeira (aba Alunos, no fim da página) e perde o acesso ao app. Dá para trazer de volta com tudo.', 'Excluir')) return;
+    try { await cloud.fs.doc('profiles/' + p.id).update({ deleted: true, deletedAt: new Date().toISOString() }); }
+    catch (err) { return cloudError(err); }
+    db.profiles = db.profiles.filter(x => x.id !== p.id);
+    if (ui.profile === p.id) { ui.profile = ME; if (ui.view === 'perfil') ui.view = 'alunos'; }
+    saveUi(); render(); return toast(`${esc(p.name)} foi para a lixeira.`);
+  }
   if (!await confirmAsk(`Excluir ${p.name}?`, 'Todo o histórico de treinos deste aluno será apagado. Não dá para desfazer.')) return;
   const ids = new Set(profExs(p.id).map(e => e.id));
   db.sessions = db.sessions.filter(s => !ids.has(s.exId));
@@ -1663,7 +1724,8 @@ function marcacoesHtml(p) {
       return `<div class="plan-row"><div class="grow"><b>${esc(exById(x.exId).name)}</b>
         <small>${done.length}/${x.sets.length} séries · ${done.map(y => `${fmt(y.carga)}×${y.reps ?? '–'}`).join('  ')}</small></div><b>${fmt(vol(x.sets))} kg</b></div>`;
     }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b><small>cardio</small></div><b>${fmtMin(c.min)} min</b></div>`).join('');
-    return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}</p>${rows}`;
+    const sent = ss.filter(x => x.date === d && x.fin).map(x => x.fin).sort().pop();
+    return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}${sent ? ` · <span class="pill up">✓ treino enviado às ${new Date(sent).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}</p>${rows}`;
   }).join('');
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Marcações do aluno</h3>
       <small>Séries e cardio que ${esc(firstName(p))} marcou no app</small></div></div>
@@ -1819,7 +1881,7 @@ function renderPerfil() {
 
   const exRow = e => `<div class="plan-row"><div class="grow"><b>${esc(e.name)}</b><small>${e.group} · ${planText(e)}</small></div>
         <button class="icon" data-act="edit-ex" data-id="${e.id}" aria-label="Editar ${esc(e.name)}">⋯</button></div>`;
-  const loose = profExs(p.id).filter(e => !isLetter(e.letter)).sort(byGroupOrder);
+  const loose = profExs(p.id).filter(e => !isLetter(e.letter) && !e.archived).sort(byGroupOrder);
   const plan = workoutsOf(p.id).map(w => `<div class="plan-g" style="display:flex;align-items:center;gap:6px">${esc(w.name)}${letterDesc(w.id, p.id) ? ' · ' + esc(letterDesc(w.id, p.id)) : ''}
         <span class="grow"></span><button class="link" data-act="rename-workout" data-id="${w.id}">renomear</button><button class="link" style="color:var(--down)" data-act="del-workout" data-id="${w.id}">excluir</button></div>
       ${letterExs(w.id, p.id).map(exRow).join('')}
@@ -2018,6 +2080,7 @@ $main.addEventListener('input', e => {
   const inp = e.target.closest('input[data-f]');
   if (!inp) return;
   const card = inp.closest('[data-ex]'), ex = exById(card.dataset.ex);
+  if (lockReason(ex.id)) return;
   const row = inp.closest('[data-i]'), i = +row.dataset.i;
   const s = ensureSession(ex, ui.date);
   s.sets[i][inp.dataset.f] = parseNum(inp.value);
@@ -2033,7 +2096,9 @@ $main.addEventListener('input', e => {
 function autoCheck(inp) {
   const card = inp.closest('[data-ex]'), row = inp.closest('[data-i]');
   if (!card || !row) return;
-  const ex = exById(card.dataset.ex), s = ensureSession(ex, ui.date), i = +row.dataset.i, x = s.sets[i];
+  const ex = exById(card.dataset.ex);
+  if (lockReason(ex.id)) return;
+  const s = ensureSession(ex, ui.date), i = +row.dataset.i, x = s.sets[i];
   if (x.done || x.carga == null || x.reps == null) return;
   const wasComplete = s.sets.every(y => y.done);
   x.done = true; save();
@@ -2091,7 +2156,7 @@ $main.addEventListener('click', e => {
       });
       return;
     }
-    case 'set-letter': { const ex = exById(b.dataset.id); ex.letter = b.dataset.l; save(); toast(`<b>${esc(ex.name)}</b> agora está em ${esc(wName(ex.letter))}`); return render(); }
+    case 'set-letter': { const ex = exById(b.dataset.id); ex.letter = b.dataset.l; delete ex.archived; save(); toast(`<b>${esc(ex.name)}</b> agora está em ${esc(wName(ex.letter))}`); return render(); }
     case 'new-workout': return newWorkout();
     case 'rename-workout': return renameWorkout(b.dataset.id);
     case 'del-workout': return deleteWorkout(b.dataset.id);
@@ -2122,6 +2187,22 @@ $main.addEventListener('click', e => {
       const q = (cloud.requests || []).find(x => x.uid === b.dataset.uid);
       confirmAsk(`Recusar ${q ? q.name : 'este pedido'}?`, 'A pessoa não terá acesso. Ela pode pedir de novo depois.', 'Recusar')
         .then(ok => ok && cloud.fs.doc('requests/' + b.dataset.uid).delete().catch(cloudError));
+      return;
+    }
+    case 'send-workout': return sendWorkout();
+    case 'untrash': b.disabled = true; return untrash(b.dataset.pid).then(() => toast('✓ Aluno de volta, com tudo.'), err => { b.disabled = false; cloudError(err); });
+    case 'bk-open': return loadBackupDates().catch(err => toast('Não foi possível abrir as cópias (' + (err.code || 'erro') + '). Confira as regras do Firebase.'));
+    case 'bk-day': return loadBackupDay(b.dataset.d).catch(cloudError);
+    case 'bk-restore': {
+      const x = [...(ui.bk.me ? [ui.bk.me] : []), ...ui.bk.items].find(y => y.pid === b.dataset.pid); if (!x) return;
+      const nm = x.pid === ME ? 'o seu treino' : x.name;
+      confirmAsk(`Restaurar ${nm}?`, `Traz de volta o que faltar da cópia de ${fmtDate(x.date)}. Nada do que existe hoje é apagado.`, 'Restaurar').then(async ok => {
+        if (!ok) return;
+        if (inTrash(x.pid)) await untrash(x.pid);
+        await ensureFull(x.pid);
+        restoreFromDocs(JSON.parse(x.data), [x.pid], true);
+        await syncNow(); toast(`✓ ${esc(nm)} restaurado.`);
+      });
       return;
     }
     case 'rescue': {
@@ -2181,6 +2262,7 @@ $main.addEventListener('click', e => {
       return toast(v > 0 ? `Meta de cardio de ${esc(firstName(p))}: <b>${fmtMin(p.cardioDaily)} min</b> por dia` : 'Meta de cardio removida');
     }
     case 'cardio-save': {
+      if (dayLocked()) return toast(LOCK_MSG.past);
       const v = parseNum(document.getElementById('cardioDone').value);
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
       return setCardio(v);
@@ -2208,6 +2290,7 @@ $main.addEventListener('click', e => {
   if (!card) return;
   const ex = exById(card.dataset.ex);
   if (act === 'edit') return openDialog(ex);
+  if (lockReason(ex.id)) return toast(LOCK_MSG[lockReason(ex.id)]);
   const s = ensureSession(ex, ui.date);
   const wasComplete = s.sets.every(x => x.done);
   if (act === 'done') {
@@ -2267,12 +2350,12 @@ $form.addEventListener('submit', e => {
   const carga = parseNum($form.carga.value), reps = parseNum($form.reps.value);
   const group = $form.group.value || GROUPS[0], letter = $form.letter.value || null;
   if (editing) {
-    editing.name = name; editing.group = group; editing.letter = letter;
+    editing.name = name; editing.group = group; editing.letter = letter; if (letter) delete editing.archived;
     // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
     if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
       editing.sets = Array.from({ length: n }, () => ({ carga, reps }));
-      const s = ensureSession(editing, ui.date);
-      s.sets = Array.from({ length: n }, (_, i) => ({ carga, reps, done: !!(s.sets[i] && s.sets[i].done) }));
+      const s = !lockReason(editing.id) && ensureSession(editing, ui.date);
+      if (s) s.sets = Array.from({ length: n }, (_, i) => ({ carga, reps, done: !!(s.sets[i] && s.sets[i].done) }));
     }
   } else {
     db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
@@ -2284,9 +2367,16 @@ document.getElementById('exCancel').onclick = () => $dlg.close();
 document.getElementById('exDelete').onclick = async () => {
   if (!editing) return;
   $dlg.close();
-  if (!await confirmAsk(`Excluir "${editing.name}"?`, 'O exercício e todo o histórico dele serão apagados.')) return;
-  db.sessions = db.sessions.filter(s => s.exId !== editing.id);
-  db.exercises = db.exercises.filter(e => e.id !== editing.id);
+  const hist = exHistory(editing.id).filter(x => x.exId === editing.id).length;
+  if (hist) {
+    // Já tem treinos registrados: sai do treino, mas o histórico continua guardado
+    if (!await confirmAsk(`Tirar "${editing.name}" do treino?`, `${hist === 1 ? 'O treino já registrado' : `Os ${hist} treinos já registrados`} deste exercício continua${hist === 1 ? '' : 'm'} guardado${hist === 1 ? '' : 's'} no histórico e na evolução.`, 'Tirar do treino')) return;
+    editing.letter = null; editing.archived = true;
+  } else {
+    if (!await confirmAsk(`Excluir "${editing.name}"?`, 'O exercício ainda não tem treinos registrados.')) return;
+    db.sessions = db.sessions.filter(s => s.exId !== editing.id);
+    db.exercises = db.exercises.filter(e => e.id !== editing.id);
+  }
   save(); $dlg.close(); render();
 };
 
@@ -2462,7 +2552,7 @@ async function startSession(user) {
     clearInvite();
   }
   const q = await cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).get();
-  if (q.empty) return noProfile(user);
+  if (q.empty || q.docs[0].data().deleted) return noProfile(user);
   startStudent(q.docs[0].id);
 }
 // ---------- Resgate ----------
@@ -2491,9 +2581,10 @@ async function saveRescueFromCache(user, admin) {
 // Alunos que estão na cópia deste aparelho mas não estão mais na nuvem (e não foram excluídos pelo professor)
 // (ou que voltaram só com a ficha, sem nenhum treino, enquanto a cópia tem treinos)
 const rescueSessions = e => Object.entries(e.docs).reduce((n, [k, v]) => n + (/\/months\/\d{4}-\d{2}$/.test(k) ? (v.sessions || []).length : 0), 0);
-const rescuable = () => { const r = readRescue(); return Object.keys(r).filter(pid => pid !== ME && !deletedProfiles.has(pid) && r[pid].docs['profiles/' + pid]
+const inTrash = pid => !!(cloud && cloud.trash || []).some(t => t.id === pid);
+const rescuable = () => { const r = readRescue(); return Object.keys(r).filter(pid => pid !== ME && !deletedProfiles.has(pid) && !inTrash(pid) && r[pid].docs['profiles/' + pid]
   && (!profile(pid) || (profSessions(pid).length === 0 && rescueSessions(r[pid]) > 0))); };
-function restoreFromDocs(docs, pids) {
+function restoreFromDocs(docs, pids, merge) {
   const got = assemble(new Map(Object.entries(docs)));
   let n = 0;
   got.profiles.filter(p => pids.includes(p.id)).forEach(p => {
@@ -2554,7 +2645,7 @@ async function noProfile(user) {
   // Quando o professor aceitar, o app abre sozinho
   if (cloud.waitProfile) cloud.waitProfile();
   cloud.waitProfile = cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).onSnapshot(snap => {
-    if (snap.empty) return;
+    if (snap.empty || snap.docs[0].data().deleted) return;
     cloud.waitProfile(); cloud.waitProfile = null;
     startStudent(snap.docs[0].id);
   }, () => {});
@@ -2588,6 +2679,8 @@ async function acceptRequest(uidReq) {
   const q = (cloud.requests || []).find(x => x.uid === uidReq); if (!q) return;
   let old = null; try { old = q.rescue ? JSON.parse(q.rescue) : null; } catch (e) {}
   let name = q.name;
+  const trashed = (cloud.trash || []).find(t => t.uid === q.uid);
+  if (trashed) { await untrash(trashed.id); try { await cloud.fs.doc('requests/' + q.uid).delete(); } catch (e) {} return toast(`✓ ${esc(trashed.name)} voltou da lixeira, com tudo.`); }
   const oldPid = old && (old.pids || []).find(pid => (old.docs['profiles/' + pid] || {}).uid === q.uid);
   if (oldPid) { // já era aluno: volta com tudo o que estava no celular dele
     await ensureFull(oldPid);
@@ -2601,6 +2694,74 @@ async function acceptRequest(uidReq) {
   save(); await syncNow();
   try { await cloud.fs.doc('requests/' + q.uid).delete(); } catch (e) {}
   toast(`✓ ${esc(name)} aceito${oldPid ? ', com os treinos antigos' : ''}. O app já abre para essa pessoa.`);
+}
+
+// ---------- Lixeira ----------
+async function untrash(pid) {
+  const del = firebase.firestore.FieldValue.delete();
+  await cloud.fs.doc('profiles/' + pid).update({ deleted: del, deletedAt: del });
+}
+function trashHtml() {
+  const t = (CLOUD && cloud && cloud.trash) || [];
+  if (!t.length) return '';
+  return `<section class="card" style="margin-top:14px"><details class="tbl"><summary>🗑 Lixeira (${t.length})</summary>
+    <p class="hint" style="margin:8px 0">Alunos excluídos. Nada foi apagado: ao trazer de volta, voltam com treinos, histórico e acesso ao app.</p>
+    ${t.map(x => `<div class="list-row"><div class="grow"><b>${esc(x.name || 'Aluno')}</b>${x.deletedAt ? `<small style="display:block;color:var(--muted)">excluído em ${fmtDate(x.deletedAt.slice(0, 10))}</small>` : ''}</div>
+      <button class="btn" data-act="untrash" data-pid="${x.id}">Trazer de volta</button></div>`).join('')}</details></section>`;
+}
+// ---------- Cópia automática diária na nuvem (30 dias) ----------
+const BK_DAYS = 30;
+const BK_EVERY = 3 * 3600e3; // a cópia do dia se atualiza no máximo a cada 3 horas
+const countSessions = docs => Object.entries(docs).reduce((a, [k, v]) => a + (/\/months\/\d{4}-\d{2}$/.test(k) ? (v.sessions || []).length : 0), 0);
+async function dailyBackup(force) {
+  if (!cloud || cloud.role !== 'admin' || !cloud.ready) return;
+  const day = today(), idx = cloud.fs.doc('backups/_index'), ID = firebase.firestore.FieldPath.documentId();
+  try {
+    const snap = await idx.get(), info = snap.exists ? snap.data() : { dates: [] };
+    if (!force && (info.dates || []).includes(day) && Date.now() - (info.lastAt || 0) < BK_EVERY) return;
+    await ensureFullAll();
+    // o que já está guardado hoje: nunca troca uma cópia por outra com MENOS treinos (protege contra perda)
+    const have = {};
+    (await cloud.fs.collection('backups').where(ID, '>=', day + '_').where(ID, '<', day + '_~').get())
+      .forEach(d => { try { have[d.data().pid] = countSessions(JSON.parse(d.data().data)); } catch (e) {} });
+    const docs = splitDb(), batch = cloud.fs.batch(), names = {};
+    for (const p of db.profiles) {
+      const mine = {}; for (const [k, v] of docs) if (pidOfPath(k) === p.id) mine[k] = v;
+      names[p.id] = p.name;
+      if (have[p.id] != null && countSessions(mine) < have[p.id]) continue;
+      const txt = JSON.stringify(mine); if (txt.length > 900000) continue;
+      batch.set(cloud.fs.doc(`backups/${day}_${p.id}`), { date: day, pid: p.id, name: p.name, at: new Date().toISOString(), data: txt });
+    }
+    const dates = [...new Set([...(info.dates || []), day])].sort(), keep = dates.slice(-BK_DAYS), drop = dates.slice(0, -BK_DAYS);
+    batch.set(idx, { dates: keep, lastAt: Date.now(), last: { date: day, names } });
+    await batch.commit();
+    for (const d of drop) {
+      const old = await cloud.fs.collection('backups').where(ID, '>=', d + '_').where(ID, '<', d + '_~').get();
+      for (const x of old.docs) await x.ref.delete();
+    }
+  } catch (e) { console.warn('cópia automática:', e.code || e); }
+}
+async function loadBackupDates() {
+  const snap = await cloud.fs.doc('backups/_index').get();
+  ui.bk = { dates: snap.exists ? (snap.data().dates || []).slice().reverse() : [], date: null, items: [] };
+  render();
+}
+async function loadBackupDay(day) {
+  const q = await cloud.fs.collection('backups').where(firebase.firestore.FieldPath.documentId(), '>=', day + '_').where(firebase.firestore.FieldPath.documentId(), '<', day + '_~').get();
+  ui.bk.date = day; ui.bk.items = q.docs.map(d => d.data()).filter(x => x.pid !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  ui.bk.me = q.docs.map(d => d.data()).find(x => x.pid === ME);
+  render();
+}
+function backupsHtml() {
+  if (!CLOUD || !cloud || cloud.role !== 'admin') return '';
+  if (!ui.bk) return `<button class="btn" data-act="bk-open">☁ Cópias automáticas (30 dias)</button>`;
+  const b = ui.bk;
+  return `<div style="margin-top:10px"><p class="plan-g">Cópias automáticas na nuvem</p>
+    ${b.dates.length ? `<div class="months">${b.dates.map(d => `<button class="${d === b.date ? 'on' : ''}" data-act="bk-day" data-d="${d}">${fmtDate(d)}/${d.slice(2, 4)}</button>`).join('')}</div>` : '<p class="hint">Ainda não há cópias. A primeira é feita hoje, sozinha.</p>'}
+    ${b.date ? [...(b.me ? [b.me] : []), ...b.items].map(x => { const n = (() => { try { return Object.entries(JSON.parse(x.data)).reduce((a, [k, v]) => a + (/\/months\/\d{4}-\d{2}$/.test(k) ? (v.sessions || []).length : 0), 0); } catch (e) { return 0; } })();
+      return `<div class="list-row"><div class="grow"><b>${esc(x.pid === ME ? 'Meu treino' : x.name)}</b><small style="display:block;color:var(--muted)">${n} exercícios treinados nesta cópia</small></div>
+        <button class="btn" data-act="bk-restore" data-pid="${x.pid}">Restaurar</button></div>`; }).join('') : ''}
+    <p class="hint" style="margin:8px 0 0">Restaurar traz de volta o que faltar (aluno, treinos, marcações). Nada do que existe hoje é apagado.</p></div>`;
 }
 
 // Professor: carrega só os meses recentes de cada aluno (os antigos vêm quando precisar).
@@ -2670,9 +2831,10 @@ function startStudent(pid) {
   ui.view = 'treino'; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
   cloud.pid = pid; cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
   cloud.unsubs.push(cloud.fs.doc('profiles/' + pid).onSnapshot(doc => {
-    if (!doc.exists) return showAuth('noprofile');
+    if (!doc.exists || doc.data().deleted) return showAuth('noprofile');
     remote.set('profiles/' + pid, doc.data());
     cloud.gotProfiles = true; onRemote();
+    if (cloud.ready && document.body.classList.contains('locked')) enterApp(); // voltou da lixeira: abre sozinho
   }, err => cloudError(err)));
   subscribeMonths(pid);
 }
@@ -2684,6 +2846,7 @@ async function onRemote() {
   db = assemble();
   lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
   enterApp();
+  if (cloud.role === 'admin') setTimeout(dailyBackup, 4000); // cópia de segurança do dia
   // perfis antigos sem código de convite ganham um (e já sobem para a nuvem)
   if (cloud.role === 'admin' && db.profiles.some(p => p.id !== ME && !p.inviteCode)) { ensureCloudFields(db); scheduleSync(); }
 }
@@ -2701,6 +2864,7 @@ async function firstRun() {
   lastSynced = new Map();
   await syncNow(); render();
   toast(up ? 'Dados enviados para a nuvem.' : 'Conta pronta! Cadastre seus alunos na aba Alunos.');
+  setTimeout(dailyBackup, 4000);
 }
 function ensureCloudFields(d) {
   d.profiles.forEach(p => {
@@ -2709,13 +2873,14 @@ function ensureCloudFields(d) {
   });
 }
 function assemble(src = remote) {
-  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {};
+  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {}, trash = [];
   for (const [path, v0] of src) {
     const v = plain(v0), m = path.split('/');
     if (m[3] === 'prefs') prefs[m[1]] = v; // preferências do aluno (ex.: cor do app)
     else if (m[3] === 'body') bodies[m[1]] = v.entries || []; // medidas do corpo
     else if (m.length === 2) {
       const { exercises = [], claim, ...meta } = v;
+      if (meta.deleted) { trash.push({ id: m[1], name: meta.name, uid: meta.uid || null, deletedAt: meta.deletedAt || '' }); continue; } // lixeira
       d.profiles.push({ ...meta, id: m[1] });
       exercises.forEach(e => d.exercises.push({ ...e, profileId: m[1] }));
     } else {
@@ -2728,6 +2893,7 @@ function assemble(src = remote) {
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
   d.profiles.sort((a, b) => a.id === ME ? -1 : b.id === ME ? 1 : 0);
+  if (src === remote && cloud) cloud.trash = trash;
   return d;
 }
 // O app (db) dividido nos documentos da nuvem
@@ -2764,10 +2930,12 @@ async function syncNow() {
   for (const [path, doc] of cur) {
     if (cloud.removed && cloud.removed.has(pidOfPath(path))) continue;
     const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
+  // Nada é apagado na nuvem (o Firebase também recusa): um mês que ficou vazio é gravado vazio
   for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) {
-    const pid = pidOfPath(path);
-    if (!profile(pid) && !deletedProfiles.has(pid)) { console.warn('não apagado (aluno não foi excluído):', path); continue; }
-    ops.push(['delete', path]); lastSynced.delete(path); remote.delete(path);
+    if (!profile(pidOfPath(path)) || !path.includes('/months/')) continue; // aluno fora do app (lixeira etc.): não mexe
+    const empty = path.endsWith('/prefs') ? {} : path.endsWith('/body') ? { entries: [] } : { sessions: [], cardio: [] };
+    if (lastSynced.get(path) === canon(empty)) continue;
+    ops.push(['set', path, empty]); lastSynced.set(path, canon(empty)); remote.set(path, empty);
   }
   try {
     for (let i = 0; i < ops.length; i += 400) {
@@ -2776,6 +2944,7 @@ async function syncNow() {
       await b.commit();
     }
     setSyncState('Tudo salvo na nuvem ✓');
+    if (cloud.role === 'admin' && ops.length) { clearTimeout(cloud.bkTimer); cloud.bkTimer = setTimeout(dailyBackup, 60e3); }
   } catch (err) { cloudError(err); }
   if (cloud.remoteDirty) { cloud.remoteDirty = false; applyRemote(); }
 }
@@ -2894,7 +3063,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/09-00:02';
+const APP_VERSION = '30/09-00:26';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

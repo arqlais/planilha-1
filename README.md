@@ -120,9 +120,18 @@ firebase deploy --project SEU_PROJETO
 
 Para as leituras do Firebase não crescerem com os anos, o app do professor carrega só os **últimos 6 meses** de cada aluno ao abrir. Meses mais antigos são buscados na hora em que forem necessários (calendário de meses antigos, backup e importação). O aluno carrega só os próprios dados.
 
+## Enviar treino
+
+- Quando todas as séries do treino do dia estão confirmadas (carga e repetições), aparece no fim da tela o botão **✓ Enviar treino**. Vale para os alunos e para o seu treino.
+- Depois de enviado, o treino fica registrado (para o aluno e para você) e **ninguém consegue mais alterar** cargas, repetições ou séries. No histórico e nas marcações aparece **✓ enviado**.
+- Só dá para mexer no treino de **hoje**. Dias passados ficam só para consulta.
+- Excluir um exercício que já tem treinos registrados só tira ele do treino: o histórico continua guardado.
+
 ## Segurança dos dados
 
-- Um aluno só é apagado da nuvem quando você usa **Excluir** no aluno. Nenhuma outra ação (importar, restaurar backup, erro de sincronização) apaga alunos.
+- **O Firebase não deixa apagar** alunos nem treinos (regras de segurança). **Excluir** manda o aluno para a **🗑 Lixeira** (fim da aba Alunos), de onde ele volta com tudo.
+- **Cópia automática diária na nuvem** de cada aluno e do seu treino, guardada por 30 dias (aba Alunos → Backup → ☁ Cópias automáticas → escolha o dia → Restaurar). A cópia do dia se atualiza a cada 3 horas e nunca é trocada por uma com menos treinos.
+- Nenhuma ação do app apaga alunos. Nenhuma outra ação (importar, restaurar backup, erro de sincronização) apaga alunos.
 - **Resgate:** cada aparelho guarda uma cópia do que já viu. Se um aluno sumir da nuvem sem ter sido excluído, aparece na aba Alunos o cartão **Alunos para recuperar** com o botão **Restaurar**. Se só o celular do aluno tiver a cópia, ele vê **⬇ Baixar cópia dos meus treinos** na tela de entrada e manda o arquivo ao professor, que usa **⬆ Restaurar backup**.
 - **⬆ Restaurar backup** (aba Alunos) só aceita o arquivo de backup do app (`treino-backup-….json`) e, antes de trocar os dados, baixa uma cópia do que existe. Se escolher um arquivo de histórico ali, ele é importado no perfil certo, juntando, sem apagar nada.
 
