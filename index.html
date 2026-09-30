@@ -1670,7 +1670,7 @@ function bodySummaryHtml(p) {
 function histImportHtml(p) {
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
       <small>Traga os treinos que ${p.id === ME ? 'você anotou' : esc(firstName(p)) + ' anotou'} antes do app (arquivo de histórico). Junta com o que já existe, sem apagar nada.</small></div></div>
-      <label class="btn">⬆ Importar histórico<input type="file" accept="application/json,.json" id="histFile" hidden></label></section>`;
+      <label class="btn">⬆ Importar histórico<input type="file" id="histFile" hidden></label></section>`;
 }
 function renderMedidas() {
   const p = profile(ui.profile), list = bodyOf(p), last = list[list.length - 1], prev = list[list.length - 2];
@@ -2274,12 +2274,15 @@ async function exportData() {
 // Importar histórico de um aluno (arquivo preparado a partir da planilha antiga). Junta sem apagar nada.
 function importHistory(file) {
   if (!file) return;
-  const p = profile(ui.profile);
+  const pid = ui.profile;
   file.text().then(async t => {
-    const d = JSON.parse(t);
-    if (!d || d.kind !== 'historico-aluno' || !Array.isArray(d.sessions)) throw new Error('formato');
-    if (!await confirmAsk(`Importar histórico para ${firstName(p)}?`, `${d.sessions.length} exercícios treinados${d.body && d.body.length ? `, ${d.body.length} avaliação de medidas` : ''}${d.workouts && d.workouts.length ? ` e os treinos ${d.workouts.map(w => w.name).join(', ')}` : ''}. Nada do que já existe é apagado.`, 'Importar')) return;
-    if (CLOUD) { toast('Carregando o histórico antigo…'); await ensureFull(p.id); }
+    let d = null; try { d = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) {}
+    if (!d || d.kind !== 'historico-aluno' || !Array.isArray(d.sessions)) return toast(`O arquivo escolhido (${esc(file.name)}) não é um histórico. Escolha o arquivo <b>historico-….json</b> que recebeu.`);
+    const other = d.aluno && profile(pid) && !sameName(firstName({ name: d.aluno }), firstName(profile(pid))) ? `Atenção: este arquivo é de ${d.aluno}. ` : '';
+    if (!await confirmAsk(`Importar histórico para ${firstName(profile(pid))}?`, `${other}${d.sessions.length} exercícios treinados${d.body && d.body.length ? `, ${d.body.length} avaliação de medidas` : ''}${d.workouts && d.workouts.length ? ` e os treinos ${d.workouts.map(w => w.name).join(', ')}` : ''}. Nada do que já existe é apagado.`, 'Importar')) return;
+    if (CLOUD) { toast('Carregando o histórico antigo…'); await ensureFull(pid); }
+    const p = profile(pid); // pega de novo: a nuvem pode ter atualizado os dados enquanto a pergunta estava aberta
+    if (!p) return;
     p.workouts = p.workouts || [];
     const info = new Map((d.exercises || []).map(e => [e.name.trim().toLowerCase(), e]));
     const mine = () => profExs(p.id);
@@ -2326,7 +2329,7 @@ function importHistory(file) {
     const lastDate = d.sessions.map(x => x.date).sort().pop();
     if (nS && lastDate) { ui.month = lastDate.slice(0, 7); ui.histDay = null; ui.profile = p.id; go('historico'); } else render();
     toast(`Importado para ${esc(firstName(p))}: ${nS} exercícios treinados, ${nW} treinos novos, ${nE} exercícios novos${nB ? `, ${nB} avaliação` : ''}.${nS ? ' Use os meses no topo do Histórico para navegar.' : ''}`);
-  }).catch(() => toast('Arquivo de histórico inválido.'));
+  }).catch(err => { console.error(err); toast('Não foi possível importar este arquivo.'); });
 }
 function importData(file) {
   if (!file) return;
@@ -2646,7 +2649,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-22:35';
+const APP_VERSION = '29/09-22:41';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
