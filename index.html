@@ -82,7 +82,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .swatches button.on{border-color:var(--text)}
 .install-tip{background:var(--acc-soft);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
 .install-tip button{border:0;background:none;color:var(--muted);font-size:16px;padding:0 2px}
-.goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px;display:flex;justify-content:flex-end}
+.goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px}
 .goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:width .9s ease-out}
 .goal-txt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .goal-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--acc-soft);border-radius:14px;padding:10px 12px;margin-bottom:12px}
@@ -2362,7 +2362,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/09-21:17';
+const APP_VERSION = '29/09-21:19';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
