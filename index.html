@@ -291,6 +291,8 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+#offBar{display:none;position:sticky;top:0;z-index:30;background:#5b5f66;color:#fff;font-size:12.5px;font-weight:600;text-align:center;padding:6px 12px}
+body.offline #offBar{display:block}
 .card.locked input[data-f]{opacity:.75}
 .card.locked .chk,.card.locked .step button{pointer-events:none;opacity:.6}
 .lock-note{margin:10px 0 0;font-size:13px;font-weight:700;color:var(--muted)}
@@ -404,6 +406,7 @@ input,select,textarea{font-size:16px!important}
     </div>
   </div>
 </div>
+<div id="offBar">📴 Sem internet: pode anotar normalmente. Tudo sobe para a nuvem quando a internet voltar.</div>
 <div id="studentBar" hidden>👁 Vendo como <b id="studentBarName"></b> vê o app <button data-act-global="exit-student">Sair</button></div>
 <header class="hero">
   <div class="hero-in">
@@ -1093,8 +1096,9 @@ async function sendWorkout() {
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode) s.by = 'aluno'; });
   save(); render();
-  if (CLOUD && cloud && cloud.ready) await syncNow();
-  toast(ui.studentMode ? '✓ Treino enviado! Seu professor já pode ver.' : '✓ Treino enviado e registrado.');
+  if (CLOUD && cloud && cloud.ready) { const s = syncNow(); if (navigator.onLine) await Promise.race([s, new Promise(r => setTimeout(r, 4000))]); }
+  toast(!navigator.onLine ? '✓ Treino enviado! Está salvo no aparelho e vai para a nuvem quando a internet voltar.'
+    : ui.studentMode ? '✓ Treino enviado! Seu professor já pode ver.' : '✓ Treino enviado e registrado.');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function isComplete(exId) {
@@ -2961,7 +2965,7 @@ async function syncNow() {
       for (const [op, path, doc] of ops.slice(i, i + 400)) op === 'set' ? b.set(cloud.fs.doc(path), doc) : b.delete(cloud.fs.doc(path));
       await b.commit();
     }
-    setSyncState('Tudo salvo na nuvem ✓');
+    setSyncState(navigator.onLine ? 'Tudo salvo na nuvem ✓' : 'Sem internet: salvo no aparelho');
     if (cloud.role === 'admin' && ops.length) { clearTimeout(cloud.bkTimer); cloud.bkTimer = setTimeout(dailyBackup, 60e3); }
   } catch (err) { cloudError(err); }
   if (cloud.remoteDirty) { cloud.remoteDirty = false; applyRemote(); }
@@ -2995,7 +2999,7 @@ function fixUi() {
 function enterApp(skipRender) {
   document.body.classList.remove('locked');
   document.getElementById('auth').hidden = true;
-  fixUi();
+  fixUi(); netState();
   if (!skipRender) render();
 }
 async function logout() {
@@ -3081,7 +3085,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/09-21:21';
+const APP_VERSION = '30/09-23:52';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
@@ -3097,6 +3101,15 @@ async function checkUpdate() {
 }
 checkUpdate();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+// Guarda o app no aparelho: abre e anota o treino mesmo sem internet
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+// Sem internet: tudo continua salvo no aparelho e sobe para a nuvem quando a internet voltar
+function netState() {
+  document.body.classList.toggle('offline', !navigator.onLine);
+  if (CLOUD && cloud && cloud.ready) setSyncState(navigator.onLine ? (syncTimer ? 'Salvando…' : 'Tudo salvo na nuvem ✓') : 'Sem internet: salvo no aparelho');
+}
+addEventListener('online', () => { netState(); if (CLOUD && cloud && cloud.ready) { scheduleSync(); if (navigator.onLine) toast('Internet de volta: enviando o que foi anotado.'); } });
+addEventListener('offline', () => { netState(); toast('Sem internet: pode continuar anotando, fica salvo no aparelho.'); });
 
 if (CLOUD) cloudBoot();
 else {

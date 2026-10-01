@@ -120,6 +120,11 @@ firebase deploy --project SEU_PROJETO
 
 Para as leituras do Firebase não crescerem com os anos, o app do professor carrega só os **últimos 6 meses** de cada aluno ao abrir. Meses mais antigos são buscados na hora em que forem necessários (calendário de meses antigos, backup e importação). O aluno carrega só os próprios dados.
 
+## Sem internet
+
+- Depois de abrir o app uma vez com internet, ele fica guardado no aparelho: dá para **abrir e anotar o treino sem internet** (aparece a faixa "📴 Sem internet").
+- Tudo fica salvo no aparelho e **sobe sozinho para a nuvem** quando a internet voltar (professor e aluno). Enviar treino também funciona sem internet.
+
 ## Enviar treino
 
 - Quando todas as séries do treino do dia estão confirmadas (carga e repetições), aparece no fim da tela o botão **✓ Enviar treino**. Vale para os alunos e para o seu treino.
