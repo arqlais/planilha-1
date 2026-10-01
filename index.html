@@ -980,7 +980,7 @@ function renderTreino() {
     ${groupChips(group)}
     ${!group ? `<section class="card"><p class="empty" style="padding:10px 0">Nenhum treino criado ainda.<br>Toque em <b>＋ Novo treino</b> e dê o nome que quiser (ex.: Superiores, Inferiores, Full body).</p>
       <button class="btn primary" style="width:100%;padding:12px" data-act="new-workout">＋ Novo treino</button></section>`
-    : group === CARDIO ? (ui.profile !== ME || dayLocked() ? cardioGoalHtml(profile(ui.profile)) : cardioHtml()) : `<div class="banner">${bannerHtml(group)}</div>
+    : group === CARDIO ? (ui.profile !== ME || cardioLocked() ? cardioGoalHtml(profile(ui.profile)) : cardioHtml()) : `<div class="banner">${bannerHtml(group)}</div>
     ${cardioGoalHtml(profile(ui.profile))}
     ${sendStatusHtml(exs)}
     <div class="layout">Séries em:
@@ -1059,14 +1059,14 @@ function cardioGoalHtml(p) {
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados pelo aluno` : 'O aluno ainda não fez cardio neste dia'}</span>
         <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
-      ${done && today_.some(c => c.by !== 'aluno') ? '<div class="actions"><button class="btn danger" style="padding-left:0" data-act="cardio-set" data-min="0">Apagar tempo marcado por engano</button></div>' : ''}
+      ${done && !cardioLocked() && today_.some(c => c.by !== 'aluno') ? '<div class="actions"><button class="btn danger" style="padding-left:0" data-act="cardio-set" data-min="0">Apagar tempo marcado por engano</button></div>' : ''}
     </section>`;
-  if (dayLocked()) return `<section class="card cardio-card ${full ? 'complete' : ''}">
+  if (cardioLocked() && (p.id === ME || ui.studentMode)) return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h"><div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Nenhum cardio anotado neste dia'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado'}</span><span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
-      <p class="lock-note">🔒 Só consulta (dia passado)</p>
+      <p class="lock-note">🔒 ${dayLocked() ? 'Só consulta (dia passado)' : 'Treino enviado: cardio registrado'}</p>
     </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
@@ -1086,7 +1086,7 @@ function cardioGoalHtml(p) {
 }
 // Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
 function setCardio(min) {
-  if (dayLocked()) return toast(LOCK_MSG.past);
+  if (cardioLocked()) return toast(cardioLockMsg());
   const p = profile(ui.profile), mode = ui.mode;
   min = Math.min(300, Math.round((min || 0) * 100) / 100);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
@@ -1172,6 +1172,10 @@ const sentAt = (exId, date = ui.date) => { const s = sessionOn(exId, date); retu
 const lockReason = (exId, date = ui.date) => date !== today() ? 'past' : sentAt(exId, date) ? 'sent' : '';
 const LOCK_MSG = { past: 'Dias passados ficam só para consulta: só dá para alterar o treino de hoje.', sent: 'Este treino já foi enviado: as cargas e repetições não podem mais ser alteradas.' };
 const dayLocked = (date = ui.date) => date !== today();
+// Cardio também trava depois que o treino do dia é enviado
+const daySent = (date = ui.date, pid = ui.profile) => profExs(pid).some(e => sentAt(e.id, date));
+const cardioLocked = (date = ui.date) => dayLocked(date) || daySent(date);
+const cardioLockMsg = () => dayLocked() ? LOCK_MSG.past : 'O treino de hoje já foi enviado: o cardio também ficou registrado e não pode mais ser alterado.';
 // Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
 function sendableExs() {
   if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return workoutsOf(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
@@ -1213,7 +1217,8 @@ function maybeAskSend() {
 async function sendWorkout(auto) {
   const exs = sendableExs().filter(e => !sentAt(e.id));
   if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
-  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas e repetições.`, 'Enviar')) return;
+  const pp = profile(ui.profile), noCardio = (dayPlan(pp, ui.date).includes(CARDIO) || cardioGoalOf(pp, ui.date)) && !profCardio().some(c => c.date === ui.date);
+  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? '⚠️ O cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode) s.by = 'aluno'; });
   save(); render();
@@ -1327,7 +1332,7 @@ function cardioHtml(noBanner) {
     </section>`;
 }
 function addCardio(mode, min) {
-  if (dayLocked()) return toast(LOCK_MSG.past);
+  if (cardioLocked()) return toast(cardioLockMsg());
   min = Math.round(min);
   if (!(min > 0)) return toast('Informe os minutos.');
   db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
@@ -2435,7 +2440,7 @@ $main.addEventListener('click', e => {
       return toast(v > 0 ? `Meta de cardio de ${esc(firstName(p))}: <b>${fmtMin(p.cardioDaily)} min</b> por dia` : 'Meta de cardio removida');
     }
     case 'cardio-save': {
-      if (dayLocked()) return toast(LOCK_MSG.past);
+      if (cardioLocked()) return toast(cardioLockMsg());
       const v = parseNum(document.getElementById('cardioDone').value);
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
       return setCardio(v);
@@ -3264,7 +3269,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-17:46';
+const APP_VERSION = '01/10-17:50';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
