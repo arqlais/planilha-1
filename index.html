@@ -2696,6 +2696,24 @@ async function acceptRequest(uidReq) {
   toast(`✓ ${esc(name)} aceito${oldPid ? ', com os treinos antigos' : ''}. O app já abre para essa pessoa.`);
 }
 
+// ---------- Ajustes pontuais nos dados (rodam uma vez só; ficam marcados no perfil do professor) ----------
+// Rosca martelo do professor: passou a ser feita de outro jeito, com halteres (cada um até 15 kg).
+// Os treinos antigos (carga acima de 15 kg, soma dos dois lados) viram a metade, para comparar com o jeito novo.
+async function fixOnce() {
+  const me = profile(ME); if (!me || (me.fixes || []).includes('martelo-halteres')) return;
+  await ensureFull(ME);
+  const ids = new Set(profExs(ME).filter(e => sameName(e.name, 'Rosca martelo')).map(e => e.id));
+  let n = 0;
+  db.sessions.forEach(s => {
+    if (!ids.has(s.exId) || !s.sets.some(x => (x.carga || 0) > 15)) return;
+    s.sets.forEach(x => { if (x.carga != null) x.carga = x.carga / 2; }); n++;
+  });
+  profExs(ME).filter(e => ids.has(e.id)).forEach(e => e.sets.forEach(x => { if ((x.carga || 0) > 15) x.carga = x.carga / 2; }));
+  const cur = profile(ME); cur.fixes = [...(cur.fixes || []), 'martelo-halteres'];
+  save(); render();
+  if (n) toast(`Rosca martelo: cargas dos ${n} treinos antigos passadas para a metade (halteres).`);
+}
+
 // ---------- Lixeira ----------
 async function untrash(pid) {
   const del = firebase.firestore.FieldValue.delete();
@@ -2846,7 +2864,7 @@ async function onRemote() {
   db = assemble();
   lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
   enterApp();
-  if (cloud.role === 'admin') setTimeout(dailyBackup, 4000); // cópia de segurança do dia
+  if (cloud.role === 'admin') { fixOnce().catch(e => console.warn('ajuste:', e)); setTimeout(dailyBackup, 4000); } // ajustes pontuais + cópia do dia
   // perfis antigos sem código de convite ganham um (e já sobem para a nuvem)
   if (cloud.role === 'admin' && db.profiles.some(p => p.id !== ME && !p.inviteCode)) { ensureCloudFields(db); scheduleSync(); }
 }
@@ -3063,7 +3081,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/09-00:26';
+const APP_VERSION = '30/09-21:21';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
