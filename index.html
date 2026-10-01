@@ -106,6 +106,19 @@ body.locked > header, body.locked > main, body.locked > nav, body.locked > #stud
 .auth-card h1{margin:10px 0 2px;font-size:22px}
 .auth-card #authSub{margin:0 0 16px;color:var(--muted)}
 .auth-logo{width:52px;height:52px;border-radius:16px;background:var(--acc-soft);display:grid;place-items:center}
+.loader{display:flex;flex-direction:column;align-items:center;margin:4px 0 6px}
+.loader svg{width:100%;max-width:260px;height:auto;overflow:visible}
+.loader .bar{fill:var(--muted)}.loader .collar{fill:var(--text);opacity:.55}
+.loader .pl{fill:var(--acc);transform-box:fill-box;transform-origin:center;opacity:0}
+.loader .p2{fill:var(--acc-2)}.loader .p3{fill:var(--acc);opacity:0}
+.loader .p1{animation:pl1 3s infinite}.loader .p2{animation:pl2 3s infinite}.loader .p3{animation:pl3 3s infinite}
+.loader .lift{animation:lift 3s infinite}
+.loader-kg{font-size:15px;color:var(--muted);font-weight:600;margin-top:2px}.loader-kg b{font-size:26px;color:var(--text);font-variant-numeric:tabular-nums}
+@keyframes pl1{0%,12%{opacity:0;transform:scale(.4,.2)}20%,88%{opacity:1;transform:none}100%{opacity:0;transform:none}}
+@keyframes pl2{0%,32%{opacity:0;transform:scale(.4,.2)}40%,88%{opacity:1;transform:none}100%{opacity:0;transform:none}}
+@keyframes pl3{0%,52%{opacity:0;transform:scale(.4,.2)}60%,88%{opacity:1;transform:none}100%{opacity:0;transform:none}}
+@keyframes lift{0%,62%{transform:translateY(0)}70%{transform:translateY(-14px)}78%,100%{transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.loader .pl,.loader .lift{animation:none;opacity:1}}
 .auth-logo svg{width:30px;height:30px;fill:none;stroke:var(--acc);stroke-width:1.8;stroke-linecap:round}
 .auth-links{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
 .auth-links .link{font-size:14px}
@@ -401,7 +414,17 @@ input,select,textarea{font-size:16px!important}
 <body>
 <div id="auth" hidden>
   <div class="auth-card">
-    <div class="auth-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg></div>
+    <div class="auth-logo" id="authLogo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg></div>
+    <div class="loader" id="authLoader" hidden aria-hidden="true">
+      <svg viewBox="0 0 220 90"><g class="lift">
+        <rect class="bar" x="8" y="42" width="204" height="6" rx="3"/>
+        <rect class="collar" x="72" y="34" width="6" height="22" rx="2"/><rect class="collar" x="142" y="34" width="6" height="22" rx="2"/>
+        <rect class="pl p1" x="60" y="17" width="11" height="56" rx="3"/><rect class="pl p1" x="149" y="17" width="11" height="56" rx="3"/>
+        <rect class="pl p2" x="47" y="22" width="11" height="46" rx="3"/><rect class="pl p2" x="162" y="22" width="11" height="46" rx="3"/>
+        <rect class="pl p3" x="35" y="28" width="10" height="34" rx="3"/><rect class="pl p3" x="175" y="28" width="10" height="34" rx="3"/>
+      </g></svg>
+      <div class="loader-kg"><b id="loaderKg">20</b> kg</div>
+    </div>
     <h1>Planilha de Treino</h1>
     <p id="authSub">Carregando…</p>
     <form id="authForm" hidden>
@@ -3109,6 +3132,7 @@ function fixUi() {
   if (!isLetter(ui.group) && ui.group !== CARDIO) ui.group = firstWorkout();
 }
 function enterApp(skipRender) {
+  setLoader(false);
   document.body.classList.remove('locked');
   document.getElementById('auth').hidden = true;
   fixUi(); netState();
@@ -3125,8 +3149,17 @@ const accountHtml = () => CLOUD && cloud && cloud.user ? `<section class="card" 
 // ---------- Tela de login ----------
 const $auth = document.getElementById('auth'), $authForm = document.getElementById('authForm');
 let authMode = 'login';
+// Tela de carregando: halter ganhando anilhas (20 → 40 → 60 → 80 kg)
+let loaderT = null;
+function setLoader(on) {
+  document.getElementById('authLoader').hidden = !on; document.getElementById('authLogo').hidden = on;
+  clearInterval(loaderT); loaderT = null;
+  if (!on) return;
+  const t0 = performance.now(), kg = document.getElementById('loaderKg');
+  loaderT = setInterval(() => { const t = ((performance.now() - t0) % 3000) / 3000; kg.textContent = t < 0.2 ? 20 : t < 0.4 ? 40 : t < 0.6 ? 60 : 80; }, 100);
+}
 function showAuth(mode, msg = '') {
-  authMode = mode;
+  authMode = mode; setLoader(mode === 'loading');
   document.body.classList.add('locked'); $auth.hidden = false;
   const inv = pendingInvite(), isSignup = mode === 'signup';
   document.getElementById('authSub').textContent = { loading: 'Carregando…', login: 'Entre na sua conta', signup: inv ? 'Você recebeu um convite! Crie sua conta.' : 'Criar conta', noprofile: 'Falta o professor liberar seu acesso.' }[mode];
@@ -3197,7 +3230,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-17:34';
+const APP_VERSION = '01/10-17:37';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
