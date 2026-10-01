@@ -272,7 +272,7 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 @keyframes pulse{50%{transform:translateX(-50%) scale(1.06)}}
 
 /* ---- aviso e confete ---- */
-#toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-140px);z-index:20;background:var(--card);color:var(--text);border:2px solid var(--acc);
+#toast{position:fixed;left:50%;top:16px;transform:translate(-50%,calc(-100% - 40px));z-index:20;background:var(--card);color:var(--text);border:2px solid var(--acc);
   border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);font-weight:600;transition:transform .35s;max-width:calc(100vw - 32px);text-align:center}
 #toast.show{transform:translate(-50%,0)}
 .confetti{position:fixed;top:-12px;width:8px;height:14px;border-radius:2px;z-index:19;pointer-events:none;animation:fall 1.6s ease-in forwards}
@@ -319,7 +319,8 @@ body.offline #offBar{display:block}
 .day-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .day-h .d{width:46px;height:46px;border-radius:12px;background:var(--hero);color:#fff;display:grid;place-items:center;line-height:1;font-weight:800;flex:0 0 auto;text-align:center}
 .day-h .d small{display:block;font-size:10px;font-weight:600;opacity:.85;margin-top:2px}
-.day-h h3{margin:0;font-size:16px;text-transform:capitalize}
+.day-h h3{margin:0;font-size:16px}
+.day-h h3::first-letter{text-transform:uppercase}
 
 /* ---- evolução ---- */
 .bars{display:grid;gap:12px}
@@ -889,7 +890,7 @@ function renderTreino() {
     ${groupChips(group)}
     ${!group ? `<section class="card"><p class="empty" style="padding:10px 0">Nenhum treino criado ainda.<br>Toque em <b>＋ Novo treino</b> e dê o nome que quiser (ex.: Superiores, Inferiores, Full body).</p>
       <button class="btn primary" style="width:100%;padding:12px" data-act="new-workout">＋ Novo treino</button></section>`
-    : group === CARDIO ? (ui.profile !== ME ? cardioGoalHtml(profile(ui.profile)) : cardioHtml()) : `<div class="banner">${bannerHtml(group)}</div>
+    : group === CARDIO ? (ui.profile !== ME || dayLocked() ? cardioGoalHtml(profile(ui.profile)) : cardioHtml()) : `<div class="banner">${bannerHtml(group)}</div>
     ${cardioGoalHtml(profile(ui.profile))}
     <div class="layout">Séries em:
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
@@ -968,6 +969,13 @@ function cardioGoalHtml(p) {
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados pelo aluno` : 'O aluno ainda não fez cardio neste dia'}</span>
         <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
       ${done && today_.some(c => c.by !== 'aluno') ? '<div class="actions"><button class="btn danger" style="padding-left:0" data-act="cardio-set" data-min="0">Apagar tempo marcado por engano</button></div>' : ''}
+    </section>`;
+  if (dayLocked()) return `<section class="card cardio-card ${full ? 'complete' : ''}">
+      <div class="card-h"><div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Nenhum cardio anotado neste dia'}</small></div>
+        ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
+      ${bar}
+      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado'}</span><span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
+      <p class="lock-note">🔒 Só consulta (dia passado)</p>
     </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
@@ -1080,6 +1088,7 @@ function sendableExs() {
 }
 function sendHtml() {
   if (ui.date !== today() || (ui.profile !== ME && !ui.studentMode)) return '';
+  if (ui.studentMode && CLOUD && cloud && cloud.role === 'admin') return `<p class="hint" style="text-align:center;margin:14px 0">No app do aluno aparece aqui o botão <b>✓ Enviar treino</b>. Na pré-visualização ele fica desligado.</p>`;
   const exs = sendableExs(); if (!exs.length) return '';
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
@@ -1300,7 +1309,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : 'Toque em qualquer dia para ver o treino ou anotar um treino passado. Dias destacados têm treino.'}</p>
+      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
         <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(Math.round(monthVol))}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
@@ -1493,7 +1502,13 @@ function renderEvolution() {
     : `<div class="banner"><div class="grow"><h2>Evolução</h2>
       <small>${esc(profile(ui.profile).name)} · últimas ${ui.weeks} semanas até ${fmtDate(addDays(weekStart(ui.date), 6))}</small>
       <div class="actions"><button class="btn" data-act="demo">Ver exemplo de progressão</button></div></div></div>`;
+  // Sem treinos nas semanas mostradas (ex.: histórico antigo importado): atalho para o período com treinos
+  const firstWk = addDays(weekStart(ui.date), -7 * (ui.weeks - 1));
+  const lastDay = trainedDates().filter(d => d <= ui.date).pop();
+  const gap = !ui.demo && lastDay && lastDay < firstWk ? `<section class="card" style="border:2px solid var(--acc)"><p class="hint" style="margin:0 0 8px">Nenhum treino nas últimas ${ui.weeks} semanas. O último foi em <b>${fmtDate(lastDay)}/${lastDay.slice(2, 4)}</b>.</p>
+      <button class="btn primary" data-act="evo-last" data-d="${lastDay}">Ver a evolução até ${fmtDate(lastDay)}</button></section>` : '';
   let html = `${top}
+    ${gap}
     ${ui.demo ? '' : bodySummaryHtml(profile(ui.profile))}
     <div class="seg">${[4, 8, 12].map(n => `<button class="${n === ui.weeks ? 'on' : ''}" data-act="weeks" data-n="${n}">${n} semanas</button>`).join('')}</div>
     <section class="card">
@@ -2031,8 +2046,11 @@ const $toast = document.getElementById('toast');
 let toastT;
 function toast(html) {
   $toast.innerHTML = html; $toast.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => $toast.classList.remove('show'), 3200);
+  // avisos longos ficam mais tempo; toque no aviso para fechar
+  const ms = Math.min(8000, 2500 + $toast.textContent.length * 45);
+  clearTimeout(toastT); toastT = setTimeout(() => $toast.classList.remove('show'), ms);
 }
+$toast.addEventListener('click', () => { clearTimeout(toastT); $toast.classList.remove('show'); });
 function confetti() {
   const colors = ['#2b4637', '#3e6b52', '#5d876e', '#9bb5a3', '#d9d4c7', '#ffffff'];
   for (let i = 0; i < 40; i++) {
@@ -2062,6 +2080,8 @@ document.addEventListener('click', e => {
   if (v.closest('#nav') && !ui.studentMode && ui.profile !== ME && ['treino', 'historico', 'evolucao'].includes(v.dataset.view)) {
     ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
   }
+  // A aba Treino da barra de baixo sempre abre no treino de hoje
+  if (v.closest('#nav') && v.dataset.view === 'treino' && ui.date !== today()) { ui.date = today(); ui.month = ui.date.slice(0, 7); }
   go(v.dataset.view);
 });
 $date.addEventListener('change', () => { if ($date.value) { ui.date = $date.value; ui.month = ui.date.slice(0, 7); render(); } });
@@ -2194,6 +2214,7 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'evo-last': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'untrash': b.disabled = true; return untrash(b.dataset.pid).then(() => toast('✓ Aluno de volta, com tudo.'), err => { b.disabled = false; cloudError(err); });
     case 'bk-open': return loadBackupDates().catch(err => toast('Não foi possível abrir as cópias (' + (err.code || 'erro') + '). Confira as regras do Firebase.'));
     case 'bk-day': return loadBackupDay(b.dataset.d).catch(cloudError);
@@ -2643,7 +2664,7 @@ async function noProfile(user) {
   // Quem já era aluno e tem a cópia dos treinos no aparelho: pede acesso sozinho, levando a cópia
   const pids = myRescuePids(), r = readRescue();
   const oldName = pids.length ? (r[pids[0]].docs['profiles/' + pids[0]] || {}).name : '';
-  if (!cloud.myRequest && (savedName() || oldName)) { try { await sendAccessRequest(savedName() || oldName); } catch (e) {} }
+  if (!cloud.myRequest && (savedName() || oldName)) { try { await sendAccessRequest(savedName() || oldName); } catch (e) { console.warn('pedido:', e.code || e); } }
   else if (cloud.myRequest && pids.length && !cloud.myRequest.rescue) { try { await sendAccessRequest(cloud.myRequest.name); } catch (e) {} }
   showAuth('noprofile');
   // Quando o professor aceitar, o app abre sozinho
@@ -3085,7 +3106,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/09-23:52';
+const APP_VERSION = '01/10-00:25';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
@@ -3101,6 +3122,15 @@ async function checkUpdate() {
 }
 checkUpdate();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+// App aberto de um dia para o outro: quem estava no "hoje" vai para o novo hoje (senão o treino aparece travado como dia passado)
+let lastToday = today();
+function dayRollover() {
+  const t = today(); if (t === lastToday) return;
+  if (ui.date === lastToday) { ui.date = t; ui.month = t.slice(0, 7); if (ui.histDay === lastToday) ui.histDay = null; }
+  lastToday = t; if (!isTyping()) render();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) dayRollover(); });
+setInterval(dayRollover, 60e3);
 // Guarda o app no aparelho: abre e anota o treino mesmo sem internet
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 // Sem internet: tudo continua salvo no aparelho e sobe para a nuvem quando a internet voltar
