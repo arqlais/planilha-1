@@ -1182,8 +1182,10 @@ function sendStatusHtml(exs) {
   if (ui.profile === ME || ui.studentMode || ui.date !== today() || !exs.length) return '';
   const p = profile(ui.profile), started = exs.filter(e => { const s = sessionOn(e.id, ui.date); return s && s.sets.some(x => x.done); });
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
-  if (sent.length && sent.length === started.length) return `<section class="card sent-card"><p style="margin:0"><b>🔒 ${esc(firstName(p))} enviou este treino às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</b><br><small style="color:var(--muted)">Cargas, repetições e séries estão bloqueadas.</small></p></section>`;
-  if (started.length) return `<section class="card"><p style="margin:0"><b>${esc(firstName(p))} ainda não enviou este treino.</b><br><small style="color:var(--muted)">Enquanto não enviar, dá para alterar. Ao terminar, o app pede para ${esc(firstName(p))} tocar em <b>Enviar treino</b>.</small></p></section>`;
+  const byMe = exs.some(e => { const x = sessionOn(e.id, ui.date); return x && x.finBy === 'professor'; });
+  if (sent.length && sent.length === started.length) return `<section class="card sent-card"><p style="margin:0"><b>🔒 ${byMe ? 'Você bloqueou este treino às' : `${esc(firstName(p))} enviou este treino às`} ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</b><br><small style="color:var(--muted)">Cargas, repetições e séries estão bloqueadas.</small></p></section>`;
+  if (started.length) return `<section class="card"><p style="margin:0 0 10px"><b>${esc(firstName(p))} ainda não enviou este treino.</b><br><small style="color:var(--muted)">Enquanto não enviar, dá para alterar. Se ${esc(firstName(p))} já terminou e esqueceu de enviar, bloqueie por aqui.</small></p>
+      <button class="btn primary" data-act="lock-student">🔒 Bloquear este treino</button></section>`;
   return '';
 }
 function sendHtml() {
@@ -2348,6 +2350,18 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'lock-student': {
+      const p = profile(ui.profile), exs = isLetter(ui.group) ? letterExs(ui.group) : [];
+      const list = exs.map(e => sessionOn(e.id, ui.date)).filter(x => x && !x.fin && x.sets.some(y => y.done));
+      if (!list.length) return;
+      confirmAsk(`Bloquear o treino de ${firstName(p)}?`, 'Fica registrado como enviado e ninguém (nem você, nem o aluno) consegue mais alterar as cargas e repetições de hoje.', 'Bloquear').then(async ok => {
+        if (!ok) return;
+        const at = new Date().toISOString(); list.forEach(x => { x.fin = at; x.finBy = 'professor'; });
+        save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow();
+        toast(`🔒 Treino de ${esc(firstName(p))} bloqueado.`);
+      });
+      return;
+    }
     case 'evo-last': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'untrash': b.disabled = true; return untrash(b.dataset.pid).then(() => toast('✓ Aluno de volta, com tudo.'), err => { b.disabled = false; cloudError(err); });
     case 'bk-open': return loadBackupDates().catch(err => toast('Não foi possível abrir as cópias (' + (err.code || 'erro') + '). Confira as regras do Firebase.'));
@@ -3250,7 +3264,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-17:42';
+const APP_VERSION = '01/10-17:46';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
