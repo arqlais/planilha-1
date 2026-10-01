@@ -291,6 +291,12 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+#pickDlg{width:min(420px,calc(100vw - 32px))}
+.pick-list{max-height:60vh;overflow-y:auto;margin:6px -4px 0;padding:0 4px}
+.pick-row{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:9px 6px;border-radius:12px;font:inherit;cursor:pointer}
+.pick-row:hover,.pick-row.on{background:var(--acc-soft)}
+.pick-row .grow{min-width:0}.pick-row b{display:block;font-size:15px}.pick-row small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick-row .av{width:34px;height:34px;font-size:13px;flex:none}
 .wsets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .wset{border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--input);min-width:0}
 .wname{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
@@ -442,6 +448,12 @@ input,select,textarea{font-size:16px!important}
 </div>
 <div id="toast"></div>
 
+<dialog id="pickDlg">
+  <h2>Trocar de aluno</h2>
+  <input class="search" id="pickSearch" placeholder="Buscar aluno" autocomplete="off" hidden>
+  <div id="pickList" class="pick-list"></div>
+  <div class="dlg-actions"><span class="grow"></span><button class="btn" id="pickClose">Fechar</button></div>
+</dialog>
 <dialog id="askDlg">
   <form id="askForm">
     <h2 id="askTitle"></h2>
@@ -751,13 +763,41 @@ const $main = document.getElementById('main');
 const $nav = document.getElementById('nav');
 const $date = document.getElementById('date');
 
+// Lista para trocar de aluno (botão do topo)
+const $pick = document.getElementById('pickDlg');
+function openPicker() {
+  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const search = document.getElementById('pickSearch');
+  search.hidden = students.length < 8; search.value = '';
+  const draw = () => {
+    const q = search.value.trim().toLowerCase(), me = profile(ME);
+    const row = (p, sub) => `<button class="pick-row ${p.id === ui.profile ? 'on' : ''}" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
+      <span class="grow"><b>${esc(p.name)}</b>${sub ? `<small>${sub}</small>` : ''}</span>${p.id === ui.profile ? '<span class="pill up">aberto</span>' : ''}</button>`;
+    const list = students.filter(p => !q || p.name.toLowerCase().includes(q));
+    document.getElementById('pickList').innerHTML = (q ? '' : row(me, 'Meu treino')) + '<p class="plan-g" style="margin:12px 2px 6px">Alunos</p>'
+      + (list.map(p => row(p, profileSummary(p.id).lastTxt)).join('') || '<p class="empty" style="padding:8px 0">Nenhum aluno encontrado.</p>');
+  };
+  search.oninput = draw; draw();
+  $pick.showModal();
+}
+document.getElementById('who').addEventListener('click', () => { if (!ui.studentMode) openPicker(); });
+document.getElementById('pickClose').onclick = () => $pick.close();
+$pick.addEventListener('click', e => {
+  if (e.target === $pick) return $pick.close(); // toque fora fecha
+  const r = e.target.closest('[data-pid]'); if (!r) return;
+  $pick.close();
+  const pid = r.dataset.pid;
+  ui.profile = pid; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
+  if (pid === ME) { ui.group = firstWorkout(); go('treino'); } else go('perfil');
+});
 function renderHero() {
   const p = profile(ui.profile), isMe = ui.profile === ME;
   const $who = document.getElementById('who');
   $who.innerHTML = ui.studentMode ? `<span class="av">${esc(initials(p.name))}</span><span>Olá, ${esc(firstName(p))}!</span>`
     : `<span class="av">${esc(initials(p.name))}</span><span>${isMe ? esc(p.name) : 'Aluno: ' + esc(p.name)}</span> ▾`;
-  $who.dataset.view = ui.studentMode ? 'recados' : isMe ? 'alunos' : 'perfil';
-  if (ui.view === 'alunos') { $who.innerHTML = '<span>Alunos</span>'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
+  // Professor: o botão abre a lista de alunos (ordem alfabética) para trocar de perfil
+  if (ui.studentMode) $who.dataset.view = 'recados'; else delete $who.dataset.view;
+  if (ui.view === 'alunos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
   const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor', medidas: 'Medidas do corpo' };
@@ -3138,7 +3178,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-00:38';
+const APP_VERSION = '01/10-17:29';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
