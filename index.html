@@ -304,6 +304,16 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+.pweek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.pday{border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:10px;padding:5px 2px;min-height:62px;display:flex;flex-direction:column;align-items:center;gap:3px;font:inherit;cursor:pointer;min-width:0}
+.pday .pd{font-size:11px;font-weight:800;color:var(--muted)}
+.pday .pt{font-size:9.5px;font-weight:700;line-height:1.15;text-align:center;overflow-wrap:anywhere;hyphens:auto;letter-spacing:-.2px;color:var(--acc)}
+.pcopy{border:0;background:none;color:var(--acc);font:inherit;font-size:12.5px;font-weight:700;padding:6px 2px;cursor:pointer}
+.pday.rest .pt{color:var(--muted);font-weight:600}
+.pday.own{border:2px solid var(--acc)}
+.pday.today{background:var(--acc-soft)}
+.pday:disabled{opacity:.4;cursor:default}
+.own-key{border:2px solid var(--acc);border-radius:6px;padding:0 4px}
 #pickDlg,#meDlg{width:min(420px,calc(100vw - 32px))}
 .pick-list{max-height:60vh;overflow-y:auto;margin:6px -4px 0;padding:0 4px}
 .pick-row{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:9px 6px;border-radius:12px;font:inherit;cursor:pointer}
@@ -334,6 +344,7 @@ body.offline #offBar{display:block}
 .cal .wd{font-size:11px;font-weight:700;color:var(--muted);padding-bottom:2px}
 .cal button{aspect-ratio:1;border:0;border-radius:10px;background:transparent;font-weight:600;font-size:14px;color:var(--text);padding:0;position:relative}
 .cal button.has{background:var(--hero);color:#fff}
+.cal button.planned{box-shadow:inset 0 -3px 0 var(--acc);background:var(--acc-soft)}
 .cal button.today{outline:2px solid var(--acc-2);outline-offset:-2px}
 .cal button.sel{box-shadow:0 0 0 3px var(--text) inset}
 .cal button:not(.has):not(:disabled):hover{background:var(--acc-soft)}
@@ -530,11 +541,12 @@ input,select,textarea{font-size:16px!important}
 <dialog id="dayDlg">
   <form id="dayForm">
     <h2 id="dayTitle">Treino de segunda</h2>
-    <p class="hint">Escolha o que o aluno vai treinar neste dia. O aluno verá só esses exercícios, sem precisar escolher.</p>
+    <p class="hint" id="dayHint">Escolha o que o aluno vai treinar neste dia. O aluno verá só esses exercícios, sem precisar escolher.</p>
     <div id="dayPick" style="margin-bottom:12px"></div>
     <label class="f" id="dayCardioF">Meta de cardio só neste dia (opcional; se vazio, vale a meta diária do aluno)<input name="cmin" inputmode="decimal" placeholder="ex.: 20" autocomplete="off"></label>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="dayRest">Descanso</button>
+      <button type="button" class="btn" id="dayDefault" hidden>Usar a divisão</button>
       <span class="grow"></span>
       <button type="button" class="btn" id="dayCancel">Cancelar</button>
       <button type="submit" class="btn primary">Salvar</button>
@@ -731,7 +743,9 @@ const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === p
 const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0);
 // Divisão da semana do aluno (feita pelo professor): dia da semana (0=domingo) -> grupos
 const WEEK = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
-const dayPlan = (p, date) => (p.division && p.division[toDate(date).getDay()]) || [];
+// Plano do dia: o professor pode marcar um treino só para uma data (planejamento); senão vale a divisão da semana
+const datePlan = (p, date) => p && p.plans && p.plans[date];
+const dayPlan = (p, date) => { const o = datePlan(p, date); return o ? (o.w || []) : (p && p.division && p.division[toDate(date).getDay()]) || []; };
 const byGroupOrder = (a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group);
 const letterExs = (L, pid = ui.profile) => profExs(pid).filter(e => e.letter === L).sort(byGroupOrder);
 // "Peito · Costas": grupos musculares que o treino tem
@@ -1033,7 +1047,7 @@ function renderStudentTreino(p, greet, isToday) {
 }
 // Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
 // Cartão de cardio do aluno, como um exercício: ele toca no tempo que fez e a barra anima até lá
-const cardioGoalOf = (p, date) => (p.cardioGoal && p.cardioGoal[toDate(date).getDay()]) || p.cardioDaily || 0;
+const cardioGoalOf = (p, date) => { const o = datePlan(p, date); if (o && o.c) return o.c; return (!o && p.cardioGoal && p.cardioGoal[toDate(date).getDay()]) || p.cardioDaily || 0; };
 function cardioGoalHtml(p) {
   const goal = cardioGoalOf(p, ui.date);
   const today_ = profCardio().filter(c => c.date === ui.date);
@@ -1398,8 +1412,11 @@ function renderHistorico() {
   cells += '<span></span>'.repeat(offset);
   for (let d = 1; d <= nDays; d++) {
     const iso = `${ui.month}-${pad(d)}`, has = days[iso];
-    const cls = [has ? 'has' : '', iso === today() ? 'today' : '', iso === sel ? 'sel' : ''].join(' ');
-    cells += `<button class="${cls}" data-act="pickday" data-d="${iso}" ${iso > today() ? 'disabled' : ''} aria-label="${weekday(iso)}, ${fmtDate(iso)}${has ? ', com treino' : ''}">${d}</button>`;
+    // Professor no calendário de um aluno: dias futuros abrem o planejamento daquela data
+    const planner = !ui.studentMode && ui.profile !== ME, fut = iso > today();
+    const planned = planner && fut && dayPlan(profile(ui.profile), iso).some(x => x !== CARDIO);
+    const cls = [has ? 'has' : '', iso === today() ? 'today' : '', iso === sel ? 'sel' : '', planned ? 'planned' : ''].join(' ');
+    cells += `<button class="${cls}" data-act="${planner && fut ? 'plan-day' : 'pickday'}" data-d="${iso}" ${fut && !planner ? 'disabled' : ''} aria-label="${weekday(iso)}, ${fmtDate(iso)}${has ? ', com treino' : planned ? ', treino planejado' : ''}">${d}</button>`;
   }
 
   let selHtml = '';
@@ -1426,7 +1443,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
+      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : ui.profile !== ME ? 'Toque em um dia para ver o treino. Dias futuros: toque para planejar o treino daquela data (marcados = treino planejado).' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
         <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(Math.round(monthVol))}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
@@ -1966,13 +1983,33 @@ function openDay(d) {
   const p = profile(ui.profile), cur = (p.division && p.division[d]) || [];
   dayEditing = d;
   document.getElementById('dayTitle').textContent = `Treino de ${WEEK.find(w => w[0] === d)[1].toLowerCase()}`;
+  document.getElementById('dayHint').textContent = 'Vale para toda semana. Escolha o que o aluno vai treinar neste dia; ele verá só esses exercícios.';
   document.getElementById('dayPick').innerHTML = letterPicker('checkbox', 'g', g => cur.includes(g), true, p.id);
   $dayForm.cmin.value = (p.cardioGoal && p.cardioGoal[d]) || '';
   document.getElementById('dayCardioF').hidden = false;
+  document.getElementById('dayDefault').hidden = true;
+  $dayDlg.showModal();
+}
+// Planejar uma data específica (próximas semanas)
+function openDate(iso) {
+  const p = profile(ui.profile), cur = dayPlan(p, iso), o = datePlan(p, iso);
+  dayEditing = iso;
+  document.getElementById('dayTitle').textContent = `${weekday(iso).replace(/^./, c => c.toUpperCase())}, ${fmtDate(iso)}`;
+  document.getElementById('dayHint').textContent = o ? 'Planejado só para esta data.' : 'Nesta data vale a divisão da semana. O que você salvar aqui vale só para esta data.';
+  document.getElementById('dayPick').innerHTML = letterPicker('checkbox', 'g', g => cur.includes(g), true, p.id);
+  $dayForm.cmin.value = o ? (o.c || '') : ((p.cardioGoal && p.cardioGoal[toDate(iso).getDay()]) || '');
+  document.getElementById('dayCardioF').hidden = false;
+  document.getElementById('dayDefault').hidden = !o;
   $dayDlg.showModal();
 }
 function saveDay(groups) {
   const p = profile(ui.profile);
+  if (typeof dayEditing === 'string') { // data específica
+    const cmin = parseNum($dayForm.cmin.value);
+    p.plans = p.plans || {};
+    p.plans[dayEditing] = { w: groups, ...(groups.length && cmin > 0 ? { c: Math.min(300, cmin) } : {}) };
+    prunePlans(p); $dayDlg.close(); save(); render(); return;
+  }
   p.division = p.division || {};
   p.division[dayEditing] = groups;
   // meta de cardio do dia (minutos): o aluno vê uma barra que completa ao atingir
@@ -1983,23 +2020,26 @@ function saveDay(groups) {
 }
 $dayForm.addEventListener('submit', e => { e.preventDefault(); saveDay([...$dayForm.querySelectorAll('input[name=g]:checked')].map(i => i.value)); });
 document.getElementById('dayRest').onclick = () => saveDay([]);
+document.getElementById('dayDefault').onclick = () => { const p = profile(ui.profile); if (p.plans) delete p.plans[dayEditing]; $dayDlg.close(); save(); render(); };
+// datas que já passaram há mais de 2 meses saem do planejamento (não pesam no perfil)
+function prunePlans(p) { const lim = addDays(today(), -60); for (const k in p.plans || {}) if (k < lim) delete p.plans[k]; }
 document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 
 // Séries por grupo muscular na semana: o que a divisão manda fazer (planejado) e o que o aluno já fez nesta semana
 function weekSetsHtml(p) {
   const plan = {}, done = {};
-  Object.values(p.division || {}).forEach(day => (day || []).forEach(w => {
+  const ws = weekStart(today()), we = addDays(ws, 6);
+  for (let i = 0; i < 7; i++) dayPlan(p, addDays(ws, i)).forEach(w => {
     if (w === CARDIO) return;
     letterExs(w, p.id).forEach(e => { plan[e.group] = (plan[e.group] || 0) + (e.sets || []).length; });
-  }));
-  const ws = weekStart(today()), we = addDays(ws, 6);
+  });
   profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => {
     const e = exById(x.exId); if (e) done[e.group] = (done[e.group] || 0) + x.sets.filter(y => y.done).length;
   });
   const groups = GROUPS.filter(g => plan[g] || done[g]);
   const total = groups.reduce((a, g) => a + (plan[g] || 0), 0);
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Séries por grupo na semana</h3>
-      <small>${groups.length ? `<b>${total} séries</b> planejadas na divisão · barra = feitas nesta semana` : 'Monte a divisão da semana para ver as séries de cada grupo'}</small></div></div>
+      <small>${groups.length ? `<b>${total} séries</b> planejadas nesta semana · barra = feitas` : 'Monte a divisão da semana para ver as séries de cada grupo'}</small></div></div>
     ${groups.length ? `<div class="wsets">${groups.map(g => {
       const pl = plan[g] || 0, dn = done[g] || 0, pct = pl ? Math.min(100, dn / pl * 100) : 100;
       return `<div class="wset"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
@@ -2007,6 +2047,26 @@ function weekSetsHtml(p) {
         <div class="wbar"><i style="width:${pct}%;background:${COLOR(g)}"></i></div>
         <small class="wdone">${dn ? `${dn} de ${pl} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></div>`;
     }).join('')}</div>` : ''}
+  </section>`;
+}
+// Planejamento: esta semana e as próximas, dia a dia
+const shortName = (id, pid) => id === CARDIO ? 'Cardio' : wName(id, pid);
+function plannerHtml(p) {
+  const off = ui.planOff || 0, start = addDays(weekStart(today()), 7 * off);
+  const weeks = [0, 1, 2, 3].map(k => addDays(start, 7 * k));
+  const cell = iso => {
+    const plan = dayPlan(p, iso), own = !!datePlan(p, iso), past = iso < today();
+    const txt = plan.length ? plan.map(x => esc(shortName(x, p.id))).join(' + ') : '—';
+    return `<button class="pday ${own ? 'own' : ''} ${iso === today() ? 'today' : ''} ${plan.length ? '' : 'rest'}" data-act="plan-day" data-d="${iso}" ${past ? 'disabled' : ''}>
+      <span class="pd">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][(toDate(iso).getDay() + 6) % 7]} ${iso.slice(8)}</span><span class="pt">${txt}</span></button>`;
+  };
+  return `<section class="card" id="plannerCard"><div class="card-h"><div class="grow"><h3>📆 Planejamento das próximas semanas</h3>
+      <small>Toque em um dia para escolher o treino só daquela data. Os outros dias seguem a divisão da semana. <b class="own-key">Borda</b> = planejado só para a data · — = descanso.</small></div></div>
+    <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="plan-off" data-d="-1" ${off <= 0 ? 'disabled' : ''}>‹ Anteriores</button>
+      <span class="grow"></span><button class="btn" data-act="plan-off" data-d="1">Próximas ›</button></div>
+    ${weeks.map(w => `<p class="plan-g" style="margin:10px 2px 6px">Semana de ${fmtDate(w)} a ${fmtDate(addDays(w, 6))}</p>
+      <div class="pweek">${[0, 1, 2, 3, 4, 5, 6].map(i => cell(addDays(w, i))).join('')}</div>
+      <div style="text-align:right"><button class="pcopy" data-act="plan-copy" data-d="${w}">⧉ Copiar para a semana seguinte</button></div>`).join('')}
   </section>`;
 }
 function renderPerfil() {
@@ -2096,6 +2156,7 @@ function renderPerfil() {
     ${bodySummaryHtml(p)}
     ${noHist ? '' : histImportHtml(p)}
     ${marcacoesHtml(p)}
+    ${plannerHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
         <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
@@ -2355,6 +2416,18 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'plan-day': return openDate(b.dataset.d);
+    case 'plan-off': ui.planOff = Math.max(0, (ui.planOff || 0) + +b.dataset.d); render(); return document.getElementById('plannerCard').scrollIntoView({ block: 'start' });
+    case 'plan-copy': {
+      const p = profile(ui.profile), w = b.dataset.d, n = addDays(w, 7);
+      confirmAsk(`Copiar a semana de ${fmtDate(w)} para a de ${fmtDate(n)}?`, 'Os treinos de cada dia viram o plano da semana seguinte (só aquelas datas). Dá para mudar depois, dia a dia.', 'Copiar').then(ok => {
+        if (!ok) return;
+        p.plans = p.plans || {};
+        for (let i = 0; i < 7; i++) { const a = addDays(w, i), d = addDays(n, i); p.plans[d] = { w: dayPlan(p, a).slice(), ...(datePlan(p, a) && datePlan(p, a).c ? { c: datePlan(p, a).c } : {}) }; }
+        save(); render(); toast(`Semana de ${fmtDate(n)} planejada.`);
+      });
+      return;
+    }
     case 'lock-student': {
       const p = profile(ui.profile), exs = isLetter(ui.group) ? letterExs(ui.group) : [];
       const list = exs.map(e => sessionOn(e.id, ui.date)).filter(x => x && !x.fin && x.sets.some(y => y.done));
@@ -2414,9 +2487,9 @@ $main.addEventListener('click', e => {
     case 'save-plan': {
       const p = profile(ui.profile), name = esc(firstName(p)), L = b.dataset.release;
       if (L) { // coloca o treino na divisão do dia da semana de hoje
-        const d = toDate(today()).getDay();
-        p.division = p.division || {};
-        p.division[d] = [...new Set([...(p.division[d] || []), L])];
+        const d = toDate(today()).getDay(), o = datePlan(p, today());
+        if (o) o.w = [...new Set([...(o.w || []), L])];
+        else { p.division = p.division || {}; p.division[d] = [...new Set([...(p.division[d] || []), L])]; }
         save(); render();
       }
       b.disabled = true; b.textContent = 'Salvando…';
@@ -3269,7 +3342,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-17:50';
+const APP_VERSION = '01/10-18:02';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
