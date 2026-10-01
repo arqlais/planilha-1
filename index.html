@@ -982,6 +982,7 @@ function renderTreino() {
       <button class="btn primary" style="width:100%;padding:12px" data-act="new-workout">＋ Novo treino</button></section>`
     : group === CARDIO ? (ui.profile !== ME || dayLocked() ? cardioGoalHtml(profile(ui.profile)) : cardioHtml()) : `<div class="banner">${bannerHtml(group)}</div>
     ${cardioGoalHtml(profile(ui.profile))}
+    ${sendStatusHtml(exs)}
     <div class="layout">Séries em:
       <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
       <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>
@@ -1176,6 +1177,15 @@ function sendableExs() {
   if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return workoutsOf(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
   return isLetter(ui.group) ? letterExs(ui.group) : [];
 }
+// Professor vendo o treino de um aluno: mostra se o aluno já enviou (bloqueado) ou ainda não
+function sendStatusHtml(exs) {
+  if (ui.profile === ME || ui.studentMode || ui.date !== today() || !exs.length) return '';
+  const p = profile(ui.profile), started = exs.filter(e => { const s = sessionOn(e.id, ui.date); return s && s.sets.some(x => x.done); });
+  const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
+  if (sent.length && sent.length === started.length) return `<section class="card sent-card"><p style="margin:0"><b>🔒 ${esc(firstName(p))} enviou este treino às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</b><br><small style="color:var(--muted)">Cargas, repetições e séries estão bloqueadas.</small></p></section>`;
+  if (started.length) return `<section class="card"><p style="margin:0"><b>${esc(firstName(p))} ainda não enviou este treino.</b><br><small style="color:var(--muted)">Enquanto não enviar, dá para alterar. Ao terminar, o app pede para ${esc(firstName(p))} tocar em <b>Enviar treino</b>.</small></p></section>`;
+  return '';
+}
 function sendHtml() {
   if (ui.date !== today() || (ui.profile !== ME && !ui.studentMode)) return '';
   if (ui.studentMode && CLOUD && cloud && cloud.role === 'admin') return `<p class="hint" style="text-align:center;margin:14px 0">No app do aluno aparece aqui o botão <b>✓ Enviar treino</b>. Na pré-visualização ele fica desligado.</p>`;
@@ -1188,10 +1198,20 @@ function sendHtml() {
   return `<section class="card send-card"><button class="btn primary" style="width:100%;padding:14px;font-size:16px" data-act="send-workout" ${ready ? '' : 'disabled'}>✓ Enviar treino</button>
     <p class="hint" style="margin:8px 0 0;text-align:center">${ready ? 'Tudo confirmado. Ao enviar, o treino fica salvo e registrado e ninguém consegue mais alterar.' : `Confirme todas as séries (carga e repetições) para enviar. Falta${missing === 1 ? '' : 'm'} ${missing} exercício${missing === 1 ? '' : 's'}.`}</p></section>`;
 }
-async function sendWorkout() {
+// Aluno confirmou a última série do treino do dia: o app já pergunta se quer enviar
+const askedSend = new Set();
+function maybeAskSend() {
+  const mine = !ui.studentMode && ui.profile === ME, student = ui.studentMode && !(CLOUD && cloud && cloud.role === 'admin');
+  if ((!mine && !student) || ui.date !== today()) return;
+  const exs = sendableExs(), key = ui.profile + today();
+  if (!exs.length || askedSend.has(key) || exs.every(e => sentAt(e.id)) || !exs.filter(e => !sentAt(e.id)).every(e => isComplete(e.id))) return;
+  askedSend.add(key);
+  setTimeout(() => sendWorkout(true), 900);
+}
+async function sendWorkout(auto) {
   const exs = sendableExs().filter(e => !sentAt(e.id));
   if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
-  if (!await confirmAsk('Enviar treino?', `Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas e repetições.`, 'Enviar')) return;
+  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas e repetições.`, 'Enviar')) return;
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode) s.by = 'aluno'; });
   save(); render();
@@ -2248,7 +2268,7 @@ function autoCheck(inp) {
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
   card.classList.toggle('complete', isComplete(ex.id));
   refreshTop();
-  if (!wasComplete && done === n) celebrate(ex, s); else startRest();
+  if (!wasComplete && done === n) { celebrate(ex, s); maybeAskSend(); } else startRest();
 }
 $main.addEventListener('change', e => {
   if (e.target.matches('input[data-f]')) return autoCheck(e.target);
@@ -2456,7 +2476,7 @@ $main.addEventListener('click', e => {
     if (s.sets.length > 1) s.sets.pop();
   }
   save(); refreshCard(ex.id); refreshTop();
-  if (!wasComplete && s.sets.every(x => x.done)) celebrate(ex, s);
+  if (!wasComplete && s.sets.every(x => x.done)) { celebrate(ex, s); maybeAskSend(); }
 });
 
 // ---------- Diálogo de exercício ----------
@@ -3230,7 +3250,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-17:37';
+const APP_VERSION = '01/10-17:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
