@@ -291,7 +291,7 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
-#pickDlg{width:min(420px,calc(100vw - 32px))}
+#pickDlg,#meDlg{width:min(420px,calc(100vw - 32px))}
 .pick-list{max-height:60vh;overflow-y:auto;margin:6px -4px 0;padding:0 4px}
 .pick-row{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:9px 6px;border-radius:12px;font:inherit;cursor:pointer}
 .pick-row:hover,.pick-row.on{background:var(--acc-soft)}
@@ -449,6 +449,10 @@ input,select,textarea{font-size:16px!important}
 </div>
 <div id="toast"></div>
 
+<dialog id="meDlg">
+  <div id="meBody"></div>
+  <div class="dlg-actions"><span class="grow"></span><button class="btn" id="meClose">Fechar</button></div>
+</dialog>
 <dialog id="pickDlg">
   <h2>Alunos</h2>
   <input class="search" id="pickSearch" placeholder="Buscar aluno" autocomplete="off" hidden>
@@ -782,7 +786,21 @@ function openPicker() {
   $pick.showModal();
   if (search.hidden && document.activeElement) document.activeElement.blur(); // sem contorno azul no primeiro nome
 }
-document.getElementById('who').addEventListener('click', () => { if (!ui.studentMode) openPicker(); });
+document.getElementById('who').addEventListener('click', () => {
+  if (ui.studentMode) return;
+  if (ui.profile === ME && ui.view !== 'alunos') openMyProfile(); else openPicker();
+});
+// Meu perfil (professor): abre ao tocar no próprio nome no topo
+const $me = document.getElementById('meDlg');
+function openMyProfile() { document.getElementById('meBody').innerHTML = myProfileHtml(); $me.showModal(); if (document.activeElement) document.activeElement.blur(); }
+document.getElementById('meClose').onclick = () => $me.close();
+$me.addEventListener('click', e => {
+  if (e.target === $me) return $me.close();
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  $me.close(); ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
+  if (b.dataset.act === 'open-medidas') { ui.bodyDate = null; go('medidas'); } else go(b.dataset.v || 'treino');
+});
+$me.addEventListener('change', e => { if (e.target.id === 'histFileMe') { const f = e.target.files[0]; $me.close(); ui.profile = ME; importHistory(f); e.target.value = ''; } });
 document.getElementById('pickClose').onclick = () => $pick.close();
 $pick.addEventListener('click', e => {
   if (e.target === $pick) return $pick.close(); // toque fora fecha
@@ -1656,7 +1674,7 @@ function profileCard(p) {
 // Cartão do professor na aba Alunos: o perfil dele (histórico antigo e medidas)
 function myProfileHtml() {
   const me = profile(ME), list = bodyOf(me), n = trainedDates(ME).length;
-  return `<section class="card" style="margin-top:4px">
+  return `<div>
     <div class="card-h"><span class="av">${esc(initials(me.name))}</span><div class="grow"><h3>Meu perfil · ${esc(me.name)}</h3>
       <small>${n} ${n === 1 ? 'dia' : 'dias'} de treino${list.length ? ` · medidas de ${fmtDate(list[list.length - 1].date)}/${list[list.length - 1].date.slice(2, 4)}` : ''}</small></div></div>
     <p class="hint" style="margin:0 0 10px">Traga os treinos que você anotou antes do app (arquivo <b>historico-….json</b>). Junta com o que já existe, sem apagar nada.</p>
@@ -1664,7 +1682,7 @@ function myProfileHtml() {
       <label class="btn primary">⬆ Importar meu histórico<input type="file" id="histFileMe" hidden></label>
       <button class="btn" data-act="open-medidas" data-pid="${ME}">Minhas medidas</button>
       <button class="btn" data-act="open-profile" data-pid="${ME}" data-v="historico">Meu histórico</button>
-    </div></section>`;
+    </div></div>`;
 }
 function renderAlunos() {
   const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -1674,7 +1692,6 @@ function renderAlunos() {
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
     ${CLOUD && cloud ? requestsHtml() : ''}
     ${rescueHtml()}
-    ${myProfileHtml()}
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
     <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro '}</p>`}</div>
@@ -3180,7 +3197,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-17:31';
+const APP_VERSION = '01/10-17:34';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
