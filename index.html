@@ -291,6 +291,13 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+.wsets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wset{border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--input);min-width:0}
+.wname{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
+.wname .key{width:10px;height:10px;border-radius:50%;flex:none}
+.wnum{font-size:12px;color:var(--muted);font-weight:600;margin:2px 0 4px}.wnum b{font-size:22px;color:var(--text)}
+.wbar{height:5px;border-radius:5px;background:var(--line);overflow:hidden}.wbar i{display:block;height:100%;border-radius:5px}
+.wdone{display:block;font-size:10.5px;color:var(--muted);margin-top:4px}
 #offBar{display:none;position:sticky;top:0;z-index:30;background:#5b5f66;color:#fff;font-size:12.5px;font-weight:600;text-align:center;padding:6px 12px}
 body.offline #offBar{display:block}
 .card.locked input[data-f]{opacity:.75}
@@ -1869,6 +1876,30 @@ $dayForm.addEventListener('submit', e => { e.preventDefault(); saveDay([...$dayF
 document.getElementById('dayRest').onclick = () => saveDay([]);
 document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 
+// Séries por grupo muscular na semana: o que a divisão manda fazer (planejado) e o que o aluno já fez nesta semana
+function weekSetsHtml(p) {
+  const plan = {}, done = {};
+  Object.values(p.division || {}).forEach(day => (day || []).forEach(w => {
+    if (w === CARDIO) return;
+    letterExs(w, p.id).forEach(e => { plan[e.group] = (plan[e.group] || 0) + (e.sets || []).length; });
+  }));
+  const ws = weekStart(today()), we = addDays(ws, 6);
+  profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => {
+    const e = exById(x.exId); if (e) done[e.group] = (done[e.group] || 0) + x.sets.filter(y => y.done).length;
+  });
+  const groups = GROUPS.filter(g => plan[g] || done[g]);
+  const total = groups.reduce((a, g) => a + (plan[g] || 0), 0);
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Séries por grupo na semana</h3>
+      <small>${groups.length ? `<b>${total} séries</b> planejadas na divisão · barra = feitas nesta semana` : 'Monte a divisão da semana para ver as séries de cada grupo'}</small></div></div>
+    ${groups.length ? `<div class="wsets">${groups.map(g => {
+      const pl = plan[g] || 0, dn = done[g] || 0, pct = pl ? Math.min(100, dn / pl * 100) : 100;
+      return `<div class="wset"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
+        <div class="wnum"><b>${pl}</b> séries</div>
+        <div class="wbar"><i style="width:${pct}%;background:${COLOR(g)}"></i></div>
+        <small class="wdone">${dn ? `${dn} de ${pl} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></div>`;
+    }).join('')}</div>` : ''}
+  </section>`;
+}
 function renderPerfil() {
   const p = profile(ui.profile);
   if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
@@ -1935,6 +1966,7 @@ function renderPerfil() {
         <button class="btn" data-act="student-mode">👁 Ver como o aluno</button>
       </div>
     </section>
+    ${weekSetsHtml(p)}
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
@@ -3106,7 +3138,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-00:25';
+const APP_VERSION = '01/10-00:38';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
