@@ -393,6 +393,8 @@ table.pay td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align
 .pcopy{border:0;background:none;color:var(--acc);font:inherit;font-size:12.5px;font-weight:700;padding:6px 2px;cursor:pointer}
 .pday.rest .pt{color:var(--muted);font-weight:600}
 .pday.own{border:2px solid var(--acc)}
+.pday.skip{border:2px dashed var(--down);opacity:1}.pday.skip .pt{color:var(--down)}.pday.skip s{opacity:.7}
+.pday.did .pt::after{content:' ✓';color:var(--up)}
 .pday.today{background:var(--acc-soft)}
 .pday:disabled{opacity:.4;cursor:default}
 .own-key{border:2px solid var(--acc);border-radius:6px;padding:0 4px}
@@ -1197,7 +1199,7 @@ function changeGoals(p, fn) {
 const cardioGoalOf = (p, date) => {
   // dia que já passou com cardio salvo: vale a meta gravada junto com o cardio
   if (date !== today()) { const rec = db.cardio.find(c => c.profileId === p.id && c.date === date && c.goal > 0); if (rec) return rec.goal; }
-  const o = datePlan(p, date); if (o && o.c) return o.c;
+  const o = datePlan(p, date); if (o && o.skip) return 0; if (o && o.c) return o.c;
   const b = goalBase(p, date); return (!o && b.wk[toDate(date).getDay()]) || b.daily || 0;
 };
 function cardioGoalHtml(p) {
@@ -2253,13 +2255,16 @@ function plannerHtml(p) {
   const off = ui.planOff || 0, start = addDays(weekStart(today()), 7 * off);
   const weeks = [0, 1, 2, 3].map(k => addDays(start, 7 * k));
   const cell = iso => {
-    const plan = dayPlan(p, iso), own = !!datePlan(p, iso), past = iso < today();
-    const txt = plan.length ? plan.map(x => esc(shortName(x, p.id))).join(' + ') : '—';
-    return `<button class="pday ${own ? 'own' : ''} ${iso === today() ? 'today' : ''} ${plan.length ? '' : 'rest'}" data-act="plan-day" data-d="${iso}" ${past ? 'disabled' : ''}>
+    const plan = dayPlan(p, iso), o = datePlan(p, iso), own = !!o, past = iso < today();
+    const did = past && profSessions(p.id).some(x => x.date === iso);
+    // dia que passou sem treino: dá para apagar o treino (não conta mais na semana) ou passar para hoje
+    const act = !past ? 'plan-day' : did ? '' : o && o.skip ? 'plan-unskip' : plan.some(x => x !== CARDIO) ? 'plan-skip' : '';
+    const txt = o && o.skip ? `<s>${(o.was || []).map(x => esc(shortName(x, p.id))).join(' + ')}</s> faltou` : plan.length ? plan.map(x => esc(shortName(x, p.id))).join(' + ') : '—';
+    return `<button class="pday ${own && !(o && o.skip) ? 'own' : ''} ${o && o.skip ? 'skip' : ''} ${did ? 'did' : ''} ${iso === today() ? 'today' : ''} ${plan.length ? '' : 'rest'}" data-act="${act}" data-d="${iso}" ${act ? '' : 'disabled'}>
       <span class="pd">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][(toDate(iso).getDay() + 6) % 7]} ${iso.slice(8)}</span><span class="pt">${txt}</span></button>`;
   };
   return `<section class="card" id="plannerCard"><div class="card-h"><div class="grow"><h3>📆 Planejamento das próximas semanas</h3>
-      <small>Toque em um dia para escolher o treino só daquela data. Os outros dias seguem a divisão da semana. <b class="own-key">Borda</b> = planejado só para a data · — = descanso.</small></div></div>
+      <small>Toque em um dia para escolher o treino só daquela data. Os outros dias seguem a divisão da semana. <b class="own-key">Borda</b> = planejado só para a data · — = descanso. Dia que passou sem treino: toque para <b>apagar o treino</b> (não conta nas séries da semana) ou passar para hoje.</small></div></div>
     <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="plan-off" data-d="-1" ${off <= 0 ? 'disabled' : ''}>‹ Anteriores</button>
       <span class="grow"></span><button class="btn" data-act="plan-off" data-d="1">Próximas ›</button></div>
     ${weeks.map(w => `<p class="plan-g" style="margin:10px 2px 6px">Semana de ${fmtDate(w)} a ${fmtDate(addDays(w, 6))}</p>
@@ -2903,6 +2908,28 @@ $main.addEventListener('click', e => {
     case 'bill-edit': return openBill(profile(b.dataset.pid));
     case 'pix-save': { profile(ME).pixKey = document.getElementById('pixKey').value.trim().slice(0, 80); save(); return toast('Chave Pix salva.'); }
     case 'plan-day': return openDate(b.dataset.d);
+    case 'plan-skip': {
+      const p = profile(ui.profile), d = b.dataset.d, was = dayPlan(p, d).slice(), names = was.map(x => shortName(x, p.id)).join(' + ');
+      ask({ title: `${firstName(p)} não treinou em ${fmtDate(d)}?`, msg: `Apagar o treino deste dia (${names}): ele deixa de contar nas séries da semana. Nada do histórico é apagado.`, ok: 'Apagar o dia', extra: 'Apagar e passar para hoje' }).then(r => {
+        if (r.action === 'cancel') return;
+        p.plans = p.plans || {};
+        p.plans[d] = { w: [], skip: true, was };
+        let msg = `Treino de ${fmtDate(d)} apagado.`;
+        if (r.action === 'extra') { // passa para hoje (junta com o que já tinha hoje)
+          const t = today(), cur = dayPlan(p, t), oT = datePlan(p, t);
+          p.plans[t] = { ...(oT && !oT.skip ? oT : {}), w: [...new Set([...cur.filter(x => x !== CARDIO), ...was.filter(x => x !== CARDIO), ...(cur.includes(CARDIO) || was.includes(CARDIO) ? [CARDIO] : [])])] };
+          delete p.plans[t].skip; delete p.plans[t].was;
+          msg += ` ${names} passou para hoje.`;
+        }
+        save(); render(); toast(msg);
+      });
+      return;
+    }
+    case 'plan-unskip': {
+      const p = profile(ui.profile), d = b.dataset.d;
+      confirmAsk(`Voltar o treino de ${fmtDate(d)}?`, 'O dia volta a contar como antes (o treino de hoje não muda).', 'Voltar').then(ok => { if (!ok) return; delete p.plans[d]; save(); render(); });
+      return;
+    }
     case 'plan-off': ui.planOff = Math.max(0, (ui.planOff || 0) + +b.dataset.d); render(); return document.getElementById('plannerCard').scrollIntoView({ block: 'start' });
     case 'plan-copy': {
       const p = profile(ui.profile), w = b.dataset.d, n = addDays(w, 7);
@@ -3858,7 +3885,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-18:26';
+const APP_VERSION = '02/10-18:57';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
