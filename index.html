@@ -304,6 +304,69 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+/* ---- computador (professor) ---- */
+body.desk nav.bottom{top:0;bottom:0;right:auto;width:228px;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;border-top:0;border-right:1px solid var(--line);padding:20px 12px;box-shadow:none}
+body.desk nav.bottom::before{content:'Planilha de Treino';font-weight:800;font-size:16px;padding:4px 12px 16px;color:var(--text)}
+body.desk nav.bottom button{flex:none;max-width:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 12px;font-size:14.5px;border-radius:12px}
+body.desk .hero{margin-left:228px;border-radius:0 0 0 28px;padding-bottom:52px}
+body.desk .hero-in{max-width:1240px;padding:0 16px}
+body.desk main{margin:-36px 0 0 228px;max-width:none;padding:0 32px 60px}
+body.desk main > *{max-width:1240px}
+body.desk #rest{bottom:24px;left:calc(50% + 114px)}
+.split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
+.slist{position:sticky;top:12px;background:var(--card);border-radius:18px;padding:12px;box-shadow:var(--shadow);max-height:calc(100vh - 24px);overflow:auto}
+.srow{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:8px;border-radius:12px;font:inherit;cursor:pointer}
+.srow:hover{background:var(--acc-soft)}.srow.on{background:var(--acc);color:var(--acc-ink)}.srow.on small{color:inherit;opacity:.85}
+.srow .grow{min-width:0}.srow b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.srow small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .av{width:34px;height:34px;font-size:13px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.ws:not([data-active=all]) [data-tab]{display:none}
+.ws[data-active=resumo] [data-tab=resumo],.ws[data-active=montar] [data-tab=montar],.ws[data-active=plano] [data-tab=plano],.ws[data-active=marcacoes] [data-tab=marcacoes],
+.ws[data-active=medidas] [data-tab=medidas],.ws[data-active=mensagens] [data-tab=mensagens],.ws[data-active=pagamento] [data-tab=pagamento]{display:block}
+body.desk .ws[data-active=resumo] [data-tab=resumo]{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}
+body.desk .ws[data-active=resumo] [data-tab=resumo] > section{margin-top:0;margin-bottom:14px}
+/* ---- montar treino ---- */
+.bt-wrap{overflow-x:auto;margin:0 -4px}
+table.bt{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;table-layout:fixed;min-width:760px}
+table.bt th{font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);text-align:left;padding:0 4px 6px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.bt td{padding:4px;vertical-align:middle;background:var(--input)}
+table.bt tr.b1 td{border-top:1px solid var(--line);padding-top:8px}
+table.bt tr.b1 td:first-child{border-left:1px solid var(--line);border-top-left-radius:12px}
+table.bt tr.b1 td:last-child{border-right:1px solid var(--line);border-top-right-radius:12px}
+table.bt tr.b2 td{border-bottom:1px solid var(--line);padding-bottom:8px}
+table.bt tr.b2 td.num2{border-left:1px solid var(--line);border-bottom-left-radius:12px}
+table.bt tr.b2 td:last-child{border-right:1px solid var(--line);border-bottom-right-radius:12px}
+table.bt tr.b2 + tr.b1 td, table.bt tr.bsets + tr.b1 td{box-shadow:0 -8px 0 var(--card)}
+table.bt input,table.bt select{width:100%;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 6px;color:var(--text);font-size:14px!important}
+table.bt input.n{text-align:center}
+table.bt .num{text-align:center;font-weight:800;color:var(--muted)}
+table.bt .acts{white-space:nowrap;text-align:right}
+table.bt .acts button{border:0;background:transparent;color:var(--muted);font-size:15px;padding:4px 4px;border-radius:6px;font-weight:700}
+table.bt .acts button:hover{background:var(--acc-soft);color:var(--acc)}
+table.bt .acts button:disabled{opacity:.3}
+tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 10px}
+.bsets-in{display:flex;flex-wrap:wrap;gap:8px}
+.bset{display:flex;align-items:center;gap:4px;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:5px 7px;font-size:12px;color:var(--muted)}
+.bset input{width:58px!important;text-align:center}
+.wchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.wchips button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px}
+.wchips button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.sel{display:block;width:100%;margin-top:5px;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk-line{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;margin:0 0 14px}
+/* ---- pagamentos ---- */
+.pay-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.pay-kpis div{background:var(--card);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
+.pay-kpis b{display:block;font-size:20px}.pay-kpis span{font-size:12px;color:var(--muted)}
+.pstat{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.pstat.ok{background:var(--up-bg);color:var(--up)}.pstat.late{background:var(--down-bg);color:var(--down)}.pstat.wait{background:var(--acc-soft);color:var(--muted)}
+table.pay{width:100%;border-collapse:collapse;font-size:14px}
+table.pay th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--muted);padding:8px 6px;border-bottom:1px solid var(--line)}
+table.pay td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+@media (max-width:700px){.pay-kpis{grid-template-columns:1fr 1fr}table.pay .hide-m{display:none}}
+.ex-note{display:block;margin-top:4px;color:var(--text)!important;opacity:.85;font-size:12.5px;line-height:1.35}
 .pweek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .pday{border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:10px;padding:5px 2px;min-height:62px;display:flex;flex-direction:column;align-items:center;gap:3px;font:inherit;cursor:pointer;min-width:0}
 .pday .pd{font-size:11px;font-weight:800;color:var(--muted)}
@@ -483,6 +546,37 @@ input,select,textarea{font-size:16px!important}
 </div>
 <div id="toast"></div>
 
+<dialog id="billDlg">
+  <form id="billForm">
+    <h2 id="billTitle">Plano do aluno</h2>
+    <label class="f">Nome do plano<input name="plan" placeholder="ex.: Mensal, Trimestral, Consultoria online" autocomplete="off"></label>
+    <div class="grid2">
+      <label class="f">Valor por mês (R$)<input name="value" inputmode="decimal" placeholder="ex.: 150" autocomplete="off"></label>
+      <label class="f">Dia do vencimento<input name="due" inputmode="numeric" placeholder="ex.: 10" autocomplete="off"></label>
+    </div>
+    <label class="chk-line"><input type="checkbox" name="active" checked> Cobrança ativa</label>
+    <div class="dlg-actions"><span class="grow"></span><button type="button" class="btn" id="billCancel">Cancelar</button><button type="submit" class="btn primary">Salvar</button></div>
+  </form>
+</dialog>
+<dialog id="payDlg">
+  <form id="payForm">
+    <h2 id="payTitle">Registrar pagamento</h2>
+    <div class="grid2">
+      <label class="f">Valor (R$)<input name="value" inputmode="decimal" autocomplete="off"></label>
+      <label class="f">Data<input name="date" type="date"></label>
+    </div>
+    <label class="f">Forma de pagamento<select name="method" class="sel"><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Transferência</option><option>Outro</option></select></label>
+    <div class="dlg-actions"><span class="grow"></span><button type="button" class="btn" id="payCancel">Cancelar</button><button type="submit" class="btn primary">Marcar como pago</button></div>
+  </form>
+</dialog>
+<dialog id="copyDlg">
+  <form id="copyForm">
+    <h2 id="copyTitle">Copiar treino</h2>
+    <p class="hint" id="copyHint">O treino e todos os exercícios são copiados. Depois dá para ajustar à vontade.</p>
+    <label class="f">Para<select name="to" class="sel" id="copyTo"></select></label>
+    <div class="dlg-actions"><span class="grow"></span><button type="button" class="btn" id="copyCancel">Cancelar</button><button type="submit" class="btn primary">Copiar</button></div>
+  </form>
+</dialog>
 <dialog id="meDlg">
   <div id="meBody"></div>
   <div class="dlg-actions"><span class="grow"></span><button class="btn" id="meClose">Fechar</button></div>
@@ -600,11 +694,18 @@ const SVG = {
   recados: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
   medidas: '<path d="M3 16l13-13 5 5L8 21z"/><path d="M7 12l2 2M10 9l2 2M13 6l2 2"/>',
   alunos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2c1.9.6 3.1 2.2 3.5 4.8"/>',
+  montar: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  pagamentos: '<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19M6.5 15h4"/>',
 };
 const VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['alunos', 'Alunos']];
 // O aluno não vê a evolução (o professor mostra no celular dele): só treino, calendário e recados
 const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Calendário'], ['medidas', 'Medidas'], ['recados', 'Recados']];
-const views = () => ui.studentMode ? STUDENT_VIEWS : VIEWS;
+// Computador (tela larga), só para o professor: menu lateral com mais áreas
+const DESK_VIEWS = [['treino', 'Meu treino'], ['alunos', 'Alunos'], ['montar', 'Montar treinos'], ['pagamentos', 'Pagamentos'], ['historico', 'Histórico'], ['evolucao', 'Evolução']];
+const deskMq = matchMedia('(min-width: 1024px)');
+const cloudRole = () => { try { return cloud && cloud.role; } catch (e) { return null; } }; // nuvem ainda não iniciada
+const isDesk = () => deskMq.matches && !ui.studentMode && cloudRole() !== 'student';
+const views = () => ui.studentMode ? STUDENT_VIEWS : isDesk() ? DESK_VIEWS : VIEWS;
 const KEY = 'planilha-treino-v1';
 const UI_KEY = 'planilha-treino-ui';
 const STEP = { carga: 2.5, reps: 1 };
@@ -749,7 +850,8 @@ const WEEK = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, '
 const datePlan = (p, date) => p && p.plans && p.plans[date];
 const dayPlan = (p, date) => { const o = datePlan(p, date); return o ? (o.w || []) : (p && p.division && p.division[toDate(date).getDay()]) || []; };
 const byGroupOrder = (a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group);
-const letterExs = (L, pid = ui.profile) => profExs(pid).filter(e => e.letter === L).sort(byGroupOrder);
+const byPlanOrder = (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || byGroupOrder(a, b); // ordem montada pelo professor
+const letterExs = (L, pid = ui.profile) => profExs(pid).filter(e => e.letter === L).sort(byPlanOrder);
 // "Peito · Costas": grupos musculares que o treino tem
 const letterDesc = (L, pid = ui.profile) => [...new Set(letterExs(L, pid).map(e => e.group))].join(' · ');
 const planLabel = (x, pid) => x === CARDIO ? 'Cardio' : `${wName(x, pid)}${letterDesc(x, pid) ? ` (${letterDesc(x, pid)})` : ''}`;
@@ -762,7 +864,8 @@ function working(ex, date) {
   const s = sessionOn(ex.id, date);
   if (s) return s;
   const prev = prevSession(ex.id, date);
-  const base = prev ? prev.sets : ex.sets;
+  // professor mudou o plano depois do último treino: vale o plano novo (séries, carga e repetições)
+  const base = prev && !(ex.planDate && ex.planDate > prev.date) ? prev.sets : ex.sets;
   return { id: null, exId: ex.id, date, sets: base.map(x => ({ carga: x.carga, reps: x.reps, done: false })) };
 }
 function ensureSession(ex, date) {
@@ -827,7 +930,7 @@ function openPicker() {
 }
 document.getElementById('who').addEventListener('click', () => {
   if (ui.studentMode) return;
-  if (ui.profile === ME && ui.view !== 'alunos') openMyProfile(); else openPicker();
+  if (ui.profile === ME && !['alunos', 'pagamentos'].includes(ui.view)) openMyProfile(); else openPicker();
 });
 // Meu perfil (professor): abre ao tocar no próprio nome no topo
 const $me = document.getElementById('meDlg');
@@ -856,10 +959,11 @@ function renderHero() {
     : `<span class="av">${esc(initials(p.name))}</span><span>${isMe ? esc(p.name) : 'Aluno: ' + esc(p.name)}</span> ▾`;
   // Professor: o botão abre a lista de alunos (ordem alfabética) para trocar de perfil
   if (ui.studentMode) $who.dataset.view = 'recados'; else delete $who.dataset.view;
-  if (ui.view === 'alunos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
+  if (ui.view === 'alunos' && !(isDesk() && ui.profile !== ME) || ui.view === 'pagamentos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
+  document.getElementById('stats').hidden = ['pagamentos', 'montar'].includes(ui.view);
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', recados: 'Recados do professor', medidas: 'Medidas do corpo' };
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo' };
   if (ui.studentMode) titles.historico = 'Calendário';
   if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
   document.getElementById('heroTitle').textContent = titles[ui.view];
@@ -956,14 +1060,18 @@ function renderStats() {
 }
 function renderNav() {
   $nav.innerHTML = views().map(([id, label]) =>
-    `<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' ? 'on' : ''}" data-view="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG[id]}</svg>${label}</button>`).join('');
+    `<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' || id === 'treino' && ui.view === 'treino' ? 'on' : ''}" data-view="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG[id]}</svg>${label}</button>`).join('');
 }
 function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
+  const desk = isDesk();
+  document.body.classList.toggle('desk', desk);
+  if (desk && ui.view === 'perfil') ui.view = 'alunos'; // no computador o perfil abre dentro da área de alunos
   renderHero();
   renderNav();
-  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas })[ui.view]();
+  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
 }
+deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
 function go(view) {
   if (ui.studentMode && !STUDENT_VIEWS.some(v => v[0] === view)) view = 'treino';
   stopDemo(); ui.demo = false; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1145,7 +1253,7 @@ async function newWorkout() {
   const id = uid();
   p.workouts.push({ id, name: r.value.slice(0, 40) });
   ui.group = id; saveUi(); save();
-  if (ui.view !== 'treino' && ui.view !== 'perfil') ui.view = 'treino';
+  if (!['treino', 'perfil', 'montar', 'alunos'].includes(ui.view)) ui.view = 'treino';
   render(); toast(`Treino <b>${esc(r.value)}</b> criado. Agora adicione os exercícios.`);
 }
 async function renameWorkout(id) {
@@ -1280,7 +1388,8 @@ function cardHtml(ex) {
     <div class="card-h">
       <div class="ring" style="--p:${n ? done / n * 100 : 0}">${done}/${n}</div>
       <div class="grow"><h3>${esc(ex.name)}</h3>
-        <small>${ex.group} · ${prev ? `último treino ${fmtDate(prev.date)}` : 'primeiro treino'}</small></div>
+        <small>${ex.group} · ${prev ? `último treino ${fmtDate(prev.date)}` : 'primeiro treino'}</small>
+        ${exDetailHtml(ex)}</div>
       ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
     ${tiles ? `<div class="tile-key">Em cada série: <b>carga (kg)</b> · <b>repetições</b> · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
@@ -1292,6 +1401,12 @@ function cardHtml(ex) {
     </div>`}
     <div class="compare">${compareHtml(s, prev)}</div>`;
 }
+// Detalhes que o professor montou (técnica, descanso, observação): só aparecem se preenchidos
+function exDetailHtml(ex) {
+  const bits = [ex.method && ex.method !== 'Normal' ? `<span class="pill eq">${esc(ex.method)}</span>` : '', ex.rest ? `<span class="pill eq">⏱ ${fmtRest(ex.rest)}</span>` : ''].filter(Boolean).join(' ');
+  return (bits ? `<div class="tags" style="margin-top:4px">${bits}</div>` : '') + (ex.note ? `<small class="ex-note">📝 ${esc(ex.note)}</small>` : '');
+}
+const fmtRest = sec => sec >= 60 ? `${Math.floor(sec / 60)}min${sec % 60 ? ' ' + (sec % 60) + 's' : ''}` : `${sec}s`;
 const setTotal = x => x.carga != null && x.reps != null ? `${fmt(x.carga * x.reps)} kg` : '';
 function rowClass(x, p) {
   if (!x.done) return '';
@@ -1761,6 +1876,7 @@ function renderAlunos() {
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
     ${CLOUD && cloud ? requestsHtml() : ''}
     ${rescueHtml()}
+    <div class="actions" style="margin:4px 0 0"><button class="btn" data-act="go-view" data-v="pagamentos">💳 Pagamentos</button><button class="btn" data-act="go-view" data-v="montar">🏋️ Montar treinos</button></div>
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
     <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro '}</p>`}</div>
@@ -2074,6 +2190,268 @@ function plannerHtml(p) {
 function renderPerfil() {
   const p = profile(ui.profile);
   if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
+  $main.innerHTML = perfilHtml(p, false);
+}
+// ---------- Alunos no computador: lista à esquerda, aluno com abas à direita ----------
+function renderAlunosDesk() {
+  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const q = ui.q.trim().toLowerCase(), shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
+  const ym = today().slice(0, 7);
+  const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
+      <span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
+  const sel = ui.profile !== ME && profile(ui.profile);
+  $main.innerHTML = `<div class="split">
+    <aside class="slist">
+      <div class="actions" style="margin:0 0 8px"><button class="btn primary" style="width:100%" data-act="add-student">＋ Adicionar aluno</button></div>
+      <input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}" style="margin-bottom:6px">
+      <div id="studentList">${shown.map(row).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda.'}</p>`}</div>
+    </aside>
+    <section class="spane">${sel ? perfilHtml(sel, true) : `
+      ${CLOUD && cloud ? requestsHtml() : ''}
+      ${rescueHtml()}
+      <section class="card"><div class="card-h"><div class="grow"><h3>Seus alunos</h3><small>Escolha um aluno na lista para ver o resumo, montar o treino, planejar as semanas, ver medidas, mensagens e pagamento.</small></div></div>
+        <div class="kv"><div><b>${students.length}</b><span>alunos</span></div>
+          <div><b>${students.filter(p => profileSummary(p.id).last === today()).length}</b><span>treinaram hoje</span></div>
+          <div><b>${students.filter(p => profileSummary(p.id).weekDays > 0).length}</b><span>ativos na semana</span></div>
+          <div><b>${students.filter(p => (payStatus(p, ym) || {}).k === 'late').length}</b><span>pagamentos atrasados</span></div></div></section>
+      <section class="card"><div class="card-h"><div class="grow"><h3>Backup</h3><small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou restaure um backup.' : 'Exporte de vez em quando para não perder nada.'}</small></div></div>
+        <div class="actions"><button class="btn" data-act="export">⬇ Exportar</button><label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
+      ${trashHtml()}
+      ${accountHtml()}`}
+    </section></div>`;
+}
+
+// ---------- Montar treino detalhado ----------
+const METHODS = ['Normal', 'Bi-set', 'Tri-set', 'Drop-set', 'Rest-pause', 'Pirâmide', 'Até a falha', 'Isometria', 'Cluster', 'Excêntrica lenta'];
+const allSame = (sets, f) => sets.length && sets.every(x => x[f] === sets[0][f]) ? sets[0][f] : (sets.length ? 'var' : null);
+function builderHtml(pid) {
+  const ws = workoutsOf(pid);
+  if (!isLetter(ui.bGroup, pid)) ui.bGroup = (ws[0] || {}).id || '';
+  const L = ui.bGroup, exs = L ? letterExs(L, pid) : [];
+  const open = ui.bOpen || (ui.bOpen = new Set());
+  const rows = exs.map((e, i) => {
+    const r = allSame(e.sets, 'reps'), c = allSame(e.sets, 'carga');
+    return `<tr data-id="${e.id}" class="b1">
+      <td class="num">${i + 1}</td>
+      <td><input data-bf="name" data-id="${e.id}" value="${esc(e.name)}" aria-label="Exercício"></td>
+      <td><select data-bf="group" data-id="${e.id}" aria-label="Grupo">${GROUPS.map(g => `<option ${g === e.group ? 'selected' : ''}>${g}</option>`).join('')}</select></td>
+      <td><input class="n" data-bf="n" data-id="${e.id}" inputmode="numeric" value="${e.sets.length}" aria-label="Séries"></td>
+      <td><input class="n" data-bf="reps" data-id="${e.id}" inputmode="numeric" value="${r === 'var' ? '' : numVal(r)}" placeholder="${r === 'var' ? 'var.' : '–'}" aria-label="Repetições"></td>
+      <td><input class="n" data-bf="carga" data-id="${e.id}" inputmode="decimal" value="${c === 'var' ? '' : numVal(c)}" placeholder="${c === 'var' ? 'var.' : 'kg'}" aria-label="Carga"></td>
+      <td><input class="n" data-bf="rest" data-id="${e.id}" inputmode="numeric" value="${e.rest || ''}" placeholder="seg" aria-label="Descanso em segundos"></td>
+      <td><select data-bf="method" data-id="${e.id}" aria-label="Técnica">${METHODS.map(m => `<option ${m === (e.method || 'Normal') ? 'selected' : ''}>${m}</option>`).join('')}</select></td>
+      <td class="acts"><button data-act="b-up" data-id="${e.id}" title="Subir" ${i ? '' : 'disabled'}>↑</button><button data-act="b-down" data-id="${e.id}" title="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
+        <button data-act="b-dup" data-id="${e.id}" title="Duplicar">⧉</button><button data-act="b-del" data-id="${e.id}" title="Excluir">✕</button></td></tr>
+      <tr class="b2"><td class="num2"></td><td colspan="7"><input data-bf="note" data-id="${e.id}" value="${esc(e.note || '')}" placeholder="Observação para o aluno (ex.: pausa de 2s embaixo, pegada aberta…)" aria-label="Observação"></td>
+        <td class="acts"><button data-act="b-sets" data-id="${e.id}" title="Série por série">${open.has(e.id) ? '▾' : '▸'} séries</button></td></tr>
+      ${open.has(e.id) ? `<tr class="bsets"><td></td><td colspan="8"><div class="bsets-in">${e.sets.map((x, j) => `<div class="bset"><b>${j + 1}ª</b>
+        <input data-bs="carga" data-id="${e.id}" data-i="${j}" inputmode="decimal" value="${numVal(x.carga)}" placeholder="kg"> kg ×
+        <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps"></div>`).join('')}</div></td></tr>` : ''}`;
+  }).join('');
+  return `<section class="card">
+    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}</button>`).join('')}
+      <button data-act="b-neww">＋ Novo treino</button></div>
+    ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Tudo salva sozinho.</small></div></div>
+      <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="b-ren">✎ Renomear</button><button class="btn" data-act="b-dupw">⧉ Duplicar treino</button>
+        <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button><button class="btn danger" data-act="b-delw">Excluir treino</button></div>
+      <div class="bt-wrap"><table class="bt"><colgroup><col style="width:28px"><col><col style="width:118px"><col style="width:58px"><col style="width:58px"><col style="width:66px"><col style="width:66px"><col style="width:120px"><col style="width:104px"></colgroup>
+        <thead><tr><th>#</th><th>Exercício</th><th>Grupo</th><th>Séries</th><th>Reps</th><th title="Carga em kg">Kg</th><th title="Descanso em segundos">Desc.</th><th>Técnica</th><th></th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+      ${exs.length ? '' : '<p class="empty">Nenhum exercício neste treino ainda.</p>'}
+      <button class="add" style="margin-top:8px" data-act="b-add">＋ Adicionar exercício</button>
+      <p class="hint" style="margin:10px 0 0">Reps e Carga valem para todas as séries; para mudar série por série, use <b>▸ séries</b>. Descanso em segundos: o cronômetro do aluno usa esse tempo. O aluno vê a técnica, o descanso e a observação embaixo do nome do exercício.</p>`
+    : `<p class="empty">Crie o primeiro treino em <b>＋ Novo treino</b>.</p>`}
+  </section>`;
+}
+function renderMontar() {
+  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const p = profile(ui.profile) || profile(ME);
+  $main.innerHTML = `<section class="card"><div class="card-h"><div class="grow"><h3>Montar treinos</h3><small>Escolha de quem é o treino e monte cada exercício em detalhe.</small></div></div>
+      <label class="f" style="max-width:420px;margin:0">De quem é o treino<select class="sel" id="bWho"><option value="${ME}" ${p.id === ME ? 'selected' : ''}>Meu treino (${esc(profile(ME).name)})</option>
+        ${students.map(x => `<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
+      ${p.id !== ME ? `<div class="actions"><button class="btn" data-act="desk-pick" data-pid="${p.id}" data-t="plano">📆 Planejar semanas de ${esc(firstName(p))}</button></div>` : ''}</section>
+    ${builderHtml(p.id)}`;
+}
+// grava a mudança e redesenha mantendo o cursor no campo em que a pessoa estava
+function bRender(full) {
+  save();
+  if (!full) return;
+  const a = document.activeElement, key = a && a.dataset && (a.dataset.bf || a.dataset.bs) ? `[data-id="${a.dataset.id}"][${a.dataset.bf ? 'data-bf' : 'data-bs'}="${a.dataset.bf || a.dataset.bs}"]${a.dataset.i != null ? `[data-i="${a.dataset.i}"]` : ''}` : null;
+  render();
+  if (key) { const el = $main.querySelector(key); if (el) el.focus(); }
+}
+function builderChange(t) {
+  const ex = exById(t.dataset.id); if (!ex) return;
+  if (t.dataset.bs) { // série por série
+    const x = ex.sets[+t.dataset.i]; if (!x) return;
+    x[t.dataset.bs] = t.dataset.bs === 'reps' ? (parseNum(t.value) != null ? Math.round(parseNum(t.value)) : null) : parseNum(t.value);
+    ex.planDate = today(); return bRender(true);
+  }
+  const f = t.dataset.bf, v = t.value;
+  if (f === 'name') { if (v.trim()) ex.name = v.trim().slice(0, 60); return bRender(false); }
+  if (f === 'group') { ex.group = v; return bRender(true); }
+  if (f === 'note') { ex.note = v.trim().slice(0, 200) || undefined; if (!ex.note) delete ex.note; return bRender(false); }
+  if (f === 'method') { if (v === 'Normal') delete ex.method; else ex.method = v; return bRender(false); }
+  if (f === 'rest') { const n = parseNum(v); if (n > 0) ex.rest = Math.min(900, Math.round(n)); else delete ex.rest; return bRender(false); }
+  if (f === 'n') {
+    const n = Math.max(1, Math.min(20, Math.round(parseNum(v) || 1)));
+    const last = ex.sets[ex.sets.length - 1] || { carga: null, reps: null };
+    ex.sets = Array.from({ length: n }, (_, i) => ex.sets[i] ? { ...ex.sets[i] } : { carga: last.carga, reps: last.reps });
+    ex.planDate = today(); return bRender(true);
+  }
+  if (f === 'reps' || f === 'carga') {
+    const n = parseNum(v); if (v.trim() === '' && t.placeholder === 'var.') return;
+    ex.sets.forEach(x => { x[f] = n == null ? null : f === 'reps' ? Math.round(n) : n; });
+    ex.planDate = today(); return bRender(true);
+  }
+}
+function reorder(pid, L, exId, dir) {
+  const list = letterExs(L, pid), i = list.findIndex(e => e.id === exId), j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  list.forEach((e, k) => { e.order = k + 1; });
+  save(); render();
+}
+function cloneEx(e, pid, letter) { return { ...JSON.parse(JSON.stringify(e)), id: uid(), profileId: pid, letter, planDate: today() }; }
+function copyWorkout(fromPid, L, toPid) {
+  const w = workoutsOf(fromPid).find(x => x.id === L); if (!w) return;
+  const to = profile(toPid); to.workouts = to.workouts || [];
+  let name = w.name; if (to.workouts.some(x => sameName(x.name, name))) name = (name + (toPid === fromPid ? ' (cópia)' : ' (copiado)')).slice(0, 40);
+  const id = uid(); to.workouts.push({ id, name });
+  letterExs(L, fromPid).forEach((e, k) => db.exercises.push({ ...cloneEx(e, toPid, id), order: k + 1 }));
+  return { id, name };
+}
+const $copy = document.getElementById('copyDlg');
+document.getElementById('copyCancel').onclick = () => $copy.close();
+document.getElementById('copyForm').addEventListener('submit', e => {
+  e.preventDefault(); const pid = ui.profile, to = document.getElementById('copyTo').value;
+  const r = copyWorkout(pid, ui.bGroup, to); $copy.close(); if (!r) return;
+  save(); render(); toast(`Treino <b>${esc(r.name)}</b> copiado para ${to === ME ? 'o seu treino' : esc(profile(to).name)}.`);
+});
+async function builderAct(act, b) {
+  const pid = ui.profile, p = profile(pid), L = ui.bGroup;
+  if (act === 'b-w') { ui.bGroup = b.dataset.id; return render(); }
+  if (act === 'b-neww') { const g = ui.group; await newWorkout(); ui.bGroup = ui.group; ui.group = g; return render(); }
+  if (act === 'b-ren') return renameWorkout(L);
+  if (act === 'b-delw') { await deleteWorkout(L); ui.bGroup = firstWorkout(pid); return render(); }
+  if (act === 'b-dupw') { const r = copyWorkout(pid, L, pid); if (r) { ui.bGroup = r.id; save(); render(); toast(`Treino duplicado: <b>${esc(r.name)}</b>`); } return; }
+  if (act === 'b-copyw') {
+    const others = db.profiles.filter(x => x.id !== pid).sort((a, b2) => a.id === ME ? -1 : b2.id === ME ? 1 : a.name.localeCompare(b2.name, 'pt-BR'));
+    if (!others.length) return toast('Cadastre um aluno para copiar o treino.');
+    document.getElementById('copyTitle').textContent = `Copiar "${wName(L, pid)}"`;
+    document.getElementById('copyTo').innerHTML = others.map(x => `<option value="${x.id}">${x.id === ME ? 'Meu treino' : esc(x.name)}</option>`).join('');
+    return $copy.showModal();
+  }
+  if (act === 'b-add') {
+    if (!L) return;
+    const n = letterExs(L, pid).length;
+    const ex = { id: uid(), profileId: pid, group: (letterExs(L, pid).slice(-1)[0] || {}).group || GROUPS[0], letter: L, name: 'Novo exercício', sets: [{ carga: null, reps: 10 }, { carga: null, reps: 10 }, { carga: null, reps: 10 }], order: n + 1, planDate: today() };
+    letterExs(L, pid).forEach((e, k) => { e.order = k + 1; });
+    db.exercises.push(ex); save(); render();
+    const el = $main.querySelector(`[data-bf="name"][data-id="${ex.id}"]`); if (el) { el.focus(); el.select(); }
+    return;
+  }
+  const ex = exById(b.dataset.id); if (!ex) return;
+  if (act === 'b-sets') { ui.bOpen.has(ex.id) ? ui.bOpen.delete(ex.id) : ui.bOpen.add(ex.id); return render(); }
+  if (act === 'b-up' || act === 'b-down') return reorder(pid, L, ex.id, act === 'b-up' ? -1 : 1);
+  if (act === 'b-dup') {
+    const list = letterExs(L, pid), i = list.indexOf(ex), c = cloneEx(ex, pid, L);
+    list.splice(i + 1, 0, c); list.forEach((e, k) => { e.order = k + 1; }); db.exercises.push(c); save(); return render();
+  }
+  if (act === 'b-del') { editing = ex; return deleteEditing(); }
+}
+
+// ---------- Pagamentos ----------
+const brl = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const monthName = ym => new Date(+ym.slice(0, 4), +ym.slice(5) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
+function dueDate(p, ym) { const d = Math.min(28, Math.max(1, (p.billing && p.billing.due) || 10)); return `${ym}-${pad(d)}`; }
+// situação do aluno no mês: pago / atrasado / pendente (null = sem cobrança)
+function payStatus(p, ym) {
+  if (!p.billing || p.billing.active === false || !(p.billing.value > 0)) return null;
+  if (p.since && ym < p.since.slice(0, 7)) return null;
+  const pay = p.payments && p.payments[ym];
+  if (pay) return { k: 'ok', label: `Pago ${fmtDate(pay.date)}${pay.method ? ' · ' + pay.method : ''}`, pay };
+  return today() > dueDate(p, ym) ? { k: 'late', label: `Atrasado (venceu ${fmtDate(dueDate(p, ym))})` } : { k: 'wait', label: `Vence ${fmtDate(dueDate(p, ym))}` };
+}
+function chargeText(p, ym) {
+  const me = profile(ME);
+  return `Oi, ${firstName(p)}! Tudo bem? Passando para lembrar da mensalidade de ${monthName(ym).toLowerCase()} (${brl(p.billing.value)}), com vencimento em ${fmtDate(dueDate(p, ym))}.${me.pixKey ? ` Pix: ${me.pixKey}` : ''} Obrigado! 💪`;
+}
+function renderPagamentos() {
+  const ym = ui.payMonth || (ui.payMonth = today().slice(0, 7));
+  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const billed = students.map(p => ({ p, st: payStatus(p, ym) })).filter(x => x.st);
+  const sum = f => billed.filter(f).reduce((a, x) => a + (x.st.pay ? (x.st.pay.value || x.p.billing.value) : x.p.billing.value), 0);
+  const noPlan = students.filter(p => !p.billing || !(p.billing.value > 0));
+  const shift = n => { const d = new Date(+ym.slice(0, 4), +ym.slice(5) - 1 + n, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; };
+  $main.innerHTML = `
+    <section class="card"><div class="cal-h"><button class="icon" data-act="pay-month" data-m="${shift(-1)}" aria-label="Mês anterior">‹</button><h3>${monthName(ym)}</h3>
+      <button class="icon" data-act="pay-month" data-m="${shift(1)}" aria-label="Próximo mês">›</button></div></section>
+    <div class="pay-kpis">
+      <div><b>${brl(sum(() => true))}</b><span>previsto no mês</span></div>
+      <div><b style="color:var(--up)">${brl(sum(x => x.st.k === 'ok'))}</b><span>recebido</span></div>
+      <div><b>${brl(sum(x => x.st.k === 'wait'))}</b><span>a receber</span></div>
+      <div><b style="color:var(--down)">${brl(sum(x => x.st.k === 'late'))}</b><span>atrasado (${billed.filter(x => x.st.k === 'late').length})</span></div>
+    </div>
+    <section class="card"><div class="card-h"><div class="grow"><h3>Mensalidades</h3><small>Toque em <b>Marcar pago</b> quando receber. <b>Cobrar</b> abre o WhatsApp com a mensagem pronta.</small></div></div>
+      ${billed.length ? `<table class="pay"><thead><tr><th>Aluno</th><th class="hide-m">Plano</th><th>Valor</th><th>Situação</th><th></th></tr></thead><tbody>
+        ${billed.map(({ p, st }) => `<tr><td><b>${esc(p.name)}</b></td><td class="hide-m">${esc(p.billing.plan || '—')}</td><td>${brl(st.pay ? st.pay.value || p.billing.value : p.billing.value)}</td>
+          <td><span class="pstat ${st.k}">${st.label}</span></td>
+          <td style="text-align:right;white-space:nowrap">${st.k === 'ok' ? `<button class="btn" data-act="pay-undo" data-pid="${p.id}">Desfazer</button>`
+            : `<button class="btn primary" data-act="pay-mark" data-pid="${p.id}">Marcar pago</button> <a class="btn" target="_blank" rel="noopener" href="${waLink(p, chargeText(p, ym))}">Cobrar</a>`}
+            <button class="icon" data-act="bill-edit" data-pid="${p.id}" title="Plano">⚙</button></td></tr>`).join('')}</tbody></table>`
+      : '<p class="empty">Nenhum aluno com cobrança neste mês. Defina o plano de cada aluno abaixo.</p>'}
+    </section>
+    ${noPlan.length ? `<section class="card"><div class="card-h"><div class="grow"><h3>Alunos sem plano definido</h3><small>Defina plano, valor e dia do vencimento para entrar na lista de mensalidades.</small></div></div>
+      ${noPlan.map(p => `<div class="list-row"><div class="grow"><b>${esc(p.name)}</b></div><button class="btn" data-act="bill-edit" data-pid="${p.id}">Definir plano</button></div>`).join('')}</section>` : ''}
+    <section class="card"><div class="card-h"><div class="grow"><h3>Sua chave Pix</h3><small>Vai junto na mensagem de cobrança.</small></div></div>
+      <div class="actions" style="margin-top:0"><input id="pixKey" class="search" style="flex:1;margin:0" placeholder="ex.: seu e-mail, CPF ou telefone" value="${esc(profile(ME).pixKey || '')}">
+        <button class="btn primary" data-act="pix-save">Salvar</button></div></section>`;
+}
+function studentPayHtml(p) {
+  const b = p.billing, months = [];
+  for (let i = 0; i < 6; i++) { const d = new Date(+today().slice(0, 4), +today().slice(5, 7) - 1 - i, 1); months.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`); }
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>💳 Pagamento</h3>
+      <small>${b && b.value > 0 ? `${esc(b.plan || 'Plano')} · ${brl(b.value)} por mês · vence dia ${b.due || 10}${b.active === false ? ' · cobrança pausada' : ''}` : 'Nenhum plano definido ainda'}</small></div>
+      <button class="btn" data-act="bill-edit" data-pid="${p.id}">${b ? '✎ Plano' : 'Definir plano'}</button></div>
+    ${b && b.value > 0 ? months.map(ym => { const st = payStatus(p, ym); if (!st) return ''; return `<div class="list-row"><div class="grow"><b>${monthName(ym)}</b></div>
+      <span class="pstat ${st.k}">${st.label}</span>
+      ${st.k === 'ok' ? `<button class="icon" data-act="pay-undo" data-pid="${p.id}" data-m="${ym}" title="Desfazer">↺</button>` : `<button class="btn" data-act="pay-mark" data-pid="${p.id}" data-m="${ym}">Marcar pago</button>`}</div>`; }).join('') : ''}
+  </section>`;
+}
+const $bill = document.getElementById('billDlg'), $billForm = document.getElementById('billForm');
+const $pay = document.getElementById('payDlg'), $payForm = document.getElementById('payForm');
+let billFor = null, payFor = null;
+function openBill(p) {
+  billFor = p.id; const b = p.billing || {};
+  document.getElementById('billTitle').textContent = `Plano de ${firstName(p)}`;
+  $billForm.plan.value = b.plan || ''; $billForm.value.value = b.value ? numVal(b.value) : ''; $billForm.due.value = b.due || ''; $billForm.active.checked = b.active !== false;
+  $bill.showModal();
+}
+$billForm.addEventListener('submit', e => {
+  e.preventDefault(); const p = profile(billFor); if (!p) return;
+  const v = parseNum($billForm.value.value), d = Math.round(parseNum($billForm.due.value) || 10);
+  p.billing = { plan: $billForm.plan.value.trim().slice(0, 40), value: v > 0 ? Math.round(v * 100) / 100 : 0, due: Math.min(28, Math.max(1, d)), active: $billForm.active.checked };
+  $bill.close(); save(); render(); toast(`Plano de ${esc(firstName(p))} salvo.`);
+});
+document.getElementById('billCancel').onclick = () => $bill.close();
+function openPay(p, ym) {
+  payFor = { pid: p.id, ym };
+  document.getElementById('payTitle').textContent = `${firstName(p)} · ${monthName(ym)}`;
+  $payForm.value.value = numVal(p.billing.value); $payForm.date.value = today(); $payForm.method.value = 'Pix';
+  $pay.showModal();
+}
+$payForm.addEventListener('submit', e => {
+  e.preventDefault(); const p = profile(payFor.pid); if (!p) return;
+  p.payments = p.payments || {};
+  p.payments[payFor.ym] = { date: $payForm.date.value || today(), method: $payForm.method.value, value: parseNum($payForm.value.value) || p.billing.value };
+  $pay.close(); save(); render(); toast(`✓ Pagamento de ${esc(firstName(p))} registrado.`);
+});
+document.getElementById('payCancel').onclick = () => $pay.close();
+
+// Abas do aluno (computador)
+const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
+function perfilHtml(p, desk) {
   const s = profileSummary(p.id), ws = weekStart(today()), noHist = !trainedDates(p.id).length;
   const cm = cardioBetween(ws, addDays(ws, 6), p.id);
   if (ui.msgDraft == null || ui.msgFor !== p.id) { ui.msgFor = p.id; ui.msgDraft = ''; }
@@ -2121,7 +2499,8 @@ function renderPerfil() {
   }).join('');
 
   const log = (p.messages || []).slice().reverse().slice(0, 10);
-  $main.innerHTML = `
+  const tab = ST_TABS.some(t => t[0] === ui.stTab) ? ui.stTab : 'resumo';
+  return `<div class="ws" data-active="${desk ? tab : 'all'}">
     <section class="card">
       <div class="prof-h"><span class="av">${esc(initials(p.name))}</span>
         <div class="grow"><h2>${esc(p.name)}</h2>
@@ -2135,9 +2514,11 @@ function renderPerfil() {
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
         <button class="btn" data-act="goto-msg">💬 Mensagem</button>
         <button class="btn" data-act="student-mode">👁 Ver como o aluno</button>
+        ${desk ? '' : `<button class="btn" data-act="go-montar">🏋️ Montar treino detalhado</button>`}
       </div>
     </section>
-    ${weekSetsHtml(p)}
+    ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}</div>` : ''}
+    <div data-tab="resumo">${weekSetsHtml(p)}
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
@@ -2155,10 +2536,10 @@ function renderPerfil() {
       ${recent || '<p class="empty">Ainda não treinou.</p>'}
     </section>
     ${inviteHtml(p)}
-    ${bodySummaryHtml(p)}
-    ${noHist ? '' : histImportHtml(p)}
-    ${marcacoesHtml(p)}
-    ${plannerHtml(p)}
+    ${noHist ? '' : histImportHtml(p)}</div>
+    <div data-tab="medidas">${bodySummaryHtml(p)}</div>
+    <div data-tab="marcacoes">${marcacoesHtml(p)}</div>
+    <div data-tab="plano">${plannerHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
         <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
@@ -2167,13 +2548,14 @@ function renderPerfil() {
         <button class="btn primary" data-act="save-goal">Salvar</button></div>
       <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => planLabel(x, p.id)).join(' + ') : 'descanso'}${cardioGoalOf(p, today()) ? ` · cardio ${fmtMin(cardioGoalOf(p, today()))} min` : ''}</p>
       ${division}
-    </section>
-    <section class="card">
+    </section></div>
+    <div data-tab="montar">${desk ? builderHtml(p.id) : `<section class="card">
       <div class="card-h"><div class="grow"><h3>Treinos do aluno</h3><small>Crie os treinos com o nome que quiser e monte os exercícios: toque em ⋯ para mudar séries, carga, repetições ou o treino</small></div></div>
       ${plan}
+      <button class="btn" style="margin-top:10px" data-act="go-montar">🏋️ Montar treino detalhado</button>
       ${savePlanHtml(p, true)}
-    </section>
-    <section class="card" id="msgCard">
+    </section>`}</div>
+    <div data-tab="mensagens"><section class="card" id="msgCard">
       <div class="card-h"><div class="grow"><h3>💬 Mensagem para ${esc(firstName(p))}</h3>
         <small>${p.phone ? 'Abre o WhatsApp com a mensagem pronta' : 'Cadastre o WhatsApp do aluno (✎) para enviar direto para ele'}</small></div></div>
       <div class="tpl">
@@ -2189,7 +2571,9 @@ function renderPerfil() {
         <button class="btn" data-act="msg-copy">Copiar</button>
       </div>
       ${log.length ? `<div class="msg-log"><p class="plan-g">Mensagens enviadas</p>${log.map(m => `<div><small>${fmtDate(m.date)}/${m.date.slice(2, 4)}</small>${esc(m.text)}</div>`).join('')}</div>` : ''}
-    </section>`;
+    </section></div>
+    <div data-tab="pagamento">${studentPayHtml(p)}</div>
+  </div>`;
 }
 // ---------- Janela de pergunta (substitui prompt/confirm, que o navegador pode bloquear) ----------
 const $ask = document.getElementById('askDlg'), $askForm = document.getElementById('askForm');
@@ -2220,8 +2604,8 @@ const confirmAsk = async (title, msg, ok = 'Excluir') => (await ask({ title, msg
 const $rest = document.getElementById('rest'), $restTime = document.getElementById('restTime');
 let restEnd = 0, restTimer = null;
 const mmss = s => `${Math.floor(s / 60)}:${pad(s % 60)}`;
-function startRest() {
-  restEnd = Date.now() + ui.rest * 1000;
+function startRest(sec) {
+  restEnd = Date.now() + (sec > 0 ? sec : ui.rest) * 1000;
   $rest.hidden = false; $rest.classList.remove('go');
   clearInterval(restTimer); restTimer = setInterval(tickRest, 250); tickRest();
 }
@@ -2292,6 +2676,12 @@ $date.addEventListener('change', () => { if ($date.value) { ui.date = $date.valu
 
 // Digitar carga/reps: atualiza os números sem redesenhar os campos (não perde o foco)
 $main.addEventListener('input', e => {
+  if (e.target.id === 'search' && isDesk()) {
+    ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
+    document.getElementById('studentList').innerHTML = db.profiles.filter(p => p.id !== ME && p.name.toLowerCase().includes(q))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span><span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span></button>`).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
+    return;
+  }
   if (e.target.id === 'search') {
     ui.q = e.target.value;
     const q = ui.q.trim().toLowerCase();
@@ -2338,9 +2728,11 @@ function autoCheck(inp) {
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
   card.classList.toggle('complete', isComplete(ex.id));
   refreshTop();
-  if (!wasComplete && done === n) { celebrate(ex, s); maybeAskSend(); } else startRest();
+  if (!wasComplete && done === n) { celebrate(ex, s); maybeAskSend(); } else startRest(ex.rest);
 }
 $main.addEventListener('change', e => {
+  if (e.target.dataset && (e.target.dataset.bf || e.target.dataset.bs)) return builderChange(e.target);
+  if (e.target.id === 'bWho') { ui.profile = e.target.value; ui.bGroup = null; return render(); }
   if (e.target.matches('input[data-f]')) return autoCheck(e.target);
   if (e.target.id === 'importFile') importData(e.target.files[0]);
   if (e.target.id === 'histFile') { importHistory(e.target.files[0]); e.target.value = ''; }
@@ -2418,6 +2810,17 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
+    case 'st-tab': ui.stTab = b.dataset.t; return render();
+    case 'go-montar': return go('montar');
+    case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
+    case 'b-w': case 'b-neww': case 'b-ren': case 'b-delw': case 'b-dupw': case 'b-copyw': case 'b-add':
+    case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': return builderAct(act, b);
+    case 'pay-month': ui.payMonth = b.dataset.m; return render();
+    case 'pay-mark': return openPay(profile(b.dataset.pid), b.dataset.m || ui.payMonth || today().slice(0, 7));
+    case 'pay-undo': { const p = profile(b.dataset.pid), ym = b.dataset.m || ui.payMonth; if (p.payments) delete p.payments[ym]; save(); return render(); }
+    case 'bill-edit': return openBill(profile(b.dataset.pid));
+    case 'pix-save': { profile(ME).pixKey = document.getElementById('pixKey').value.trim().slice(0, 80); save(); return toast('Chave Pix salva.'); }
     case 'plan-day': return openDate(b.dataset.d);
     case 'plan-off': ui.planOff = Math.max(0, (ui.planOff || 0) + +b.dataset.d); render(); return document.getElementById('plannerCard').scrollIntoView({ block: 'start' });
     case 'plan-copy': {
@@ -2550,7 +2953,7 @@ $main.addEventListener('click', e => {
     const x = s.sets[+b.closest('[data-i]').dataset.i];
     if (!x.done && (x.carga == null || x.reps == null)) return toast('Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
     x.done = !x.done;
-    if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(); }
+    if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(ex.rest); }
   } else if (act === 'inc' || act === 'dec') {
     const x = s.sets[+b.closest('[data-i]').dataset.i], f = b.dataset.f;
     const v = (x[f] || 0) + STEP[f] * (act === 'inc' ? 1 : -1);
@@ -2606,7 +3009,7 @@ $form.addEventListener('submit', e => {
     editing.name = name; editing.group = group; editing.letter = letter; if (letter) delete editing.archived;
     // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
     if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
-      editing.sets = Array.from({ length: n }, () => ({ carga, reps }));
+      editing.sets = Array.from({ length: n }, () => ({ carga, reps })); editing.planDate = today();
       const s = !lockReason(editing.id) && ensureSession(editing, ui.date);
       if (s) s.sets = Array.from({ length: n }, (_, i) => ({ carga, reps, done: !!(s.sets[i] && s.sets[i].done) }));
     }
@@ -2617,9 +3020,9 @@ $form.addEventListener('submit', e => {
   saveUi(); save(); render();
 });
 document.getElementById('exCancel').onclick = () => $dlg.close();
-document.getElementById('exDelete').onclick = async () => {
+document.getElementById('exDelete').onclick = () => { if (editing) { $dlg.close(); deleteEditing(); } };
+async function deleteEditing() {
   if (!editing) return;
-  $dlg.close();
   const hist = exHistory(editing.id).filter(x => x.exId === editing.id).length;
   if (hist) {
     // Já tem treinos registrados: sai do treino, mas o histórico continua guardado
@@ -2630,8 +3033,8 @@ document.getElementById('exDelete').onclick = async () => {
     db.sessions = db.sessions.filter(s => s.exId !== editing.id);
     db.exercises = db.exercises.filter(e => e.id !== editing.id);
   }
-  save(); $dlg.close(); render();
-};
+  save(); render();
+}
 
 // ---------- Backup ----------
 async function exportData() {
@@ -3374,7 +3777,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-00:11';
+const APP_VERSION = '02/10-17:28';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
