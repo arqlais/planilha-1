@@ -964,6 +964,7 @@ $me.addEventListener('click', e => {
   if (e.target === $me) return $me.close();
   const b = e.target.closest('[data-act]'); if (!b) return;
   $me.close(); ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
+  if (b.dataset.act === 'demo-test') return openDemo('teste');
   if (b.dataset.act === 'open-medidas') { ui.bodyDate = null; go('medidas'); } else go(b.dataset.v || 'treino');
 });
 $me.addEventListener('change', e => { if (e.target.id === 'histFileMe') { const f = e.target.files[0]; $me.close(); ui.profile = ME; importHistory(f); e.target.value = ''; } });
@@ -1449,8 +1450,8 @@ const demoKey = name => String(name || '').normalize('NFD').replace(/[\u0300-\u0
 // acha a animação pelo nome (aceita variações, ex.: "Rosca Martelo com halteres")
 const demoFor = ex => { if (!ex || ex.profileId !== ME) return null; const k = demoKey(ex.name); return DEMOS[k] || (k.includes('martelo') ? DEMOS['rosca martelo'] : null); };
 function openDemo(ex) {
-  const d = demoFor(ex); if (!d) return;
-  document.getElementById('demoTitle').textContent = ex.name;
+  const d = ex === 'teste' ? DEMOS['rosca martelo'] : demoFor(ex); if (!d) return;
+  document.getElementById('demoTitle').textContent = ex === 'teste' ? 'Rosca martelo' : ex.name;
   document.getElementById('demoBody').innerHTML = `<div class="demo-box">${d.svg}</div>
     <ol class="demo-steps">${d.steps.map(t => `<li>${esc(t)}</li>`).join('')}</ol>`;
   const dlg = document.getElementById('demoDlg'); dlg.showModal(); if (document.activeElement) document.activeElement.blur();
@@ -1923,7 +1924,8 @@ function myProfileHtml() {
       <label class="btn primary">⬆ Importar meu histórico<input type="file" id="histFileMe" hidden></label>
       <button class="btn" data-act="open-medidas" data-pid="${ME}">Minhas medidas</button>
       <button class="btn" data-act="open-profile" data-pid="${ME}" data-v="historico">Meu histórico</button>
-    </div></div>`;
+    </div>
+    <div class="actions"><button class="btn" data-act="demo-test">❓ Ver o teste: como fazer a Rosca martelo</button></div></div>`;
 }
 function renderAlunos() {
   const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -3835,7 +3837,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-18:12';
+const APP_VERSION = '02/10-18:13';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
