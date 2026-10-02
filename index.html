@@ -1050,7 +1050,7 @@ document.getElementById('setClose').onclick = () => {
   if (o) {
     o.color = c;
     const g = parseInt(document.getElementById('setGoal') ? document.getElementById('setGoal').value : '');
-    if (!ui.studentMode && document.getElementById('setGoal')) { if (g > 0) o.cardioDaily = Math.min(300, g); else delete o.cardioDaily; }
+    if (!ui.studentMode && document.getElementById('setGoal') && (g > 0 ? g : 0) !== (o.cardioDaily || 0)) changeGoals(o, () => { if (g > 0) o.cardioDaily = Math.min(300, g); else delete o.cardioDaily; });
     save();
   }
   $setDlg.close();
@@ -1182,7 +1182,24 @@ function renderStudentTreino(p, greet, isToday) {
 }
 // Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
 // Cartão de cardio do aluno, como um exercício: ele toca no tempo que fez e a barra anima até lá
-const cardioGoalOf = (p, date) => { const o = datePlan(p, date); if (o && o.c) return o.c; return (!o && p.cardioGoal && p.cardioGoal[toDate(date).getDay()]) || p.cardioDaily || 0; };
+// Metas de cardio têm histórico: mudar a meta vale de hoje em diante; os dias que passaram ficam com a meta que tinham
+function goalBase(p, date) {
+  const log = p.goalLog || [];
+  let snap = null; for (const g of log) if (g.d <= date) snap = g;
+  return snap ? { daily: snap.daily || 0, wk: snap.wk || {} } : { daily: p.cardioDaily || 0, wk: p.cardioGoal || {} };
+}
+function changeGoals(p, fn) {
+  if (!p.goalLog || !p.goalLog.length) p.goalLog = [{ d: '0000-01-01', daily: p.cardioDaily || 0, wk: { ...(p.cardioGoal || {}) } }]; // o que valia até hoje
+  fn();
+  const t = today();
+  p.goalLog = p.goalLog.filter(g => g.d !== t).concat({ d: t, daily: p.cardioDaily || 0, wk: { ...(p.cardioGoal || {}) } }).sort((a, b) => a.d.localeCompare(b.d));
+}
+const cardioGoalOf = (p, date) => {
+  // dia que já passou com cardio salvo: vale a meta gravada junto com o cardio
+  if (date !== today()) { const rec = db.cardio.find(c => c.profileId === p.id && c.date === date && c.goal > 0); if (rec) return rec.goal; }
+  const o = datePlan(p, date); if (o && o.c) return o.c;
+  const b = goalBase(p, date); return (!o && b.wk[toDate(date).getDay()]) || b.daily || 0;
+};
 function cardioGoalHtml(p) {
   const goal = cardioGoalOf(p, ui.date);
   const today_ = profCardio().filter(c => c.date === ui.date);
@@ -1236,10 +1253,10 @@ function cardioGoalHtml(p) {
 // Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
 function setCardio(min) {
   if (cardioLocked()) return toast(cardioLockMsg());
-  const p = profile(ui.profile), mode = ui.mode;
+  const p = profile(ui.profile), mode = ui.mode, g0 = cardioGoalOf(p, ui.date);
   min = Math.min(300, Math.round((min || 0) * 100) / 100);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
-  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(g0 > 0 ? { goal: g0 } : {}), ...(ui.studentMode ? { by: 'aluno' } : {}) });
   save(); render();
   const goal = cardioGoalOf(p, ui.date);
   if (min > 0 && goal && min >= goal) toast(`Cardio concluído! ${modeOf(mode)[1]} ${fmtMin(min)} min`);
@@ -1524,7 +1541,8 @@ function addCardio(mode, min) {
   if (cardioLocked()) return toast(cardioLockMsg());
   min = Math.round(min);
   if (!(min > 0)) return toast('Informe os minutos.');
-  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  const g0 = cardioGoalOf(profile(ui.profile), ui.date);
+  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(g0 > 0 ? { goal: g0 } : {}), ...(ui.studentMode ? { by: 'aluno' } : {}) });
   save(); render();
   toast(`<b>${modeOf(mode)[1]}</b>: ${min} min registrados`);
 }
@@ -2191,8 +2209,11 @@ function saveDay(groups) {
   p.division[dayEditing] = groups;
   // meta de cardio do dia (minutos): o aluno vê uma barra que completa ao atingir
   const cmin = parseNum($dayForm.cmin.value);
-  p.cardioGoal = p.cardioGoal || {};
-  if (groups.length && cmin > 0) p.cardioGoal[dayEditing] = Math.min(300, cmin); else delete p.cardioGoal[dayEditing];
+  const newG = groups.length && cmin > 0 ? Math.min(300, cmin) : 0;
+  if (newG !== ((p.cardioGoal && p.cardioGoal[dayEditing]) || 0)) changeGoals(p, () => {
+    p.cardioGoal = p.cardioGoal || {};
+    if (newG) p.cardioGoal[dayEditing] = newG; else delete p.cardioGoal[dayEditing];
+  });
   $dayDlg.close(); save(); render();
 }
 $dayForm.addEventListener('submit', e => { e.preventDefault(); saveDay([...$dayForm.querySelectorAll('input[name=g]:checked')].map(i => i.value)); });
@@ -2973,7 +2994,7 @@ $main.addEventListener('click', e => {
     }
     case 'save-goal': {
       const p = profile(ui.profile), v = parseNum(document.getElementById('goalDaily').value);
-      if (v > 0) p.cardioDaily = Math.min(300, Math.round(v * 100) / 100); else delete p.cardioDaily;
+      changeGoals(p, () => { if (v > 0) p.cardioDaily = Math.min(300, Math.round(v * 100) / 100); else delete p.cardioDaily; });
       save(); render();
       return toast(v > 0 ? `Meta de cardio de ${esc(firstName(p))}: <b>${fmtMin(p.cardioDaily)} min</b> por dia` : 'Meta de cardio removida');
     }
@@ -3837,7 +3858,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-18:13';
+const APP_VERSION = '02/10-18:26';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
