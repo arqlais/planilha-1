@@ -623,7 +623,9 @@ const CLOUD = !!(CFG.firebase && CFG.firebase.apiKey);
 const ADMIN_EMAIL = String(CFG.adminEmail || '').trim().toLowerCase();
 const pad = n => String(n).padStart(2, '0');
 const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const today = () => isoDate(new Date());
+// O "dia de treino" vira às 3h da manhã: quem treina depois da meia-noite continua no treino do dia anterior
+const DAY_TURN_H = 3;
+const today = () => isoDate(new Date(Date.now() - DAY_TURN_H * 3600e3));
 const toDate = s => new Date(s + 'T12:00:00');
 const parseNum = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null; };
 const fmt = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -2951,18 +2953,48 @@ async function acceptRequest(uidReq) {
 // Rosca martelo do professor: passou a ser feita de outro jeito, com halteres (cada um até 15 kg).
 // Os treinos antigos (carga acima de 15 kg, soma dos dois lados) viram a metade, para comparar com o jeito novo.
 async function fixOnce() {
-  const me = profile(ME); if (!me || (me.fixes || []).includes('martelo-halteres')) return;
-  await ensureFull(ME);
-  const ids = new Set(profExs(ME).filter(e => sameName(e.name, 'Rosca martelo')).map(e => e.id));
-  let n = 0;
-  db.sessions.forEach(s => {
-    if (!ids.has(s.exId) || !s.sets.some(x => (x.carga || 0) > 15)) return;
-    s.sets.forEach(x => { if (x.carga != null) x.carga = x.carga / 2; }); n++;
-  });
-  profExs(ME).filter(e => ids.has(e.id)).forEach(e => e.sets.forEach(x => { if ((x.carga || 0) > 15) x.carga = x.carga / 2; }));
-  const cur = profile(ME); cur.fixes = [...(cur.fixes || []), 'martelo-halteres'];
-  save(); render();
-  if (n) toast(`Rosca martelo: cargas dos ${n} treinos antigos passadas para a metade (halteres).`);
+  const me = profile(ME); if (!me) return;
+  const done = new Set(me.fixes || []), msgs = [];
+  const mark = id => { const cur = profile(ME); cur.fixes = [...new Set([...(cur.fixes || []), id])]; };
+  // 1) Rosca martelo do professor com halteres: cargas antigas (acima de 15 kg) viram a metade
+  if (!done.has('martelo-halteres')) {
+    await ensureFull(ME);
+    const ids = new Set(profExs(ME).filter(e => sameName(e.name, 'Rosca martelo')).map(e => e.id));
+    let n = 0;
+    db.sessions.forEach(s => {
+      if (!ids.has(s.exId) || !s.sets.some(x => (x.carga || 0) > 15)) return;
+      s.sets.forEach(x => { if (x.carga != null) x.carga = x.carga / 2; }); n++;
+    });
+    profExs(ME).filter(e => ids.has(e.id)).forEach(e => e.sets.forEach(x => { if ((x.carga || 0) > 15) x.carga = x.carga / 2; }));
+    mark('martelo-halteres');
+    if (n) msgs.push(`Rosca martelo: cargas dos ${n} treinos antigos passadas para a metade.`);
+  }
+  // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
+  if (!done.has('iris-remada-0110')) {
+    const p = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Íris'));
+    const D = '2026-10-01', D2 = '2026-10-02';
+    if (p) {
+      await ensureFull(p.id);
+      const exs = profExs(p.id).filter(e => sameName(e.name, 'Remada baixa'));
+      const planned = dayPlan(p, D);
+      const ex = exs.find(e => planned.includes(e.letter)) || exs.find(e => sessionOn(e.id, D)) || exs[0];
+      if (ex) {
+        const twins = twinIds(ex.id);
+        let s = db.sessions.find(x => twins.has(x.exId) && x.date === D);
+        const stray = db.sessions.find(x => twins.has(x.exId) && x.date === D2 && !x.fin);
+        if (!s && stray) { stray.date = D; s = stray; } // anotou depois da meia-noite: volta para 01/10
+        else if (s && stray) db.sessions = db.sessions.filter(x => x !== stray);
+        if (!s) { s = { id: uid(), exId: ex.id, date: D, sets: [] }; db.sessions.push(s); }
+        s.sets = [0, 1, 2].map(() => ({ carga: 20, reps: 10, done: true })); s.by = 'aluno';
+        const at = new Date().toISOString();
+        profExs(p.id).forEach(e => { const x = sessionOn(e.id, D); if (x && !x.fin && x.sets.some(y => y.done)) { x.fin = at; x.finBy = 'professor'; } });
+        msgs.push(`Íris, 01/10: Remada baixa anotada (3 × 10 com 20 kg) e treino finalizado.`);
+      } else msgs.push('Íris: não encontrei o exercício Remada baixa para anotar o treino de 01/10.');
+      mark('iris-remada-0110');
+    }
+  }
+  if (profile(ME).fixes && profile(ME).fixes.length !== done.size) { save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow(); }
+  if (msgs.length) toast(msgs.join('<br>'));
 }
 
 // ---------- Lixeira ----------
@@ -3342,7 +3374,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '01/10-18:02';
+const APP_VERSION = '02/10-00:11';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
