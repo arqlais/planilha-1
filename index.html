@@ -406,7 +406,8 @@ table.pay td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align
 .pick-row .grow{min-width:0}.pick-row b{display:block;font-size:15px}.pick-row small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pick-row .av{width:34px;height:34px;font-size:13px;flex:none}
 .wsets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.wset{border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--input);min-width:0}
+.wset{border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--input);min-width:0;text-align:left;color:var(--text);font:inherit;cursor:pointer;width:100%}
+.wset.on{border:2px solid var(--acc)}
 .wname{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 .wname .key{width:10px;height:10px;border-radius:50%;flex:none}
 .wnum{font-size:12px;color:var(--muted);font-weight:600;margin:2px 0 4px}.wnum b{font-size:22px;color:var(--text)}
@@ -1283,7 +1284,7 @@ function savePlanHtml(p, inline) {
   const LN = L ? esc(wName(L, p.id)) : '';
   const wd = WEEK.find(w => w[0] === toDate(today()).getDay())[1].toLowerCase();
   const body = `<p class="hint" style="margin:0 0 8px"><b>Hoje ${esc(firstName(p))} vê:</b> ${parts.length ? parts.join(' + ') : 'dia de descanso'}</p>
-    ${L ? `<p class="hint" style="margin:0 0 8px;color:var(--down)">${LN} ainda não está liberado para hoje. Salvando por aqui, ele entra na divisão de ${wd} de ${esc(firstName(p))}.</p>` : ''}
+    ${L ? `<p class="hint" style="margin:0 0 8px;color:var(--down)">${LN} ainda não está liberado para hoje. Salvando por aqui, ele fica liberado só para hoje (a divisão da semana não muda).</p>` : ''}
     <button class="btn primary save-plan" data-act="save-plan" data-release="${L}" style="width:100%;padding:12px">✓ ${L ? `Salvar e liberar ${LN} hoje` : `Salvar treino de ${esc(firstName(p))}`}</button>`;
   return inline ? `<div style="margin-top:14px">${body}</div>` : `<section class="card" style="margin-top:14px">${body}</section>`;
 }
@@ -2227,12 +2228,15 @@ document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 
 // Séries por grupo muscular na semana: o que a divisão manda fazer (planejado) e o que o aluno já fez nesta semana
 function weekSetsHtml(p) {
-  const plan = {}, done = {};
+  const plan = {}, done = {}, why = {};
   const ws = weekStart(today()), we = addDays(ws, 6);
-  for (let i = 0; i < 7; i++) dayPlan(p, addDays(ws, i)).forEach(w => {
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i); dayPlan(p, d).forEach(w => {
     if (w === CARDIO) return;
-    letterExs(w, p.id).forEach(e => { plan[e.group] = (plan[e.group] || 0) + (e.sets || []).length; });
-  });
+    letterExs(w, p.id).forEach(e => {
+      const n = (e.sets || []).length; plan[e.group] = (plan[e.group] || 0) + n;
+      (why[e.group] = why[e.group] || []).push({ d, w, name: e.name, n });
+    });
+  }); }
   profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => {
     const e = exById(x.exId); if (e) done[e.group] = (done[e.group] || 0) + x.sets.filter(y => y.done).length;
   });
@@ -2242,11 +2246,16 @@ function weekSetsHtml(p) {
       <small>${groups.length ? `<b>${total} séries</b> planejadas nesta semana · barra = feitas` : 'Monte a divisão da semana para ver as séries de cada grupo'}</small></div></div>
     ${groups.length ? `<div class="wsets">${groups.map(g => {
       const pl = plan[g] || 0, dn = done[g] || 0, pct = pl ? Math.min(100, dn / pl * 100) : 100;
-      return `<div class="wset"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
+      return `<button class="wset ${ui.wsOpen === g ? 'on' : ''}" data-act="ws-why" data-g="${g}"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
         <div class="wnum"><b>${pl}</b> séries</div>
         <div class="wbar"><i style="width:${pct}%;background:${COLOR(g)}"></i></div>
-        <small class="wdone">${dn ? `${dn} de ${pl} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></div>`;
+        <small class="wdone">${dn ? `${dn} de ${pl} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></button>`;
     }).join('')}</div>` : ''}
+    ${ui.wsOpen && why[ui.wsOpen] ? `<div class="ws-why"><p class="plan-g" style="margin:12px 2px 6px">De onde vêm as ${plan[ui.wsOpen]} séries de ${ui.wsOpen}</p>
+      ${[...new Set(why[ui.wsOpen].map(x => x.d))].map(d => { const xs = why[ui.wsOpen].filter(x => x.d === d);
+        return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b> · ${[...new Set(xs.map(x => esc(wName(x.w, p.id))))].join(' + ')}${datePlan(p, d) ? ' <small>(planejado só para a data)</small>' : ''}
+          <small>${xs.map(x => `${esc(x.name)} (${x.n})`).join(' · ')}</small></div><b>${xs.reduce((a, x) => a + x.n, 0)}</b></div>`; }).join('')}
+      <p class="hint" style="margin:8px 2px 0">Se algum dia não deveria estar aqui, ajuste na <b>Divisão da semana</b> ou no <b>Planejamento</b> (dia que passou sem treino: toque nele para apagar).</p></div>` : ''}
   </section>`;
 }
 // Planejamento: esta semana e as próximas, dia a dia
@@ -2895,6 +2904,7 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'ws-why': ui.wsOpen = ui.wsOpen === b.dataset.g ? null : b.dataset.g; return render();
     case 'demo-ex': return openDemo(exById(b.dataset.id));
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
     case 'st-tab': ui.stTab = b.dataset.t; return render();
@@ -3000,9 +3010,11 @@ $main.addEventListener('click', e => {
     case 'save-plan': {
       const p = profile(ui.profile), name = esc(firstName(p)), L = b.dataset.release;
       if (L) { // coloca o treino na divisão do dia da semana de hoje
-        const d = toDate(today()).getDay(), o = datePlan(p, today());
-        if (o) o.w = [...new Set([...(o.w || []), L])];
-        else { p.division = p.division || {}; p.division[d] = [...new Set([...(p.division[d] || []), L])]; }
+        // vale só para hoje: o dia da semana na divisão não muda
+        const t = today(), o = datePlan(p, t);
+        p.plans = p.plans || {};
+        if (o && !o.skip) o.w = [...new Set([...(o.w || []), L])];
+        else p.plans[t] = { w: [...new Set([...dayPlan(p, t).filter(x => !o || !o.skip), L])] };
         save(); render();
       }
       b.disabled = true; b.textContent = 'Salvando…';
@@ -3885,7 +3897,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-18:57';
+const APP_VERSION = '02/10-19:11';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
