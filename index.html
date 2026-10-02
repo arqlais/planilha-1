@@ -304,6 +304,24 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 /* ---- histórico ---- */
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-h h3{margin:0;font-size:16px}
+.qhelp{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:900;font-size:14px;line-height:1;padding:0;vertical-align:2px;margin-left:4px;cursor:pointer}
+#demoDlg{width:min(440px,calc(100vw - 32px))}
+.demo-box{background:var(--input);border-radius:16px;padding:8px;margin-bottom:12px}
+.demo-svg{display:block;width:100%;max-height:300px}
+.demo-svg .d-floor{fill:var(--line)}
+.demo-svg .d-skin{fill:var(--muted)}.demo-svg .d-eye{fill:var(--card)}.demo-svg .d-torso{fill:var(--muted);opacity:.85}
+.demo-svg .d-limb{stroke:var(--muted);stroke-width:12;stroke-linecap:round;fill:none}
+.demo-svg .d-limb.thick{stroke-width:22}
+.demo-svg .d-arm{stroke:var(--acc);stroke-width:11;stroke-linecap:round;fill:none}
+.demo-svg .d-bell{fill:var(--text)}.demo-svg .d-plate{fill:var(--text)}
+.demo-svg .d-fore{transform-box:view-box;transform-origin:120px 112px;animation:dcurl 2.6s ease-in-out infinite}
+.demo-svg .d-tag{font-size:13px;font-weight:800;fill:var(--acc);opacity:0;animation:dtag 2.6s infinite}
+.demo-svg .d-tag.d2{animation-name:dtag2}
+@keyframes dcurl{0%,8%{transform:rotate(0)}42%,55%{transform:rotate(-140deg)}92%,100%{transform:rotate(0)}}
+@keyframes dtag{10%,40%{opacity:1}0%,8%,45%,100%{opacity:0}}
+@keyframes dtag2{58%,88%{opacity:1}0%,55%,92%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.demo-svg .d-fore{animation-duration:5s}}
+.demo-steps{margin:0;padding-left:20px;font-size:14.5px;line-height:1.45}.demo-steps li{margin-bottom:6px}
 /* ---- computador (professor) ---- */
 body.desk nav.bottom{top:0;bottom:0;right:auto;width:228px;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;border-top:0;border-right:1px solid var(--line);padding:20px 12px;box-shadow:none}
 body.desk nav.bottom::before{content:'Planilha de Treino';font-weight:800;font-size:16px;padding:4px 12px 16px;color:var(--text)}
@@ -576,6 +594,11 @@ input,select,textarea{font-size:16px!important}
     <label class="f">Para<select name="to" class="sel" id="copyTo"></select></label>
     <div class="dlg-actions"><span class="grow"></span><button type="button" class="btn" id="copyCancel">Cancelar</button><button type="submit" class="btn primary">Copiar</button></div>
   </form>
+</dialog>
+<dialog id="demoDlg">
+  <h2 id="demoTitle">Como fazer</h2>
+  <div id="demoBody"></div>
+  <div class="dlg-actions"><span class="grow"></span><button class="btn primary" id="demoClose">Entendi</button></div>
 </dialog>
 <dialog id="meDlg">
   <div id="meBody"></div>
@@ -1387,7 +1410,7 @@ function cardHtml(ex) {
   return `
     <div class="card-h">
       <div class="ring" style="--p:${n ? done / n * 100 : 0}">${done}/${n}</div>
-      <div class="grow"><h3>${esc(ex.name)}</h3>
+      <div class="grow"><h3>${esc(ex.name)}${demoFor(ex) ? ` <button class="qhelp" data-act="demo-ex" data-id="${ex.id}" aria-label="Como fazer ${esc(ex.name)}">?</button>` : ''}</h3>
         <small>${ex.group} · ${prev ? `último treino ${fmtDate(prev.date)}` : 'primeiro treino'}</small>
         ${exDetailHtml(ex)}</div>
       ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
@@ -1401,6 +1424,38 @@ function cardHtml(ex) {
     </div>`}
     <div class="compare">${compareHtml(s, prev)}</div>`;
 }
+// ---------- Demonstração do exercício (botão ?) ----------
+// Animações próprias do app (sem depender de outro site). Teste: só no perfil do professor.
+const DEMOS = {
+  'rosca martelo': {
+    steps: ['Em pé, um halter em cada mão, braços estendidos ao lado do corpo.', 'Palmas das mãos viradas uma para a outra (pegada "martelo") durante todo o movimento.',
+      'Suba os halteres dobrando só os cotovelos. Cotovelos colados no corpo; ombros parados.', 'Desça devagar, controlando, até esticar os braços. Não balance o corpo.'],
+    svg: `<svg viewBox="0 0 240 230" class="demo-svg" role="img" aria-label="Animação da rosca martelo">
+      <ellipse cx="120" cy="218" rx="60" ry="5" class="d-floor"/>
+      <g class="d-body">
+        <circle cx="122" cy="36" r="17" class="d-skin"/><path d="M137 34 l7 4 -7 3z" class="d-skin"/><circle cx="130" cy="31" r="2" class="d-eye"/>
+        <rect x="104" y="56" width="32" height="76" rx="14" class="d-torso"/>
+        <path d="M120 128 L112 172 L114 214 M120 128 L128 172 L126 214" class="d-limb"/>
+        <path d="M120 66 L120 112" class="d-arm"/>
+        <g class="d-fore"><path d="M120 112 L120 152" class="d-arm"/>
+          <g transform="translate(120 158)"><rect x="-5" y="-11" width="10" height="22" rx="3" class="d-bell"/><rect x="-9" y="-14" width="18" height="6" rx="2" class="d-plate"/><rect x="-9" y="8" width="18" height="6" rx="2" class="d-plate"/></g></g>
+      </g>
+      <text x="196" y="92" class="d-tag">sobe</text><text x="196" y="168" class="d-tag d2">desce</text>
+    </svg>`,
+  },
+};
+const demoKey = name => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const demoFor = ex => ex && ex.profileId === ME && DEMOS[demoKey(ex.name)];
+function openDemo(ex) {
+  const d = demoFor(ex); if (!d) return;
+  document.getElementById('demoTitle').textContent = ex.name;
+  document.getElementById('demoBody').innerHTML = `<div class="demo-box">${d.svg}</div>
+    <ol class="demo-steps">${d.steps.map(t => `<li>${esc(t)}</li>`).join('')}</ol>`;
+  const dlg = document.getElementById('demoDlg'); dlg.showModal(); if (document.activeElement) document.activeElement.blur();
+}
+document.getElementById('demoClose').onclick = () => document.getElementById('demoDlg').close();
+document.getElementById('demoDlg').addEventListener('click', e => { if (e.target.id === 'demoDlg') e.target.close(); });
+
 // Detalhes que o professor montou (técnica, descanso, observação): só aparecem se preenchidos
 function exDetailHtml(ex) {
   const bits = [ex.method && ex.method !== 'Normal' ? `<span class="pill eq">${esc(ex.method)}</span>` : '', ex.rest ? `<span class="pill eq">⏱ ${fmtRest(ex.rest)}</span>` : ''].filter(Boolean).join(' ');
@@ -2810,6 +2865,7 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'demo-ex': return openDemo(exById(b.dataset.id));
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
     case 'st-tab': ui.stTab = b.dataset.t; return render();
     case 'go-montar': return go('montar');
@@ -3777,7 +3833,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-17:28';
+const APP_VERSION = '02/10-17:52';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
