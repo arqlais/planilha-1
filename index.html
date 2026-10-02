@@ -340,6 +340,10 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
 .tabs button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px}
 .tabs button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.ready-btn{border:2px dashed var(--acc)!important;background:var(--card)!important;color:var(--acc)!important;border-radius:999px;padding:7px 14px;font-weight:800;font-size:13.5px}
+.ready-btn.on{border-style:solid!important;background:var(--up-bg)!important;color:var(--up)!important;border-color:var(--up)!important}
+.srow .pstat{margin-left:4px;padding:2px 7px}
+.srow.on .pstat{background:rgba(255,255,255,.2);color:inherit}
 .ws:not([data-active=all]) [data-tab]{display:none}
 .ws[data-active=resumo] [data-tab=resumo],.ws[data-active=montar] [data-tab=montar],.ws[data-active=plano] [data-tab=plano],.ws[data-active=marcacoes] [data-tab=marcacoes],
 .ws[data-active=medidas] [data-tab=medidas],.ws[data-active=mensagens] [data-tab=mensagens],.ws[data-active=pagamento] [data-tab=pagamento]{display:block}
@@ -1923,7 +1927,7 @@ function profileCard(p) {
       <span class="av">${esc(initials(p.name))}</span>
       <div class="grow"><h3>${esc(p.name)}</h3>
         <small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt} ${s.lastGroups}</small>
-        <div class="tags"><span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
+        <div class="tags">${isMe ? '' : readyChip(p)}<span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
           ${s.now || s.before ? `<span class="pill eq">${fmt(s.now)} kg</span> ${delta(s.now, s.before)}` : ''}</div></div>
       ${isMe ? '' : `<button class="icon" data-act="student-menu" data-pid="${p.id}" aria-label="Opções do aluno">⋯</button>`}
     </div>
@@ -2292,7 +2296,7 @@ function renderAlunosDesk() {
   const q = ui.q.trim().toLowerCase(), shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   const ym = today().slice(0, 7);
   const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
-      <span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
+      <span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${readyChip(p, true)}${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
   const sel = ui.profile !== ME && profile(ui.profile);
   $main.innerHTML = `<div class="split">
     <aside class="slist">
@@ -2543,6 +2547,15 @@ $payForm.addEventListener('submit', e => {
 });
 document.getElementById('payCancel').onclick = () => $pay.close();
 
+// Planejamento pronto: o professor confirma que terminou de montar o planejamento do aluno
+function readyChip(p, compact) {
+  const r = p.planReady;
+  return r ? `<span class="pstat ok" title="Planejamento pronto em ${fmtDate(r.slice(0, 10))}">✓${compact ? '' : ' alinhado'}</span>` : `<span class="pstat wait" title="Planejamento ainda não confirmado">⏳${compact ? '' : ' planejar'}</span>`;
+}
+const readyBtn = p => p.planReady
+  ? `<button class="ready-btn on" data-act="plan-ready" title="Toque para desmarcar">✓ Planejamento pronto · ${fmtDate(p.planReady.slice(0, 10))}</button>`
+  : `<button class="ready-btn" data-act="plan-ready">✓ Marcar planejamento pronto</button>`;
+
 // Abas do aluno (computador)
 const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
 function perfilHtml(p, desk) {
@@ -2608,10 +2621,10 @@ function perfilHtml(p, desk) {
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
         <button class="btn" data-act="goto-msg">💬 Mensagem</button>
         <button class="btn" data-act="student-mode">👁 Ver como o aluno</button>
-        ${desk ? '' : `<button class="btn" data-act="go-montar">🏋️ Montar treino detalhado</button>`}
+        ${desk ? '' : `<button class="btn" data-act="go-montar">🏋️ Montar treino detalhado</button>${readyBtn(p)}`}
       </div>
     </section>
-    ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}</div>` : ''}
+    ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${readyBtn(p)}</div>` : ''}
     <div data-tab="resumo">${weekSetsHtml(p)}
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
@@ -2773,7 +2786,7 @@ $main.addEventListener('input', e => {
   if (e.target.id === 'search' && isDesk()) {
     ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
     document.getElementById('studentList').innerHTML = db.profiles.filter(p => p.id !== ME && p.name.toLowerCase().includes(q))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span><span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span></button>`).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span><span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${readyChip(p, true)}</button>`).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
     return;
   }
   if (e.target.id === 'search') {
@@ -2904,6 +2917,12 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'plan-ready': {
+      const p = profile(ui.profile); if (!p) return;
+      if (p.planReady) { confirmAsk(`Desmarcar o planejamento de ${firstName(p)}?`, 'Ele volta para a lista como "planejar".', 'Desmarcar').then(ok => { if (!ok) return; delete p.planReady; save(); render(); }); return; }
+      p.planReady = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString(); save(); render();
+      return toast(`✓ Planejamento de ${esc(firstName(p))} pronto. Na lista ele aparece como alinhado.`);
+    }
     case 'ws-why': ui.wsOpen = ui.wsOpen === b.dataset.g ? null : b.dataset.g; return render();
     case 'demo-ex': return openDemo(exById(b.dataset.id));
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
@@ -3897,7 +3916,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-19:11';
+const APP_VERSION = '02/10-20:03';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

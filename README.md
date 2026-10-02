@@ -24,6 +24,7 @@ App simples (um único arquivo `index.html`) para registrar treinos de musculaç
 Com a tela larga (computador), o app do professor vira uma plataforma com **menu lateral**: Meu treino, Alunos, Montar treinos, Pagamentos, Histórico e Evolução. No celular nada muda.
 
 - **Alunos:** lista à esquerda (com busca) e o aluno aberto à direita, com abas: **Resumo**, **Montar treino**, **Planejamento**, **Marcações**, **Medidas**, **Mensagens** e **Pagamento**.
+- **Planejamento pronto:** ao lado da aba Pagamento há o botão **✓ Marcar planejamento pronto**. Na lista de alunos aparece **✓ alinhado** (pronto) ou **⏳ planejar** (ainda falta). Toque de novo para desmarcar. No celular o botão fica no perfil do aluno.
 - **Montar treinos:** tabela por treino com ordem (↑ ↓), exercício, grupo, séries, repetições, carga, descanso (segundos), técnica (Bi-set, Drop-set, Rest-pause…) e observação para o aluno. **▸ séries** edita série por série. Duplicar exercício, duplicar treino e **copiar o treino para outro aluno**. Tudo salva sozinho. O aluno vê técnica, descanso e observação embaixo do nome do exercício (só se preenchidos), e o cronômetro de descanso usa o tempo do exercício. Quando o plano muda, a próxima sessão do aluno já vem com as cargas e repetições novas.
 - **Pagamentos:** plano, valor e dia de vencimento de cada aluno; por mês: previsto, recebido, a receber e atrasado; **Marcar pago** (valor, data, forma) e **Cobrar** (WhatsApp com mensagem pronta e sua chave Pix). No celular: aba Alunos → 💳 Pagamentos.
 
