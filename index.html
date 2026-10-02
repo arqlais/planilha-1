@@ -329,7 +329,7 @@ body.desk nav.bottom button{flex:none;max-width:none;flex-direction:row;justify-
 body.desk .hero{margin-left:228px;border-radius:0 0 0 28px;padding-bottom:52px}
 body.desk .hero-in{max-width:1240px;padding:0 16px}
 body.desk main{margin:-36px 0 0 228px;max-width:none;padding:0 32px 60px}
-body.desk main > *{max-width:1240px}
+body.desk main > *{max-width:1240px;margin-left:auto;margin-right:auto}
 body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
 .slist{position:sticky;top:12px;background:var(--card);border-radius:18px;padding:12px;box-shadow:var(--shadow);max-height:calc(100vh - 24px);overflow:auto}
@@ -347,8 +347,9 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .ws:not([data-active=all]) [data-tab]{display:none}
 .ws[data-active=resumo] [data-tab=resumo],.ws[data-active=montar] [data-tab=montar],.ws[data-active=plano] [data-tab=plano],.ws[data-active=marcacoes] [data-tab=marcacoes],
 .ws[data-active=medidas] [data-tab=medidas],.ws[data-active=mensagens] [data-tab=mensagens],.ws[data-active=pagamento] [data-tab=pagamento]{display:block}
-body.desk .ws[data-active=resumo] [data-tab=resumo]{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}
-body.desk .ws[data-active=resumo] [data-tab=resumo] > section{margin-top:0;margin-bottom:14px}
+/* Resumo em duas colunas que se encaixam (sem buracos entre os cartões) */
+body.desk .ws[data-active=resumo] [data-tab=resumo]{columns:2;column-gap:14px}
+body.desk .ws[data-active=resumo] [data-tab=resumo] > section{margin-top:0;margin-bottom:14px;break-inside:avoid;display:inline-block;width:100%}
 /* ---- montar treino ---- */
 .bt-wrap{overflow-x:auto;margin:0 -4px}
 table.bt{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;table-layout:fixed;min-width:760px}
@@ -3932,7 +3933,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-20:18';
+const APP_VERSION = '02/10-20:53';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
