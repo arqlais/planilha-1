@@ -709,6 +709,15 @@ function splitGroup(group, name) {
     : /flexora|stiff|posterior|mesa|terra|romeno|gluteo|good morning/.test(n) ? 'Posteriores' : 'Quadríceps';
   return group;
 }
+// Grupo para contar séries: se o nome do exercício diz claramente o músculo (ex.: "Bíceps", "Rosca", "Tríceps"),
+// vale o nome, mesmo que ele tenha sido cadastrado dentro de outro grupo (ex.: Bíceps no treino de Costas)
+function groupOf(e) {
+  const n = (e.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!UPPER.includes(e.group)) return e.group; // exercícios de pernas ficam como estão
+  if (/tricep|frances|testa/.test(n)) return 'Tríceps';
+  if (/bicep|rosca|martelo|scott/.test(n)) return 'Bíceps';
+  return e.group;
+}
 const OLD_GROUPS = { 'Braços': ['Bíceps', 'Tríceps'], Pernas: LEGS };
 // Treinos de cada perfil com nome livre (ex.: "Superiores", "Treino A"). Cada exercício guarda o id do
 // treino em "letter" (nome histórico do campo) e o grupo muscular. Os antigos A/B/C/D viram "Treino A"...
@@ -2237,12 +2246,12 @@ function weekSetsHtml(p) {
   for (let i = 0; i < 7; i++) { const d = addDays(ws, i); dayPlan(p, d).forEach(w => {
     if (w === CARDIO) return;
     letterExs(w, p.id).forEach(e => {
-      const n = (e.sets || []).length; plan[e.group] = (plan[e.group] || 0) + n;
-      (why[e.group] = why[e.group] || []).push({ d, w, name: e.name, n });
+      const n = (e.sets || []).length, g = groupOf(e); plan[g] = (plan[g] || 0) + n;
+      (why[g] = why[g] || []).push({ d, w, name: e.name, n });
     });
   }); }
   profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => {
-    const e = exById(x.exId); if (e) done[e.group] = (done[e.group] || 0) + x.sets.filter(y => y.done).length;
+    const e = exById(x.exId), g = e && groupOf(e); if (e) done[g] = (done[g] || 0) + x.sets.filter(y => y.done).length;
   });
   const groups = GROUPS.filter(g => plan[g] || done[g]);
   const total = groups.reduce((a, g) => a + (plan[g] || 0), 0);
@@ -3511,6 +3520,13 @@ async function fixOnce() {
     mark('martelo-halteres');
     if (n) msgs.push(`Rosca martelo: cargas dos ${n} treinos antigos passadas para a metade.`);
   }
+  // 1b) Exercícios cujo nome diz o músculo (Bíceps/Tríceps) mas foram cadastrados em outro grupo: corrige o grupo
+  if (!done.has('grupo-pelo-nome')) {
+    let n = 0;
+    db.exercises.forEach(e => { const g = groupOf(e); if (g !== e.group && UPPER.includes(e.group)) { e.group = g; n++; } });
+    mark('grupo-pelo-nome');
+    if (n) msgs.push(`${n} exercício${n === 1 ? '' : 's'} de bíceps/tríceps estava${n === 1 ? '' : 'm'} em outro grupo e foi${n === 1 ? '' : 'ram'} corrigido${n === 1 ? '' : 's'}.`);
+  }
   // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
   if (!done.has('iris-remada-0110')) {
     const p = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Íris'));
@@ -3916,7 +3932,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-20:03';
+const APP_VERSION = '02/10-20:18';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
