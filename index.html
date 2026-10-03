@@ -654,6 +654,7 @@ input,select,textarea{font-size:16px!important}
     <p class="hint">É só o ponto de partida: depois do primeiro treino, o app já preenche tudo com os valores da última vez.</p>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="exDelete">Excluir</button>
+      <button type="button" class="btn" id="exSplit" hidden>Separar histórico</button>
       <span class="grow"></span>
       <button type="button" class="btn" id="exCancel">Cancelar</button>
       <button type="submit" class="btn primary">Salvar</button>
@@ -2464,6 +2465,30 @@ function resizeSets(s, n) {
   const last = s.sets[s.sets.length - 1] || { carga: null, reps: null };
   s.sets = Array.from({ length: n }, (_, i) => s.sets[i] ? s.sets[i] : { carga: last.carga, reps: last.reps, done: false });
 }
+// Renomear para OUTRO exercício (ex.: Tríceps francês → Cadeira flexora) não leva o histórico junto: o histórico
+// fica guardado com o nome antigo e o exercício renomeado começa do zero. Correções de nome (maiúscula, acento,
+// "Puxada" → "Puxada alta", erro de digitação) mantêm o histórico.
+const normName = n => (n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+function nearName(a, b) {
+  a = normName(a); b = normName(b);
+  if (a === b || a.includes(b) || b.includes(a)) return true;
+  if (Math.abs(a.length - b.length) > 2) return false;
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length] <= 2;
+}
+const ownHistory = ex => db.sessions.some(x => x.exId === ex.id && (x.date < today() || x.fin));
+function splitHistory(ex, oldName) {
+  if (!ownHistory(ex)) return false;
+  const oldId = ex.id, keep = { ...plain(ex), name: oldName, letter: null, archived: true };
+  delete keep.order;
+  ex.id = uid(); ex.planDate = today();
+  db.exercises.push(keep);
+  // treino de hoje ainda em andamento fica com o exercício novo
+  db.sessions.forEach(x => { if (x.exId === oldId && x.date === today() && !x.fin) x.exId = ex.id; });
+  return true;
+}
 function builderChange(t) {
   const ex = exById(t.dataset.id); if (!ex) return;
   if (t.dataset.bs) { // série por série
@@ -2472,7 +2497,12 @@ function builderChange(t) {
     ex.planDate = today(); return bRender(true);
   }
   const f = t.dataset.bf, v = t.value;
-  if (f === 'name') { if (v.trim()) ex.name = v.trim().slice(0, 60); return bRender(false); }
+  if (f === 'name') {
+    const nn = v.trim().slice(0, 60); if (!nn || nn === ex.name) return;
+    const old = ex.name; ex.name = nn;
+    if (!nearName(old, nn) && splitHistory(ex, old)) toast(`<b>${esc(nn)}</b> começa com histórico novo. O histórico de ${esc(old)} continua guardado.`);
+    return bRender(false);
+  }
   if (f === 'group') { ex.group = v; return bRender(true); }
   if (f === 'note') { ex.note = v.trim().slice(0, 200) || undefined; if (!ex.note) delete ex.note; return bRender(false); }
   if (f === 'method') { if (v === 'Normal') delete ex.method; else ex.method = v; return bRender(false); }
@@ -3271,6 +3301,7 @@ function openDialog(ex, letter) {
   editing = ex;
   document.getElementById('exTitle').textContent = ex ? 'Editar exercício' : 'Novo exercício';
   document.getElementById('exDelete').style.visibility = ex ? 'visible' : 'hidden';
+  document.getElementById('exSplit').hidden = !(ex && !ui.studentMode && exHistory(ex.id).length);
   const w = ex ? working(ex, ui.date) : null;
   $form.name.value = ex ? ex.name : '';
   document.getElementById('letterPick').innerHTML = letterPicker('radio', 'letter', () => false, false, ui.profile, true);
@@ -3292,7 +3323,9 @@ $form.addEventListener('submit', e => {
   const carga = parseNum($form.carga.value), reps = parseNum($form.reps.value);
   const group = $form.group.value || GROUPS[0], letter = $form.letter.value || null;
   if (editing) {
+    const oldName = editing.name;
     editing.name = name; editing.group = group; editing.letter = letter; if (letter) delete editing.archived;
+    if (!nearName(oldName, name) && splitHistory(editing, oldName)) toast(`<b>${esc(name)}</b> começa com histórico novo. O histórico de ${esc(oldName)} continua guardado.`);
     // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
     if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
       editing.sets = Array.from({ length: n }, () => ({ carga, reps })); editing.planDate = today();
@@ -3311,6 +3344,17 @@ $form.addEventListener('submit', e => {
 });
 document.getElementById('exCancel').onclick = () => $dlg.close();
 document.getElementById('exDelete').onclick = () => { if (editing) { $dlg.close(); deleteEditing(); } };
+// "anterior" com cargas de outro exercício: separa o histórico (fica guardado à parte) e o exercício começa do zero
+document.getElementById('exSplit').onclick = async () => {
+  const ex = editing; if (!ex) return;
+  $dlg.close();
+  const ok = await confirmAsk(`Separar o histórico de ${ex.name}?`, `Use quando o "anterior" mostra cargas que não são deste exercício. Os treinos antigos ficam guardados no Histórico como "${ex.name} (histórico antigo)" e ${ex.name} passa a usar só o que for anotado daqui para a frente. Nada é apagado.`, 'Separar');
+  if (!ok) return;
+  let n = splitHistory(ex, `${ex.name} (histórico antigo)`) ? 1 : 0;
+  // outros exercícios guardados com o mesmo nome (fora dos treinos) também saem do "anterior"
+  db.exercises.forEach(e => { if (e !== ex && e.profileId === ex.profileId && !isLetter(e.letter, e.profileId) && sameName(e.name, ex.name)) { e.name = `${ex.name} (histórico antigo)`; e.archived = true; n++; } });
+  if (n) { save(); render(); toast(`Pronto: ${esc(ex.name)} começa com histórico novo.`); }
+};
 async function deleteEditing() {
   if (!editing) return;
   const hist = exHistory(editing.id).filter(x => x.exId === editing.id).length;
@@ -4214,7 +4258,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-09:43';
+const APP_VERSION = '03/10-10:15';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
