@@ -2293,7 +2293,37 @@ function plannerHtml(p) {
     ${weeks.map(w => `<p class="plan-g" style="margin:10px 2px 6px">Semana de ${fmtDate(w)} a ${fmtDate(addDays(w, 6))}</p>
       <div class="pweek">${[0, 1, 2, 3, 4, 5, 6].map(i => cell(addDays(w, i))).join('')}</div>
       <div style="text-align:right"><button class="pcopy" data-act="plan-copy" data-d="${w}">⧉ Copiar para a semana seguinte</button></div>`).join('')}
+    ${planVersionsHtml(p)}
   </section>`;
+}
+// Versões do planejamento guardadas nas cópias automáticas da nuvem (uma por dia): dá para voltar a uma delas
+function planVersionsHtml(p) {
+  if (!CLOUD || !cloud || cloud.role !== 'admin') return '';
+  const v = ui.planVers && ui.planVers.pid === p.id ? ui.planVers : null;
+  if (!v) return `<div style="margin-top:12px"><button class="btn" data-act="plan-vers">↺ Versões salvas do planejamento</button></div>`;
+  if (v.loading) return '<p class="hint" style="margin-top:12px">Buscando as cópias…</p>';
+  const t = today(), days = Array.from({ length: 28 }, (_, i) => addDays(t, i));
+  const label = x => { const fake = { ...p, plans: x.plans, division: x.division };
+    const ds = days.filter(d => dayPlan(fake, d).length);
+    return ds.length ? ds.slice(0, 10).map(d => `${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][toDate(d).getDay()]} ${fmtDate(d)} ${dayPlan(fake, d).map(w => esc(shortName(w, p.id))).join(' + ')}`).join(' · ') + (ds.length > 10 ? ' …' : '') : 'nenhum treino nas próximas 4 semanas'; };
+  return `<div style="margin-top:12px"><p class="plan-g">Versões salvas (cópia automática de cada dia)</p>
+    ${v.items.length ? v.items.map((x, i) => `<div class="list-row"><div class="grow"><b>Cópia de ${fmtDate(x.date)}${x.at ? ` às ${new Date(x.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}</b>
+        <small style="display:block;color:var(--muted)">${label(x)}</small></div><button class="btn" data-act="plan-use" data-i="${i}">Usar esta</button></div>`).join('')
+      : '<p class="hint">Ainda não há cópias deste aluno.</p>'}
+    <p class="hint" style="margin:8px 0 0">"Usar esta" troca o planejamento de hoje em diante (e a divisão da semana) pelo da cópia. Os treinos já feitos não mudam.</p>
+    <button class="btn" data-act="plan-vers-close" style="margin-top:6px">Fechar</button></div>`;
+}
+async function loadPlanVersions(pid) {
+  ui.planVers = { pid, loading: true, items: [] }; render();
+  try {
+    const idx = await cloud.fs.doc('backups/_index').get(), dates = (idx.exists ? idx.data().dates || [] : []).slice(-10).reverse();
+    const docs = await Promise.all(dates.map(d => cloud.fs.doc(`backups/${d}_${pid}`).get()));
+    const items = [];
+    docs.forEach(d => { if (!d.exists) return; try { const x = d.data(), pr = JSON.parse(x.data)['profiles/' + pid] || {};
+      items.push({ date: x.date, at: x.at, plans: pr.plans || {}, division: pr.division || {} }); } catch (e) {} });
+    ui.planVers = { pid, items };
+  } catch (e) { ui.planVers = null; toast('Não foi possível buscar as cópias agora.'); }
+  render();
 }
 function renderPerfil() {
   const p = profile(ui.profile);
@@ -2947,6 +2977,20 @@ $main.addEventListener('click', e => {
     case 'bill-edit': return openBill(profile(b.dataset.pid));
     case 'pix-save': { profile(ME).pixKey = document.getElementById('pixKey').value.trim().slice(0, 80); save(); return toast('Chave Pix salva.'); }
     case 'plan-day': return openDate(b.dataset.d);
+    case 'plan-vers': return loadPlanVersions(ui.profile);
+    case 'plan-vers-close': ui.planVers = null; return render();
+    case 'plan-use': {
+      const p = profile(ui.profile), x = ui.planVers && ui.planVers.items[+b.dataset.i]; if (!p || !x) return;
+      confirmAsk(`Usar o planejamento da cópia de ${fmtDate(x.date)}?`, 'Os dias de hoje em diante e a divisão da semana voltam a ser como estavam nessa cópia.', 'Usar esta').then(ok => {
+        if (!ok) return;
+        const t = today(), plans = { ...(p.plans || {}) };
+        for (const k of Object.keys(plans)) if (k >= t) delete plans[k];
+        for (const [k, v] of Object.entries(x.plans || {})) if (k >= t) plans[k] = v;
+        p.plans = plans; p.division = { ...(x.division || {}) };
+        ui.planVers = null; save(); render(); toast(`✓ Planejamento de ${esc(firstName(p))} voltou para a versão de ${fmtDate(x.date)}.`);
+      });
+      return;
+    }
     case 'plan-skip': {
       const p = profile(ui.profile), d = b.dataset.d, was = dayPlan(p, d).slice(), names = was.map(x => shortName(x, p.id)).join(' + ');
       ask({ title: `${firstName(p)} não treinou em ${fmtDate(d)}?`, msg: `Apagar o treino deste dia (${names}): ele deixa de contar nas séries da semana. Nada do histórico é apagado.`, ok: 'Apagar o dia', extra: 'Apagar e passar para hoje' }).then(r => {
@@ -3574,7 +3618,7 @@ const BK_DAYS = 30;
 const BK_EVERY = 3 * 3600e3; // a cópia do dia se atualiza no máximo a cada 3 horas
 const countSessions = docs => Object.entries(docs).reduce((a, [k, v]) => a + (/\/months\/\d{4}-\d{2}$/.test(k) ? (v.sessions || []).length : 0), 0);
 async function dailyBackup(force) {
-  if (!cloud || cloud.role !== 'admin' || !cloud.ready) return;
+  if (!cloud || cloud.role !== 'admin' || !cloud.ready || !cloud.serverSeen) return;
   const day = today(), idx = cloud.fs.doc('backups/_index'), ID = firebase.firestore.FieldPath.documentId();
   try {
     const snap = await idx.get(), info = snap.exists ? snap.data() : { dates: [] };
@@ -3633,12 +3677,13 @@ function subscribeMonths(pid) {
   cloud.waiting.add(pid);
   let ref = cloud.fs.collection(`profiles/${pid}/months`);
   if (cloud.role === 'admin') ref = ref.where(firebase.firestore.FieldPath.documentId(), '>=', cloud.windowStart); // "prefs" também entra
-  const un = ref.onSnapshot(snap => {
+  const un = ref.onSnapshot({ includeMetadataChanges: true }, snap => {
     snap.docChanges().forEach(ch => {
       const path = `profiles/${pid}/months/${ch.doc.id}`;
       ch.type === 'removed' ? remote.delete(path) : remote.set(path, ch.doc.data());
     });
-    cloud.waiting.delete(pid); onRemote();
+    if (freshSnap(snap)) cloud.waiting.delete(pid);
+    onRemote();
   }, err => cloudError(err));
   cloud.months.set(pid, un);
 }
@@ -3671,14 +3716,19 @@ function dropProfile(pid) {
 function startAdmin() {
   cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
   cloud.windowStart = windowStartMonth(); cloud.fullLoaded = new Set(); cloud.loadingOld = new Map(); cloud.removed = new Set();
-  cloud.unsubs.push(cloud.fs.collection('profiles').onSnapshot(snap => {
+  // Espera os dados do servidor (não só a cópia guardada no aparelho), para não começar com dados antigos.
+  // Sem internet (ou se o servidor demorar), segue com a cópia do aparelho.
+  setTimeout(() => { cloud.cacheOk = true; onRemote(); }, 8000);
+  cloud.unsubs.push(cloud.fs.collection('profiles').onSnapshot({ includeMetadataChanges: true }, snap => {
+    cloud.profilesSeen = true; if (!snap.metadata.fromCache) cloud.serverSeen = true;
     snap.docChanges().forEach(ch => {
       const pid = ch.doc.id;
       if (ch.type === 'removed') return dropProfile(pid);
       remote.set('profiles/' + pid, ch.doc.data()); cloud.removed.delete(pid);
       if (!cloud.months.has(pid)) subscribeMonths(pid);
     });
-    cloud.gotProfiles = true; onRemote();
+    if (freshSnap(snap)) cloud.gotProfiles = true;
+    onRemote();
   }, err => cloudError(err)));
   cloud.requests = [];
   cloud.unsubs.push(cloud.fs.collection('requests').onSnapshot(snap => {
@@ -3698,17 +3748,26 @@ function startStudent(pid) {
   }, err => cloudError(err)));
   subscribeMonths(pid);
 }
+// Dados que valem para começar: vieram do servidor, ou o aparelho está sem internet / o servidor demorou
+const freshSnap = snap => !snap.metadata.fromCache || !navigator.onLine || (cloud && cloud.cacheOk);
 async function onRemote() {
-  if (cloud.ready) return applyRemote();
+  if (cloud.ready) { runFixes(); return applyRemote(); }
+  if (cloud.cacheOk && cloud.role === 'admin' && cloud.months && cloud.profilesSeen) { cloud.gotProfiles = true; cloud.waiting.clear(); }
   if (!cloud.gotProfiles || cloud.waiting.size) return;
   cloud.ready = true;
   if (cloud.role === 'admin' && !remote.size) return firstRun();
   db = assemble();
   lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
   enterApp();
-  if (cloud.role === 'admin') { fixOnce().catch(e => console.warn('ajuste:', e)); setTimeout(dailyBackup, 4000); } // ajustes pontuais + cópia do dia
+  if (cloud.role === 'admin') { runFixes(); setTimeout(dailyBackup, 4000); } // ajustes pontuais + cópia do dia
   // perfis antigos sem código de convite ganham um (e já sobem para a nuvem)
   if (cloud.role === 'admin' && db.profiles.some(p => p.id !== ME && !p.inviteCode)) { ensureCloudFields(db); scheduleSync(); }
+}
+// Ajustes pontuais: só depois de receber os dados do servidor (nunca em cima de uma cópia antiga do aparelho)
+function runFixes() {
+  if (!cloud || cloud.role !== 'admin' || !cloud.ready || !cloud.serverSeen || cloud.fixesRan) return;
+  cloud.fixesRan = true;
+  fixOnce().catch(e => console.warn('ajuste:', e));
 }
 // Primeira vez do professor: a nuvem está vazia. Oferece enviar os dados deste aparelho.
 async function firstRun() {
@@ -3783,13 +3842,29 @@ function scheduleSync() {
   clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 700);
   setSyncState('Salvando…');
 }
+// Ficha do aluno que já existe na nuvem: grava só os campos que ESTE aparelho mudou (e cada data do planejamento
+// separada). Assim um aparelho com dados antigos (ex.: celular aberto há horas) não apaga o que foi feito em outro.
+function profileUpdate(path, was, doc) {
+  if (!was || !/^profiles\/[^/]+$/.test(path)) return null;
+  let old; try { old = JSON.parse(was); } catch (e) { return null; }
+  const del = firebase.firestore.FieldValue.delete(), up = {};
+  for (const k of new Set([...Object.keys(old), ...Object.keys(doc)])) {
+    if (k === 'claim') continue;
+    const a = old[k], b = doc[k];
+    if (k === 'plans' && a && b && typeof a === 'object' && typeof b === 'object') {
+      for (const d of new Set([...Object.keys(a), ...Object.keys(b)])) if (canon(a[d]) !== canon(b[d])) up['plans.' + d] = b[d] === undefined ? del : b[d];
+    } else if (canon(a) !== canon(b)) up[k] = b === undefined ? del : b;
+  }
+  return Object.keys(up).length ? ['update', path, up] : null;
+}
 async function syncNow() {
   clearTimeout(syncTimer); syncTimer = null;
   if (!cloud || !cloud.ready) return;
   const cur = splitDb(), ops = [];
   for (const [path, doc] of cur) {
     if (cloud.removed && cloud.removed.has(pidOfPath(path))) continue;
-    const c = canon(doc); if (lastSynced.get(path) !== c) { ops.push(['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
+    const c = canon(doc), was = lastSynced.get(path);
+    if (was !== c) { ops.push(profileUpdate(path, was, doc) || ['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
   // Nada é apagado na nuvem (o Firebase também recusa): um mês que ficou vazio é gravado vazio
   for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) {
     if (!profile(pidOfPath(path)) || !path.includes('/months/')) continue; // aluno fora do app (lixeira etc.): não mexe
@@ -3800,7 +3875,7 @@ async function syncNow() {
   try {
     for (let i = 0; i < ops.length; i += 400) {
       const b = cloud.fs.batch();
-      for (const [op, path, doc] of ops.slice(i, i + 400)) op === 'set' ? b.set(cloud.fs.doc(path), doc) : b.delete(cloud.fs.doc(path));
+      for (const [op, path, doc] of ops.slice(i, i + 400)) op === 'set' ? b.set(cloud.fs.doc(path), doc) : op === 'update' ? b.update(cloud.fs.doc(path), doc) : b.delete(cloud.fs.doc(path));
       await b.commit();
     }
     setSyncState(navigator.onLine ? 'Tudo salvo na nuvem ✓' : 'Sem internet: salvo no aparelho');
@@ -3933,7 +4008,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-20:53';
+const APP_VERSION = '02/10-23:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
