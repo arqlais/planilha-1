@@ -1465,7 +1465,7 @@ function cardHtml(ex) {
     </div>
     ${tiles ? `<div class="tile-key">Em cada série: <b>carga (kg)</b> · <b>repetições</b> · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
-    ${lock ? `<p class="lock-note">🔒 ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}</p>` : `<div class="actions">
+    ${lock ? `<p class="lock-note">🔒 ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em ⋯'}</p>` : `<div class="actions">
       <button class="btn" data-act="addset">＋ série</button>
       <button class="btn" data-act="rmset">− série</button>
       <button class="btn" data-act="alldone">${done === n ? 'Desmarcar todas' : '✓ Marcar todas'}</button>
@@ -2459,6 +2459,11 @@ function bRender(full) {
   render();
   if (key) { const el = $main.querySelector(key); if (el) el.focus(); }
 }
+// muda o número de séries de um treino do dia mantendo o que já foi anotado (tira do fim / repete a última)
+function resizeSets(s, n) {
+  const last = s.sets[s.sets.length - 1] || { carga: null, reps: null };
+  s.sets = Array.from({ length: n }, (_, i) => s.sets[i] ? s.sets[i] : { carga: last.carga, reps: last.reps, done: false });
+}
 function builderChange(t) {
   const ex = exById(t.dataset.id); if (!ex) return;
   if (t.dataset.bs) { // série por série
@@ -2476,6 +2481,8 @@ function builderChange(t) {
     const n = Math.max(1, Math.min(20, Math.round(parseNum(v) || 1)));
     const last = ex.sets[ex.sets.length - 1] || { carga: null, reps: null };
     ex.sets = Array.from({ length: n }, (_, i) => ex.sets[i] ? { ...ex.sets[i] } : { carga: last.carga, reps: last.reps });
+    // o treino de hoje (se já começou) também fica com esse número de séries
+    const s = sessionOn(ex.id, today()); if (s && s.sets.length !== n) resizeSets(s, n);
     ex.planDate = today(); return bRender(true);
   }
   if (f === 'reps' || f === 'carga') {
@@ -3291,6 +3298,10 @@ $form.addEventListener('submit', e => {
       editing.sets = Array.from({ length: n }, () => ({ carga, reps })); editing.planDate = today();
       const s = !lockReason(editing.id) && ensureSession(editing, ui.date);
       if (s) s.sets = Array.from({ length: n }, (_, i) => ({ carga, reps, done: !!(s.sets[i] && s.sets[i].done) }));
+      else if (!ui.studentMode) { // professor corrigindo um treino já enviado (ou de dia passado): ajusta o número de séries daquele dia
+        const old = sessionOn(editing.id, ui.date);
+        if (old && old.sets.length !== n) { resizeSets(old, n); toast(`Treino de ${fmtDate(ui.date)} corrigido: ${n} série${n === 1 ? '' : 's'}.`); }
+      }
     }
   } else {
     db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
@@ -4203,7 +4214,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-09:07';
+const APP_VERSION = '03/10-09:43';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
