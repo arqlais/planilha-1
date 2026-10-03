@@ -2305,12 +2305,12 @@ function planVersionsHtml(p) {
   const t = today(), days = Array.from({ length: 28 }, (_, i) => addDays(t, i));
   const label = x => { const fake = { ...p, plans: x.plans, division: x.division };
     const ds = days.filter(d => dayPlan(fake, d).length);
-    return ds.length ? ds.slice(0, 10).map(d => `${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][toDate(d).getDay()]} ${fmtDate(d)} ${dayPlan(fake, d).map(w => esc(shortName(w, p.id))).join(' + ')}`).join(' · ') + (ds.length > 10 ? ' …' : '') : 'nenhum treino nas próximas 4 semanas'; };
+    return ds.length ? ds.slice(0, 10).map(d => `${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][toDate(d).getDay()]} ${fmtDate(d)} ${dayPlan(fake, d).map(w => esc(w === CARDIO ? 'Cardio' : ((x.workouts.find(y => y.id === w) || {}).name || shortName(w, p.id)))).join(' + ')}`).join(' · ') + (ds.length > 10 ? ' …' : '') : 'nenhum treino nas próximas 4 semanas'; };
   return `<div style="margin-top:12px"><p class="plan-g">Versões salvas (cópia automática de cada dia)</p>
     ${v.items.length ? v.items.map((x, i) => `<div class="list-row"><div class="grow"><b>Cópia de ${fmtDate(x.date)}${x.at ? ` às ${new Date(x.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}</b>
-        <small style="display:block;color:var(--muted)">${label(x)}</small></div><button class="btn" data-act="plan-use" data-i="${i}">Usar esta</button></div>`).join('')
+        <small style="display:block;color:var(--muted)"><b>${x.workouts.length} treino${x.workouts.length === 1 ? '' : 's'} montado${x.workouts.length === 1 ? '' : 's'}</b> (${x.workouts.map(w => `${esc(w.name)}: ${x.exercises.filter(e => e.letter === w.id).length} exerc.`).join(', ')}) · ${label(x)}</small></div><button class="btn" data-act="plan-use" data-i="${i}">Usar esta</button></div>`).join('')
       : '<p class="hint">Ainda não há cópias deste aluno.</p>'}
-    <p class="hint" style="margin:8px 0 0">"Usar esta" troca o planejamento de hoje em diante (e a divisão da semana) pelo da cópia. Os treinos já feitos não mudam.</p>
+    <p class="hint" style="margin:8px 0 0">"Usar esta" traz de volta os treinos montados (exercícios, séries, cargas, ordem, observações), a divisão da semana e o planejamento de hoje em diante como estavam na cópia. O histórico do que o aluno já fez não muda.</p>
     <button class="btn" data-act="plan-vers-close" style="margin-top:6px">Fechar</button></div>`;
 }
 async function loadPlanVersions(pid) {
@@ -2320,7 +2320,7 @@ async function loadPlanVersions(pid) {
     const docs = await Promise.all(dates.map(d => cloud.fs.doc(`backups/${d}_${pid}`).get()));
     const items = [];
     docs.forEach(d => { if (!d.exists) return; try { const x = d.data(), pr = JSON.parse(x.data)['profiles/' + pid] || {};
-      items.push({ date: x.date, at: x.at, plans: pr.plans || {}, division: pr.division || {} }); } catch (e) {} });
+      items.push({ date: x.date, at: x.at, plans: pr.plans || {}, division: pr.division || {}, workouts: pr.workouts || [], exercises: pr.exercises || [] }); } catch (e) {} });
     ui.planVers = { pid, items };
   } catch (e) { ui.planVers = null; toast('Não foi possível buscar as cópias agora.'); }
   render();
@@ -2981,8 +2981,12 @@ $main.addEventListener('click', e => {
     case 'plan-vers-close': ui.planVers = null; return render();
     case 'plan-use': {
       const p = profile(ui.profile), x = ui.planVers && ui.planVers.items[+b.dataset.i]; if (!p || !x) return;
-      confirmAsk(`Usar o planejamento da cópia de ${fmtDate(x.date)}?`, 'Os dias de hoje em diante e a divisão da semana voltam a ser como estavam nessa cópia.', 'Usar esta').then(ok => {
+      confirmAsk(`Voltar ${firstName(p)} para a cópia de ${fmtDate(x.date)}?`, 'Os treinos montados, a divisão da semana e o planejamento de hoje em diante voltam a ser como estavam nessa cópia. Nada do histórico é apagado.', 'Usar esta').then(ok => {
         if (!ok) return;
+        // treinos montados: os da cópia voltam como estavam; o que existe hoje e não está na cópia continua (nada é apagado)
+        if (x.workouts.length) { const ws = (p.workouts || []).filter(w => !x.workouts.some(y => y.id === w.id)); p.workouts = [...x.workouts.map(w => ({ ...w })), ...ws]; }
+        x.exercises.forEach(e0 => { const e = { ...plain(e0), profileId: p.id }, i = db.exercises.findIndex(y => y.id === e.id);
+          if (i >= 0) db.exercises[i] = e; else db.exercises.push(e); });
         const t = today(), plans = { ...(p.plans || {}) };
         for (const k of Object.keys(plans)) if (k >= t) delete plans[k];
         for (const [k, v] of Object.entries(x.plans || {})) if (k >= t) plans[k] = v;
@@ -4008,7 +4012,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-23:35';
+const APP_VERSION = '02/10-23:53';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
