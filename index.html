@@ -2257,15 +2257,28 @@ document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 function weekSetsHtml(p) {
   const plan = {}, done = {}, why = {}, off = ui.wsOff || 0, t = today();
   const ws = addDays(weekStart(t), 7 * off), we = addDays(ws, 6);
+  // o que estava planejado em cada dia (exercício por exercício)
+  const items = [];
   for (let i = 0; i < 7; i++) { const d = addDays(ws, i); dayPlan(p, d).forEach(w => {
     if (w === CARDIO) return;
     if (d <= t && isHeld(w, p.id)) return; // treino guardado não estava no app do aluno
-    letterExs(w, p.id).forEach(e => {
-      // dia que o aluno já treinou: vale o que ele tinha naquele dia (mudanças na montagem valem daqui para a frente)
-      const s = d <= t && sessionOn(e.id, d), g = groupOf(e), n = s ? s.sets.length : (e.sets || []).length; plan[g] = (plan[g] || 0) + n;
-      (why[g] = why[g] || []).push({ d, w, name: e.name, n });
-    });
+    letterExs(w, p.id).forEach(e => items.push({ d, w, e, tw: twinIds(e.id) }));
   }); }
+  // Dia que já passou (ou hoje): vale o que o aluno tinha naquele dia, não a montagem atual. Procura o treino
+  // que ele fez desse exercício na semana (no próprio dia ou em outro dia da semana); sem treino feito, vale a
+  // montagem como estava naquele dia (mudança feita depois vale só daqui para a frente).
+  const weekS = profSessions(p.id).filter(x => x.date >= ws && x.date <= we && x.date <= t), used = new Set();
+  const take = (it, sameDay) => { const x = weekS.find(y => !used.has(y.id) && it.tw.has(y.exId) && (!sameDay || y.date === it.d)); if (x) { used.add(x.id); it.s = x; } };
+  items.filter(it => it.d <= t).forEach(it => take(it, true));
+  items.filter(it => it.d <= t && !it.s).forEach(it => take(it, false));
+  items.forEach(it => {
+    const e = it.e, g = groupOf(e);
+    let n = (e.sets || []).length;
+    if (it.s) n = it.s.sets.length;
+    else if (it.d <= t && e.planDate && e.planDate > it.d) { const pv = prevSession(e.id, e.planDate); if (pv) n = pv.sets.length; }
+    plan[g] = (plan[g] || 0) + n;
+    (why[g] = why[g] || []).push({ d: it.d, w: it.w, name: e.name, n });
+  });
   profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => {
     const e = exById(x.exId), g = e && groupOf(e); if (e) done[g] = (done[g] || 0) + x.sets.filter(y => y.done).length;
   });
@@ -4177,7 +4190,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-08:42';
+const APP_VERSION = '03/10-08:51';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
