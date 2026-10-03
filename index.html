@@ -1326,7 +1326,7 @@ async function newWorkout(hold) {
   p.workouts.push({ id, name: r.value.slice(0, 40), ...(hold ? { hold: true } : {}) });
   ui.group = id; saveUi(); save();
   if (!['treino', 'perfil', 'montar', 'alunos'].includes(ui.view)) ui.view = 'treino';
-  render(); toast(`Treino <b>${esc(r.value)}</b> criado. Agora adicione os exercícios.${hold ? ' Ele fica 🔒 guardado (não aparece no app) até você tocar em Liberar no app.' : ''}`);
+  render(); toast(`Treino <b>${esc(r.value)}</b> criado. Agora adicione os exercícios.${hold ? ' Ele fica 🙈 escondido do app até você tocar em Liberar no app.' : ''}`);
 }
 async function renameWorkout(id) {
   const w = workoutsOf().find(x => x.id === id); if (!w) return;
@@ -2303,7 +2303,7 @@ function weekSetsHtml(p) {
   </section>`;
 }
 // Planejamento: esta semana e as próximas, dia a dia
-const shortName = (id, pid) => id === CARDIO ? 'Cardio' : (isHeld(id, pid) ? '🔒 ' : '') + wName(id, pid);
+const shortName = (id, pid) => id === CARDIO ? 'Cardio' : (isHeld(id, pid) ? '🙈 ' : '') + wName(id, pid);
 function plannerHtml(p) {
   const off = ui.planOff || 0, start = addDays(weekStart(today()), 7 * off);
   const weeks = [0, 1, 2, 3].map(k => addDays(start, 7 * k));
@@ -2421,12 +2421,12 @@ function builderHtml(pid) {
         <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps"></div>`).join('')}</div></td></tr>` : ''}`;
   }).join('');
   return `<section class="card">
-    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${w.hold ? '🔒 ' : ''}${esc(w.name)}</button>`).join('')}
+    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${w.hold ? '🙈 ' : ''}${esc(w.name)}</button>`).join('')}
       <button data-act="b-neww">＋ Novo treino</button></div>
     ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
       <div class="hold-bar ${isHeld(L, pid) ? 'held' : ''}">${isHeld(L, pid)
-        ? `<span class="grow"><b>🔒 Guardado</b> · fica só salvo: não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
-        : `<span class="grow"><b>✓ Liberado</b> · aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''} nos dias em que estiver na divisão ou no planejamento.</span><button class="btn" data-act="b-hold">🔒 Guardar (tirar do app)</button>`}</div>
+        ? `<span class="grow"><b>🙈 Escondido</b> · está salvo, mas não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
+        : `<span class="grow"><b>✓ Liberado</b> · aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''} nos dias em que estiver na divisão ou no planejamento.</span><button class="btn" data-act="b-hold">🙈 Esconder do app</button>`}</div>
       <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="b-ren">✎ Renomear</button><button class="btn" data-act="b-dupw">⧉ Duplicar treino</button>
         <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button><button class="btn danger" data-act="b-delw">Excluir treino</button></div>
       <div class="bt-wrap"><table class="bt"><colgroup><col style="width:28px"><col><col style="width:118px"><col style="width:58px"><col style="width:58px"><col style="width:66px"><col style="width:66px"><col style="width:120px"><col style="width:104px"></colgroup>
@@ -2528,7 +2528,7 @@ async function saveWorkoutNow(pid, L, b) {
     ui.bSaved = { pid, L, hora };
     render();
     const held = isHeld(L, pid);
-    await ask({ title: '✓ Treino salvo', msg: `${who} foi salvo${CLOUD ? ' na nuvem' : ''} às ${hora}: ${resumo}.${held ? ` 🔒 Está guardado: não aparece no app${pid !== ME ? ` de ${firstName(p)}` : ''} até você tocar em Liberar no app.` : ''}`, ok: 'OK', noCancel: true });
+    await ask({ title: '✓ Treino salvo', msg: `${who} foi salvo${CLOUD ? ' na nuvem' : ''} às ${hora}: ${resumo}.${held ? ` 🙈 Está escondido: não aparece no app${pid !== ME ? ` de ${firstName(p)}` : ''} até você tocar em Liberar no app.` : ''}`, ok: 'OK', noCancel: true });
   } catch (e) {
     console.warn('salvar treino:', e);
     render();
@@ -2543,8 +2543,8 @@ async function builderAct(act, b) {
     const w = workoutsOf(pid).find(x => x.id === L); if (!w) return;
     const who = pid === ME ? 'no seu Meu treino' : `no app de ${firstName(p)}`;
     if (w.hold) { delete w.hold; save(); render(); return toast(`✓ <b>${esc(w.name)}</b> liberado: aparece ${esc(who)} nos dias em que estiver na divisão ou no planejamento.`); }
-    const ok = await confirmAsk(`Guardar ${w.name}?`, `Ele continua salvo, mas some ${who} até você liberar de novo.`, 'Guardar');
-    if (ok) { w.hold = true; save(); render(); toast(`🔒 <b>${esc(w.name)}</b> guardado.`); }
+    const ok = await confirmAsk(`Esconder ${w.name} do app?`, `ATENÇÃO: isto NÃO é para salvar (o treino já se salva sozinho; para confirmar use ✓ Salvar treino). Esconder faz o treino sumir ${who} até você tocar em Liberar no app.`, 'Esconder do app');
+    if (ok) { w.hold = true; save(); render(); toast(`🙈 <b>${esc(w.name)}</b> escondido do app.`); }
     return;
   }
   if (act === 'b-neww') { const g = ui.group; await newWorkout(true); ui.bGroup = ui.group; ui.group = g; return render(); }
@@ -3656,6 +3656,17 @@ async function fixOnce() {
     mark('grupo-pelo-nome');
     if (n) msgs.push(`${n} exercício${n === 1 ? '' : 's'} de bíceps/tríceps estava${n === 1 ? '' : 'm'} em outro grupo e foi${n === 1 ? '' : 'ram'} corrigido${n === 1 ? '' : 's'}.`);
   }
+  // 1c) Treinos que o aluno já fazia (têm treinos anotados) e foram escondidos sem querer: voltam para o app
+  if (!done.has('liberar-usados')) {
+    const back = [];
+    db.profiles.forEach(p => (p.workouts || []).forEach(w => {
+      if (!w.hold) return;
+      const ids = new Set(db.exercises.filter(e => e.profileId === p.id && e.letter === w.id).map(e => e.id));
+      if (db.sessions.some(x => ids.has(x.exId))) { delete w.hold; back.push(`${firstName(p)}: ${w.name}`); }
+    }));
+    mark('liberar-usados');
+    if (back.length) { save(); msgs.push(`Treinos que tinham sido escondidos do app voltaram: ${back.join(', ')}.`); }
+  }
   // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
   if (!done.has('iris-remada-0110')) {
     const p = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Íris'));
@@ -4190,7 +4201,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-08:51';
+const APP_VERSION = '03/10-08:57';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
