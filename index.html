@@ -348,8 +348,7 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
 .tabs button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px}
 .tabs button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-.ready-btn{border:2px dashed var(--acc)!important;background:var(--card)!important;color:var(--acc)!important;border-radius:999px;padding:7px 14px;font-weight:800;font-size:13.5px}
-.ready-btn.on{border-style:solid!important;background:var(--up-bg)!important;color:var(--up)!important;border-color:var(--up)!important}
+.ready-btn.on{background:var(--up-bg)!important;color:var(--up)!important;border-color:var(--up)!important}
 .srow .pstat{margin-left:4px;padding:2px 7px}
 .srow.on .pstat{background:rgba(255,255,255,.2);color:inherit}
 .ws:not([data-active=all]) [data-tab]{display:none}
@@ -1326,7 +1325,7 @@ async function newWorkout(hold) {
   p.workouts.push({ id, name: r.value.slice(0, 40), ...(hold ? { hold: true } : {}) });
   ui.group = id; saveUi(); save();
   if (!['treino', 'perfil', 'montar', 'alunos'].includes(ui.view)) ui.view = 'treino';
-  render(); toast(`Treino <b>${esc(r.value)}</b> criado. Agora adicione os exercícios.${hold ? ' Ele fica 🙈 escondido do app até você tocar em Liberar no app.' : ''}`);
+  render(); toast(`Treino <b>${esc(r.value)}</b> criado. Agora adicione os exercícios.${hold ? ' Ele fica escondido do app até você tocar em Liberar no app.' : ''}`);
 }
 async function renameWorkout(id) {
   const w = workoutsOf().find(x => x.id === id); if (!w) return;
@@ -1973,7 +1972,7 @@ function myProfileHtml() {
       <button class="btn" data-act="open-medidas" data-pid="${ME}">Minhas medidas</button>
       <button class="btn" data-act="open-profile" data-pid="${ME}" data-v="historico">Meu histórico</button>
     </div>
-    <div class="actions"><button class="btn" data-act="demo-test">❓ Ver o teste: como fazer a Rosca martelo</button></div></div>`;
+    <div class="actions"><button class="btn" data-act="demo-test">Ver o teste: como fazer a Rosca martelo</button></div></div>`;
 }
 function renderAlunos() {
   const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -1983,7 +1982,7 @@ function renderAlunos() {
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
     ${CLOUD && cloud ? requestsHtml() : ''}
     ${rescueHtml()}
-    <div class="actions" style="margin:4px 0 0"><button class="btn" data-act="go-view" data-v="pagamentos">💳 Pagamentos</button><button class="btn" data-act="go-view" data-v="montar">🏋️ Montar treinos</button></div>
+    <div class="actions" style="margin:4px 0 0"><button class="btn" data-act="go-view" data-v="pagamentos">Pagamentos</button><button class="btn" data-act="go-view" data-v="montar">Montar treinos</button></div>
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
     <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro '}</p>`}</div>
@@ -2106,7 +2105,7 @@ function marcacoesHtml(p) {
   }).join('');
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Marcações do aluno</h3>
       <small>Séries e cardio que ${esc(firstName(p))} marcou no app</small></div></div>
-    ${body || `<p class="empty" style="padding:8px 0">Nenhuma marcação ainda. Use <b>👁 Ver como o aluno</b> para ver o app como ${esc(firstName(p))} e marcar um treino.</p>`}</section>`;
+    ${body || `<p class="empty" style="padding:8px 0">Nenhuma marcação ainda. Use <b>Ver como o aluno</b> para ver o app como ${esc(firstName(p))} e marcar um treino.</p>`}</section>`;
 }
 // ---------- Medidas do corpo (aluno e professor) ----------
 const BODY_FIELDS = [['peso', 'Peso', 'kg'], ['altura', 'Altura', 'cm'], ['idade', 'Idade', 'anos'],
@@ -2303,7 +2302,7 @@ function weekSetsHtml(p) {
   </section>`;
 }
 // Planejamento: esta semana e as próximas, dia a dia
-const shortName = (id, pid) => id === CARDIO ? 'Cardio' : (isHeld(id, pid) ? '🙈 ' : '') + wName(id, pid);
+const shortName = (id, pid) => id === CARDIO ? 'Cardio' : wName(id, pid) + (isHeld(id, pid) ? ' (escondido)' : '');
 function plannerHtml(p) {
   const off = ui.planOff || 0, start = addDays(weekStart(today()), 7 * off);
   const weeks = [0, 1, 2, 3].map(k => addDays(start, 7 * k));
@@ -2421,12 +2420,12 @@ function builderHtml(pid) {
         <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps"></div>`).join('')}</div></td></tr>` : ''}`;
   }).join('');
   return `<section class="card">
-    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${w.hold ? '🙈 ' : ''}${esc(w.name)}</button>`).join('')}
+    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}${w.hold ? ' <small>(escondido)</small>' : ''}</button>`).join('')}
       <button data-act="b-neww">＋ Novo treino</button></div>
     ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
       <div class="hold-bar ${isHeld(L, pid) ? 'held' : ''}">${isHeld(L, pid)
-        ? `<span class="grow"><b>🙈 Escondido</b> · está salvo, mas não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
-        : `<span class="grow"><b>✓ Liberado</b> · aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''} nos dias em que estiver na divisão ou no planejamento.</span><button class="btn" data-act="b-hold">🙈 Esconder do app</button>`}</div>
+        ? `<span class="grow"><b>Escondido</b> · está salvo, mas não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
+        : `<span class="grow"><b>✓ Liberado</b> · aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''} nos dias em que estiver na divisão ou no planejamento.</span><button class="btn" data-act="b-hold">Esconder do app</button>`}</div>
       <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="b-ren">✎ Renomear</button><button class="btn" data-act="b-dupw">⧉ Duplicar treino</button>
         <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button><button class="btn danger" data-act="b-delw">Excluir treino</button></div>
       <div class="bt-wrap"><table class="bt"><colgroup><col style="width:28px"><col><col style="width:118px"><col style="width:58px"><col style="width:58px"><col style="width:66px"><col style="width:66px"><col style="width:120px"><col style="width:104px"></colgroup>
@@ -2446,7 +2445,7 @@ function renderMontar() {
   $main.innerHTML = `<section class="card"><div class="card-h"><div class="grow"><h3>Montar treinos</h3><small>Escolha de quem é o treino e monte cada exercício em detalhe.</small></div></div>
       <label class="f" style="max-width:420px;margin:0">De quem é o treino<select class="sel" id="bWho"><option value="${ME}" ${p.id === ME ? 'selected' : ''}>Meu treino (${esc(profile(ME).name)})</option>
         ${students.map(x => `<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
-      ${p.id !== ME ? `<div class="actions"><button class="btn" data-act="desk-pick" data-pid="${p.id}" data-t="plano">📆 Planejar semanas de ${esc(firstName(p))}</button></div>` : ''}</section>
+      ${p.id !== ME ? `<div class="actions"><button class="btn" data-act="desk-pick" data-pid="${p.id}" data-t="plano">Planejar semanas de ${esc(firstName(p))}</button></div>` : ''}</section>
     ${builderHtml(p.id)}`;
 }
 // grava a mudança e redesenha mantendo o cursor no campo em que a pessoa estava
@@ -2528,7 +2527,7 @@ async function saveWorkoutNow(pid, L, b) {
     ui.bSaved = { pid, L, hora };
     render();
     const held = isHeld(L, pid);
-    await ask({ title: '✓ Treino salvo', msg: `${who} foi salvo${CLOUD ? ' na nuvem' : ''} às ${hora}: ${resumo}.${held ? ` 🙈 Está escondido: não aparece no app${pid !== ME ? ` de ${firstName(p)}` : ''} até você tocar em Liberar no app.` : ''}`, ok: 'OK', noCancel: true });
+    await ask({ title: '✓ Treino salvo', msg: `${who} foi salvo${CLOUD ? ' na nuvem' : ''} às ${hora}: ${resumo}.${held ? ` Está escondido: não aparece no app${pid !== ME ? ` de ${firstName(p)}` : ''} até você tocar em Liberar no app.` : ''}`, ok: 'OK', noCancel: true });
   } catch (e) {
     console.warn('salvar treino:', e);
     render();
@@ -2544,7 +2543,7 @@ async function builderAct(act, b) {
     const who = pid === ME ? 'no seu Meu treino' : `no app de ${firstName(p)}`;
     if (w.hold) { delete w.hold; save(); render(); return toast(`✓ <b>${esc(w.name)}</b> liberado: aparece ${esc(who)} nos dias em que estiver na divisão ou no planejamento.`); }
     const ok = await confirmAsk(`Esconder ${w.name} do app?`, `ATENÇÃO: isto NÃO é para salvar (o treino já se salva sozinho; para confirmar use ✓ Salvar treino). Esconder faz o treino sumir ${who} até você tocar em Liberar no app.`, 'Esconder do app');
-    if (ok) { w.hold = true; save(); render(); toast(`🙈 <b>${esc(w.name)}</b> escondido do app.`); }
+    if (ok) { w.hold = true; save(); render(); toast(`<b>${esc(w.name)}</b> escondido do app.`); }
     return;
   }
   if (act === 'b-neww') { const g = ui.group; await newWorkout(true); ui.bGroup = ui.group; ui.group = g; return render(); }
@@ -2671,8 +2670,8 @@ function readyChip(p, compact) {
   return r ? `<span class="pstat ok" title="Planejamento pronto em ${fmtDate(r.slice(0, 10))}">✓${compact ? '' : ' alinhado'}</span>` : `<span class="pstat wait" title="Planejamento ainda não confirmado">⏳${compact ? '' : ' planejar'}</span>`;
 }
 const readyBtn = p => p.planReady
-  ? `<button class="ready-btn on" data-act="plan-ready" title="Toque para desmarcar">✓ Planejamento pronto · ${fmtDate(p.planReady.slice(0, 10))}</button>`
-  : `<button class="ready-btn" data-act="plan-ready">✓ Marcar planejamento pronto</button>`;
+  ? `<button class="btn ready-btn on" data-act="plan-ready" title="Toque para desmarcar">✓ Planejamento pronto · ${fmtDate(p.planReady.slice(0, 10))}</button>`
+  : `<button class="btn ready-btn" data-act="plan-ready">Marcar planejamento pronto</button>`;
 
 // Abas do aluno (computador)
 const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
@@ -2737,9 +2736,9 @@ function perfilHtml(p, desk) {
         <button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
-        <button class="btn" data-act="goto-msg">💬 Mensagem</button>
-        <button class="btn" data-act="student-mode">👁 Ver como o aluno</button>
-        ${desk ? '' : `<button class="btn" data-act="go-montar">🏋️ Montar treino detalhado</button>${readyBtn(p)}`}
+        <button class="btn" data-act="goto-msg">Mensagem</button>
+        <button class="btn" data-act="student-mode">Ver como o aluno</button>
+        ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${readyBtn(p)}`}
       </div>
     </section>
     ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${readyBtn(p)}</div>` : ''}
@@ -2777,18 +2776,18 @@ function perfilHtml(p, desk) {
     <div data-tab="montar">${desk ? builderHtml(p.id) : `<section class="card">
       <div class="card-h"><div class="grow"><h3>Treinos do aluno</h3><small>Crie os treinos com o nome que quiser e monte os exercícios: toque em ⋯ para mudar séries, carga, repetições ou o treino</small></div></div>
       ${plan}
-      <button class="btn" style="margin-top:10px" data-act="go-montar">🏋️ Montar treino detalhado</button>
+      <button class="btn" style="margin-top:10px" data-act="go-montar">Montar treino detalhado</button>
       ${savePlanHtml(p, true)}
     </section>`}</div>
     <div data-tab="mensagens"><section class="card" id="msgCard">
       <div class="card-h"><div class="grow"><h3>💬 Mensagem para ${esc(firstName(p))}</h3>
         <small>${p.phone ? 'Abre o WhatsApp com a mensagem pronta' : 'Cadastre o WhatsApp do aluno (✎) para enviar direto para ele'}</small></div></div>
       <div class="tpl">
-        <button class="btn" data-act="tpl" data-k="treino">📋 Enviar</button>
+        <button class="btn" data-act="tpl" data-k="treino">Enviar</button>
         <select id="tplGroup" aria-label="Treino">${workoutsOf(p.id).map(w => `<option value="${w.id}" ${w.id === ui.tplGroup ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select>
-        <button class="btn" data-act="tpl" data-k="semana">📈 Resumo da semana</button>
+        <button class="btn" data-act="tpl" data-k="semana">Resumo da semana</button>
         <button class="btn" data-act="tpl" data-k="lembrete">⏰ Lembrete</button>
-        <button class="btn" data-act="tpl" data-k="parabens">🎉 Parabéns</button>
+        <button class="btn" data-act="tpl" data-k="parabens">Parabéns</button>
       </div>
       <textarea class="msg" id="msgText" placeholder="Escreva a mensagem ou escolha um modelo acima">${esc(ui.msgDraft)}</textarea>
       <div class="actions">
@@ -4201,7 +4200,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-08:57';
+const APP_VERSION = '03/10-09:02';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
