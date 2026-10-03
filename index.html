@@ -3724,6 +3724,23 @@ async function fixOnce() {
     mark('liberar-usados');
     if (back.length) { save(); msgs.push(`Treinos que tinham sido escondidos do app voltaram: ${back.join(', ')}.`); }
   }
+  // 1d) Professor, 03/10: treino de Pernas começa do zero (o de hoje vira a primeira comparação); o antigo fica guardado
+  if (!done.has('pernas-zero-0310')) {
+    const D = '2026-10-03', meP = profile(ME), legs = (meP.workouts || []).filter(w => /perna/.test(normName(w.name))).map(w => w.id);
+    let n = 0;
+    profExs(ME).filter(e => legs.includes(e.letter)).forEach(e => {
+      const name = e.name, oldName = `${name} (histórico antigo)`;
+      // outros exercícios guardados com o mesmo nome (fora dos treinos) saem do "anterior"
+      db.exercises.forEach(x => { if (x !== e && x.profileId === ME && !isLetter(x.letter, ME) && sameName(x.name, name)) { x.name = oldName; x.archived = true; } });
+      if (!db.sessions.some(x => x.exId === e.id && x.date < D)) return;
+      const oldId = e.id, keep = { ...plain(e), name: oldName, letter: null, archived: true }; delete keep.order;
+      e.id = uid(); e.planDate = D; db.exercises.push(keep);
+      db.sessions.forEach(x => { if (x.exId === oldId && x.date >= D) x.exId = e.id; }); // o treino de hoje fica com o exercício
+      n++;
+    });
+    mark('pernas-zero-0310');
+    if (n) { save(); msgs.push(`Seu treino de Pernas começou do zero: o de hoje é a primeira comparação (${n} exercícios; o histórico antigo ficou guardado).`); }
+  }
   // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
   if (!done.has('iris-remada-0110')) {
     const p = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Íris'));
@@ -4258,7 +4275,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-10:15';
+const APP_VERSION = '03/10-10:31';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
