@@ -2270,10 +2270,13 @@ function weekSetsHtml(p) {
   const take = (it, sameDay) => { const x = weekS.find(y => !used.has(y.id) && it.tw.has(y.exId) && (!sameDay || y.date === it.d)); if (x) { used.add(x.id); it.s = x; } };
   items.filter(it => it.d <= t).forEach(it => take(it, true));
   items.filter(it => it.d <= t && !it.s).forEach(it => take(it, false));
+  // treino que o aluno já fez naquele dia: exercício que não estava nele (acrescentado depois) fica para as próximas semanas
+  const doneDay = new Set(items.filter(it => it.s).map(it => it.d + '|' + it.w));
   items.forEach(it => {
     const e = it.e, g = groupOf(e);
     let n = (e.sets || []).length;
     if (it.s) n = it.s.sets.length;
+    else if (it.d <= t && doneDay.has(it.d + '|' + it.w)) return;
     else if (it.d <= t && e.planDate && e.planDate > it.d) { const pv = prevSession(e.id, e.planDate); if (pv) n = pv.sets.length; }
     plan[g] = (plan[g] || 0) + n;
     (why[g] = why[g] || []).push({ d: it.d, w: it.w, name: e.name, n });
@@ -4200,7 +4203,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-09:02';
+const APP_VERSION = '03/10-09:07';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
