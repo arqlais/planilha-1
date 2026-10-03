@@ -265,6 +265,12 @@ label.f textarea{display:block;width:100%;margin-top:5px;background:var(--input)
 .pill.down{background:var(--down-bg);color:var(--down)}
 .pill.eq{background:var(--input);color:var(--muted);border:1px solid var(--line)}
 
+.wsh{flex-wrap:wrap;row-gap:6px}.wsh .grow{min-width:240px}
+.wsnav{display:flex;align-items:center;gap:4px;flex:none;margin-left:auto}.wsnav span{font-size:12.5px;font-weight:800;color:var(--muted);min-width:92px;text-align:center}
+.wsnav button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:18px;font-weight:800;line-height:1}
+.wsnav button:disabled{opacity:.35}
+.hold-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-radius:14px;padding:10px 12px;margin:0 0 10px;background:var(--up-bg);color:var(--text);font-size:13.5px}
+.hold-bar.held{background:var(--acc-soft)}
 .bsave{width:100%;margin-top:10px;padding:14px;font-size:15.5px;font-weight:800;border-radius:18px}
 .bsaved{margin:8px 2px 0;color:var(--up);font-weight:700;font-size:13.5px;text-align:center}
 .add{width:100%;padding:14px;border:2px solid var(--acc-2);background:var(--card);border-radius:18px;color:var(--acc);font-weight:700}
@@ -728,6 +734,9 @@ const OLD_LETTERS = ['A', 'B', 'C', 'D'];
 const workoutsOf = (pid = ui.profile) => { const p = db.profiles.find(x => x.id === pid); return (p && p.workouts) || []; };
 const isLetter = (v, pid = ui.profile) => !!v && workoutsOf(pid).some(w => w.id === v);
 const wName = (id, pid = ui.profile) => (workoutsOf(pid).find(w => w.id === id) || {}).name || 'Treino';
+// Treino guardado (montado mas ainda não liberado): não aparece no app do aluno (nem no Meu treino do professor)
+const isHeld = (id, pid = ui.profile) => !!(workoutsOf(pid).find(w => w.id === id) || {}).hold;
+const liveWorkouts = (pid = ui.profile) => workoutsOf(pid).filter(w => !w.hold);
 const firstWorkout = (pid = ui.profile) => (workoutsOf(pid)[0] || {}).id || '';
 const SVG = {
   treino: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
@@ -1174,7 +1183,7 @@ function markLocked() {
 }
 // Aluno: vê só o treino que o professor passou para o dia (sem escolher grupo)
 function renderStudentTreino(p, greet, isToday) {
-  const plan = dayPlan(p, ui.date), groups = workoutsOf(p.id).map(w => w.id).filter(g => plan.includes(g));
+  const plan = dayPlan(p, ui.date), groups = liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g));
   const blocks = groups.map(g => {
     const exs = letterExs(g);
     return `<h3 style="margin:18px 4px 10px">${esc(wName(g))}${letterDesc(g) ? ` <small style="color:var(--muted);font-weight:600">${esc(letterDesc(g))}</small>` : ''}</h3>`
@@ -1182,6 +1191,7 @@ function renderStudentTreino(p, greet, isToday) {
       || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>');
   }).join('');
   const label = [...groups.map(g => wName(g)), ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
+  const showPlan = groups.length || plan.includes(CARDIO); // só treino guardado: para o aluno é descanso
   $main.innerHTML = `${greet}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
@@ -1190,7 +1200,7 @@ function renderStudentTreino(p, greet, isToday) {
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
     ${installTipHtml()}
-    ${plan.length ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
+    ${showPlan ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
       ${cardioGoalHtml(p)}
       ${groups.length ? `<div class="layout">Séries em:
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
@@ -1295,7 +1305,7 @@ function installTipHtml() {
 // Professor confirma o treino montado: grava na hora e mostra o que o aluno vê hoje
 function savePlanHtml(p, inline) {
   const plan = dayPlan(p, today()), goal = cardioGoalOf(p, today());
-  const parts = [...workoutsOf(p.id).filter(w => plan.includes(w.id)).map(w => w.name), ...(goal ? [`cardio ${fmtMin(goal)} min`] : plan.includes(CARDIO) ? ['cardio'] : [])];
+  const parts = [...liveWorkouts(p.id).filter(w => plan.includes(w.id)).map(w => w.name), ...(goal ? [`cardio ${fmtMin(goal)} min`] : plan.includes(CARDIO) ? ['cardio'] : [])];
   // montando um treino (A/B/C/D) que não está na divisão de hoje: o botão também libera para hoje
   const L = !inline && isLetter(ui.group, p.id) && letterExs(ui.group, p.id).length && !plan.includes(ui.group) ? ui.group : '';
   const LN = L ? esc(wName(L, p.id)) : '';
@@ -1306,17 +1316,17 @@ function savePlanHtml(p, inline) {
   return inline ? `<div style="margin-top:14px">${body}</div>` : `<section class="card" style="margin-top:14px">${body}</section>`;
 }
 // Criar, renomear e excluir treinos (do perfil aberto: o professor ou o aluno que ele está montando)
-async function newWorkout() {
+async function newWorkout(hold) {
   const p = profile(ui.profile);
   const r = await ask({ title: 'Novo treino', field: 'Nome do treino', ok: 'Criar',
     msg: `Dê o nome que quiser, por exemplo: Superiores, Inferiores, Full body, Treino A.${p.id !== ME ? ` O treino é de ${firstName(p)}.` : ''}` });
   if (r.action !== 'ok' || !r.value) return;
   p.workouts = p.workouts || [];
   const id = uid();
-  p.workouts.push({ id, name: r.value.slice(0, 40) });
+  p.workouts.push({ id, name: r.value.slice(0, 40), ...(hold ? { hold: true } : {}) });
   ui.group = id; saveUi(); save();
   if (!['treino', 'perfil', 'montar', 'alunos'].includes(ui.view)) ui.view = 'treino';
-  render(); toast(`Treino <b>${esc(r.value)}</b> criado. Agora adicione os exercícios.`);
+  render(); toast(`Treino <b>${esc(r.value)}</b> criado. Agora adicione os exercícios.${hold ? ' Ele fica 🔒 guardado (não aparece no app) até você tocar em Liberar no app.' : ''}`);
 }
 async function renameWorkout(id) {
   const w = workoutsOf().find(x => x.id === id); if (!w) return;
@@ -1335,7 +1345,7 @@ async function deleteWorkout(id) {
 }
 function groupChips(group) {
   const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? g : esc(wName(g))}</button>`;
-  return `<div class="chips">${workoutsOf().map(w => chip(w.id)).join('')}${chip(CARDIO)}
+  return `<div class="chips">${workoutsOf().filter(w => !(w.hold && (ui.profile === ME || ui.studentMode)) || w.id === group).map(w => chip(w.id)).join('')}${chip(CARDIO)}
     ${ui.studentMode ? '' : '<button class="add-chip" data-act="new-workout">＋ Novo treino</button>'}</div>`;
 }
 function letterPicker(type, name, checked, withCardio, pid = ui.profile, withNone) {
@@ -1364,7 +1374,7 @@ const cardioLocked = (date = ui.date) => dayLocked(date) || daySent(date);
 const cardioLockMsg = () => dayLocked() ? LOCK_MSG.past : 'O treino de hoje já foi enviado: o cardio também ficou registrado e não pode mais ser alterado.';
 // Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
 function sendableExs() {
-  if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return workoutsOf(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
+  if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
   return isLetter(ui.group) ? letterExs(ui.group) : [];
 }
 // Professor vendo o treino de um aluno: mostra se o aluno já enviou (bloqueado) ou ainda não
@@ -2245,12 +2255,14 @@ document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 
 // Séries por grupo muscular na semana: o que a divisão manda fazer (planejado) e o que o aluno já fez nesta semana
 function weekSetsHtml(p) {
-  const plan = {}, done = {}, why = {};
-  const ws = weekStart(today()), we = addDays(ws, 6);
+  const plan = {}, done = {}, why = {}, off = ui.wsOff || 0, t = today();
+  const ws = addDays(weekStart(t), 7 * off), we = addDays(ws, 6);
   for (let i = 0; i < 7; i++) { const d = addDays(ws, i); dayPlan(p, d).forEach(w => {
     if (w === CARDIO) return;
+    if (d <= t && isHeld(w, p.id)) return; // treino guardado não estava no app do aluno
     letterExs(w, p.id).forEach(e => {
-      const n = (e.sets || []).length, g = groupOf(e); plan[g] = (plan[g] || 0) + n;
+      // dia que o aluno já treinou: vale o que ele tinha naquele dia (mudanças na montagem valem daqui para a frente)
+      const s = d <= t && sessionOn(e.id, d), g = groupOf(e), n = s ? s.sets.length : (e.sets || []).length; plan[g] = (plan[g] || 0) + n;
       (why[g] = why[g] || []).push({ d, w, name: e.name, n });
     });
   }); }
@@ -2259,8 +2271,10 @@ function weekSetsHtml(p) {
   });
   const groups = GROUPS.filter(g => plan[g] || done[g]);
   const total = groups.reduce((a, g) => a + (plan[g] || 0), 0);
-  return `<section class="card"><div class="card-h"><div class="grow"><h3>Séries por grupo na semana</h3>
-      <small>${groups.length ? `<b>${total} séries</b> planejadas nesta semana · barra = feitas` : 'Monte a divisão da semana para ver as séries de cada grupo'}</small></div></div>
+  const wl = off === 0 ? 'Esta semana' : off === 1 ? 'Próxima semana' : off === -1 ? 'Semana passada' : `${fmtDate(ws)} a ${fmtDate(we)}`;
+  return `<section class="card"><div class="card-h wsh"><div class="grow"><h3>Séries por grupo na semana</h3>
+      <small>${groups.length ? `<b>${total} séries</b> planejadas · ${fmtDate(ws)} a ${fmtDate(we)}${off < 1 ? ' · barra = feitas' : ''}` : `Nada planejado de ${fmtDate(ws)} a ${fmtDate(we)}`}</small></div>
+      <div class="wsnav"><button data-act="ws-week" data-d="-1" aria-label="Semana anterior">‹</button><span>${wl}</span><button data-act="ws-week" data-d="1" aria-label="Próxima semana" ${off >= 8 ? 'disabled' : ''}>›</button></div></div>
     ${groups.length ? `<div class="wsets">${groups.map(g => {
       const pl = plan[g] || 0, dn = done[g] || 0, pct = pl ? Math.min(100, dn / pl * 100) : 100;
       return `<button class="wset ${ui.wsOpen === g ? 'on' : ''}" data-act="ws-why" data-g="${g}"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
@@ -2276,7 +2290,7 @@ function weekSetsHtml(p) {
   </section>`;
 }
 // Planejamento: esta semana e as próximas, dia a dia
-const shortName = (id, pid) => id === CARDIO ? 'Cardio' : wName(id, pid);
+const shortName = (id, pid) => id === CARDIO ? 'Cardio' : (isHeld(id, pid) ? '🔒 ' : '') + wName(id, pid);
 function plannerHtml(p) {
   const off = ui.planOff || 0, start = addDays(weekStart(today()), 7 * off);
   const weeks = [0, 1, 2, 3].map(k => addDays(start, 7 * k));
@@ -2394,9 +2408,12 @@ function builderHtml(pid) {
         <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps"></div>`).join('')}</div></td></tr>` : ''}`;
   }).join('');
   return `<section class="card">
-    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}</button>`).join('')}
+    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${w.hold ? '🔒 ' : ''}${esc(w.name)}</button>`).join('')}
       <button data-act="b-neww">＋ Novo treino</button></div>
     ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
+      <div class="hold-bar ${isHeld(L, pid) ? 'held' : ''}">${isHeld(L, pid)
+        ? `<span class="grow"><b>🔒 Guardado</b> · fica só salvo: não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
+        : `<span class="grow"><b>✓ Liberado</b> · aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''} nos dias em que estiver na divisão ou no planejamento.</span><button class="btn" data-act="b-hold">🔒 Guardar (tirar do app)</button>`}</div>
       <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="b-ren">✎ Renomear</button><button class="btn" data-act="b-dupw">⧉ Duplicar treino</button>
         <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button><button class="btn danger" data-act="b-delw">Excluir treino</button></div>
       <div class="bt-wrap"><table class="bt"><colgroup><col style="width:28px"><col><col style="width:118px"><col style="width:58px"><col style="width:58px"><col style="width:66px"><col style="width:66px"><col style="width:120px"><col style="width:104px"></colgroup>
@@ -2464,7 +2481,7 @@ function copyWorkout(fromPid, L, toPid) {
   const w = workoutsOf(fromPid).find(x => x.id === L); if (!w) return;
   const to = profile(toPid); to.workouts = to.workouts || [];
   let name = w.name; if (to.workouts.some(x => sameName(x.name, name))) name = (name + (toPid === fromPid ? ' (cópia)' : ' (copiado)')).slice(0, 40);
-  const id = uid(); to.workouts.push({ id, name });
+  const id = uid(); to.workouts.push({ id, name, hold: true }); // cópia chega guardada: libere quando estiver pronta
   letterExs(L, fromPid).forEach((e, k) => db.exercises.push({ ...cloneEx(e, toPid, id), order: k + 1 }));
   return { id, name };
 }
@@ -2497,7 +2514,8 @@ async function saveWorkoutNow(pid, L, b) {
     const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     ui.bSaved = { pid, L, hora };
     render();
-    await ask({ title: '✓ Treino salvo', msg: `${who} foi salvo${CLOUD ? ' na nuvem' : ''} às ${hora}: ${resumo}.${CLOUD && pid !== ME ? ` Já aparece no app de ${firstName(p)}.` : ''}`, ok: 'OK', noCancel: true });
+    const held = isHeld(L, pid);
+    await ask({ title: '✓ Treino salvo', msg: `${who} foi salvo${CLOUD ? ' na nuvem' : ''} às ${hora}: ${resumo}.${held ? ` 🔒 Está guardado: não aparece no app${pid !== ME ? ` de ${firstName(p)}` : ''} até você tocar em Liberar no app.` : ''}`, ok: 'OK', noCancel: true });
   } catch (e) {
     console.warn('salvar treino:', e);
     render();
@@ -2508,7 +2526,15 @@ async function builderAct(act, b) {
   const pid = ui.profile, p = profile(pid), L = ui.bGroup;
   if (act === 'b-w') { ui.bGroup = b.dataset.id; return render(); }
   if (act === 'b-save') return saveWorkoutNow(pid, L, b);
-  if (act === 'b-neww') { const g = ui.group; await newWorkout(); ui.bGroup = ui.group; ui.group = g; return render(); }
+  if (act === 'b-hold') {
+    const w = workoutsOf(pid).find(x => x.id === L); if (!w) return;
+    const who = pid === ME ? 'no seu Meu treino' : `no app de ${firstName(p)}`;
+    if (w.hold) { delete w.hold; save(); render(); return toast(`✓ <b>${esc(w.name)}</b> liberado: aparece ${esc(who)} nos dias em que estiver na divisão ou no planejamento.`); }
+    const ok = await confirmAsk(`Guardar ${w.name}?`, `Ele continua salvo, mas some ${who} até você liberar de novo.`, 'Guardar');
+    if (ok) { w.hold = true; save(); render(); toast(`🔒 <b>${esc(w.name)}</b> guardado.`); }
+    return;
+  }
+  if (act === 'b-neww') { const g = ui.group; await newWorkout(true); ui.bGroup = ui.group; ui.group = g; return render(); }
   if (act === 'b-ren') return renameWorkout(L);
   if (act === 'b-delw') { await deleteWorkout(L); ui.bGroup = firstWorkout(pid); return render(); }
   if (act === 'b-dupw') { const r = copyWorkout(pid, L, pid); if (r) { ui.bGroup = r.id; save(); render(); toast(`Treino duplicado: <b>${esc(r.name)}</b>`); } return; }
@@ -3003,6 +3029,7 @@ $main.addEventListener('click', e => {
       p.planReady = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString(); save(); render();
       return toast(`✓ Planejamento de ${esc(firstName(p))} pronto. Na lista ele aparece como alinhado.`);
     }
+    case 'ws-week': ui.wsOff = Math.max(-26, Math.min(8, (ui.wsOff || 0) + +b.dataset.d)); ui.wsOpen = null; return render();
     case 'ws-why': ui.wsOpen = ui.wsOpen === b.dataset.g ? null : b.dataset.g; return render();
     case 'demo-ex': return openDemo(exById(b.dataset.id));
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
@@ -3010,7 +3037,7 @@ $main.addEventListener('click', e => {
     case 'go-montar': return go('montar');
     case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
     case 'b-w': case 'b-neww': case 'b-ren': case 'b-delw': case 'b-dupw': case 'b-copyw': case 'b-add':
-    case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': case 'b-save': return builderAct(act, b);
+    case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': case 'b-save': case 'b-hold': return builderAct(act, b);
     case 'pay-month': ui.payMonth = b.dataset.m; return render();
     case 'pay-mark': return openPay(profile(b.dataset.pid), b.dataset.m || ui.payMonth || today().slice(0, 7));
     case 'pay-undo': { const p = profile(b.dataset.pid), ym = b.dataset.m || ui.payMonth; if (p.payments) delete p.payments[ym]; save(); return render(); }
@@ -4150,7 +4177,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-00:18';
+const APP_VERSION = '03/10-08:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
