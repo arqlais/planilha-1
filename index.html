@@ -265,6 +265,8 @@ label.f textarea{display:block;width:100%;margin-top:5px;background:var(--input)
 .pill.down{background:var(--down-bg);color:var(--down)}
 .pill.eq{background:var(--input);color:var(--muted);border:1px solid var(--line)}
 
+.bsave{width:100%;margin-top:10px;padding:14px;font-size:15.5px;font-weight:800;border-radius:18px}
+.bsaved{margin:8px 2px 0;color:var(--up);font-weight:700;font-size:13.5px;text-align:center}
 .add{width:100%;padding:14px;border:2px solid var(--acc-2);background:var(--card);border-radius:18px;color:var(--acc);font-weight:700}
 .empty{color:var(--muted);text-align:center;padding:18px 0}
 
@@ -842,6 +844,7 @@ function load() {
   return seed();
 }
 function save() {
+  if (typeof ui !== 'undefined' && ui.bSaved) ui.bSaved = null; // mudou algo depois de salvar o treino
   if (CLOUD) return scheduleSync(); // com login, os dados vão para a nuvem
   try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {}
 }
@@ -2307,7 +2310,7 @@ function planVersionsHtml(p) {
     const ds = days.filter(d => dayPlan(fake, d).length);
     return ds.length ? ds.slice(0, 10).map(d => `${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][toDate(d).getDay()]} ${fmtDate(d)} ${dayPlan(fake, d).map(w => esc(w === CARDIO ? 'Cardio' : ((x.workouts.find(y => y.id === w) || {}).name || shortName(w, p.id)))).join(' + ')}`).join(' · ') + (ds.length > 10 ? ' …' : '') : 'nenhum treino nas próximas 4 semanas'; };
   return `<div style="margin-top:12px"><p class="plan-g">Versões salvas (cópia automática de cada dia)</p>
-    ${v.items.length ? v.items.map((x, i) => `<div class="list-row"><div class="grow"><b>Cópia de ${fmtDate(x.date)}${x.at ? ` às ${new Date(x.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}</b>
+    ${v.items.length ? v.items.map((x, i) => `<div class="list-row"><div class="grow"><b>Versão de ${fmtDate(x.at ? isoDate(new Date(x.at)) : x.date)}${x.at ? ` às ${new Date(x.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}</b>
         <small style="display:block;color:var(--muted)"><b>${x.workouts.length} treino${x.workouts.length === 1 ? '' : 's'} montado${x.workouts.length === 1 ? '' : 's'}</b> (${x.workouts.map(w => `${esc(w.name)}: ${x.exercises.filter(e => e.letter === w.id).length} exerc.`).join(', ')}) · ${label(x)}</small></div><button class="btn" data-act="plan-use" data-i="${i}">Usar esta</button></div>`).join('')
       : '<p class="hint">Ainda não há cópias deste aluno.</p>'}
     <p class="hint" style="margin:8px 0 0">"Usar esta" traz de volta os treinos montados (exercícios, séries, cargas, ordem, observações), a divisão da semana e o planejamento de hoje em diante como estavam na cópia. O histórico do que o aluno já fez não muda.</p>
@@ -2317,10 +2320,14 @@ async function loadPlanVersions(pid) {
   ui.planVers = { pid, loading: true, items: [] }; render();
   try {
     const idx = await cloud.fs.doc('backups/_index').get(), dates = (idx.exists ? idx.data().dates || [] : []).slice(-10).reverse();
-    const docs = await Promise.all(dates.map(d => cloud.fs.doc(`backups/${d}_${pid}`).get()));
+    const ID = firebase.firestore.FieldPath.documentId();
+    const vers = await cloud.fs.collection('backups').where(ID, '>=', `v_${pid}_`).where(ID, '<', `v_${pid}_~`).get();
+    const docs = [...vers.docs, ...await Promise.all(dates.map(d => cloud.fs.doc(`backups/${d}_${pid}`).get()))];
     const items = [];
-    docs.forEach(d => { if (!d.exists) return; try { const x = d.data(), pr = JSON.parse(x.data)['profiles/' + pid] || {};
-      items.push({ date: x.date, at: x.at, plans: pr.plans || {}, division: pr.division || {}, workouts: pr.workouts || [], exercises: pr.exercises || [] }); } catch (e) {} });
+    docs.forEach(d => { if (!d.exists) return; try { const x = d.data(), pr = x.kind === 'v' ? {} : JSON.parse(x.data)['profiles/' + pid] || {};
+      const pr2 = x.kind === 'v' ? JSON.parse(x.data) : pr;
+      items.push({ date: x.date || (x.at || '').slice(0, 10), at: x.at, plans: pr2.plans || {}, division: pr2.division || {}, workouts: pr2.workouts || [], exercises: pr2.exercises || [] }); } catch (e) {} });
+    items.sort((a, b) => (b.at || '').localeCompare(a.at || ''));
     ui.planVers = { pid, items };
   } catch (e) { ui.planVers = null; toast('Não foi possível buscar as cópias agora.'); }
   render();
@@ -2389,7 +2396,7 @@ function builderHtml(pid) {
   return `<section class="card">
     <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}</button>`).join('')}
       <button data-act="b-neww">＋ Novo treino</button></div>
-    ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Tudo salva sozinho.</small></div></div>
+    ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
       <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="b-ren">✎ Renomear</button><button class="btn" data-act="b-dupw">⧉ Duplicar treino</button>
         <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button><button class="btn danger" data-act="b-delw">Excluir treino</button></div>
       <div class="bt-wrap"><table class="bt"><colgroup><col style="width:28px"><col><col style="width:118px"><col style="width:58px"><col style="width:58px"><col style="width:66px"><col style="width:66px"><col style="width:120px"><col style="width:104px"></colgroup>
@@ -2397,6 +2404,8 @@ function builderHtml(pid) {
         <tbody>${rows}</tbody></table></div>
       ${exs.length ? '' : '<p class="empty">Nenhum exercício neste treino ainda.</p>'}
       <button class="add" style="margin-top:8px" data-act="b-add">＋ Adicionar exercício</button>
+      ${exs.length ? `<button class="btn primary bsave" data-act="b-save">✓ Salvar ${/^treino/i.test(wName(L, pid)) ? '' : 'treino '}${esc(wName(L, pid))}${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}</button>
+        ${ui.bSaved && ui.bSaved.pid === pid && ui.bSaved.L === L ? `<p class="bsaved">✓ Salvo às ${ui.bSaved.hora}. Se mudar algo, toque em Salvar de novo.</p>` : ''}` : ''}
       <p class="hint" style="margin:10px 0 0">Reps e Carga valem para todas as séries; para mudar série por série, use <b>▸ séries</b>. Descanso em segundos: o cronômetro do aluno usa esse tempo. O aluno vê a técnica, o descanso e a observação embaixo do nome do exercício.</p>`
     : `<p class="empty">Crie o primeiro treino em <b>＋ Novo treino</b>.</p>`}
   </section>`;
@@ -2466,9 +2475,39 @@ document.getElementById('copyForm').addEventListener('submit', e => {
   const r = copyWorkout(pid, ui.bGroup, to); $copy.close(); if (!r) return;
   save(); render(); toast(`Treino <b>${esc(r.name)}</b> copiado para ${to === ME ? 'o seu treino' : esc(profile(to).name)}.`);
 });
+// tocar em Salvar com um campo ainda sendo digitado: o toque não se perde (o campo é confirmado dentro do salvar)
+document.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('[data-act="b-save"]')) e.preventDefault(); });
+// Salvar treino: grava agora, confere na nuvem que está tudo lá e guarda uma versão (para voltar se precisar)
+async function saveWorkoutNow(pid, L, b) {
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); // o que está sendo digitado entra
+  await new Promise(r => setTimeout(r, 80));
+  b = document.querySelector('[data-act="b-save"]') || b;
+  const p = profile(pid), exs = letterExs(L, pid), nm = wName(L, pid), who = pid === ME ? 'Seu treino' : `Treino de ${firstName(p)}`;
+  const resumo = `${nm} · ${exs.length} exercício${exs.length === 1 ? '' : 's'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries`;
+  b.disabled = true; b.textContent = 'Salvando…';
+  try {
+    if (CLOUD && cloud && cloud.ready) {
+      await syncNow();
+      if (!navigator.onLine || (cloud.pending && cloud.pending.has('profiles/' + pid))) throw 'offline';
+      const snap = await cloud.fs.doc('profiles/' + pid).get({ source: 'server' }), got = (snap.exists && snap.data().exercises) || [];
+      const ok = exs.every(e => got.some(g => g.id === e.id && canon(g.sets) === canon(e.sets) && g.name === e.name));
+      if (!ok) throw 'diff';
+      if (cloud.verAt) cloud.verAt[pid] = 0; saveVersions(['profiles/' + pid]);
+    } else save();
+    const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    ui.bSaved = { pid, L, hora };
+    render();
+    await ask({ title: '✓ Treino salvo', msg: `${who} foi salvo${CLOUD ? ' na nuvem' : ''} às ${hora}: ${resumo}.${CLOUD && pid !== ME ? ` Já aparece no app de ${firstName(p)}.` : ''}`, ok: 'OK', noCancel: true });
+  } catch (e) {
+    console.warn('salvar treino:', e);
+    render();
+    toast(e === 'offline' ? 'Sem internet: o treino ficou guardado neste aparelho e sobe sozinho quando a internet voltar. Não feche o app até aparecer "Tudo salvo".' : 'Não foi possível confirmar o salvamento. Confira a internet e toque em Salvar de novo.');
+  }
+}
 async function builderAct(act, b) {
   const pid = ui.profile, p = profile(pid), L = ui.bGroup;
   if (act === 'b-w') { ui.bGroup = b.dataset.id; return render(); }
+  if (act === 'b-save') return saveWorkoutNow(pid, L, b);
   if (act === 'b-neww') { const g = ui.group; await newWorkout(); ui.bGroup = ui.group; ui.group = g; return render(); }
   if (act === 'b-ren') return renameWorkout(L);
   if (act === 'b-delw') { await deleteWorkout(L); ui.bGroup = firstWorkout(pid); return render(); }
@@ -2724,7 +2763,7 @@ function perfilHtml(p, desk) {
 }
 // ---------- Janela de pergunta (substitui prompt/confirm, que o navegador pode bloquear) ----------
 const $ask = document.getElementById('askDlg'), $askForm = document.getElementById('askForm');
-function ask({ title, msg = '', field = null, value = '', ok = 'OK', extra = null, danger = false }) {
+function ask({ title, msg = '', field = null, value = '', ok = 'OK', extra = null, danger = false, noCancel = false }) {
   return new Promise(resolve => {
     document.getElementById('askTitle').textContent = title;
     document.getElementById('askMsg').textContent = msg;
@@ -2735,6 +2774,7 @@ function ask({ title, msg = '', field = null, value = '', ok = 'OK', extra = nul
     const $ok = document.getElementById('askOk'), $extra = document.getElementById('askExtra');
     $ok.textContent = ok; $ok.className = 'btn ' + (danger ? 'primary danger-fill' : 'primary');
     $extra.hidden = !extra; if (extra) $extra.textContent = extra;
+    document.getElementById('askCancel').hidden = noCancel;
     let settled = false;
     const done = action => { if (settled) return; settled = true; $ask.close(); resolve({ action, value: $in.value.trim() }); };
     $askForm.onsubmit = e => { e.preventDefault(); if (field && !$in.value.trim()) return $in.focus(); done('ok'); };
@@ -2970,7 +3010,7 @@ $main.addEventListener('click', e => {
     case 'go-montar': return go('montar');
     case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
     case 'b-w': case 'b-neww': case 'b-ren': case 'b-delw': case 'b-dupw': case 'b-copyw': case 'b-add':
-    case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': return builderAct(act, b);
+    case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': case 'b-save': return builderAct(act, b);
     case 'pay-month': ui.payMonth = b.dataset.m; return render();
     case 'pay-mark': return openPay(profile(b.dataset.pid), b.dataset.m || ui.payMonth || today().slice(0, 7));
     case 'pay-undo': { const p = profile(b.dataset.pid), ym = b.dataset.m || ui.payMonth; if (p.payments) delete p.payments[ym]; save(); return render(); }
@@ -3760,8 +3800,15 @@ async function onRemote() {
   if (!cloud.gotProfiles || cloud.waiting.size) return;
   cloud.ready = true;
   if (cloud.role === 'admin' && !remote.size) return firstRun();
-  db = assemble();
+  // fichas alteradas sem internet numa visita anterior: entram no app e sobem juntando com a nuvem
+  loadPending();
+  let srv = remote;
+  if (cloud.pending.size) { srv = new Map(remote); for (const [path, x] of cloud.pending) srv.set(path, x.doc); }
+  db = assemble(srv);
+  if (srv !== remote) assemble(); // lixeira (vem da nuvem)
   lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
+  for (const [path, x] of cloud.pending) x.was === undefined ? lastSynced.delete(path) : lastSynced.set(path, x.was);
+  if (cloud.pending.size) scheduleSync();
   enterApp();
   if (cloud.role === 'admin') { runFixes(); setTimeout(dailyBackup, 4000); } // ajustes pontuais + cópia do dia
   // perfis antigos sem código de convite ganham um (e já sobem para a nuvem)
@@ -3861,36 +3908,127 @@ function profileUpdate(path, was, doc) {
   }
   return Object.keys(up).length ? ['update', path, up] : null;
 }
+// Junta 3 versões: "base" (o que este aparelho recebeu da nuvem), "mine" (como ficou aqui) e "server" (como está na
+// nuvem agora). Só o que ESTE aparelho mudou entra; o resto fica como está na nuvem. Listas com id (exercícios,
+// treinos, marcações...) são juntadas item por item, então nada feito em outro aparelho é perdido.
+const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+const idList = v => Array.isArray(v) && v.length > 0 && v.every(x => isObj(x) && x.id != null);
+function merge3(base, mine, server) {
+  if (canon(mine) === canon(base)) return server;
+  if (server === undefined || canon(server) === canon(base)) return mine;
+  if (isObj(mine) && isObj(server)) {
+    const b = isObj(base) ? base : {}, out = {};
+    for (const k of new Set([...Object.keys(server), ...Object.keys(mine)])) { const v = merge3(b[k], mine[k], server[k]); if (v !== undefined) out[k] = v; }
+    return out;
+  }
+  if ((idList(mine) || !(mine || []).length) && (idList(server) || !(server || []).length) && Array.isArray(mine) && Array.isArray(server)) {
+    const B = new Map((Array.isArray(base) ? base : []).filter(isObj).map(x => [x.id, x])), M = new Map(mine.map(x => [x.id, x])), out = [];
+    for (const sv of server) {
+      if (M.has(sv.id)) out.push(merge3(B.get(sv.id), M.get(sv.id), sv));
+      else if (!B.has(sv.id)) out.push(sv); // novo em outro aparelho: fica
+      else if (canon(B.get(sv.id)) !== canon(sv)) out.push(sv); // apagado aqui, mas mudado lá: fica (nada se perde)
+    }
+    const S = new Set(server.map(x => x.id));
+    for (const m of mine) if (!S.has(m.id) && !B.has(m.id)) out.push(m); // novo aqui
+    return out;
+  }
+  return mine;
+}
+// Grava um documento juntando com o que está na nuvem (transação). Devolve o documento final.
+async function writeMerged(path, was, doc) {
+  const ref = cloud.fs.doc(path);
+  let base; try { base = was ? JSON.parse(was) : undefined; } catch (e) { base = undefined; }
+  return cloud.fs.runTransaction(async tx => {
+    const snap = await tx.get(ref), server = snap.exists ? plain(snap.data()) : undefined;
+    const out = server === undefined ? doc : merge3(base, doc, server);
+    if (!server || canon(out) !== canon(server)) tx.set(ref, out);
+    return out;
+  });
+}
 async function syncNow() {
   clearTimeout(syncTimer); syncTimer = null;
   if (!cloud || !cloud.ready) return;
+  cloud.pending = cloud.pending || new Map();
   const cur = splitDb(), ops = [];
   for (const [path, doc] of cur) {
     if (cloud.removed && cloud.removed.has(pidOfPath(path))) continue;
     const c = canon(doc), was = lastSynced.get(path);
-    if (was !== c) { ops.push(profileUpdate(path, was, doc) || ['set', path, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
+    if (was !== c) { ops.push([path, was, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
   // Nada é apagado na nuvem (o Firebase também recusa): um mês que ficou vazio é gravado vazio
   for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) {
     if (!profile(pidOfPath(path)) || !path.includes('/months/')) continue; // aluno fora do app (lixeira etc.): não mexe
     const empty = path.endsWith('/prefs') ? {} : path.endsWith('/body') ? { entries: [] } : { sessions: [], cardio: [] };
     if (lastSynced.get(path) === canon(empty)) continue;
-    ops.push(['set', path, empty]); lastSynced.set(path, canon(empty)); remote.set(path, empty);
+    ops.push([path, lastSynced.get(path), empty]); lastSynced.set(path, canon(empty)); remote.set(path, empty);
   }
+  if (!ops.length) { setSyncState(navigator.onLine ? 'Tudo salvo na nuvem ✓' : 'Sem internet: salvo no aparelho'); if (cloud.remoteDirty) { cloud.remoteDirty = false; applyRemote(); } return; }
+  let merged = false;
   try {
-    for (let i = 0; i < ops.length; i += 400) {
+    const offline = [];
+    if (navigator.onLine) {
+      // com internet: cada documento é juntado com o que está na nuvem
+      for (let i = 0; i < ops.length; i += 20) await Promise.all(ops.slice(i, i + 20).map(async op => {
+        const [path, was, doc] = op;
+        try {
+          const out = await writeMerged(path, was, doc);
+          if (canon(out) !== canon(doc)) { merged = true; lastSynced.set(path, canon(out)); remote.set(path, plain(out)); }
+          if (cloud.pending.delete(path)) savePending();
+        } catch (e) { if (e && e.code === 'permission-denied') throw e; offline.push(op); }
+      }));
+    } else offline.push(...ops);
+    // ficha do aluno sem internet: fica guardada no aparelho e sobe (juntando com a nuvem) quando a internet voltar
+    for (const op of offline.filter(o => /^profiles\/[^/]+$/.test(o[0]))) {
+      const [path, was, doc] = op, keep = cloud.pending.get(path);
+      cloud.pending.set(path, { was: keep ? keep.was : was, doc });
+      keep ? (keep.was === undefined ? lastSynced.delete(path) : lastSynced.set(path, keep.was)) : (was === undefined ? lastSynced.delete(path) : lastSynced.set(path, was));
+      offline.splice(offline.indexOf(op), 1);
+    }
+    savePending();
+    // sem internet: fica na fila do aparelho e sobe quando a internet voltar (ficha do aluno: só os campos mudados)
+    for (let i = 0; i < offline.length; i += 400) {
       const b = cloud.fs.batch();
-      for (const [op, path, doc] of ops.slice(i, i + 400)) op === 'set' ? b.set(cloud.fs.doc(path), doc) : op === 'update' ? b.update(cloud.fs.doc(path), doc) : b.delete(cloud.fs.doc(path));
+      for (const [path, was, doc] of offline.slice(i, i + 400)) { const u = profileUpdate(path, was, doc); u ? b.update(cloud.fs.doc(path), u[2]) : b.set(cloud.fs.doc(path), doc); }
       await b.commit();
     }
     setSyncState(navigator.onLine ? 'Tudo salvo na nuvem ✓' : 'Sem internet: salvo no aparelho');
-    if (cloud.role === 'admin' && ops.length) { clearTimeout(cloud.bkTimer); cloud.bkTimer = setTimeout(dailyBackup, 60e3); }
+    if (cloud.role === 'admin') { clearTimeout(cloud.bkTimer); cloud.bkTimer = setTimeout(dailyBackup, 60e3); saveVersions(ops.map(o => o[0])); }
   } catch (err) { cloudError(err); }
-  if (cloud.remoteDirty) { cloud.remoteDirty = false; applyRemote(); }
+  if (merged) cloud.remoteDirty = true; // juntou com algo de outro aparelho: atualiza a tela
+  if (cloud.remoteDirty && !syncTimer && !isTyping()) { cloud.remoteDirty = false; db = assemble(); lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)])); fixUi(); render(); }
+}
+const PEND_KEY = 'planilha-pendente';
+function savePending() { try { cloud.pending.size ? localStorage.setItem(PEND_KEY, JSON.stringify([...cloud.pending])) : localStorage.removeItem(PEND_KEY); } catch (e) {} }
+function loadPending() {
+  cloud.pending = new Map();
+  try { const v = JSON.parse(localStorage.getItem(PEND_KEY)); if (Array.isArray(v)) cloud.pending = new Map(v); } catch (e) {}
+  if (cloud.role !== 'admin') cloud.pending.clear();
+}
+// Histórico de versões da ficha de cada aluno (treinos montados, divisão, planejamento): uma a cada 10 minutos
+// de edição, as últimas 40 de cada aluno. Fica em "Versões salvas" no Planejamento.
+const VER_EVERY = 10 * 60e3, VER_KEEP = 40;
+async function saveVersions(paths) {
+  if (!cloud || cloud.role !== 'admin' || !cloud.serverSeen) return;
+  cloud.verAt = cloud.verAt || {};
+  for (const path of new Set(paths)) {
+    if (!/^profiles\/[^/]+$/.test(path)) continue;
+    const pid = pidOfPath(path), p = profile(pid), doc = remote.get(path);
+    if (!p || !doc || Date.now() - (cloud.verAt[pid] || 0) < VER_EVERY) continue;
+    cloud.verAt[pid] = Date.now();
+    try {
+      const txt = JSON.stringify(doc); if (txt.length > 900000) continue;
+      await cloud.fs.doc(`backups/v_${pid}_${Date.now()}`).set({ kind: 'v', pid, name: p.name, at: new Date().toISOString(), data: txt });
+      const ID = firebase.firestore.FieldPath.documentId();
+      const old = await cloud.fs.collection('backups').where(ID, '>=', `v_${pid}_`).where(ID, '<', `v_${pid}_~`).get();
+      const docs = old.docs.sort((a, b) => a.id.localeCompare(b.id));
+      for (const d of docs.slice(0, Math.max(0, docs.length - VER_KEEP))) await d.ref.delete();
+    } catch (e) { console.warn('versão:', e.code || e); }
+  }
 }
 const isTyping = () => document.querySelector('dialog[open]') || (document.activeElement && $main.contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
 // Chegou algo da nuvem (outro aparelho, aluno marcando treino...): atualiza a tela sem perder o que está sendo digitado
 function applyRemote() {
   if (!cloud.ready) return;
+  if (cloud.pending && cloud.pending.size) { if (navigator.onLine) scheduleSync(); else cloud.remoteDirty = true; return; } // primeiro sobe o que ficou guardado
   let changed = [...remote].some(([k, v]) => lastSynced.get(k) !== canon(v)) || [...lastSynced.keys()].some(k => !remote.has(k));
   if (!changed) return;
   if (syncTimer || isTyping()) { cloud.remoteDirty = true; return; }
@@ -4012,7 +4150,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/10-23:53';
+const APP_VERSION = '03/10-00:18';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
