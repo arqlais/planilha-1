@@ -92,6 +92,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ct-dir{display:flex;gap:4px;margin-top:8px;background:var(--acc-soft);border-radius:10px;padding:3px}.ct-dir button{flex:1;border:0;background:transparent;color:var(--muted);border-radius:8px;padding:6px;font-weight:700;font-size:12.5px}
 .ct-dir button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ctimer.run .ct-row{margin-top:10px}.ct-x{display:block;margin:6px auto 4px;color:var(--muted);font-size:13px}
+.ct-save{width:100%;margin-top:10px;padding:13px;font-size:15.5px}
 .ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
 .ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
 .goal-edit{display:inline-flex;align-items:center;gap:4px}.time-in.sm{width:56px;padding:6px;font-size:15px}.btn.sm{padding:6px 10px}
@@ -1122,7 +1123,7 @@ const statsDay = () => ui.view === 'historico' && ui.histDay ? ui.histDay : ui.d
 function renderStats() {
   let cells;
   if (ui.view === 'alunos' || ui.view === 'perfil' && ui.profile === ME) {
-    const students = db.profiles.filter(p => p.id !== ME);
+    const students = db.profiles.filter(p => p.id !== ME && !p.test); // o perfil de teste não conta
     const trainedToday = students.filter(p => profSessions(p.id).some(s => s.date === today())).length;
     const ws = weekStart(today());
     const activeWeek = students.filter(p => profSessions(p.id).some(s => s.date >= ws)).length;
@@ -1291,17 +1292,11 @@ function cardioGoalHtml(p) {
     </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
-        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Anote o tempo ou use o cronômetro'}</small></div>
+        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Use o cronômetro para marcar o tempo'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
-      <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Tempo realizado</label>
-      <div class="actions" style="margin-top:0;align-items:center">
-        <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="0" value="${done ? fmtMin(done) : ''}" aria-label="Tempo realizado em minutos"><span class="unit">min</span>
-        <button class="btn primary" data-act="cardio-save">Salvar</button>
-        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Zerar</button>' : ''}
-      </div>
       ${bar}
-      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
+      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min feitos${timing ? '' : ' <button class="link" data-act="cardio-zero">zerar</button>'}` : 'Nada feito ainda'}</span>
         ${p.id === ME && !ui.studentMode && ui.goalEdit
           ? `<span class="goal-edit">Meta <input id="goalDaily" class="time-in sm" inputmode="decimal" placeholder="0" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}" aria-label="Meta em minutos"> min <button class="btn primary sm" data-act="save-goal">OK</button></span>`
           : `<span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b>${p.id === ME && !ui.studentMode ? ' <button class="link" data-act="goal-edit">alterar</button>' : ''}</span>`}</div>
@@ -1324,10 +1319,13 @@ function ctHtml(p, goal, done) {
     return `<div class="ctimer run">
       <div class="ct-clock" id="ctClock">${mmss(Math.round(show))}</div>
       <small class="ct-sub">${modeOf(t.mode)[1]} · ${fmtMin(t.dur / 60)} min${t.pausedAt ? ' · <b>pausado</b>' : ''}</small>
-      <div class="ct-row" style="justify-content:center">
+      ${t.stopped ? `<button class="btn primary ct-save" data-act="ct-save">✓ Salvar ${fmtMin(Math.round(el / 60 * 100) / 100)} min feitos</button>
+        <div class="ct-row" style="justify-content:center"><button class="btn" data-act="ct-resume">Continuar</button></div>
+        <button class="link ct-x" data-act="ct-cancel">descartar</button>`
+      : `<div class="ct-row" style="justify-content:center">
         ${t.pausedAt ? '<button class="btn primary" data-act="ct-resume">Continuar</button>' : '<button class="btn" data-act="ct-pause">Pausar</button>'}
-        <button class="btn primary" data-act="ct-stop">Parar e salvar</button></div>
-      <button class="link ct-x" data-act="ct-cancel">cancelar</button></div>`;
+        <button class="btn primary" data-act="ct-stop">Parar</button></div>
+      <button class="link ct-x" data-act="ct-cancel">cancelar</button>`}</div>`;
   }
   const left = goal ? Math.max(0, goal - done) : 0;
   const min = ui.ctMin || (left >= 1 ? Math.round(left) : goal ? Math.round(goal) : 20), dir = ui.ctDir || ctPref();
@@ -1495,7 +1493,7 @@ function sendStatusHtml(exs) {
 }
 function sendHtml() {
   if (ui.date !== today() || (ui.profile !== ME && !ui.studentMode)) return '';
-  if (ui.studentMode && CLOUD && cloud && cloud.role === 'admin') return `<p class="hint" style="text-align:center;margin:14px 0">No app do aluno aparece aqui o botão <b>✓ Enviar treino</b>. Na pré-visualização ele fica desligado.</p>`;
+  if (ui.studentMode && CLOUD && cloud && cloud.role === 'admin' && !(profile(ui.profile) || {}).test) return `<p class="hint" style="text-align:center;margin:14px 0">No app do aluno aparece aqui o botão <b>✓ Enviar treino</b>. Na pré-visualização ele fica desligado.</p>`;
   const exs = sendableExs(); if (!exs.length) return '';
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
@@ -1508,7 +1506,7 @@ function sendHtml() {
 // Aluno confirmou a última série do treino do dia: o app já pergunta se quer enviar
 const askedSend = new Set();
 function maybeAskSend() {
-  const mine = !ui.studentMode && ui.profile === ME, student = ui.studentMode && !(CLOUD && cloud && cloud.role === 'admin');
+  const mine = !ui.studentMode && ui.profile === ME, student = ui.studentMode && (!(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test);
   if ((!mine && !student) || ui.date !== today()) return;
   const exs = sendableExs(), key = ui.profile + today();
   if (!exs.length || askedSend.has(key) || exs.every(e => sentAt(e.id)) || !exs.filter(e => !sentAt(e.id)).every(e => isComplete(e.id))) return;
@@ -1518,6 +1516,7 @@ function maybeAskSend() {
 async function sendWorkout(auto) {
   const exs = sendableExs().filter(e => !sentAt(e.id));
   if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
+  if (ct && ct.pid === ui.profile && ct.date === ui.date && !auto) ctFinish(false); // cronômetro ligado: o tempo feito vai junto
   const pp = profile(ui.profile), noCardio = (dayPlan(pp, ui.date).includes(CARDIO) || cardioGoalOf(pp, ui.date)) && !profCardio().some(c => c.date === ui.date);
   if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? '⚠️ O cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
   const at = new Date().toISOString();
@@ -2048,6 +2047,19 @@ function profileSummary(pid) {
   if (last) { const n = daysBetween(last, today()); lastTxt = n === 0 ? 'Treinou hoje' : n === 1 ? 'Treinou ontem' : `Último treino há ${n} dias (${fmtDate(last)})`; }
   return { last, lastTxt, lastGroups, weekDays, now, before };
 }
+// Perfil de teste: um aluno de mentira para o professor testar novidades sem mexer nos dados reais
+const testProfile = () => db.profiles.find(p => p.test);
+function openTestProfile() {
+  let p = testProfile();
+  if (!p) {
+    p = { id: uid(), name: 'Perfil de teste', test: true, messages: [], workouts: [], since: today(), cardioDaily: 20 };
+    if (CLOUD) { p.uid = null; p.inviteCode = newInviteCode(); }
+    db.profiles.push(p); save();
+    toast('Perfil de teste criado. Monte treinos, planeje, use "Ver como o aluno"… nada disso aparece para os alunos nem entra nos números.');
+  }
+  ui.profile = p.id; ui.group = firstWorkout(p.id);
+  go(isDesk() ? 'alunos' : 'perfil');
+}
 function profileCard(p) {
   const isMe = p.id === ME, s = profileSummary(p.id), active = ui.profile === p.id;
   return `<section class="card ${isMe ? 'me-card' : ''} ${active ? 'complete' : ''}">
@@ -2055,7 +2067,7 @@ function profileCard(p) {
       <span class="av">${esc(initials(p.name))}</span>
       <div class="grow"><h3>${esc(p.name)}</h3>
         <small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt} ${s.lastGroups}</small>
-        <div class="tags">${isMe ? '' : readyChip(p)}<span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
+        <div class="tags">${p.test ? '<span class="pstat wait">perfil de teste</span>' : isMe ? '' : readyChip(p)}<span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
           ${s.now || s.before ? `<span class="pill eq">${fmt(s.now)} kg</span> ${delta(s.now, s.before)}` : ''}</div></div>
       ${isMe ? '' : `<button class="icon" data-act="student-menu" data-pid="${p.id}" aria-label="Opções do aluno">⋯</button>`}
     </div>
@@ -2093,6 +2105,7 @@ function renderAlunos() {
     ${students.length > 4 ? `<input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}">` : ''}
     <div id="studentList">${shown.map(profileCard).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda. Cadastre o primeiro '}</p>`}</div>
     <button class="add" data-act="add-student">＋ Adicionar aluno</button>
+    <button class="btn" style="width:100%;margin-top:8px" data-act="test-profile">${testProfile() ? 'Abrir perfil de teste' : 'Criar perfil de teste'}</button>
     <section class="card" style="margin-top:14px">
       <div class="card-h"><div class="grow"><h3>Backup</h3>
         <small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou importe um backup (ex.: dados de outro aparelho).' : 'Os dados (seus e dos alunos) ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.'}</small></div></div>
@@ -2478,11 +2491,12 @@ function renderAlunosDesk() {
   const q = ui.q.trim().toLowerCase(), shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   const ym = today().slice(0, 7);
   const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
-      <span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${readyChip(p, true)}${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
-  const sel = ui.profile !== ME && profile(ui.profile);
+      <span class="grow"><b>${esc(p.name)}</b><small>${p.test ? 'só para testar · não conta nos números' : esc(profileSummary(p.id).lastTxt)}</small></span>${p.test ? '' : readyChip(p, true)}${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
+  const sel = ui.profile !== ME && profile(ui.profile), real = students.filter(p => !p.test);
   $main.innerHTML = `<div class="split">
     <aside class="slist">
-      <div class="actions" style="margin:0 0 8px"><button class="btn primary" style="width:100%" data-act="add-student">＋ Adicionar aluno</button></div>
+      <div class="actions" style="margin:0 0 8px"><button class="btn primary" style="width:100%" data-act="add-student">＋ Adicionar aluno</button>
+        <button class="btn" style="width:100%" data-act="test-profile">${testProfile() ? 'Abrir perfil de teste' : 'Criar perfil de teste'}</button></div>
       <input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}" style="margin-bottom:6px">
       <div id="studentList">${shown.map(row).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda.'}</p>`}</div>
     </aside>
@@ -2490,10 +2504,10 @@ function renderAlunosDesk() {
       ${CLOUD && cloud ? requestsHtml() : ''}
       ${rescueHtml()}
       <section class="card"><div class="card-h"><div class="grow"><h3>Seus alunos</h3><small>Escolha um aluno na lista para ver o resumo, montar o treino, planejar as semanas, ver medidas, mensagens e pagamento.</small></div></div>
-        <div class="kv"><div><b>${students.length}</b><span>alunos</span></div>
-          <div><b>${students.filter(p => profileSummary(p.id).last === today()).length}</b><span>treinaram hoje</span></div>
-          <div><b>${students.filter(p => profileSummary(p.id).weekDays > 0).length}</b><span>ativos na semana</span></div>
-          <div><b>${students.filter(p => (payStatus(p, ym) || {}).k === 'late').length}</b><span>pagamentos atrasados</span></div></div></section>
+        <div class="kv"><div><b>${real.length}</b><span>alunos</span></div>
+          <div><b>${real.filter(p => profileSummary(p.id).last === today()).length}</b><span>treinaram hoje</span></div>
+          <div><b>${real.filter(p => profileSummary(p.id).weekDays > 0).length}</b><span>ativos na semana</span></div>
+          <div><b>${real.filter(p => (payStatus(p, ym) || {}).k === 'late').length}</b><span>pagamentos atrasados</span></div></div></section>
       <section class="card"><div class="card-h"><div class="grow"><h3>Backup</h3><small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou restaure um backup.' : 'Exporte de vez em quando para não perder nada.'}</small></div></div>
         <div class="actions"><button class="btn" data-act="export">⬇ Exportar</button><label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
       ${trashHtml()}
@@ -2739,7 +2753,7 @@ function chargeText(p, ym) {
 }
 function renderPagamentos() {
   const ym = ui.payMonth || (ui.payMonth = today().slice(0, 7));
-  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const students = db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const billed = students.map(p => ({ p, st: payStatus(p, ym) })).filter(x => x.st);
   const sum = f => billed.filter(f).reduce((a, x) => a + (x.st.pay ? (x.st.pay.value || x.p.billing.value) : x.p.billing.value), 0);
   const noPlan = students.filter(p => !p.billing || !(p.billing.value > 0));
@@ -2883,10 +2897,11 @@ function perfilHtml(p, desk) {
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
         <button class="btn" data-act="goto-msg">Mensagem</button>
         <button class="btn" data-act="student-mode">Ver como o aluno</button>
-        ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${readyBtn(p)}`}
+        ${p.test ? '<button class="btn danger" data-act="test-clear">Limpar teste</button>' : ''}
+        ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${p.test ? '' : readyBtn(p)}`}
       </div>
     </section>
-    ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${readyBtn(p)}</div>` : ''}
+    ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test ? '' : readyBtn(p)}</div>` : ''}
     <div data-tab="resumo">${weekSetsHtml(p)}
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
@@ -3120,6 +3135,18 @@ $main.addEventListener('click', e => {
   switch (act) {
     case 'new': return openDialog(null);
     case 'export': return exportData();
+    case 'test-profile': return openTestProfile();
+    case 'test-clear': {
+      const p = testProfile(); if (!p) return;
+      confirmAsk('Limpar o perfil de teste?', 'Apaga as marcações de séries, o cardio, o planejamento, as mensagens e os pagamentos do teste. Os treinos montados continuam.', 'Limpar').then(ok => {
+        if (!ok) return;
+        const ids = new Set(profExs(p.id).map(e => e.id));
+        db.sessions = db.sessions.filter(x => !ids.has(x.exId)); db.cardio = db.cardio.filter(c => c.profileId !== p.id);
+        delete p.plans; delete p.payments; delete p.planReady; p.messages = []; delete p.body;
+        save(); render(); toast('Perfil de teste limpo.');
+      });
+      return;
+    }
     case 'add-student': return openStudent(null);
     case 'student-menu': return openStudent(profile(b.dataset.pid));
     case 'student-edit': return openStudent(profile(ui.profile));
@@ -3359,8 +3386,11 @@ $main.addEventListener('click', e => {
       ui.ctMin = null; ctSaveState(); ctWake(); markActivity(ui.date); render(); return;
     }
     case 'ct-pause': if (ct && !ct.pausedAt) { ct.pausedAt = Date.now(); ctSaveState(); } return render();
-    case 'ct-resume': if (ct && ct.pausedAt) { ct.paused += Date.now() - ct.pausedAt; delete ct.pausedAt; ctSaveState(); ctWake(); } return render();
-    case 'ct-stop': return ctFinish(false);
+    case 'ct-resume': if (ct && ct.pausedAt) { ct.paused += Date.now() - ct.pausedAt; delete ct.pausedAt; delete ct.stopped; ctSaveState(); ctWake(); } return render();
+    // parou antes do fim: mostra direto o botão para salvar o tempo feito (completou ou não)
+    case 'ct-stop': if (ct) { if (!ct.pausedAt) ct.pausedAt = Date.now(); ct.stopped = true; ctSaveState(); } return render();
+    case 'ct-save': return ctFinish(false);
+    case 'cardio-zero': confirmAsk('Zerar o cardio de hoje?', 'O tempo anotado hoje volta para 0.', 'Zerar').then(ok => { if (ok) setCardio(0); }); return;
     case 'ct-cancel': confirmAsk('Cancelar o cronômetro?', 'O tempo contado até agora não será salvo.', 'Cancelar cronômetro').then(ok => { if (!ok) return; ct = null; ctSaveState(); clearInterval(ctTimer); try { ctLock && ctLock.release(); } catch (e) {} render(); }); return;
     case 'del-cardio': db.cardio = db.cardio.filter(c => c.id !== b.dataset.id); save(); return render();
     case 'watch-start': ui.watch = { start: Date.now(), mode: ui.mode }; clearInterval(watchTimer); watchTimer = setInterval(tickWatch, 500); return render();
@@ -4418,7 +4448,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-00:42';
+const APP_VERSION = '04/10-00:56';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
