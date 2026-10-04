@@ -92,7 +92,9 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ct-dir{display:flex;gap:4px;margin-top:8px;background:var(--acc-soft);border-radius:10px;padding:3px}.ct-dir button{flex:1;border:0;background:transparent;color:var(--muted);border-radius:8px;padding:6px;font-weight:700;font-size:12.5px}
 .ct-dir button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ctimer.run .ct-row{margin-top:10px}.ct-x{display:block;margin:6px auto 4px;color:var(--muted);font-size:13px}
-.c-manual{margin-top:8px}
+.ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
+.ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
+.goal-edit{display:inline-flex;align-items:center;gap:4px}.time-in.sm{width:56px;padding:6px;font-size:15px}.btn.sm{padding:6px 10px}
 .goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px}
 .goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:width .9s ease-out}
 .goal-txt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -1289,16 +1291,20 @@ function cardioGoalHtml(p) {
     </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
-        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Escolha o tipo e toque em Iniciar'}</small></div>
+        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Anote o tempo ou use o cronômetro'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
-      ${bar}
-      <div class="goal-txt"><span><b>${fmtMin(done)}</b>${goal ? ` de ${fmtMin(goal)}` : ''} min</span>
-        ${ui.cManual || timing ? '' : `<button class="link" data-act="c-manual">anotar à mão</button>`}</div>
-      ${ui.cManual ? `<div class="actions c-manual" style="align-items:center">
+      <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Tempo realizado</label>
+      <div class="actions" style="margin-top:0;align-items:center">
         <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="0" value="${done ? fmtMin(done) : ''}" aria-label="Tempo realizado em minutos"><span class="unit">min</span>
         <button class="btn primary" data-act="cardio-save">Salvar</button>
-        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Zerar</button>' : ''}</div>` : ''}
+        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Zerar</button>' : ''}
+      </div>
+      ${bar}
+      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
+        ${p.id === ME && !ui.studentMode && ui.goalEdit
+          ? `<span class="goal-edit">Meta <input id="goalDaily" class="time-in sm" inputmode="decimal" placeholder="0" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}" aria-label="Meta em minutos"> min <button class="btn primary sm" data-act="save-goal">OK</button></span>`
+          : `<span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b>${p.id === ME && !ui.studentMode ? ' <button class="link" data-act="goal-edit">alterar</button>' : ''}</span>`}</div>
       ${ctHtml(p, goal, done)}
     </section>`;
 }
@@ -1326,7 +1332,10 @@ function ctHtml(p, goal, done) {
   const left = goal ? Math.max(0, goal - done) : 0;
   const min = ui.ctMin || (left >= 1 ? Math.round(left) : goal ? Math.round(goal) : 20), dir = ui.ctDir || ctPref();
   return `<div class="ctimer">
-      <div class="ct-row"><button class="ct-step" data-act="ct-min" data-d="-5" aria-label="Menos 5 minutos">−</button><b>${min} min</b><button class="ct-step" data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+</button>
+      <p class="plan-g" style="margin:14px 0 6px">Cronômetro</p>
+      <div class="ct-row"><button class="ct-step" data-act="ct-min" data-d="-5" aria-label="Menos 5 minutos">−</button>
+        <span class="ct-in"><input id="ctMinIn" inputmode="numeric" value="${min}" aria-label="Minutos do cronômetro"> min</span>
+        <button class="ct-step" data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+</button>
         <button class="btn primary ct-go" data-act="ct-start" data-min="${min}">▶ Iniciar</button></div>
       <div class="ct-dir"><button class="${dir === 'down' ? 'on' : ''}" data-act="ct-dir" data-d="down">Regressivo</button><button class="${dir === 'up' ? 'on' : ''}" data-act="ct-dir" data-d="up">Progressivo</button></div></div>`;
 }
@@ -3324,6 +3333,7 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'save-goal': {
+      ui.goalEdit = false;
       const p = profile(ui.profile), v = parseNum(document.getElementById('goalDaily').value);
       changeGoals(p, () => { if (v > 0) p.cardioDaily = Math.min(300, Math.round(v * 100) / 100); else delete p.cardioDaily; });
       save(); render();
@@ -3335,14 +3345,17 @@ $main.addEventListener('click', e => {
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
       return setCardio(v);
     }
+    case 'goal-edit': ui.goalEdit = true; render(); { const i = document.getElementById('goalDaily'); if (i) i.focus(); } return;
     case 'c-manual': ui.cManual = true; render(); { const i = document.getElementById('cardioDone'); if (i) i.focus(); } return;
     case 'ct-dir': ui.ctDir = b.dataset.d; try { localStorage.setItem('planilha-cronometro-modo', ui.ctDir); } catch (e) {} return render();
-    case 'ct-min': { const cur = +($main.querySelector('[data-act="ct-start"]') || {}).dataset?.min || 20; ui.ctMin = Math.max(5, Math.min(180, Math.round((cur + +b.dataset.d) / 5) * 5 || 5)); return render(); }
+    case 'ct-min': { const i = document.getElementById('ctMinIn'), cur = parseNum(i && i.value) || 20; ui.ctMin = Math.max(1, Math.min(180, Math.round(cur + +b.dataset.d))); return render(); }
     case 'ct-start': {
       if (cardioLocked()) return toast(cardioLockMsg());
       const p = profile(ui.profile), goal = cardioGoalOf(p, ui.date), had = profCardio().filter(c => c.date === ui.date).reduce((a, c) => a + c.min, 0);
       const today_ = profCardio().filter(c => c.date === ui.date), mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
-      ct = { pid: p.id, date: ui.date, mode, dir: ui.ctDir || ctPref(), dur: Math.round(+b.dataset.min * 60), start: Date.now(), paused: 0, base: had, goal: goal || 0, ...(ui.studentMode ? { by: 'aluno' } : {}) };
+      const mi = parseNum((document.getElementById('ctMinIn') || {}).value);
+      if (!(mi > 0)) { const i = document.getElementById('ctMinIn'); if (i) i.focus(); return toast('Digite quantos minutos o cronômetro vai marcar.'); }
+      ct = { pid: p.id, date: ui.date, mode, dir: ui.ctDir || ctPref(), dur: Math.round(Math.min(180, mi) * 60), start: Date.now(), paused: 0, base: had, goal: goal || 0, ...(ui.studentMode ? { by: 'aluno' } : {}) };
       ui.ctMin = null; ctSaveState(); ctWake(); markActivity(ui.date); render(); return;
     }
     case 'ct-pause': if (ct && !ct.pausedAt) { ct.pausedAt = Date.now(); ctSaveState(); } return render();
@@ -4405,7 +4418,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-00:29';
+const APP_VERSION = '04/10-00:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
