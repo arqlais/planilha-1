@@ -92,6 +92,8 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ct-dir{display:flex;gap:4px;margin-top:8px;background:var(--acc-soft);border-radius:10px;padding:3px}.ct-dir button{flex:1;border:0;background:transparent;color:var(--muted);border-radius:8px;padding:6px;font-weight:700;font-size:12.5px}
 .ct-dir button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ctimer.run .ct-row{margin-top:10px}.ct-x{display:block;margin:6px auto 4px;color:var(--muted);font-size:13px}
+.ct-mode{margin:6px 0 0;font-size:12.5px}
+#setTimer button{font-size:12.5px;padding:8px 4px}
 .ct-save{width:100%;margin-top:10px;padding:13px;font-size:15.5px}
 .ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
 .ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
@@ -680,6 +682,9 @@ input,select,textarea{font-size:16px!important}
   <h2>Configurações</h2>
   <p class="hint" style="margin-bottom:8px">Cor do app</p>
   <div class="swatches" id="swatches"></div>
+  <p class="hint" style="margin:14px 0 8px">Cronômetro do cardio</p>
+  <div class="ct-dir" id="setTimer" style="margin:0"></div>
+  <p class="hint" style="margin:6px 0 14px;font-size:12.5px">Regressivo: o tempo diminui (20:00 → 0:00). Progressivo: o tempo sobe (0:00 → 20:00).</p>
   <div id="setGoalBox"></div>
   <div id="setAccount"></div>
   <p class="hint" id="setVersion" style="margin:0 0 12px"></p>
@@ -1087,8 +1092,11 @@ function renderSwatches() {
   document.getElementById('swatches').innerHTML = COLORS.map(([id, label, hex]) =>
     `<button type="button" class="${shownColor === id ? 'on' : ''}" data-color="${id}"><i style="background:${hex}"></i>${label}</button>`).join('');
 }
+let shownTimer = 'down';
+const renderTimerPick = () => { document.getElementById('setTimer').innerHTML = [['down', 'Regressivo ↓'], ['up', 'Progressivo ↑']].map(([id, l]) => `<button type="button" class="${shownTimer === id ? 'on' : ''}" data-ctmode="${id}">${l}</button>`).join(''); };
 function openSettings() {
   renderSwatches();
+  shownTimer = ctPref(); renderTimerPick();
   document.getElementById('setVersion').textContent = 'Versão do app: ' + APP_VERSION;
   const me = profile(ME);
   document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
@@ -1101,6 +1109,7 @@ document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('setClose').onclick = () => {
   const c = shownColor, o = colorOwner();
   ui.color = c; saveUi();
+  try { localStorage.setItem('planilha-cronometro-modo', shownTimer); } catch (e) {} ui.ctDir = null;
   if (o) {
     o.color = c;
     const g = parseInt(document.getElementById('setGoal') ? document.getElementById('setGoal').value : '');
@@ -1109,7 +1118,7 @@ document.getElementById('setClose').onclick = () => {
   }
   $setDlg.close();
   paintColor(c); render(); // redesenha o app inteiro já na cor nova
-  toast('Cor salva ✓');
+  toast('Configurações salvas ✓');
 };
 document.getElementById('setCancel').onclick = () => { $setDlg.close(); paintColor(savedColor()); render(); };
 $setDlg.addEventListener('cancel', () => setTimeout(() => { paintColor(savedColor()); render(); }));
@@ -1117,6 +1126,7 @@ $setDlg.addEventListener('click', e => {
   const b = e.target.closest('[data-color]');
   // tocar numa cor já mostra o app nela; "Salvar" grava na conta do aluno
   if (b) { paintColor(b.dataset.color); renderSwatches(); return; }
+  const tm = e.target.closest('[data-ctmode]'); if (tm) { shownTimer = tm.dataset.ctmode; renderTimerPick(); return; }
   if (e.target.id === 'setLogout') logout();
 });
 const statsDay = () => ui.view === 'historico' && ui.histDay ? ui.histDay : ui.date;
@@ -1335,7 +1345,7 @@ function ctHtml(p, goal, done) {
         <span class="ct-in"><input id="ctMinIn" inputmode="numeric" value="${min}" aria-label="Minutos do cronômetro"> min</span>
         <button class="ct-step" data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+</button>
         <button class="btn primary ct-go" data-act="ct-start" data-min="${min}">▶ Iniciar</button></div>
-      <div class="ct-dir"><button class="${dir === 'down' ? 'on' : ''}" data-act="ct-dir" data-d="down">Regressivo</button><button class="${dir === 'up' ? 'on' : ''}" data-act="ct-dir" data-d="up">Progressivo</button></div></div>`;
+      <p class="hint ct-mode">${dir === 'down' ? 'Regressivo' : 'Progressivo'} · para trocar, vá em Configurações</p></div>`;
 }
 // atualiza o relógio e a barra sem redesenhar a tela
 function ctTick() {
@@ -4448,7 +4458,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-00:56';
+const APP_VERSION = '04/10-01:11';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
