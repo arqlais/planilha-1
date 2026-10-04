@@ -1239,6 +1239,9 @@ function renderStudentTreino(p, greet, isToday) {
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
     ${installTipHtml()}
+    ${Object.keys(p.unlocks || {}).filter(d => d < today() && d !== ui.date && !daySent(d, p.id)).sort().map(d => `<section class="card unlock-note"><p style="margin:0 0 10px"><b>🔓 Seu professor liberou o treino de ${fmtDate(d)}</b> para você completar o que faltou e enviar.</p>
+      <button class="btn primary" data-act="goto-day" data-d="${d}">Abrir treino de ${fmtDate(d)}</button></section>`).join('')}
+    ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0">🔓 Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
     ${showPlan ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
       ${cardioGoalHtml(p)}
       ${groups.length ? `<div class="layout">Séries em:
@@ -1483,9 +1486,12 @@ function groupPicker(type, name, checked, withCardio) {
 // ---------- Treino enviado / trava ----------
 // Só dá para mexer no treino de HOJE que ainda não foi enviado. Dias passados e treinos enviados ficam só para consulta.
 const sentAt = (exId, date = ui.date) => { const s = sessionOn(exId, date); return s && s.fin; };
-const lockReason = (exId, date = ui.date) => date !== today() ? 'past' : sentAt(exId, date) ? 'sent' : '';
+// Dia passado que o professor destravou para corrigir (ex.: aluno esqueceu de anotar a última série)
+// (vale até o treino daquele dia ser enviado de novo)
+const dayUnlocked = (date = ui.date, pid = ui.profile) => { const p = profile(pid); return !!(p && p.unlocks && p.unlocks[date]) && !profExs(pid).some(e => { const x = sessionOn(e.id, date); return x && x.fin; }); };
+const lockReason = (exId, date = ui.date) => date !== today() && !dayUnlocked(date) ? 'past' : sentAt(exId, date) ? 'sent' : '';
 const LOCK_MSG = { past: 'Dias passados ficam só para consulta: só dá para alterar o treino de hoje.', sent: 'Este treino já foi enviado: as cargas e repetições não podem mais ser alteradas.' };
-const dayLocked = (date = ui.date) => date !== today();
+const dayLocked = (date = ui.date) => date !== today() && !dayUnlocked(date);
 // Cardio também trava depois que o treino do dia é enviado
 const daySent = (date = ui.date, pid = ui.profile) => profExs(pid).some(e => sentAt(e.id, date));
 const cardioLocked = (date = ui.date) => dayLocked(date) || daySent(date);
@@ -1497,6 +1503,14 @@ function sendableExs() {
 }
 // Professor vendo o treino de um aluno: mostra se o aluno já enviou (bloqueado) ou ainda não
 function sendStatusHtml(exs) {
+  if (!ui.studentMode && ui.date < today() && exs.length) { // dia passado: o professor pode destravar para corrigir
+    const p = profile(ui.profile), who = ui.profile === ME ? 'você' : firstName(p);
+    return dayUnlocked(ui.date)
+      ? `<section class="card"><p style="margin:0 0 10px"><b>🔓 Dia ${fmtDate(ui.date)} destravado.</b><br><small style="color:var(--muted)">${ui.profile === ME ? 'Preencha o que faltou e envie o treino.' : `${esc(firstName(p))} pode preencher o que faltou e enviar (no app dela aparece o aviso). Você também pode preencher por aqui.`} Depois de enviado, trava de novo.</small></p>
+        <button class="btn" data-act="day-relock">🔒 Travar de novo</button></section>`
+      : `<section class="card"><p style="margin:0 0 10px"><small style="color:var(--muted)">Dia que já passou: só consulta. Se ${esc(who)} esqueceu de anotar alguma série, destrave este dia para preencher.</small></p>
+        <button class="btn" data-act="day-unlock">🔓 Destravar este dia para corrigir</button></section>`;
+  }
   if (ui.profile === ME || ui.studentMode || ui.date !== today() || !exs.length) return '';
   const p = profile(ui.profile), started = exs.filter(e => { const s = sessionOn(e.id, ui.date); return s && s.sets.some(x => x.done); });
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
@@ -1507,7 +1521,7 @@ function sendStatusHtml(exs) {
   return '';
 }
 function sendHtml() {
-  if (ui.date !== today() || (ui.profile !== ME && !ui.studentMode)) return '';
+  if ((ui.date !== today() && !dayUnlocked(ui.date)) || (ui.profile !== ME && !ui.studentMode)) return '';
   if (ui.studentMode && CLOUD && cloud && cloud.role === 'admin' && !(profile(ui.profile) || {}).test) return `<p class="hint" style="text-align:center;margin:14px 0">No app do aluno aparece aqui o botão <b>✓ Enviar treino</b>. Na pré-visualização ele fica desligado.</p>`;
   const exs = sendableExs(); if (!exs.length) return '';
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
@@ -1522,7 +1536,7 @@ function sendHtml() {
 const askedSend = new Set();
 function maybeAskSend() {
   const mine = !ui.studentMode && ui.profile === ME, student = ui.studentMode && (!(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test);
-  if ((!mine && !student) || ui.date !== today()) return;
+  if ((!mine && !student) || (ui.date !== today() && !dayUnlocked(ui.date))) return;
   const exs = sendableExs(), key = ui.profile + today();
   if (!exs.length || askedSend.has(key) || exs.every(e => sentAt(e.id)) || !exs.filter(e => !sentAt(e.id)).every(e => isComplete(e.id))) return;
   askedSend.add(key);
@@ -1536,6 +1550,7 @@ async function sendWorkout(auto) {
   if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? '⚠️ O cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode) s.by = 'aluno'; });
+  if (dayUnlocked(ui.date) && !(CLOUD && cloud && cloud.role === 'student')) delete profile(ui.profile).unlocks[ui.date]; // enviado: o dia trava de novo
   save(); render();
   if (CLOUD && cloud && cloud.ready) { const s = syncNow(); if (navigator.onLine) await Promise.race([s, new Promise(r => setTimeout(r, 4000))]); }
   toast(!navigator.onLine ? '✓ Treino enviado! Está salvo no aparelho e vai para a nuvem quando a internet voltar.'
@@ -3294,6 +3309,21 @@ $main.addEventListener('click', e => {
       });
       return;
     }
+    case 'goto-day': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
+    case 'day-unlock': {
+      const p = profile(ui.profile), d = ui.date;
+      p.unlocks = { ...(p.unlocks || {}), [d]: true };
+      profExs(p.id).forEach(e => { const x = sessionOn(e.id, d); if (x) { delete x.fin; delete x.finBy; } }); // pode completar e enviar de novo
+      for (const k of Object.keys(p.unlocks)) if (k < addDays(today(), -30)) delete p.unlocks[k];
+      save(); render();
+      return toast(`🔓 Dia ${fmtDate(d)} destravado${p.id === ME ? '' : `: ${esc(firstName(p))} já pode preencher e enviar`}.`);
+    }
+    case 'day-relock': {
+      const p = profile(ui.profile), d = ui.date, at = new Date().toISOString();
+      if (p.unlocks) delete p.unlocks[d];
+      profExs(p.id).forEach(e => { const x = sessionOn(e.id, d); if (x && x.sets.some(y => y.done) && !x.fin) { x.fin = at; x.finBy = 'professor'; } });
+      save(); render(); return toast(`🔒 Dia ${fmtDate(d)} travado de novo.`);
+    }
     case 'lock-student': {
       const p = profile(ui.profile), exs = isLetter(ui.group) ? letterExs(ui.group) : [];
       const list = exs.map(e => sessionOn(e.id, ui.date)).filter(x => x && !x.fin && x.sets.some(y => y.done));
@@ -4464,7 +4494,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-01:24';
+const APP_VERSION = '04/10-02:06';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
