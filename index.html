@@ -950,10 +950,16 @@ function working(ex, date) {
   const base = prev && !(ex.planDate && ex.planDate > prev.date) ? prev.sets : ex.sets;
   return { id: null, exId: ex.id, date, sets: base.map(x => ({ carga: x.carga, reps: x.reps, done: false })) };
 }
+// Treino novo do dia: carga e repetições começam VAZIAS (a pessoa preenche); o "antes" fica embaixo de cada
+// série. Se o professor deixou carga/repetições planejadas na montagem, elas aparecem apagadinhas como dica.
+function blankSession(ex, date) {
+  const w = working(ex, date), prev = prevSession(ex.id, date), planned = !prev || (ex.planDate && ex.planDate > prev.date);
+  return { ...w, sets: w.sets.map((x, i) => ({ carga: null, reps: null, done: false, hint: planned ? { carga: (ex.sets[i] || {}).carga ?? null, reps: (ex.sets[i] || {}).reps ?? null } : null })) };
+}
 function ensureSession(ex, date) {
   if (date === today()) markActivity(date); // está treinando agora
   let s = sessionOn(ex.id, date);
-  if (!s) { s = working(ex, date); s.id = uid(); db.sessions.push(s); }
+  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); db.sessions.push(s); }
   if (ui.studentMode) s.by = 'aluno'; // marcação feita pelo aluno
   return s;
 }
@@ -1562,30 +1568,30 @@ function isComplete(exId) {
   return !!s && s.sets.length > 0 && s.sets.every(x => x.done);
 }
 
-const stepper = (f, v, label) => `<div class="step">
+const stepper = (f, v, label, hint) => `<div class="step">
   <button data-act="dec" data-f="${f}" aria-label="Diminuir ${label}">−</button>
-  <input data-f="${f}" inputmode="${f === 'carga' ? 'decimal' : 'numeric'}" value="${numVal(v)}" placeholder="${f === 'carga' ? 'kg' : '–'}" aria-label="${label}">
+  <input data-f="${f}" inputmode="${f === 'carga' ? 'decimal' : 'numeric'}" value="${numVal(v)}" placeholder="${hint != null ? numVal(hint) : f === 'carga' ? 'kg' : '–'}" aria-label="${label}">
   <button data-act="inc" data-f="${f}" aria-label="Aumentar ${label}">+</button></div>`;
 
 function cardHtml(ex) {
   const lock = lockReason(ex.id);
   if (lock === 'past' && !sessionOn(ex.id, ui.date)) return `<div class="card-h"><div class="grow"><h3>${esc(ex.name)}</h3><small>${ex.group} · sem registro neste dia</small></div></div>`;
-  const s = working(ex, ui.date);
+  const s = sessionOn(ex.id, ui.date) || blankSession(ex, ui.date), hints = blankSession(ex, ui.date).sets;
   const prev = prevSession(ex.id, ui.date);
   const done = s.sets.filter(x => x.done).length, n = s.sets.length;
   const tiles = ui.layout !== 'list';
   const rows = s.sets.map((x, i) => {
-    const p = prev && prev.sets[i];
+    const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
     if (tiles) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></div>
-      <label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="kg" aria-label="carga da série ${i + 1}"></label>
-      <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps" aria-label="repetições da série ${i + 1}"></label>
+      <label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>
+      <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
       <div class="ant">${p && p.done ? `${fmt(p.carga)}×${p.reps ?? '–'}` : 'novo'}</div>
     </div>`;
     return `<div class="set ${rowClass(x, p)}" data-i="${i}" data-base="set">
       <span class="num">${i + 1}</span>
-      ${stepper('carga', x.carga, `carga da série ${i + 1}`)}
-      ${stepper('reps', x.reps, `repetições da série ${i + 1}`)}
+      ${stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
+      ${stepper('reps', x.reps, `repetições da série ${i + 1}`, h.reps)}
       <button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button>
       <div class="meta"><span>${p && p.done ? `antes: ${fmt(p.carga)} kg × ${p.reps ?? '–'}` : 'sem registro anterior'}</span><span class="tot">${setTotal(x)}</span></div>
     </div>`;
@@ -3470,9 +3476,14 @@ $main.addEventListener('click', e => {
     x.done = !x.done;
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(ex.rest); }
   } else if (act === 'inc' || act === 'dec') {
-    const x = s.sets[+b.closest('[data-i]').dataset.i], f = b.dataset.f;
-    const v = (x[f] || 0) + STEP[f] * (act === 'inc' ? 1 : -1);
-    x[f] = Math.max(0, Math.round(v * 10) / 10);
+    const i = +b.closest('[data-i]').dataset.i, x = s.sets[i], f = b.dataset.f;
+    if (x[f] == null) { // campo vazio: o primeiro toque já coloca o valor de antes (ou o planejado)
+      const pv = prevSession(ex.id, ui.date), base = (pv && pv.sets[i] && pv.sets[i][f]) ?? ((blankSession(ex, ui.date).sets[i] || {}).hint || {})[f];
+      x[f] = base != null ? base : act === 'inc' ? STEP[f] : 0;
+    } else {
+      const v = x[f] + STEP[f] * (act === 'inc' ? 1 : -1);
+      x[f] = Math.max(0, Math.round(v * 10) / 10);
+    }
   } else if (act === 'alldone') {
     if (s.sets.every(x => x.done)) s.sets.forEach(x => x.done = false);
     else {
@@ -4494,7 +4505,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-02:06';
+const APP_VERSION = '04/10-02:27';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
