@@ -93,7 +93,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ct-dir button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ctimer.run .ct-row{margin-top:10px}.ct-x{display:block;margin:6px auto 4px;color:var(--muted);font-size:13px}
 .ct-mode{margin:6px 0 0;font-size:12.5px}
-#setTimer button{font-size:12.5px;padding:8px 4px}
+#setTimer button{font-size:14.5px;padding:12px 6px;min-height:46px;touch-action:manipulation}
 .ct-save{width:100%;margin-top:10px;padding:13px;font-size:15.5px}
 .ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
 .ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
@@ -1093,7 +1093,11 @@ function renderSwatches() {
     `<button type="button" class="${shownColor === id ? 'on' : ''}" data-color="${id}"><i style="background:${hex}"></i>${label}</button>`).join('');
 }
 let shownTimer = 'down';
-const renderTimerPick = () => { document.getElementById('setTimer').innerHTML = [['down', 'Regressivo ↓'], ['up', 'Progressivo ↑']].map(([id, l]) => `<button type="button" class="${shownTimer === id ? 'on' : ''}" data-ctmode="${id}">${l}</button>`).join(''); };
+const renderTimerPick = () => {
+  const box = document.getElementById('setTimer');
+  box.innerHTML = [['down', 'Regressivo ↓'], ['up', 'Progressivo ↑']].map(([id, l]) => `<button type="button" class="${shownTimer === id ? 'on' : ''}" data-ctmode="${id}">${l}</button>`).join('');
+  box.querySelectorAll('button').forEach(bt => { bt.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); shownTimer = bt.dataset.ctmode; renderTimerPick(); }; });
+};
 function openSettings() {
   renderSwatches();
   shownTimer = ctPref(); renderTimerPick();
@@ -1345,7 +1349,7 @@ function ctHtml(p, goal, done) {
         <span class="ct-in"><input id="ctMinIn" inputmode="numeric" value="${min}" aria-label="Minutos do cronômetro"> min</span>
         <button class="ct-step" data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+</button>
         <button class="btn primary ct-go" data-act="ct-start" data-min="${min}">▶ Iniciar</button></div>
-      <p class="hint ct-mode">${dir === 'down' ? 'Regressivo' : 'Progressivo'} · para trocar, vá em Configurações</p></div>`;
+      <p class="hint ct-mode">Modo: <b>${dir === 'down' ? 'Regressivo ↓' : 'Progressivo ↑'}</b> <button class="link" data-act="ct-settings">trocar</button></p></div>`;
 }
 // atualiza o relógio e a barra sem redesenhar a tela
 function ctTick() {
@@ -3384,6 +3388,7 @@ $main.addEventListener('click', e => {
     }
     case 'goal-edit': ui.goalEdit = true; render(); { const i = document.getElementById('goalDaily'); if (i) i.focus(); } return;
     case 'c-manual': ui.cManual = true; render(); { const i = document.getElementById('cardioDone'); if (i) i.focus(); } return;
+    case 'ct-settings': return openSettings();
     case 'ct-dir': ui.ctDir = b.dataset.d; try { localStorage.setItem('planilha-cronometro-modo', ui.ctDir); } catch (e) {} return render();
     case 'ct-min': { const i = document.getElementById('ctMinIn'), cur = parseNum(i && i.value) || 20; ui.ctMin = Math.max(1, Math.min(180, Math.round(cur + +b.dataset.d))); return render(); }
     case 'ct-start': {
@@ -4458,7 +4463,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-01:11';
+const APP_VERSION = '04/10-01:15';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
