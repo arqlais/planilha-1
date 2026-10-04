@@ -82,6 +82,14 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .swatches button.on{border-color:var(--text)}
 .install-tip{background:var(--acc-soft);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
 .install-tip button{border:0;background:none;color:var(--muted);font-size:16px;padding:0 2px}
+.ctimer{margin-top:4px}.ctimer.run{margin-top:14px;text-align:center;background:var(--acc-soft);border-radius:16px;padding:14px 10px 4px}
+.ct-clock{font-size:54px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1.05;color:var(--text)}
+.ct-sub{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.ct-dir{display:flex;gap:6px;margin-bottom:10px}.ct-dir button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:9px 6px;font-weight:700;font-size:13.5px}
+.ct-dir button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.ct-set{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px}.ct-set b{min-width:84px;text-align:center;font-size:20px}
+.ct-set button{width:44px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:800}
+.ct-go{width:100%;padding:13px;font-size:15.5px}
 .goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px}
 .goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:width .9s ease-out}
 .goal-txt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -1239,7 +1247,8 @@ function cardioGoalHtml(p) {
   const pct = goal ? Math.min(100, done / goal * 100) : done ? 100 : 0;
   const key = ui.profile + ui.date, from = ui.cardioBar && ui.cardioBar.key === key ? ui.cardioBar.v : 0;
   ui.cardioBar = { key, v: pct };
-  if (from !== pct) setTimeout(() => { const f = $main.querySelector('.cardio-card .goal-bar .fill'); if (f) requestAnimationFrame(() => requestAnimationFrame(() => f.style.width = pct + '%')); });
+  const timing = typeof ct !== 'undefined' && ct && ct.pid === p.id && ct.date === ui.date;
+  if (from !== pct && !timing) setTimeout(() => { const f = $main.querySelector('.cardio-card .goal-bar .fill'); if (f) requestAnimationFrame(() => requestAnimationFrame(() => f.style.width = pct + '%')); });
   const mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
   const bar = `<div class="goal-bar ${full ? 'full' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="${goal || 100}" aria-valuenow="${goal ? Math.min(done, goal) : pct}">
         <div class="fill" style="width:${from}%"></div></div>`;
@@ -1278,8 +1287,84 @@ function cardioGoalHtml(p) {
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
         <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
+      ${ctHtml(p, goal, done)}
     </section>`;
 }
+// ---------- Cronômetro do cardio (regressivo ou progressivo; a barra anda junto com o tempo) ----------
+const CT_KEY = 'planilha-cronometro';
+let ct = null, ctTimer = null, ctLock = null;
+try { ct = JSON.parse(localStorage.getItem(CT_KEY)) || null; } catch (e) {}
+const ctSaveState = () => { try { ct ? localStorage.setItem(CT_KEY, JSON.stringify(ct)) : localStorage.removeItem(CT_KEY); } catch (e) {} };
+const ctElapsed = t => Math.max(0, Math.min(t.dur, ((t.pausedAt || Date.now()) - t.start - (t.paused || 0)) / 1000));
+const ctPref = () => { try { return localStorage.getItem('planilha-cronometro-modo') || 'down'; } catch (e) { return 'down'; } };
+function ctHtml(p, goal, done) {
+  const t = ct && ct.pid === p.id && ct.date === ui.date ? ct : null;
+  if (!t && ui.date !== today()) return '';
+  if (t) {
+    const el = ctElapsed(t), show = t.dir === 'down' ? t.dur - el : el;
+    setTimeout(ctTick);
+    return `<div class="ctimer run">
+      <div class="ct-clock" id="ctClock">${mmss(Math.round(show))}</div>
+      <small class="ct-sub">${t.dir === 'down' ? 'Regressivo' : 'Progressivo'} · ${fmtMin(t.dur / 60)} min · ${modeOf(t.mode)[1]}${t.pausedAt ? ' · <b>pausado</b>' : ''}</small>
+      <div class="actions" style="justify-content:center">
+        ${t.pausedAt ? '<button class="btn primary" data-act="ct-resume">▶ Continuar</button>' : '<button class="btn" data-act="ct-pause">Pausar</button>'}
+        <button class="btn primary" data-act="ct-stop">Parar e salvar</button>
+        <button class="btn danger" data-act="ct-cancel">Cancelar</button></div></div>`;
+  }
+  const left = goal ? Math.max(0, goal - done) : 0;
+  const min = ui.ctMin || (left >= 1 ? Math.round(left) : goal ? Math.round(goal) : 20), dir = ui.ctDir || ctPref();
+  return `<div class="ctimer">
+      <p class="plan-g" style="margin:14px 0 8px">Cronômetro</p>
+      <div class="ct-dir"><button class="${dir === 'down' ? 'on' : ''}" data-act="ct-dir" data-d="down">⬇ Regressivo</button><button class="${dir === 'up' ? 'on' : ''}" data-act="ct-dir" data-d="up">⬆ Progressivo</button></div>
+      <div class="ct-set"><button data-act="ct-min" data-d="-5" aria-label="Menos 5 minutos">−5</button><button data-act="ct-min" data-d="-1" aria-label="Menos 1 minuto">−1</button>
+        <b>${min} min</b><button data-act="ct-min" data-d="1" aria-label="Mais 1 minuto">+1</button><button data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+5</button></div>
+      <button class="btn primary ct-go" data-act="ct-start" data-min="${min}">▶ Iniciar ${min} min</button></div>`;
+}
+// atualiza o relógio e a barra sem redesenhar a tela
+function ctTick() {
+  clearInterval(ctTimer);
+  if (!ct) return;
+  const step = () => {
+    if (!ct) return clearInterval(ctTimer);
+    const el = ctElapsed(ct), clock = document.getElementById('ctClock');
+    if (clock && ui.date === ct.date && ui.profile === ct.pid) {
+      clock.textContent = mmss(Math.round(ct.dir === 'down' ? ct.dur - el : el));
+      const f = $main.querySelector('.cardio-card .goal-bar .fill');
+      // regressivo: a barra esvazia com o tempo; progressivo: enche até a meta (ou até o tempo escolhido)
+      const pct = ct.dir === 'down' ? (1 - el / ct.dur) * 100 : Math.min(100, (ct.base + el / 60) / (ct.goal || (ct.base + ct.dur / 60)) * 100);
+      if (f) { f.style.transition = 'width .3s linear'; f.style.width = pct + '%'; }
+    }
+    if (!ct.pausedAt && el >= ct.dur) ctFinish(true);
+  };
+  step(); ctTimer = setInterval(step, 250);
+}
+// grava os minutos do cronômetro no cardio do dia (somando com o que já tinha)
+function ctFinish(auto) {
+  const t = ct; if (!t) return;
+  const sec = ctElapsed(t); ct = null; ctSaveState(); clearInterval(ctTimer);
+  try { ctLock && ctLock.release(); } catch (e) {} ctLock = null;
+  if (auto) { if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 500]); beep(); }
+  const min = Math.round(sec / 60 * 100) / 100;
+  if (!(min > 0)) { render(); return toast('Cronômetro cancelado: nenhum minuto contado.'); }
+  const p = profile(t.pid); if (!p) return render();
+  if (daySent(t.date, t.pid)) { render(); return toast('O treino deste dia já foi enviado: o tempo do cronômetro não foi somado.'); }
+  const prev = db.cardio.filter(c => c.profileId === t.pid && c.date === t.date), had = prev.reduce((a, c) => a + c.min, 0);
+  const total = Math.min(300, Math.round((had + min) * 100) / 100), g0 = cardioGoalOf(p, t.date);
+  db.cardio = db.cardio.filter(c => !(c.profileId === t.pid && c.date === t.date));
+  db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
+  save(); render();
+  toast(`${auto ? '⏰ Tempo! ' : ''}${modeOf(t.mode)[1]}: ${fmtMin(min)} min salvos${g0 && total >= g0 ? ' · meta de cardio concluída!' : ''}`);
+}
+function beep() {
+  try {
+    const A = new (window.AudioContext || window.webkitAudioContext)();
+    [0, .35, .7].forEach(d => { const o = A.createOscillator(), g = A.createGain(); o.frequency.value = 880; o.connect(g); g.connect(A.destination);
+      g.gain.setValueAtTime(.25, A.currentTime + d); g.gain.exponentialRampToValueAtTime(.001, A.currentTime + d + .3); o.start(A.currentTime + d); o.stop(A.currentTime + d + .3); });
+  } catch (e) {}
+}
+async function ctWake() { try { ctLock = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; } catch (e) { ctLock = null; } }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ct && !ct.pausedAt) { ctWake(); ctTick(); } });
+if (ct) setTimeout(ctTick, 1500); // cronômetro que estava correndo antes de fechar o app
 // Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
 function setCardio(min) {
   if (cardioLocked()) return toast(cardioLockMsg());
@@ -3239,6 +3324,19 @@ $main.addEventListener('click', e => {
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
       return setCardio(v);
     }
+    case 'ct-dir': ui.ctDir = b.dataset.d; try { localStorage.setItem('planilha-cronometro-modo', ui.ctDir); } catch (e) {} return render();
+    case 'ct-min': { const cur = +($main.querySelector('[data-act="ct-start"]') || {}).dataset?.min || 20; ui.ctMin = Math.max(1, Math.min(180, cur + +b.dataset.d)); return render(); }
+    case 'ct-start': {
+      if (cardioLocked()) return toast(cardioLockMsg());
+      const p = profile(ui.profile), goal = cardioGoalOf(p, ui.date), had = profCardio().filter(c => c.date === ui.date).reduce((a, c) => a + c.min, 0);
+      const today_ = profCardio().filter(c => c.date === ui.date), mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
+      ct = { pid: p.id, date: ui.date, mode, dir: ui.ctDir || ctPref(), dur: Math.round(+b.dataset.min * 60), start: Date.now(), paused: 0, base: had, goal: goal || 0, ...(ui.studentMode ? { by: 'aluno' } : {}) };
+      ui.ctMin = null; ctSaveState(); ctWake(); render(); return;
+    }
+    case 'ct-pause': if (ct && !ct.pausedAt) { ct.pausedAt = Date.now(); ctSaveState(); } return render();
+    case 'ct-resume': if (ct && ct.pausedAt) { ct.paused += Date.now() - ct.pausedAt; delete ct.pausedAt; ctSaveState(); ctWake(); } return render();
+    case 'ct-stop': return ctFinish(false);
+    case 'ct-cancel': confirmAsk('Cancelar o cronômetro?', 'O tempo contado até agora não será salvo.', 'Cancelar cronômetro').then(ok => { if (!ok) return; ct = null; ctSaveState(); clearInterval(ctTimer); try { ctLock && ctLock.release(); } catch (e) {} render(); }); return;
     case 'del-cardio': db.cardio = db.cardio.filter(c => c.id !== b.dataset.id); save(); return render();
     case 'watch-start': ui.watch = { start: Date.now(), mode: ui.mode }; clearInterval(watchTimer); watchTimer = setInterval(tickWatch, 500); return render();
     case 'watch-cancel': ui.watch = null; clearInterval(watchTimer); return render();
@@ -4295,7 +4393,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-23:43';
+const APP_VERSION = '04/10-00:03';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
