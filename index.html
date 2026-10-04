@@ -784,9 +784,19 @@ const CLOUD = !!(CFG.firebase && CFG.firebase.apiKey);
 const ADMIN_EMAIL = String(CFG.adminEmail || '').trim().toLowerCase();
 const pad = n => String(n).padStart(2, '0');
 const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-// O "dia de treino" vira às 3h da manhã: quem treina depois da meia-noite continua no treino do dia anterior
-const DAY_TURN_H = 3;
-const today = () => isoDate(new Date(Date.now() - DAY_TURN_H * 3600e3));
+// O dia vira à meia-noite. Exceção: quem estava no meio do treino quando deu meia-noite (anotou algo há menos
+// de 1h30) continua no treino do dia anterior até as 3h da manhã — assim o treino não trava no meio.
+const DAY_TURN_H = 3, ACT_KEY = 'planilha-ultimo-treino';
+let lastAct = null; try { lastAct = JSON.parse(localStorage.getItem(ACT_KEY)) || null; } catch (e) {}
+const today = () => {
+  const now = new Date();
+  if (now.getHours() < DAY_TURN_H && lastAct && Date.now() - lastAct.t < 90 * 60e3) {
+    const y = isoDate(new Date(now.getTime() - DAY_TURN_H * 3600e3));
+    if (lastAct.d === y) return y;
+  }
+  return isoDate(now);
+};
+const markActivity = date => { lastAct = { t: Date.now(), d: date }; try { localStorage.setItem(ACT_KEY, JSON.stringify(lastAct)); } catch (e) {} };
 const toDate = s => new Date(s + 'T12:00:00');
 const parseNum = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null; };
 const fmt = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -930,6 +940,7 @@ function working(ex, date) {
   return { id: null, exId: ex.id, date, sets: base.map(x => ({ carga: x.carga, reps: x.reps, done: false })) };
 }
 function ensureSession(ex, date) {
+  if (date === today()) markActivity(date); // está treinando agora
   let s = sessionOn(ex.id, date);
   if (!s) { s = working(ex, date); s.id = uid(); db.sessions.push(s); }
   if (ui.studentMode) s.by = 'aluno'; // marcação feita pelo aluno
@@ -1368,6 +1379,7 @@ if (ct) setTimeout(ctTick, 1500); // cronômetro que estava correndo antes de fe
 // Marca o tempo total de cardio do dia (substitui o que estava marcado); aceita número quebrado (ex.: 12,5)
 function setCardio(min) {
   if (cardioLocked()) return toast(cardioLockMsg());
+  if (ui.date === today()) markActivity(ui.date);
   const p = profile(ui.profile), mode = ui.mode, g0 = cardioGoalOf(p, ui.date);
   min = Math.min(300, Math.round((min || 0) * 100) / 100);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
@@ -3331,7 +3343,7 @@ $main.addEventListener('click', e => {
       const p = profile(ui.profile), goal = cardioGoalOf(p, ui.date), had = profCardio().filter(c => c.date === ui.date).reduce((a, c) => a + c.min, 0);
       const today_ = profCardio().filter(c => c.date === ui.date), mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
       ct = { pid: p.id, date: ui.date, mode, dir: ui.ctDir || ctPref(), dur: Math.round(+b.dataset.min * 60), start: Date.now(), paused: 0, base: had, goal: goal || 0, ...(ui.studentMode ? { by: 'aluno' } : {}) };
-      ui.ctMin = null; ctSaveState(); ctWake(); render(); return;
+      ui.ctMin = null; ctSaveState(); ctWake(); markActivity(ui.date); render(); return;
     }
     case 'ct-pause': if (ct && !ct.pausedAt) { ct.pausedAt = Date.now(); ctSaveState(); } return render();
     case 'ct-resume': if (ct && ct.pausedAt) { ct.paused += Date.now() - ct.pausedAt; delete ct.pausedAt; ctSaveState(); ctWake(); } return render();
@@ -4393,7 +4405,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-00:03';
+const APP_VERSION = '04/10-00:14';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
