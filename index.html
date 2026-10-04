@@ -85,11 +85,14 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ctimer{margin-top:4px}.ctimer.run{margin-top:14px;text-align:center;background:var(--acc-soft);border-radius:16px;padding:14px 10px 4px}
 .ct-clock{font-size:54px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1.05;color:var(--text)}
 .ct-sub{display:block;color:var(--muted);font-size:13px;margin-top:2px}
-.ct-dir{display:flex;gap:6px;margin-bottom:10px}.ct-dir button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:9px 6px;font-weight:700;font-size:13.5px}
-.ct-dir button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-.ct-set{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px}.ct-set b{min-width:84px;text-align:center;font-size:20px}
-.ct-set button{width:44px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:800}
-.ct-go{width:100%;padding:13px;font-size:15.5px}
+.ctimer{margin-top:12px}
+.ct-row{display:flex;align-items:center;gap:8px}.ct-row b{min-width:64px;text-align:center;font-size:18px}
+.ct-step{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:20px;font-weight:800;line-height:1}
+.ct-go{flex:1;padding:11px;font-size:15px}
+.ct-dir{display:flex;gap:4px;margin-top:8px;background:var(--acc-soft);border-radius:10px;padding:3px}.ct-dir button{flex:1;border:0;background:transparent;color:var(--muted);border-radius:8px;padding:6px;font-weight:700;font-size:12.5px}
+.ct-dir button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ctimer.run .ct-row{margin-top:10px}.ct-x{display:block;margin:6px auto 4px;color:var(--muted);font-size:13px}
+.c-manual{margin-top:8px}
 .goal-bar{height:18px;border-radius:9px;background:var(--acc-soft);overflow:hidden;margin-top:14px}
 .goal-bar .fill{height:100%;border-radius:9px;background:var(--acc);transition:width .9s ease-out}
 .goal-txt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -1286,18 +1289,16 @@ function cardioGoalHtml(p) {
     </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
-        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Escolha o cardio e anote o tempo'}</small></div>
+        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Escolha o tipo e toque em Iniciar'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
-      <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Tempo realizado</label>
-      <div class="actions" style="margin-top:0;align-items:center">
+      ${bar}
+      <div class="goal-txt"><span><b>${fmtMin(done)}</b>${goal ? ` de ${fmtMin(goal)}` : ''} min</span>
+        ${ui.cManual || timing ? '' : `<button class="link" data-act="c-manual">anotar à mão</button>`}</div>
+      ${ui.cManual ? `<div class="actions c-manual" style="align-items:center">
         <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="0" value="${done ? fmtMin(done) : ''}" aria-label="Tempo realizado em minutos"><span class="unit">min</span>
         <button class="btn primary" data-act="cardio-save">Salvar</button>
-        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Desmarcar</button>' : ''}
-      </div>
-      ${bar}
-      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado ainda'}</span>
-        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
+        ${done ? '<button class="btn danger" data-act="cardio-set" data-min="0">Zerar</button>' : ''}</div>` : ''}
       ${ctHtml(p, goal, done)}
     </section>`;
 }
@@ -1316,20 +1317,18 @@ function ctHtml(p, goal, done) {
     setTimeout(ctTick);
     return `<div class="ctimer run">
       <div class="ct-clock" id="ctClock">${mmss(Math.round(show))}</div>
-      <small class="ct-sub">${t.dir === 'down' ? 'Regressivo' : 'Progressivo'} · ${fmtMin(t.dur / 60)} min · ${modeOf(t.mode)[1]}${t.pausedAt ? ' · <b>pausado</b>' : ''}</small>
-      <div class="actions" style="justify-content:center">
-        ${t.pausedAt ? '<button class="btn primary" data-act="ct-resume">▶ Continuar</button>' : '<button class="btn" data-act="ct-pause">Pausar</button>'}
-        <button class="btn primary" data-act="ct-stop">Parar e salvar</button>
-        <button class="btn danger" data-act="ct-cancel">Cancelar</button></div></div>`;
+      <small class="ct-sub">${modeOf(t.mode)[1]} · ${fmtMin(t.dur / 60)} min${t.pausedAt ? ' · <b>pausado</b>' : ''}</small>
+      <div class="ct-row" style="justify-content:center">
+        ${t.pausedAt ? '<button class="btn primary" data-act="ct-resume">Continuar</button>' : '<button class="btn" data-act="ct-pause">Pausar</button>'}
+        <button class="btn primary" data-act="ct-stop">Parar e salvar</button></div>
+      <button class="link ct-x" data-act="ct-cancel">cancelar</button></div>`;
   }
   const left = goal ? Math.max(0, goal - done) : 0;
   const min = ui.ctMin || (left >= 1 ? Math.round(left) : goal ? Math.round(goal) : 20), dir = ui.ctDir || ctPref();
   return `<div class="ctimer">
-      <p class="plan-g" style="margin:14px 0 8px">Cronômetro</p>
-      <div class="ct-dir"><button class="${dir === 'down' ? 'on' : ''}" data-act="ct-dir" data-d="down">⬇ Regressivo</button><button class="${dir === 'up' ? 'on' : ''}" data-act="ct-dir" data-d="up">⬆ Progressivo</button></div>
-      <div class="ct-set"><button data-act="ct-min" data-d="-5" aria-label="Menos 5 minutos">−5</button><button data-act="ct-min" data-d="-1" aria-label="Menos 1 minuto">−1</button>
-        <b>${min} min</b><button data-act="ct-min" data-d="1" aria-label="Mais 1 minuto">+1</button><button data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+5</button></div>
-      <button class="btn primary ct-go" data-act="ct-start" data-min="${min}">▶ Iniciar ${min} min</button></div>`;
+      <div class="ct-row"><button class="ct-step" data-act="ct-min" data-d="-5" aria-label="Menos 5 minutos">−</button><b>${min} min</b><button class="ct-step" data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+</button>
+        <button class="btn primary ct-go" data-act="ct-start" data-min="${min}">▶ Iniciar</button></div>
+      <div class="ct-dir"><button class="${dir === 'down' ? 'on' : ''}" data-act="ct-dir" data-d="down">Regressivo</button><button class="${dir === 'up' ? 'on' : ''}" data-act="ct-dir" data-d="up">Progressivo</button></div></div>`;
 }
 // atualiza o relógio e a barra sem redesenhar a tela
 function ctTick() {
@@ -3336,8 +3335,9 @@ $main.addEventListener('click', e => {
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
       return setCardio(v);
     }
+    case 'c-manual': ui.cManual = true; render(); { const i = document.getElementById('cardioDone'); if (i) i.focus(); } return;
     case 'ct-dir': ui.ctDir = b.dataset.d; try { localStorage.setItem('planilha-cronometro-modo', ui.ctDir); } catch (e) {} return render();
-    case 'ct-min': { const cur = +($main.querySelector('[data-act="ct-start"]') || {}).dataset?.min || 20; ui.ctMin = Math.max(1, Math.min(180, cur + +b.dataset.d)); return render(); }
+    case 'ct-min': { const cur = +($main.querySelector('[data-act="ct-start"]') || {}).dataset?.min || 20; ui.ctMin = Math.max(5, Math.min(180, Math.round((cur + +b.dataset.d) / 5) * 5 || 5)); return render(); }
     case 'ct-start': {
       if (cardioLocked()) return toast(cardioLockMsg());
       const p = profile(ui.profile), goal = cardioGoalOf(p, ui.date), had = profCardio().filter(c => c.date === ui.date).reduce((a, c) => a + c.min, 0);
@@ -4405,7 +4405,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-00:14';
+const APP_VERSION = '04/10-00:29';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
