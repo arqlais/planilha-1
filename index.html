@@ -3967,8 +3967,27 @@ function ensureCloudFields(d) {
     if (p.id !== ME && !p.inviteCode) p.inviteCode = newInviteCode();
   });
 }
+// Registros que entraram no formato da planilha (sem id / sem ligação com o exercício, ex.: histórico carregado
+// pelo botão errado): ganham id fixo (igual em todos os aparelhos) e são ligados ao exercício pelo nome.
+const fixedId = str => { let h = 5381; for (let i = 0; i < str.length; i++) h = (h * 33 + str.charCodeAt(i)) >>> 0; return 'h' + h.toString(36); };
+const plainName = n => (n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+function linkLoose(d, loose) {
+  if (!loose.length) return;
+  loose.forEach(({ pid, x, i }) => {
+    const nm = plainName(x.ex);
+    // só exercícios que vieram do mesmo histórico (sem treino ativo), também os já marcados "(histórico antigo)"
+    let ex = d.exercises.find(e => e.profileId === pid && e.loose && (plainName(e.name) === nm || plainName(e.name) === nm + ' (historico antigo)'));
+    if (!ex) {
+      ex = { id: fixedId(`${pid}|ex|${nm}`), profileId: pid, name: x.ex, group: GROUPS[0], letter: null, archived: true, sets: (x.sets || []).map(y => ({ carga: y.carga ?? null, reps: y.reps ?? null })), loose: true };
+      if (!d.exercises.some(e => e.id === ex.id)) d.exercises.push(ex); else ex = d.exercises.find(e => e.id === ex.id);
+    }
+    const { ex: _n, ...rest } = x;
+    d.sessions.push({ ...rest, id: fixedId(`${pid}|s|${nm}|${x.date}|${i}`), exId: ex.id, sets: (x.sets || []).map(y => ({ carga: y.carga ?? null, reps: y.reps ?? null, done: y.done !== false })) });
+  });
+  d.exercises.forEach(e => { delete e.loose; });
+}
 function assemble(src = remote) {
-  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {}, trash = [];
+  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {}, trash = [], loose = [];
   for (const [path, v0] of src) {
     const v = plain(v0), m = path.split('/');
     if (m[3] === 'prefs') prefs[m[1]] = v; // preferências do aluno (ex.: cor do app)
@@ -3977,12 +3996,13 @@ function assemble(src = remote) {
       const { exercises = [], claim, ...meta } = v;
       if (meta.deleted) { trash.push({ id: m[1], name: meta.name, uid: meta.uid || null, deletedAt: meta.deletedAt || '' }); continue; } // lixeira
       d.profiles.push({ ...meta, id: m[1] });
-      exercises.forEach(e => d.exercises.push({ ...e, profileId: m[1] }));
+      exercises.forEach((e, i) => d.exercises.push(e.id ? { ...e, profileId: m[1] } : { ...e, id: fixedId(`${m[1]}|ex|${plainName(e.name)}|${i}`), profileId: m[1], loose: true }));
     } else {
-      (v.sessions || []).forEach(x => d.sessions.push(x));
+      (v.sessions || []).forEach((x, i) => x.exId ? d.sessions.push(x) : x.ex ? loose.push({ pid: m[1], x, i }) : null);
       (v.cardio || []).forEach(c => d.cardio.push({ ...c, profileId: m[1] }));
     }
   }
+  linkLoose(d, loose); d.exercises.forEach(e => { delete e.loose; });
   d.profiles.forEach(p => { delete p.color; if (prefs[p.id] && prefs[p.id].color) p.color = prefs[p.id].color; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
@@ -4275,7 +4295,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '03/10-10:31';
+const APP_VERSION = '03/10-23:43';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
