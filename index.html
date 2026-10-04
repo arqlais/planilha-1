@@ -996,7 +996,7 @@ const $date = document.getElementById('date');
 // Lista para trocar de aluno (botão do topo)
 const $pick = document.getElementById('pickDlg');
 function openPicker() {
-  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const students = db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const search = document.getElementById('pickSearch');
   search.hidden = students.length < 8; search.value = '';
   const draw = () => {
@@ -1115,7 +1115,7 @@ document.getElementById('setClose').onclick = () => {
   ui.color = c; saveUi();
   try { localStorage.setItem('planilha-cronometro-modo', shownTimer); } catch (e) {} ui.ctDir = null;
   if (o) {
-    o.color = c;
+    o.color = c; o.ctMode = shownTimer;
     const g = parseInt(document.getElementById('setGoal') ? document.getElementById('setGoal').value : '');
     if (!ui.studentMode && document.getElementById('setGoal') && (g > 0 ? g : 0) !== (o.cardioDaily || 0)) changeGoals(o, () => { if (g > 0) o.cardioDaily = Math.min(300, g); else delete o.cardioDaily; });
     save();
@@ -1323,7 +1323,8 @@ let ct = null, ctTimer = null, ctLock = null;
 try { ct = JSON.parse(localStorage.getItem(CT_KEY)) || null; } catch (e) {}
 const ctSaveState = () => { try { ct ? localStorage.setItem(CT_KEY, JSON.stringify(ct)) : localStorage.removeItem(CT_KEY); } catch (e) {} };
 const ctElapsed = t => Math.max(0, Math.min(t.dur, ((t.pausedAt || Date.now()) - t.start - (t.paused || 0)) / 1000));
-const ctPref = () => { try { return localStorage.getItem('planilha-cronometro-modo') || 'down'; } catch (e) { return 'down'; } };
+// modo do cronômetro: fica na conta (vale em qualquer aparelho); sem conta, no aparelho
+const ctPref = () => { const o = colorOwner(); if (o && o.ctMode) return o.ctMode; try { return localStorage.getItem('planilha-cronometro-modo') || 'down'; } catch (e) { return 'down'; } };
 function ctHtml(p, goal, done) {
   const t = ct && ct.pid === p.id && ct.date === ui.date ? ct : null;
   if (!t && ui.date !== today()) return '';
@@ -2107,7 +2108,7 @@ function myProfileHtml() {
     <div class="actions"><button class="btn" data-act="demo-test">Ver o teste: como fazer a Rosca martelo</button></div></div>`;
 }
 function renderAlunos() {
-  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const students = db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const q = ui.q.trim().toLowerCase();
   const shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   $main.innerHTML = `
@@ -2501,7 +2502,7 @@ function renderPerfil() {
 }
 // ---------- Alunos no computador: lista à esquerda, aluno com abas à direita ----------
 function renderAlunosDesk() {
-  const students = db.profiles.filter(p => p.id !== ME).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const students = db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const q = ui.q.trim().toLowerCase(), shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   const ym = today().slice(0, 7);
   const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
@@ -4171,7 +4172,7 @@ function assemble(src = remote) {
     }
   }
   linkLoose(d, loose); d.exercises.forEach(e => { delete e.loose; });
-  d.profiles.forEach(p => { delete p.color; if (prefs[p.id] && prefs[p.id].color) p.color = prefs[p.id].color; });
+  d.profiles.forEach(p => { delete p.color; delete p.ctMode; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
@@ -4183,7 +4184,7 @@ function assemble(src = remote) {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, body, ...meta } = p;
+    const { id, color, body, ctMode, ...meta } = p;
     const exercises = db.exercises.filter(e => e.profileId === id).map(({ profileId, ...e }) => e);
     const rem = remote.get('profiles/' + id);
     out.set('profiles/' + id, plain({ ...meta, uid: p.uid ?? null, inviteCode: p.inviteCode ?? null, exercises, ...(rem && rem.claim ? { claim: rem.claim } : {}) }));
@@ -4197,7 +4198,7 @@ function splitDb() {
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
-  for (const p of db.profiles) if (own.has(p.id) && p.color) out.set(`profiles/${p.id}/months/prefs`, { color: p.color });
+  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode)) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}) });
   for (const p of db.profiles) if (own.has(p.id) && p.body && p.body.length) out.set(`profiles/${p.id}/months/body`, plain({ entries: p.body }));
   return out;
 }
@@ -4463,7 +4464,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '04/10-01:15';
+const APP_VERSION = '04/10-01:24';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
