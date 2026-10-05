@@ -94,6 +94,8 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ctimer.run .ct-row{margin-top:10px}.ct-x{display:block;margin:6px auto 4px;color:var(--muted);font-size:13px}
 .ct-mode{margin:6px 0 0;font-size:12.5px}
 #setTimer button{font-size:14.5px;padding:12px 6px;min-height:46px;touch-action:manipulation}
+.noload{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12.5px;font-weight:700}
+.chk-line{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin:0 0 10px}.chk-line input{width:20px;height:20px}
 .ct-save{width:100%;margin-top:10px;padding:13px;font-size:15.5px}
 .ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
 .ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
@@ -667,6 +669,7 @@ input,select,textarea{font-size:16px!important}
       <label class="f">Carga (kg)<input name="carga" inputmode="decimal" placeholder="0"></label>
       <label class="f">Repetições<input name="reps" inputmode="numeric" placeholder="opcional"></label>
     </div>
+    <label class="chk-line"><input type="checkbox" name="noload"> Sem carga (só repetições) — ex.: abdominal livre, flexão, prancha</label>
     <p class="hint">É só o ponto de partida: depois do primeiro treino, o app já preenche tudo com os valores da última vez.</p>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="exDelete">Excluir</button>
@@ -988,9 +991,9 @@ function delta(now, before) {
   return `<span class="pill ${cls}">${arrow} ${p > 0 ? '+' : ''}${fmt(p)}%</span>`;
 }
 // Durante o treino mostra quanto falta para superar; ao terminar (ou ao passar) mostra a variação
-function progress(total, prevTotal, finished) {
-  if (!total) return `<span class="pill eq">meta: passar de ${fmt(prevTotal)} kg</span>`;
-  if (total <= prevTotal && !finished) return `<span class="pill eq">faltam ${fmt(prevTotal - total)} kg para superar</span>`;
+function progress(total, prevTotal, finished, u = 'kg') {
+  if (!total) return `<span class="pill eq">meta: passar de ${fmt(prevTotal)} ${u}</span>`;
+  if (total <= prevTotal && !finished) return `<span class="pill eq">faltam ${fmt(prevTotal - total)} ${u} para superar</span>`;
   return delta(total, prevTotal);
 }
 
@@ -1584,16 +1587,16 @@ function cardHtml(ex) {
     const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
     if (tiles) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></div>
-      <label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>
+      ${ex.noLoad ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
       <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
-      <div class="ant">${p && p.done ? `${fmt(p.carga)}×${p.reps ?? '–'}` : 'novo'}</div>
+      <div class="ant">${p && p.done ? (ex.noLoad ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
     </div>`;
     return `<div class="set ${rowClass(x, p)}" data-i="${i}" data-base="set">
       <span class="num">${i + 1}</span>
-      ${stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
+      ${ex.noLoad ? '<span class="noload">sem carga</span>' : stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
       ${stepper('reps', x.reps, `repetições da série ${i + 1}`, h.reps)}
       <button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button>
-      <div class="meta"><span>${p && p.done ? `antes: ${fmt(p.carga)} kg × ${p.reps ?? '–'}` : 'sem registro anterior'}</span><span class="tot">${setTotal(x)}</span></div>
+      <div class="meta"><span>${p && p.done ? (ex.noLoad ? `antes: ${p.reps ?? '–'} repetições` : `antes: ${fmt(p.carga)} kg × ${p.reps ?? '–'}`) : 'sem registro anterior'}</span><span class="tot">${setTotal(x)}</span></div>
     </div>`;
   }).join('');
   return `
@@ -1604,7 +1607,7 @@ function cardHtml(ex) {
         ${exDetailHtml(ex)}</div>
       ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
-    ${tiles ? `<div class="tile-key">Em cada série: <b>carga (kg)</b> · <b>repetições</b> · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
+    ${tiles ? `<div class="tile-key">Em cada série: ${ex.noLoad ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
     ${lock ? `<p class="lock-note">🔒 ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em ⋯'}</p>` : `<div class="actions">
       <button class="btn" data-act="addset">＋ série</button>
@@ -1660,14 +1663,16 @@ function rowClass(x, p) {
   return 'done' + (cv > pv ? ' up' : cv < pv ? ' down' : '');
 }
 function compareHtml(s, prev) {
-  const total = vol(s.sets), pt = prev ? vol(prev.sets) : 0, max = Math.max(total, pt, 1);
+  const ex = exById(s.exId), nl = !!(ex && ex.noLoad), u = nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições
+  const reps = sets => sets.reduce((a, x) => a + (x.done && x.reps != null ? x.reps : 0), 0);
+  const total = nl ? reps(s.sets) : vol(s.sets), pt = prev ? (nl ? reps(prev.sets) : vol(prev.sets)) : 0, max = Math.max(total, pt, 1);
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
   return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}</small></span>
-      <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${fmt(total)} kg</b></div>
+      <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${fmt(total)} ${u}</b></div>
     ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}</small></span>
-      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${fmt(pt)} kg</b></div>`
+      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${fmt(pt)} ${u}</b></div>`
       : '<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>'}
-    <div>${prev ? progress(total, pt, finished) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
+    <div>${prev ? progress(total, pt, finished, u) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
 }
 function refreshCard(exId) {
   const card = $main.querySelector(`[data-ex="${exId}"]`);
@@ -2567,7 +2572,7 @@ function builderHtml(pid) {
       <td><select data-bf="group" data-id="${e.id}" aria-label="Grupo">${GROUPS.map(g => `<option ${g === e.group ? 'selected' : ''}>${g}</option>`).join('')}</select></td>
       <td><input class="n" data-bf="n" data-id="${e.id}" inputmode="numeric" value="${e.sets.length}" aria-label="Séries"></td>
       <td><input class="n" data-bf="reps" data-id="${e.id}" inputmode="numeric" value="${r === 'var' ? '' : numVal(r)}" placeholder="${r === 'var' ? 'var.' : '–'}" aria-label="Repetições"></td>
-      <td><input class="n" data-bf="carga" data-id="${e.id}" inputmode="decimal" value="${c === 'var' ? '' : numVal(c)}" placeholder="${c === 'var' ? 'var.' : 'kg'}" aria-label="Carga"></td>
+      <td>${e.noLoad ? '<span class="noload" title="Sem carga (só repetições)">sem</span>' : `<input class="n" data-bf="carga" data-id="${e.id}" inputmode="decimal" value="${c === 'var' ? '' : numVal(c)}" placeholder="${c === 'var' ? 'var.' : 'kg'}" aria-label="Carga">`}</td>
       <td><input class="n" data-bf="rest" data-id="${e.id}" inputmode="numeric" value="${e.rest || ''}" placeholder="seg" aria-label="Descanso em segundos"></td>
       <td><select data-bf="method" data-id="${e.id}" aria-label="Técnica">${METHODS.map(m => `<option ${m === (e.method || 'Normal') ? 'selected' : ''}>${m}</option>`).join('')}</select></td>
       <td class="acts">${demoFor(e) ? `<button class="qhelp" data-act="demo-ex" data-id="${e.id}" title="Como fazer">?</button>` : ''}<button data-act="b-up" data-id="${e.id}" title="Subir" ${i ? '' : 'disabled'}>↑</button><button data-act="b-down" data-id="${e.id}" title="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
@@ -3138,7 +3143,7 @@ function autoCheck(inp) {
   const ex = exById(card.dataset.ex);
   if (lockReason(ex.id)) return;
   const s = ensureSession(ex, ui.date), i = +row.dataset.i, x = s.sets[i];
-  if (x.done || x.carga == null || x.reps == null) return;
+  if (x.done || (x.carga == null && !ex.noLoad) || x.reps == null) return;
   const wasComplete = s.sets.every(y => y.done);
   x.done = true; save();
   if (navigator.vibrate) navigator.vibrate(30);
@@ -3472,7 +3477,7 @@ $main.addEventListener('click', e => {
   const wasComplete = s.sets.every(x => x.done);
   if (act === 'done') {
     const x = s.sets[+b.closest('[data-i]').dataset.i];
-    if (!x.done && (x.carga == null || x.reps == null)) return toast('Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
+    if (!x.done && ((x.carga == null && !ex.noLoad) || x.reps == null)) return toast(ex.noLoad ? 'Anote as <b>repetições</b> para confirmar a série.' : 'Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
     x.done = !x.done;
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(ex.rest); }
   } else if (act === 'inc' || act === 'dec') {
@@ -3487,7 +3492,7 @@ $main.addEventListener('click', e => {
   } else if (act === 'alldone') {
     if (s.sets.every(x => x.done)) s.sets.forEach(x => x.done = false);
     else {
-      const ok = s.sets.filter(x => x.carga != null && x.reps != null);
+      const ok = s.sets.filter(x => (x.carga != null || ex.noLoad) && x.reps != null);
       if (!ok.length) return toast('Anote a <b>carga</b> e as <b>repetições</b> para confirmar as séries.');
       ok.forEach(x => x.done = true);
       if (ok.length < s.sets.length) toast('Só foram confirmadas as séries com carga e repetições anotadas.');
@@ -3517,6 +3522,7 @@ function openDialog(ex, letter) {
   document.getElementById('letterPick').innerHTML = letterPicker('radio', 'letter', () => false, false, ui.profile, true);
   $form.letter.value = ex ? ex.letter || '' : letter || (isLetter(ui.group) ? ui.group : '');
   $form.group.value = ex ? ex.group : '';
+  $form.noload.checked = !!(ex && ex.noLoad);
   $form.sets.value = w ? w.sets.length : '';
   $form.carga.value = w && w.sets[0] ? numVal(w.sets[0].carga) : '';
   $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : '';
@@ -3535,6 +3541,7 @@ $form.addEventListener('submit', e => {
   if (editing) {
     const oldName = editing.name;
     editing.name = name; editing.group = group; editing.letter = letter; if (letter) delete editing.archived;
+    if ($form.noload.checked) editing.noLoad = true; else delete editing.noLoad;
     if (!nearName(oldName, name) && splitHistory(editing, oldName)) toast(`<b>${esc(name)}</b> começa com histórico novo. O histórico de ${esc(oldName)} continua guardado.`);
     // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
     if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
@@ -3547,7 +3554,7 @@ $form.addEventListener('submit', e => {
       }
     }
   } else {
-    db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })) });
+    db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })), ...($form.noload.checked ? { noLoad: true } : {}) });
   }
   if (ui.view === 'treino' && letter) ui.group = letter;
   saveUi(); save(); render();
@@ -3950,6 +3957,13 @@ async function fixOnce() {
     });
     mark('pernas-zero-0310');
     if (n) { save(); msgs.push(`Seu treino de Pernas começou do zero: o de hoje é a primeira comparação (${n} exercícios; o histórico antigo ficou guardado).`); }
+  }
+  // 1e) Abdominal livre: sem carga, só repetições (todos os perfis)
+  if (!done.has('abdominal-livre-semcarga')) {
+    let n = 0;
+    db.exercises.forEach(e => { if (/abdominal livre/.test(normName(e.name)) && !e.noLoad) { e.noLoad = true; n++; } });
+    mark('abdominal-livre-semcarga');
+    if (n) save();
   }
   // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
   if (!done.has('iris-remada-0110')) {
@@ -4505,7 +4519,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-13:14';
+const APP_VERSION = '05/10-13:19';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
