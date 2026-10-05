@@ -108,6 +108,11 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .own-item:last-child{border-bottom:0}.own-item small{color:var(--muted);font-size:12px}.own-item b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--acc-soft);color:var(--acc)}
 .own-item.on b{background:var(--acc);color:var(--acc-ink)}.own-item.on{font-weight:700}
 .own-save{position:sticky;bottom:84px;margin-top:10px;z-index:5}.own-save .btn{width:100%;padding:15px;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.install-dlg h2{font-size:22px;line-height:1.25}
+.ig-lead{font-size:17px;margin:0 0 12px}.ig-note{font-size:15px;color:var(--muted);margin:10px 0 0}
+.ig-step{display:flex;gap:12px;align-items:flex-start;margin:0 0 14px;font-size:17px;line-height:1.4}
+.ig-step>span{flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--acc-ink);display:grid;place-items:center;font-weight:800;font-size:18px}
+.ig-go{width:100%;padding:16px;font-size:18px}.ig-big{padding:14px;font-size:16px}
 .ct-save{width:100%;margin-top:10px;padding:13px;font-size:15.5px}
 .ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
 .ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
@@ -660,6 +665,15 @@ input,select,textarea{font-size:16px!important}
   <div id="pickList" class="pick-list"></div>
   <div class="dlg-actions"><span class="grow"></span><button class="btn" id="pickClose">Fechar</button></div>
 </dialog>
+<dialog id="installDlg" class="install-dlg">
+  <h2>Coloque o app na tela do seu celular</h2>
+  <div id="installBody"></div>
+  <div class="dlg-actions" style="flex-direction:column;align-items:stretch;gap:8px">
+    <button type="button" class="btn ig-big" data-act="install-done">Já coloquei</button>
+    <button type="button" class="btn ig-big" data-act="install-later">Agora não</button>
+  </div>
+</dialog>
+
 <dialog id="shareDlg">
   <h2 id="shareTitle">Mensagem</h2>
   <textarea class="msg" id="shareText" rows="6" style="width:100%"></textarea>
@@ -1593,10 +1607,52 @@ function installTipHtml() {
   let hidden = false; try { hidden = localStorage.getItem('planilha-dica-app') === '1'; } catch (e) {}
   if (!CLOUD || standalone || hidden) return '';
   const ios = /iphone|ipad/i.test(navigator.userAgent);
-  return `<div class="install-tip"><div class="grow"><b>Dica:</b> para abrir direto no seu treino, sem precisar entrar toda vez, instale o app:
-    ${ios ? 'abra este link no <b>Safari</b>, toque em <b>Compartilhar</b> e em <b>Adicionar à Tela de Início</b>.' : 'no menu do navegador (⋮), toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.'}</div>
+  return `<div class="install-tip"><div class="grow"><b>Dica:</b> coloque o app na tela de início do celular para abrir direto no seu treino.
+    <button class="btn primary" style="margin-top:8px" data-act="install-guide">Ver como colocar</button></div>
     <button data-act="hide-tip" aria-label="Fechar dica">✕</button></div>`;
 }
+// ---------- Colocar o app na tela de início (guia grande, passo a passo) ----------
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+addEventListener('appinstalled', () => { try { localStorage.setItem('planilha-instalado', '1'); } catch (er) {} const d = document.getElementById('installDlg'); if (d && d.open) d.close(); toast('✓ Pronto! O app está na tela de início do seu celular.'); });
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const isPhone = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+const SHARE_ICON = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+function installGuide(force) {
+  if (isStandalone()) { if (force) toast('O app já está aberto pela tela de início ✓'); return; }
+  if (!force) {
+    if (!isPhone()) return;
+    let st = {}; try { st = JSON.parse(localStorage.getItem('planilha-guia-instalar')) || {}; } catch (e) {}
+    if (st.done || (st.later && Date.now() - st.later < 3 * 864e5)) return;
+  }
+  const ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inApp = /FBAN|FBAV|Instagram|WhatsApp|; wv\)/i.test(ua) || (ios && !/Safari\//.test(ua));
+  const step = (n, html) => `<div class="ig-step"><span>${n}</span><div>${html}</div></div>`;
+  let body;
+  if (inApp) body = `<p class="ig-lead">Primeiro, abra este link no navegador do celular:</p>
+      ${ios ? step(1, `Toque no ícone de <b>compartilhar</b> ${SHARE_ICON} ou nos <b>três pontinhos</b>.`) + step(2, 'Toque em <b>Abrir no Safari</b>.') : step(1, 'Toque nos <b>três pontinhos ⋮</b> no canto de cima.') + step(2, 'Toque em <b>Abrir no Chrome</b> (ou "Abrir no navegador").')}
+      ${step(3, 'Lá, este guia aparece de novo para terminar.')}`;
+  else if (installEvt) body = `<p class="ig-lead">Toque no botão abaixo e depois em <b>Instalar</b>. O ícone do app vai aparecer na tela do seu celular.</p>
+      <button class="btn primary ig-go" data-act="install-now">Colocar na tela de início</button>`;
+  else if (ios) body = `<p class="ig-lead">São 3 toques:</p>
+      ${step(1, `Toque no botão <b>Compartilhar</b> ${SHARE_ICON} na barra de baixo da tela.`)}
+      ${step(2, 'Desça a lista e toque em <b>Adicionar à Tela de Início</b> ➕.')}
+      ${step(3, 'Toque em <b>Adicionar</b>, no canto de cima.')}
+      <p class="ig-note">Pronto: o ícone fica na tela do celular. Abra sempre por ele.</p>`;
+  else body = `<p class="ig-lead">São 2 toques:</p>
+      ${step(1, 'Toque nos <b>três pontinhos ⋮</b> no canto de cima da tela.')}
+      ${step(2, 'Toque em <b>Adicionar à tela inicial</b> (ou <b>Instalar app</b>) e confirme.')}
+      <p class="ig-note">Pronto: o ícone fica na tela do celular. Abra sempre por ele.</p>`;
+  const d = document.getElementById('installDlg');
+  document.getElementById('installBody').innerHTML = body;
+  d.showModal();
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('#installDlg [data-act]'); if (!t) return;
+  const d = document.getElementById('installDlg'), set = v => { try { localStorage.setItem('planilha-guia-instalar', JSON.stringify(v)); } catch (er) {} };
+  if (t.dataset.act === 'install-now' && installEvt) { installEvt.prompt(); installEvt.userChoice.then(r => { if (r.outcome === 'accepted') { set({ done: 1 }); d.close(); } }).catch(() => {}); installEvt = null; }
+  if (t.dataset.act === 'install-done') { set({ done: 1 }); d.close(); }
+  if (t.dataset.act === 'install-later') { set({ later: Date.now() }); d.close(); }
+});
 // Professor confirma o treino montado: grava na hora e mostra o que o aluno vê hoje
 function savePlanHtml(p, inline) {
   const plan = dayPlan(p, today()), goal = cardioGoalOf(p, today());
@@ -2533,16 +2589,21 @@ function saveBody() {
 
 // Convite para o aluno criar a conta dele e entrar no portal
 const inviteLink = p => `${location.origin}${location.pathname}?convite=${p.id}-${p.inviteCode}`;
+const appLink = () => `${location.origin}${location.pathname}`;
+// mensagem com o link do app, explicada passo a passo (pensando em quem tem dificuldade com celular)
+function appLinkText(p) {
+  const n = firstName(p);
+  return p.uid
+    ? `Oi, ${n}! Este é o link do nosso app de treino:\n\n${appLink()}\n\n1. Toque no link.\n2. Entre com o seu e-mail e a sua senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`
+    : `Oi, ${n}! Este é o link do nosso app de treino:\n\n${inviteLink(p)}\n\n1. Toque no link.\n2. Crie sua conta com o seu e-mail e uma senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`;
+}
 function inviteHtml(p) {
   if (!CLOUD) return '';
-  if (p.uid) return `<section class="card"><div class="card-h"><div class="grow"><h3>Portal do aluno</h3>
-      <small>✅ ${esc(firstName(p))} já tem conta e acessa o portal dele.</small></div></div></section>`;
-  const text = `Oi, ${firstName(p)}! Crie sua conta na minha planilha de treino por este link: ${inviteLink(p)}`;
-  return `<section class="card"><div class="card-h"><div class="grow"><h3>Portal do aluno</h3>
-      <small>${esc(firstName(p))} ainda não tem conta. Envie o convite: ele cria o login dele e já cai no portal.</small></div></div>
-    <p class="note" style="word-break:break-all;margin-top:0">${esc(inviteLink(p))}<br><small style="color:var(--muted)">Código: <b>${p.id}-${p.inviteCode}</b></small></p>
-    <div class="actions"><a class="btn primary" href="${waLink(p, text)}">Enviar convite pelo WhatsApp</a>
-      <button class="btn" data-act="copy-invite">Copiar link</button></div></section>`;
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Link do app para ${esc(firstName(p))}</h3>
+      <small>${p.uid ? `✅ ${esc(firstName(p))} já tem conta. Mande o link para ele abrir o app e entrar com o e-mail e a senha dele.` : `${esc(firstName(p))} ainda não tem conta. Mande o link: ele cria o login e já cai no app dele.`}</small></div></div>
+    <p class="note" style="word-break:break-all;margin-top:0">${esc(p.uid ? appLink() : inviteLink(p))}${p.uid ? '' : `<br><small style="color:var(--muted)">Código: <b>${p.id}-${p.inviteCode}</b></small>`}</p>
+    <button class="btn primary" style="width:100%;padding:13px" data-act="send-applink" data-pid="${p.id}">Enviar link do app</button>
+    <p class="hint" style="margin:8px 0 0">A mensagem já explica o passo a passo. Quando ${esc(firstName(p))} abrir, o app mostra como colocar o ícone na tela do celular.</p></section>`;
 }
 function renderRecados() {
   const p = profile(ui.profile), log = (p.messages || []).slice().reverse();
@@ -3392,6 +3453,8 @@ $main.addEventListener('click', e => {
     case 'new': return openDialog(null);
     case 'export': return exportData();
     case 'test-profile': return openTestProfile();
+    case 'send-applink': { const p = profile(b.dataset.pid); return shareMsg(`Link do app para ${firstName(p)}`, appLinkText(p), p); }
+    case 'install-guide': return installGuide(true);
     case 'test-sim': {
       const p = testProfile(); if (!p) return;
       const r = simulateWeek(p); save(); render();
@@ -4673,6 +4736,7 @@ function enterApp(skipRender) {
   document.getElementById('auth').hidden = true;
   fixUi(); netState();
   if (!skipRender) render();
+  setTimeout(() => installGuide(false), 1200); // primeira vez pelo celular: mostra como colocar na tela de início
 }
 async function logout() {
   if (syncTimer) await syncNow();
@@ -4766,7 +4830,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-19:25';
+const APP_VERSION = '05/10-19:31';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
