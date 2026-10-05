@@ -1307,7 +1307,8 @@ function renderStudentTreino(p, greet, isToday) {
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${blocks}
       ${sendHtml()}`
-    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
+    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
+    ${p.selfServe ? weekSetsHtml(p) : ''}`;
   markLocked();
 }
 // ---------- Aluno monta o próprio treino ----------
@@ -1340,7 +1341,8 @@ function renderOwnTreino(p, greet, isToday) {
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Nenhum exercício. Toque em Editar para escolher.</p>'}
-      ${sendHtml()}`}`;
+      ${sendHtml()}`}
+    ${weekSetsHtml(p)}`;
   markLocked();
 }
 // Montar / editar um treino do aluno: treino pronto ou escolhendo os exercícios por grupo muscular
@@ -2629,17 +2631,25 @@ function weekSetsHtml(p) {
   const groups = GROUPS.filter(g => plan[g] || done[g]);
   const total = groups.reduce((a, g) => a + (plan[g] || 0), 0);
   const wl = off === 0 ? 'Esta semana' : off === 1 ? 'Próxima semana' : off === -1 ? 'Semana passada' : `${fmtDate(ws)} a ${fmtDate(we)}`;
+  const doneTotal = groups.reduce((a, g) => a + (done[g] || 0), 0);
+  // sem nada planejado pelo professor (aluno que monta o próprio treino): conta as séries feitas
+  const head = total ? `<b>${total} séries</b> planejadas · ${fmtDate(ws)} a ${fmtDate(we)}${off < 1 ? ' · barra = feitas' : ''}`
+    : doneTotal ? `<b>${doneTotal} séries</b> feitas · ${fmtDate(ws)} a ${fmtDate(we)}` : `${ui.studentMode ? 'Nenhuma série feita' : 'Nada planejado'} de ${fmtDate(ws)} a ${fmtDate(we)}`;
+  const doneBy = {}; profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => { const e = exById(x.exId), n = x.sets.filter(y => y.done).length; if (!e || !n) return; const g = groupOf(e); (doneBy[g] = doneBy[g] || []).push({ d: x.date, name: e.name, n }); });
   return `<section class="card"><div class="card-h wsh"><div class="grow"><h3>Séries por grupo na semana</h3>
-      <small>${groups.length ? `<b>${total} séries</b> planejadas · ${fmtDate(ws)} a ${fmtDate(we)}${off < 1 ? ' · barra = feitas' : ''}` : `Nada planejado de ${fmtDate(ws)} a ${fmtDate(we)}`}</small></div>
+      <small>${head}</small></div>
       <div class="wsnav"><button data-act="ws-week" data-d="-1" aria-label="Semana anterior">‹</button><span>${wl}</span><button data-act="ws-week" data-d="1" aria-label="Próxima semana" ${off >= 8 ? 'disabled' : ''}>›</button></div></div>
     ${groups.length ? `<div class="wsets">${groups.map(g => {
       const pl = plan[g] || 0, dn = done[g] || 0, pct = pl ? Math.min(100, dn / pl * 100) : 100;
       return `<button class="wset ${ui.wsOpen === g ? 'on' : ''}" data-act="ws-why" data-g="${g}"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
-        <div class="wnum"><b>${pl}</b> séries</div>
+        <div class="wnum"><b>${pl || dn}</b> séries${pl ? '' : ' feitas'}</div>
         <div class="wbar"><i style="width:${pct}%;background:${COLOR(g)}"></i></div>
-        <small class="wdone">${dn ? `${dn} de ${pl} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></button>`;
+        <small class="wdone">${!pl ? 'por conta própria' : dn ? `${dn} de ${pl} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></button>`;
     }).join('')}</div>` : ''}
-    ${ui.wsOpen && why[ui.wsOpen] ? `<div class="ws-why"><p class="plan-g" style="margin:12px 2px 6px">De onde vêm as ${plan[ui.wsOpen]} séries de ${ui.wsOpen}</p>
+    ${ui.wsOpen && (ui.studentMode || !why[ui.wsOpen]) && doneBy[ui.wsOpen] ? `<div class="ws-why"><p class="plan-g" style="margin:12px 2px 6px">Séries de ${ui.wsOpen} feitas na semana</p>
+      ${[...new Set(doneBy[ui.wsOpen].map(x => x.d))].sort().map(d => { const xs = doneBy[ui.wsOpen].filter(x => x.d === d);
+        return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b><small>${xs.map(x => `${esc(x.name)} (${x.n})`).join(' · ')}</small></div><b>${xs.reduce((a, x) => a + x.n, 0)}</b></div>`; }).join('')}</div>`
+    : ui.wsOpen && why[ui.wsOpen] ? `<div class="ws-why"><p class="plan-g" style="margin:12px 2px 6px">De onde vêm as ${plan[ui.wsOpen]} séries de ${ui.wsOpen}</p>
       ${[...new Set(why[ui.wsOpen].map(x => x.d))].map(d => { const xs = why[ui.wsOpen].filter(x => x.d === d);
         return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b> · ${[...new Set(xs.map(x => esc(wName(x.w, p.id))))].join(' + ')}${datePlan(p, d) ? ' <small>(planejado só para a data)</small>' : ''}
           <small>${xs.map(x => `${esc(x.name)} (${x.n})`).join(' · ')}</small></div><b>${xs.reduce((a, x) => a + x.n, 0)}</b></div>`; }).join('')}
@@ -4729,7 +4739,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-18:24';
+const APP_VERSION = '05/10-18:38';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
