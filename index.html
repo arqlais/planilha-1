@@ -414,7 +414,10 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
 table.pay{width:100%;border-collapse:collapse;font-size:14px}
 table.pay th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--muted);padding:8px 6px;border-bottom:1px solid var(--line)}
 table.pay td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
-@media (max-width:700px){.pay-kpis{grid-template-columns:1fr 1fr}table.pay .hide-m{display:none}}
+@media (max-width:700px){.pay-kpis{grid-template-columns:1fr 1fr}table.pay .hide-m{display:none}
+  table.pay thead{display:none}table.pay tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;border-bottom:1px solid var(--line);padding:10px 0}
+  table.pay td{border:0;padding:0}table.pay td:first-child{flex:1 1 100%}table.pay td.pay-acts{flex:1 1 100%;text-align:left!important;display:flex;gap:6px;align-items:center}
+  table.pay td.pay-acts .btn{flex:1}}
 .ex-note{display:block;margin-top:4px;color:var(--text)!important;opacity:.85;font-size:12.5px;line-height:1.35}
 .pweek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .pday{border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:10px;padding:5px 2px;min-height:62px;display:flex;flex-direction:column;align-items:center;gap:3px;font:inherit;cursor:pointer;min-width:0}
@@ -644,6 +647,13 @@ input,select,textarea{font-size:16px!important}
   <div id="pickList" class="pick-list"></div>
   <div class="dlg-actions"><span class="grow"></span><button class="btn" id="pickClose">Fechar</button></div>
 </dialog>
+<dialog id="shareDlg">
+  <h2 id="shareTitle">Mensagem</h2>
+  <textarea class="msg" id="shareText" rows="6" style="width:100%"></textarea>
+  <button type="button" class="btn primary" id="shareCopy" style="width:100%;margin-top:10px;padding:13px">Copiar mensagem</button>
+  <div class="dlg-actions"><a class="btn" id="shareWa" href="#" style="flex:1;text-align:center">Abrir no WhatsApp</a><button type="button" class="btn" id="shareClose">Fechar</button></div>
+</dialog>
+
 <dialog id="askDlg">
   <form id="askForm">
     <h2 id="askTitle"></h2>
@@ -2227,7 +2237,24 @@ function waNumber(phone) {
   if (d.length === 10 || d.length === 11) d = '55' + d;
   return d;
 }
-const waLink = (p, text) => `https://wa.me/${waNumber(p.phone)}?text=${encodeURIComponent(text)}`;
+// Abre o APLICATIVO do WhatsApp direto (celular e WhatsApp do computador), sem passar pela página da web
+const waLink = (p, text) => { const n = waNumber(p.phone); return `whatsapp://send?${n ? `phone=${n}&` : ''}text=${encodeURIComponent(text)}`; };
+// copia um texto (com plano B para navegadores sem acesso à área de transferência)
+function copyText(text, ta) {
+  const fallback = () => { const t = ta || Object.assign(document.createElement('textarea'), { value: text }); if (!ta) document.body.appendChild(t); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} if (!ta) t.remove(); return ok; };
+  return (navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(text).then(() => true, fallback) : Promise.resolve(fallback()));
+}
+// Janela com a mensagem pronta: copiar e colar onde quiser, ou abrir no WhatsApp
+function shareMsg(title, text, p) {
+  const d = document.getElementById('shareDlg');
+  document.getElementById('shareTitle').textContent = title;
+  const ta = document.getElementById('shareText'); ta.value = text;
+  const wa = document.getElementById('shareWa'); wa.href = waLink(p || {}, text);
+  wa.onclick = () => { wa.href = waLink(p || {}, ta.value); };
+  document.getElementById('shareCopy').onclick = () => copyText(ta.value, ta).then(ok => toast(ok ? '✓ Mensagem copiada. É só colar no WhatsApp.' : 'Não deu para copiar sozinho: segure o dedo no texto e copie.'));
+  document.getElementById('shareClose').onclick = () => d.close();
+  d.showModal();
+}
 function firstName(p) { return p.name.trim().split(/\s+/)[0]; }
 function msgTemplate(kind, p) {
   const n = firstName(p);
@@ -2342,7 +2369,7 @@ function inviteHtml(p) {
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Portal do aluno</h3>
       <small>${esc(firstName(p))} ainda não tem conta. Envie o convite: ele cria o login dele e já cai no portal.</small></div></div>
     <p class="note" style="word-break:break-all;margin-top:0">${esc(inviteLink(p))}<br><small style="color:var(--muted)">Código: <b>${p.id}-${p.inviteCode}</b></small></p>
-    <div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="${waLink(p, text)}">Enviar convite pelo WhatsApp</a>
+    <div class="actions"><a class="btn primary" href="${waLink(p, text)}">Enviar convite pelo WhatsApp</a>
       <button class="btn" data-act="copy-invite">Copiar link</button></div></section>`;
 }
 function renderRecados() {
@@ -2808,12 +2835,12 @@ function renderPagamentos() {
       <div><b>${brl(sum(x => x.st.k === 'wait'))}</b><span>a receber</span></div>
       <div><b style="color:var(--down)">${brl(sum(x => x.st.k === 'late'))}</b><span>atrasado (${billed.filter(x => x.st.k === 'late').length})</span></div>
     </div>
-    <section class="card"><div class="card-h"><div class="grow"><h3>Mensalidades</h3><small>Toque em <b>Marcar pago</b> quando receber. <b>Cobrar</b> abre o WhatsApp com a mensagem pronta.</small></div></div>
+    <section class="card"><div class="card-h"><div class="grow"><h3>Mensalidades</h3><small>Toque em <b>Marcar pago</b> quando receber. <b>Cobrar</b> mostra a mensagem pronta para copiar ou abrir no WhatsApp.</small></div></div>
       ${billed.length ? `<table class="pay"><thead><tr><th>Aluno</th><th class="hide-m">Plano</th><th>Valor</th><th>Situação</th><th></th></tr></thead><tbody>
         ${billed.map(({ p, st }) => `<tr><td><b>${esc(p.name)}</b></td><td class="hide-m">${esc(p.billing.plan || '—')}</td><td>${brl(st.pay ? st.pay.value || p.billing.value : p.billing.value)}</td>
           <td><span class="pstat ${st.k}">${st.label}</span></td>
-          <td style="text-align:right;white-space:nowrap">${st.k === 'ok' ? `<button class="btn" data-act="pay-undo" data-pid="${p.id}">Desfazer</button>`
-            : `<button class="btn primary" data-act="pay-mark" data-pid="${p.id}">Marcar pago</button> <a class="btn" target="_blank" rel="noopener" href="${waLink(p, chargeText(p, ym))}">Cobrar</a>`}
+          <td class="pay-acts" style="text-align:right;white-space:nowrap">${st.k === 'ok' ? `<button class="btn" data-act="pay-undo" data-pid="${p.id}">Desfazer</button>`
+            : `<button class="btn primary" data-act="pay-mark" data-pid="${p.id}">Marcar pago</button> <button class="btn" data-act="pay-charge" data-pid="${p.id}" data-m="${ym}">Cobrar</button>`}
             <button class="icon" data-act="bill-edit" data-pid="${p.id}" title="Plano">⚙</button></td></tr>`).join('')}</tbody></table>`
       : '<p class="empty">Nenhum aluno com cobrança neste mês. Defina o plano de cada aluno abaixo.</p>'}
     </section>
@@ -2992,7 +3019,7 @@ function perfilHtml(p, desk) {
       </div>
       <textarea class="msg" id="msgText" placeholder="Escreva a mensagem ou escolha um modelo acima">${esc(ui.msgDraft)}</textarea>
       <div class="actions">
-        <a class="btn primary" id="waSend" data-act="wa-send" target="_blank" rel="noopener" href="${waLink(p, ui.msgDraft)}">Enviar pelo WhatsApp</a>
+        <a class="btn primary" id="waSend" data-act="wa-send" href="${waLink(p, ui.msgDraft)}">Enviar pelo WhatsApp</a>
         <button class="btn" data-act="msg-copy">Copiar</button>
       </div>
       ${log.length ? `<div class="msg-log"><p class="plan-g">Mensagens enviadas</p>${log.map(m => `<div><small>${fmtDate(m.date)}/${m.date.slice(2, 4)}</small>${esc(m.text)}</div>`).join('')}</div>` : ''}
@@ -3263,6 +3290,7 @@ $main.addEventListener('click', e => {
     case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
     case 'b-w': case 'b-neww': case 'b-ren': case 'b-delw': case 'b-dupw': case 'b-copyw': case 'b-add':
     case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': case 'b-save': case 'b-hold': return builderAct(act, b);
+    case 'pay-charge': { const p = profile(b.dataset.pid); return shareMsg(`Cobrança de ${firstName(p)}`, chargeText(p, b.dataset.m), p); }
     case 'pay-month': ui.payMonth = b.dataset.m; return render();
     case 'pay-mark': return openPay(profile(b.dataset.pid), b.dataset.m || ui.payMonth || today().slice(0, 7));
     case 'pay-undo': { const p = profile(b.dataset.pid), ym = b.dataset.m || ui.payMonth; if (p.payments) delete p.payments[ym]; save(); return render(); }
@@ -4519,7 +4547,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-13:19';
+const APP_VERSION = '05/10-13:23';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

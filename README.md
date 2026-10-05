@@ -36,7 +36,7 @@ Com a tela larga (computador), o app do professor vira uma plataforma com **menu
 - **Nada se perde entre aparelhos:** cada aparelho grava só o que ele mudou e junta com o que já está na nuvem (exercício por exercício, data por data). Sem internet, a ficha fica guardada no aparelho e sobe juntando quando a internet volta.
 - **Versões salvas:** em Planejamento → **↺ Versões salvas do planejamento**: uma versão a cada 10 minutos de edição (as últimas 40 de cada aluno) e a cópia de cada dia. **Usar esta** traz de volta os treinos montados, a divisão e o planejamento daquela versão.
 - **Montar treinos:** tabela por treino com ordem (↑ ↓), exercício, grupo, séries, repetições, carga, descanso (segundos), técnica (Bi-set, Drop-set, Rest-pause…) e observação para o aluno. **▸ séries** edita série por série. Duplicar exercício, duplicar treino e **copiar o treino para outro aluno**. Tudo salva sozinho. O aluno vê técnica, descanso e observação embaixo do nome do exercício (só se preenchidos), e o cronômetro de descanso usa o tempo do exercício. Quando o plano muda, a próxima sessão do aluno já vem com as cargas e repetições novas.
-- **Pagamentos:** plano, valor e dia de vencimento de cada aluno; por mês: previsto, recebido, a receber e atrasado; **Marcar pago** (valor, data, forma) e **Cobrar** (WhatsApp com mensagem pronta e sua chave Pix). No celular: aba Alunos → 💳 Pagamentos.
+- **Pagamentos:** plano, valor e dia de vencimento de cada aluno; por mês: previsto, recebido, a receber e atrasado; **Marcar pago** (valor, data, forma) e **Cobrar** (mostra a mensagem pronta com sua chave Pix: **Copiar mensagem** ou **Abrir no WhatsApp**, que abre o aplicativo direto). No celular: aba Alunos → 💳 Pagamentos.
 
 ## Área do professor (aba Alunos)
 
