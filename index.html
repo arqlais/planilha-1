@@ -96,6 +96,18 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 #setTimer button{font-size:14.5px;padding:12px 6px;min-height:46px;touch-action:manipulation}
 .noload{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12.5px;font-weight:700}
 .chk-line{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin:0 0 10px}.chk-line input{width:20px;height:20px}
+.self-tabs{display:flex;gap:4px;background:var(--card);border-radius:14px;padding:4px;margin:0 0 10px;box-shadow:var(--shadow)}
+.self-tabs button{flex:1;border:0;background:transparent;color:var(--muted);border-radius:10px;padding:10px 6px;font-weight:800;font-size:14px}
+.self-tabs button.on{background:var(--acc);color:var(--acc-ink)}
+.btn.big{display:block;width:100%;padding:15px;font-size:16px;margin-top:8px}
+.own-top{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}.own-top b{font-size:17px}.own-top span{width:70px}
+.ready-card{display:flex;align-items:center;gap:10px}.ready-card h3{margin:0 0 4px}.ready-card small{color:var(--muted)}
+.own-sel{display:flex;flex-wrap:wrap;gap:6px}.own-sel button{border:1px solid var(--acc);background:var(--acc-soft);color:var(--text);border-radius:999px;padding:6px 10px;font-weight:700;font-size:13px}
+.own-groups{margin:8px 0}.own-list{padding:4px 8px}
+.own-item{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:13px 6px;font:inherit;font-size:15px;text-align:left}
+.own-item:last-child{border-bottom:0}.own-item small{color:var(--muted);font-size:12px}.own-item b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--acc-soft);color:var(--acc)}
+.own-item.on b{background:var(--acc);color:var(--acc-ink)}.own-item.on{font-weight:700}
+.own-save{position:sticky;bottom:84px;margin-top:10px;z-index:5}.own-save .btn{width:100%;padding:15px;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .ct-save{width:100%;margin-top:10px;padding:13px;font-size:15.5px}
 .ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
 .ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
@@ -759,6 +771,31 @@ function groupOf(e) {
   if (/bicep|rosca|martelo|scott/.test(n)) return 'Bíceps';
   return e.group;
 }
+// ---------- Catálogo de exercícios (o aluno que monta o próprio treino escolhe daqui) ----------
+const CATALOG = {
+  Peito: ['Supino reto', 'Supino inclinado', 'Supino declinado', 'Supino com halteres', 'Crucifixo', 'Crossover', 'Peck deck', 'Flexão de braço'],
+  Costas: ['Puxada frontal', 'Puxada triângulo', 'Remada baixa', 'Remada curvada', 'Remada unilateral (serrote)', 'Remada cavalinho', 'Pulldown', 'Barra fixa'],
+  Ombros: ['Desenvolvimento com halteres', 'Desenvolvimento máquina', 'Elevação lateral', 'Elevação frontal', 'Crucifixo inverso', 'Encolhimento'],
+  'Bíceps': ['Rosca direta', 'Rosca alternada', 'Rosca martelo', 'Rosca Scott', 'Rosca na polia', 'Rosca concentrada'],
+  'Tríceps': ['Tríceps polia', 'Tríceps corda', 'Tríceps testa', 'Tríceps francês', 'Tríceps banco', 'Tríceps coice'],
+  'Abdômen': ['Abdominal livre', 'Abdominal infra', 'Prancha', 'Abdominal na máquina', 'Elevação de pernas', 'Abdominal oblíquo'],
+  'Quadríceps': ['Agachamento livre', 'Agachamento no Smith', 'Leg press', 'Cadeira extensora', 'Afundo', 'Agachamento búlgaro', 'Hack'],
+  Posteriores: ['Cadeira flexora', 'Mesa flexora', 'Stiff', 'Levantamento terra romeno', 'Flexora em pé'],
+  'Glúteos': ['Elevação pélvica', 'Cadeira abdutora', 'Glúteo na polia', 'Agachamento sumô', 'Passada', 'Cadeira adutora'],
+  Panturrilha: ['Panturrilha em pé', 'Panturrilha sentado', 'Panturrilha no leg press'],
+};
+const NOLOAD_RX = /abdominal livre|abdominal infra|abdominal obliquo|prancha|elevacao de pernas|flexao de braco|barra fixa/;
+const catGroup = name => { const n = (name || '').toLowerCase(); for (const [g, l] of Object.entries(CATALOG)) if (l.some(x => x.toLowerCase() === n)) return g; return null; };
+// Treinos prontos: o aluno escolhe um e já começa
+const READY = [
+  { name: 'Corpo todo (iniciante)', ex: ['Agachamento livre', 'Supino reto', 'Puxada frontal', 'Desenvolvimento com halteres', 'Cadeira flexora', 'Abdominal livre'] },
+  { name: 'Superiores', ex: ['Supino reto', 'Puxada frontal', 'Remada baixa', 'Elevação lateral', 'Rosca direta', 'Tríceps polia'] },
+  { name: 'Inferiores', ex: ['Agachamento livre', 'Leg press', 'Cadeira extensora', 'Cadeira flexora', 'Elevação pélvica', 'Panturrilha em pé'] },
+  { name: 'Peito e tríceps', ex: ['Supino reto', 'Supino inclinado', 'Crucifixo', 'Tríceps polia', 'Tríceps testa'] },
+  { name: 'Costas e bíceps', ex: ['Puxada frontal', 'Remada baixa', 'Remada unilateral (serrote)', 'Rosca direta', 'Rosca martelo'] },
+  { name: 'Pernas e glúteos', ex: ['Agachamento livre', 'Leg press', 'Cadeira extensora', 'Cadeira flexora', 'Elevação pélvica', 'Cadeira abdutora'] },
+  { name: 'Ombros e abdômen', ex: ['Desenvolvimento com halteres', 'Elevação lateral', 'Elevação frontal', 'Crucifixo inverso', 'Abdominal livre', 'Prancha'] },
+];
 const OLD_GROUPS = { 'Braços': ['Bíceps', 'Tríceps'], Pernas: LEGS };
 // Treinos de cada perfil com nome livre (ex.: "Superiores", "Treino A"). Cada exercício guarda o id do
 // treino em "letter" (nome histórico do campo) e o grupo muscular. Os antigos A/B/C/D viram "Treino A"...
@@ -1241,6 +1278,7 @@ function markLocked() {
 }
 // Aluno: vê só o treino que o professor passou para o dia (sem escolher grupo)
 function renderStudentTreino(p, greet, isToday) {
+  if (p.selfServe && selfTab() === 'own') return renderOwnTreino(p, greet, isToday);
   const plan = dayPlan(p, ui.date), groups = liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g));
   const blocks = groups.map(g => {
     const exs = letterExs(g);
@@ -1251,6 +1289,7 @@ function renderStudentTreino(p, greet, isToday) {
   const label = [...groups.map(g => wName(g)), ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
   const showPlan = groups.length || plan.includes(CARDIO); // só treino guardado: para o aluno é descanso
   $main.innerHTML = `${greet}
+    ${p.selfServe ? selfTabsHtml() : ''}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
       <div class="grow"><b>${weekday(ui.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(ui.date)}</b>
@@ -1270,6 +1309,121 @@ function renderStudentTreino(p, greet, isToday) {
       ${sendHtml()}`
     : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   markLocked();
+}
+// ---------- Aluno monta o próprio treino ----------
+// Abas no topo: "Treino do professor" (montado pelo professor) | "Meu treino" (o aluno escolhe)
+const selfTab = () => { try { return localStorage.getItem('planilha-aba-treino') || 'prof'; } catch (e) { return 'prof'; } };
+const selfTabsHtml = () => `<div class="self-tabs"><button class="${selfTab() === 'prof' ? 'on' : ''}" data-act="self-tab" data-t="prof">Treino do professor</button><button class="${selfTab() === 'own' ? 'on' : ''}" data-act="self-tab" data-t="own">Meu treino</button></div>`;
+const ownWorkouts = pid => workoutsOf(pid).filter(w => w.own);
+function renderOwnTreino(p, greet, isToday) {
+  const ws = ownWorkouts(p.id);
+  if (ui.ownBuild) { $main.innerHTML = `${greet}${selfTabsHtml()}${ownBuildHtml(p)}`; return; }
+  if (!ws.some(w => w.id === ui.ownW)) ui.ownW = (ws[0] || {}).id || null;
+  const w = ws.find(x => x.id === ui.ownW), exs = w ? letterExs(w.id, p.id) : [];
+  $main.innerHTML = `${greet}${selfTabsHtml()}
+    <div class="daynav">
+      <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
+      <div class="grow"><b>${weekday(ui.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(ui.date)}</b>
+        ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
+      <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
+    </div>
+    ${!ws.length ? `<section class="card own-start"><h3 style="margin:0 0 4px">Monte seu treino</h3>
+        <p class="hint" style="margin:0 0 12px">Escolha um treino pronto ou monte o seu escolhendo os exercícios.</p>
+        <button class="btn primary big" data-act="own-new" data-step="ready">Treinos prontos</button>
+        <button class="btn big" data-act="own-new" data-step="pick">Escolher meus exercícios</button></section>`
+    : `<div class="chips">${ws.map(x => `<button class="${x.id === ui.ownW ? 'on' : ''}" data-act="own-w" data-id="${x.id}">${esc(x.name)}</button>`).join('')}
+        <button class="add-chip" data-act="own-new" data-step="start">＋ Novo treino</button></div>
+      <div class="banner"><div class="grow"><h2>${esc(w.name)}</h2><small>${esc(letterDesc(w.id, p.id)) || 'sem exercícios'} · montado por você</small></div>
+        <button class="btn sm" data-act="own-edit">Editar</button></div>
+      ${cardioGoalHtml(p)}
+      ${exs.length ? `<div class="layout">Séries em:
+        <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
+        <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
+      ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Nenhum exercício. Toque em Editar para escolher.</p>'}
+      ${sendHtml()}`}`;
+  markLocked();
+}
+// Montar / editar um treino do aluno: treino pronto ou escolhendo os exercícios por grupo muscular
+function ownBuildHtml(p) {
+  const b = ui.ownBuild;
+  const top = `<div class="own-top"><button class="btn sm" data-act="own-cancel">‹ Voltar</button><b>${b.wid ? 'Editar treino' : 'Novo treino'}</b><span></span></div>`;
+  if (b.step === 'start') return `${top}<section class="card own-start">
+      <button class="btn primary big" data-act="own-step" data-step="ready">Treinos prontos</button>
+      <button class="btn big" data-act="own-step" data-step="pick">Escolher meus exercícios</button></section>`;
+  if (b.step === 'ready') return `${top}<p class="hint" style="margin:6px 4px 10px">Toque em um treino para começar. Depois dá para trocar exercícios em <b>Editar</b>.</p>
+    ${READY.map((r, i) => `<section class="card ready-card"><div class="grow"><h3>${esc(r.name)}</h3><small>${r.ex.map(esc).join(' · ')}</small></div>
+      <button class="btn primary" data-act="own-ready" data-i="${i}">Usar este</button></section>`).join('')}`;
+  // escolher exercícios
+  const q = (b.q || '').trim().toLowerCase(), g = b.g || GROUPS[0];
+  const list = q ? Object.entries(CATALOG).flatMap(([gr, l]) => l.filter(n => n.toLowerCase().includes(q)).map(n => [gr, n])) : (CATALOG[g] || []).map(n => [g, n]);
+  const isSel = n => b.sel.some(x => x.name.toLowerCase() === n.toLowerCase());
+  return `${top}
+    <section class="card">
+      <label class="f" style="margin:0 0 10px">Nome do treino<input id="ownName" value="${esc(b.name || '')}" placeholder="ex.: Treino A, Pernas…" autocomplete="off"></label>
+      ${b.sel.length ? `<p class="plan-g" style="margin:0 0 6px">No treino (${b.sel.length})</p><div class="own-sel">${b.sel.map((x, i) => `<button data-act="own-unsel" data-i="${i}">${esc(x.name)} ✕</button>`).join('')}</div>` : '<p class="hint" style="margin:0">Escolha os exercícios abaixo.</p>'}
+    </section>
+    <input class="search" id="ownSearch" placeholder="Buscar exercício" value="${esc(b.q || '')}" autocomplete="off">
+    ${q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === g ? 'on' : ''}" data-act="own-g" data-g="${x}">${x}</button>`).join('')}</div>`}
+    <section class="card own-list">${list.map(([gr, n]) => `<button class="own-item ${isSel(n) ? 'on' : ''}" data-act="own-pick" data-g="${gr}" data-n="${esc(n)}"><span class="grow">${esc(n)}${q ? ` <small>${gr}</small>` : ''}</span><b>${isSel(n) ? '✓' : '＋'}</b></button>`).join('')
+      || `<p class="hint" style="margin:0">Nenhum exercício com esse nome.</p>`}
+      ${q && !list.some(([, n]) => n.toLowerCase() === q) ? `<button class="own-item" data-act="own-custom"><span class="grow">Adicionar “${esc(b.q.trim())}” <small>${g}</small></span><b>＋</b></button>` : ''}</section>
+    ${b.wid ? '<button class="btn danger" style="margin:4px 0 0" data-act="own-del">Excluir este treino</button>' : ''}
+    <div class="own-save"><button class="btn primary" data-act="own-save" ${b.sel.length ? '' : 'disabled'}>Salvar treino${b.sel.length ? ` (${b.sel.length} exercício${b.sel.length === 1 ? '' : 's'})` : ''}</button></div>`;
+}
+// grava o treino do aluno: exercícios novos entram, os que saíram ficam guardados se já tiverem treinos anotados
+function saveOwnWorkout(p, name, sel) {
+  let w = ownWorkouts(p.id).find(x => x.id === ui.ownBuild.wid);
+  if (!w) { w = { id: uid(), name, own: true }; p.workouts = p.workouts || []; p.workouts.push(w); } else w.name = name;
+  const cur = letterExs(w.id, p.id);
+  sel.forEach((x, k) => {
+    let e = cur.find(c => sameName(c.name, x.name));
+    if (!e) { e = { id: uid(), profileId: p.id, group: x.group, letter: w.id, name: x.name, sets: [1, 2, 3].map(() => ({ carga: null, reps: 12 })), own: true, ...(NOLOAD_RX.test(normName(x.name)) ? { noLoad: true } : {}) }; db.exercises.push(e); }
+    e.order = k + 1;
+  });
+  cur.filter(c => !sel.some(x => sameName(x.name, c.name))).forEach(c => {
+    if (db.sessions.some(x => x.exId === c.id)) { c.letter = null; c.archived = true; } else db.exercises = db.exercises.filter(e => e.id !== c.id);
+  });
+  ui.ownW = w.id; ui.ownBuild = null; save(); render();
+  toast(`✓ Treino <b>${esc(name)}</b> salvo. Bom treino!`);
+}
+function ownAct(act, b) {
+  const p = profile(ui.profile), B = ui.ownBuild;
+  const keep = () => { const n = document.getElementById('ownName'); if (n && B) B.name = n.value; };
+  switch (act) {
+    case 'self-tab': try { localStorage.setItem('planilha-aba-treino', b.dataset.t); } catch (e) {} ui.ownBuild = null; return render();
+    case 'own-w': ui.ownW = b.dataset.id; return render();
+    case 'own-new': ui.ownBuild = { wid: null, step: b.dataset.step, sel: [], name: `Treino ${'ABCDEFGH'[ownWorkouts(p.id).length] || ''}`.trim(), g: GROUPS[0] }; return render();
+    case 'own-step': B.step = b.dataset.step; return render();
+    case 'own-cancel': ui.ownBuild = null; return render();
+    case 'own-edit': {
+      const w = ownWorkouts(p.id).find(x => x.id === ui.ownW); if (!w) return;
+      ui.ownBuild = { wid: w.id, step: 'pick', name: w.name, g: GROUPS[0], sel: letterExs(w.id, p.id).map(e => ({ name: e.name, group: e.group })) };
+      return render();
+    }
+    case 'own-ready': { const r = READY[+b.dataset.i]; return saveOwnWorkout(p, r.name, r.ex.map(n => ({ name: n, group: catGroup(n) || GROUPS[0] }))); }
+    case 'own-g': keep(); B.g = b.dataset.g; return render();
+    case 'own-pick': {
+      keep(); const n = b.dataset.n, i = B.sel.findIndex(x => sameName(x.name, n));
+      if (i >= 0) B.sel.splice(i, 1); else B.sel.push({ name: n, group: b.dataset.g });
+      const y = window.scrollY; render(); window.scrollTo(0, y); return;
+    }
+    case 'own-unsel': keep(); B.sel.splice(+b.dataset.i, 1); return render();
+    case 'own-custom': { keep(); const n = (B.q || '').trim().slice(0, 50); if (n && !B.sel.some(x => sameName(x.name, n))) B.sel.push({ name: n.replace(/^./, c => c.toUpperCase()), group: B.g || GROUPS[0] }); B.q = ''; return render(); }
+    case 'own-save': {
+      keep(); const name = (B.name || '').trim() || 'Meu treino';
+      if (!B.sel.length) return toast('Escolha pelo menos um exercício.');
+      return saveOwnWorkout(p, name.slice(0, 40), B.sel);
+    }
+    case 'own-del': {
+      const w = ownWorkouts(p.id).find(x => x.id === ui.ownBuild.wid); if (!w) return;
+      confirmAsk(`Excluir o treino ${w.name}?`, 'Os treinos que você já fez continuam no seu histórico.', 'Excluir').then(ok => {
+        if (!ok) return;
+        letterExs(w.id, p.id).forEach(c => { if (db.sessions.some(x => x.exId === c.id)) { c.letter = null; c.archived = true; } else db.exercises = db.exercises.filter(e => e.id !== c.id); });
+        p.workouts = p.workouts.filter(x => x.id !== w.id); ui.ownBuild = null; ui.ownW = null; save(); render();
+      });
+      return;
+    }
+  }
 }
 // Barra do cardio do dia: completa quando o aluno atinge a meta que o professor definiu
 // Cartão de cardio do aluno, como um exercício: ele toca no tempo que fez e a barra anima até lá
@@ -1517,6 +1671,7 @@ const cardioLocked = (date = ui.date) => dayLocked(date) || daySent(date);
 const cardioLockMsg = () => dayLocked() ? LOCK_MSG.past : 'O treino de hoje já foi enviado: o cardio também ficou registrado e não pode mais ser alterado.';
 // Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
 function sendableExs() {
+  if (ui.studentMode && (profile(ui.profile) || {}).selfServe && selfTab() === 'own') return ui.ownW ? letterExs(ui.ownW) : [];
   if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
   return isLetter(ui.group) ? letterExs(ui.group) : [];
 }
@@ -2611,7 +2766,7 @@ function builderHtml(pid) {
         <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps"></div>`).join('')}</div></td></tr>` : ''}`;
   }).join('');
   return `<section class="card">
-    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}${w.hold ? ' <small>(escondido)</small>' : ''}</button>`).join('')}
+    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}${w.hold ? ' <small>(escondido)</small>' : ''}${w.own ? ' <small>(do aluno)</small>' : ''}</button>`).join('')}
       <button data-act="b-neww">＋ Novo treino</button></div>
     ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
       <div class="hold-bar ${isHeld(L, pid) ? 'held' : ''}">${isHeld(L, pid)
@@ -2965,6 +3120,7 @@ function perfilHtml(p, desk) {
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
         <button class="btn" data-act="goto-msg">Mensagem</button>
         <button class="btn" data-act="student-mode">Ver como o aluno</button>
+        ${p.test ? `<button class="btn ${p.selfServe ? 'primary' : ''}" data-act="self-toggle">Aluno monta o treino: ${p.selfServe ? 'ligado' : 'desligado'}</button>` : ''}
         ${p.test ? '<button class="btn danger" data-act="test-clear">Limpar teste</button>' : ''}
         ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${p.test ? '' : readyBtn(p)}`}
       </div>
@@ -3148,6 +3304,12 @@ $main.addEventListener('input', e => {
     return;
   }
   if (e.target.id === 'msgText') { ui.msgDraft = e.target.value; return updateWaLink(); }
+  if (e.target.id === 'ownSearch' && ui.ownBuild) {
+    const n = document.getElementById('ownName'); if (n) ui.ownBuild.name = n.value;
+    ui.ownBuild.q = e.target.value; const pos = e.target.selectionStart; render();
+    const i = document.getElementById('ownSearch'); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (er) {} }
+    return;
+  }
   const inp = e.target.closest('input[data-f]');
   if (!inp) return;
   const card = inp.closest('[data-ex]'), ex = exById(card.dataset.ex);
@@ -3204,6 +3366,12 @@ $main.addEventListener('click', e => {
     case 'new': return openDialog(null);
     case 'export': return exportData();
     case 'test-profile': return openTestProfile();
+    case 'self-tab': case 'own-w': case 'own-new': case 'own-step': case 'own-cancel': case 'own-edit': case 'own-ready': case 'own-g':
+    case 'own-pick': case 'own-unsel': case 'own-custom': case 'own-save': case 'own-del': return ownAct(act, b);
+    case 'self-toggle': {
+      const p = profile(ui.profile); p.selfServe = !p.selfServe; if (!p.selfServe) delete p.selfServe; save(); render();
+      return toast(p.selfServe ? 'Ligado: no app do aluno aparecem as abas "Treino do professor" e "Meu treino".' : 'Desligado: o aluno volta a ver só o treino que você monta.');
+    }
     case 'test-clear': {
       const p = testProfile(); if (!p) return;
       confirmAsk('Limpar o perfil de teste?', 'Apaga as marcações de séries, o cardio, o planejamento, as mensagens e os pagamentos do teste. Os treinos montados continuam.', 'Limpar').then(ok => {
@@ -4239,11 +4407,12 @@ function linkLoose(d, loose) {
   d.exercises.forEach(e => { delete e.loose; });
 }
 function assemble(src = remote) {
-  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {}, trash = [], loose = [];
+  const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {}, trash = [], loose = [], owns = {};
   for (const [path, v0] of src) {
     const v = plain(v0), m = path.split('/');
     if (m[3] === 'prefs') prefs[m[1]] = v; // preferências do aluno (ex.: cor do app)
     else if (m[3] === 'body') bodies[m[1]] = v.entries || []; // medidas do corpo
+    else if (m[3] === 'own') owns[m[1]] = v; // treinos que o próprio aluno montou
     else if (m.length === 2) {
       const { exercises = [], claim, ...meta } = v;
       if (meta.deleted) { trash.push({ id: m[1], name: meta.name, uid: meta.uid || null, deletedAt: meta.deletedAt || '' }); continue; } // lixeira
@@ -4255,6 +4424,13 @@ function assemble(src = remote) {
     }
   }
   linkLoose(d, loose); d.exercises.forEach(e => { delete e.loose; });
+  d.profiles.forEach(p => { // treinos montados pelo aluno (documento que ele mesmo grava)
+    p.workouts = (p.workouts || []).filter(w => !w.own);
+    const o = owns[p.id]; if (!o) return;
+    p.workouts.push(...(o.workouts || []).map(w => ({ ...w, own: true })));
+    const has = new Set(d.exercises.map(e => e.id));
+    (o.exercises || []).forEach(e => { if (!has.has(e.id)) d.exercises.push({ ...e, profileId: p.id, own: true }); });
+  });
   d.profiles.forEach(p => { delete p.color; delete p.ctMode; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
@@ -4268,7 +4444,8 @@ function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
     const { id, color, body, ctMode, ...meta } = p;
-    const exercises = db.exercises.filter(e => e.profileId === id).map(({ profileId, ...e }) => e);
+    if (meta.workouts) meta.workouts = meta.workouts.filter(w => !w.own); // os do aluno vão no documento "own"
+    const exercises = db.exercises.filter(e => e.profileId === id && !e.own).map(({ profileId, ...e }) => e);
     const rem = remote.get('profiles/' + id);
     out.set('profiles/' + id, plain({ ...meta, uid: p.uid ?? null, inviteCode: p.inviteCode ?? null, exercises, ...(rem && rem.claim ? { claim: rem.claim } : {}) }));
   }
@@ -4282,6 +4459,11 @@ function splitDb() {
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode)) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}) });
+  // Treinos que o aluno montou: documento que o próprio aluno pode gravar
+  for (const p of db.profiles) if (own.has(p.id)) {
+    const ws = (p.workouts || []).filter(w => w.own).map(({ own: _o, ...w }) => w), exs = db.exercises.filter(e => e.profileId === p.id && e.own).map(({ profileId, own: _o, ...e }) => e);
+    if (ws.length || exs.length || remote.has(`profiles/${p.id}/months/own`)) out.set(`profiles/${p.id}/months/own`, plain({ workouts: ws, exercises: exs }));
+  }
   for (const p of db.profiles) if (own.has(p.id) && p.body && p.body.length) out.set(`profiles/${p.id}/months/body`, plain({ entries: p.body }));
   return out;
 }
@@ -4354,7 +4536,7 @@ async function syncNow() {
   // Nada é apagado na nuvem (o Firebase também recusa): um mês que ficou vazio é gravado vazio
   for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) {
     if (!profile(pidOfPath(path)) || !path.includes('/months/')) continue; // aluno fora do app (lixeira etc.): não mexe
-    const empty = path.endsWith('/prefs') ? {} : path.endsWith('/body') ? { entries: [] } : { sessions: [], cardio: [] };
+    const empty = path.endsWith('/prefs') ? {} : path.endsWith('/body') ? { entries: [] } : path.endsWith('/own') ? { workouts: [], exercises: [] } : { sessions: [], cardio: [] };
     if (lastSynced.get(path) === canon(empty)) continue;
     ops.push([path, lastSynced.get(path), empty]); lastSynced.set(path, canon(empty)); remote.set(path, empty);
   }
@@ -4547,7 +4729,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-13:23';
+const APP_VERSION = '05/10-18:24';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
