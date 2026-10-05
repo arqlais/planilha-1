@@ -479,6 +479,7 @@ body.offline #offBar{display:block}
 .cal button.sel{box-shadow:0 0 0 3px var(--text) inset}
 .cal button:not(.has):not(:disabled):hover{background:var(--acc-soft)}
 .cal button:disabled{opacity:.35}
+.cal.compact{gap:3px}.cal.compact button{aspect-ratio:auto;height:34px;font-size:13px;border-radius:8px}
 .cal button small{position:absolute;left:0;right:0;bottom:2px;font-size:9px;opacity:.9}
 .month-sum{display:flex;gap:8px;margin-top:12px}
 .month-sum div{flex:1;min-width:0;background:var(--acc-soft);border-radius:12px;padding:8px}
@@ -1296,7 +1297,6 @@ function renderStudentTreino(p, greet, isToday) {
         ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
-    ${p.selfServe ? weekSetsHtml(p) : ''}
     ${installTipHtml()}
     ${Object.keys(p.unlocks || {}).filter(d => d < today() && d !== ui.date && !daySent(d, p.id)).sort().map(d => `<section class="card unlock-note"><p style="margin:0 0 10px"><b>🔓 Seu professor liberou o treino de ${fmtDate(d)}</b> para você completar o que faltou e enviar.</p>
       <button class="btn primary" data-act="goto-day" data-d="${d}">Abrir treino de ${fmtDate(d)}</button></section>`).join('')}
@@ -1328,7 +1328,6 @@ function renderOwnTreino(p, greet, isToday) {
         ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
-    ${weekSetsHtml(p)}
     ${!ws.length ? `<section class="card own-start"><h3 style="margin:0 0 4px">Monte seu treino</h3>
         <p class="hint" style="margin:0 0 12px">Escolha um treino pronto ou monte o seu escolhendo os exercícios.</p>
         <button class="btn primary big" data-act="own-new" data-step="ready">Treinos prontos</button>
@@ -1963,13 +1962,14 @@ function renderHistorico() {
     </section>`;
 
   if (ui.studentMode) {
+    const sp = profile(ui.profile), compact = sp && sp.selfServe; // quem monta o próprio treino: calendário menor + séries da semana
     $main.innerHTML = `<section class="card">${monthsHtml}
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
-      <div class="cal">${cells}</div>
+      <div class="cal ${compact ? 'compact' : ''}">${cells}</div>
       <p class="hint" style="margin:10px 0 0">Dias destacados: dias treinados. Toque em um dia para ver o que foi marcado.</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>${monthDays.length === 1 ? 'dia treinado' : 'dias treinados'}</span></div></div>
-    </section>${selHtml}`;
+    </section>${compact ? weekSetsHtml(sp) : ''}${selHtml}`;
     return;
   }
   let html = `<div class="banner"><div class="grow"><h2>Histórico</h2>
@@ -4766,7 +4766,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-18:52';
+const APP_VERSION = '05/10-18:58';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
