@@ -2255,6 +2255,21 @@ function profileSummary(pid) {
   if (last) { const n = daysBetween(last, today()); lastTxt = n === 0 ? 'Treinou hoje' : n === 1 ? 'Treinou ontem' : `Último treino há ${n} dias (${fmtDate(last)})`; }
   return { last, lastTxt, lastGroups, weekDays, now, before };
 }
+// Perfil de teste: simula que o aluno fez todos os treinos nesta semana (um treino por dia, todas as séries feitas)
+function simulateWeek(p) {
+  const ws = weekStart(today()), at = new Date().toISOString();
+  const list = workoutsOf(p.id).filter(w => letterExs(w.id, p.id).length);
+  let n = 0;
+  list.forEach((w, k) => {
+    const d = addDays(ws, k % 7);
+    letterExs(w.id, p.id).forEach(e => {
+      if (db.sessions.some(x => x.exId === e.id && x.date === d)) return;
+      const sets = (e.sets && e.sets.length ? e.sets : [{}, {}, {}]).map(x => ({ carga: e.noLoad ? null : (x.carga ?? 10), reps: x.reps ?? 12, done: true }));
+      db.sessions.push({ id: uid(), exId: e.id, date: d, sets, fin: at, by: 'aluno' }); n++;
+    });
+  });
+  return { n, workouts: list.length };
+}
 // Perfil de teste: um aluno de mentira para o professor testar novidades sem mexer nos dados reais
 const testProfile = () => db.profiles.find(p => p.test);
 function openTestProfile() {
@@ -3131,6 +3146,7 @@ function perfilHtml(p, desk) {
         <button class="btn" data-act="goto-msg">Mensagem</button>
         <button class="btn" data-act="student-mode">Ver como o aluno</button>
         ${p.test ? `<button class="btn ${p.selfServe ? 'primary' : ''}" data-act="self-toggle">Aluno monta o treino: ${p.selfServe ? 'ligado' : 'desligado'}</button>` : ''}
+        ${p.test ? '<button class="btn" data-act="test-sim">Simular semana feita</button>' : ''}
         ${p.test ? '<button class="btn danger" data-act="test-clear">Limpar teste</button>' : ''}
         ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${p.test ? '' : readyBtn(p)}`}
       </div>
@@ -3376,6 +3392,11 @@ $main.addEventListener('click', e => {
     case 'new': return openDialog(null);
     case 'export': return exportData();
     case 'test-profile': return openTestProfile();
+    case 'test-sim': {
+      const p = testProfile(); if (!p) return;
+      const r = simulateWeek(p); save(); render();
+      return toast(r.n ? `Semana simulada: ${r.workouts} treino${r.workouts === 1 ? '' : 's'}, um por dia a partir de segunda, com todas as séries feitas.` : 'Nada novo para simular (os treinos desta semana já estão feitos).');
+    }
     case 'self-tab': case 'own-w': case 'own-new': case 'own-step': case 'own-cancel': case 'own-edit': case 'own-ready': case 'own-g':
     case 'own-pick': case 'own-unsel': case 'own-custom': case 'own-save': case 'own-del': return ownAct(act, b);
     case 'self-toggle': {
@@ -4171,6 +4192,12 @@ async function fixOnce() {
     mark('abdominal-livre-semcarga');
     if (n) save();
   }
+  // 1f) Perfil de teste: simula a semana feita com os treinos montados (pedido do professor em 05/10)
+  if (!done.has('teste-semana-0510')) {
+    const tp = db.profiles.find(x => x.test);
+    if (tp) { const r = simulateWeek(tp); if (r.n) { save(); msgs.push(`Perfil de teste: semana simulada com ${r.workouts} treino${r.workouts === 1 ? '' : 's'} feitos.`); } }
+    mark('teste-semana-0510');
+  }
   // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
   if (!done.has('iris-remada-0110')) {
     const p = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Íris'));
@@ -4739,7 +4766,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-18:41';
+const APP_VERSION = '05/10-18:52';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
