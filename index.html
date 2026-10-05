@@ -1296,6 +1296,7 @@ function renderStudentTreino(p, greet, isToday) {
         ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
+    ${p.selfServe ? weekSetsHtml(p) : ''}
     ${installTipHtml()}
     ${Object.keys(p.unlocks || {}).filter(d => d < today() && d !== ui.date && !daySent(d, p.id)).sort().map(d => `<section class="card unlock-note"><p style="margin:0 0 10px"><b>🔓 Seu professor liberou o treino de ${fmtDate(d)}</b> para você completar o que faltou e enviar.</p>
       <button class="btn primary" data-act="goto-day" data-d="${d}">Abrir treino de ${fmtDate(d)}</button></section>`).join('')}
@@ -1307,8 +1308,7 @@ function renderStudentTreino(p, greet, isToday) {
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${blocks}
       ${sendHtml()}`
-    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
-    ${p.selfServe ? weekSetsHtml(p) : ''}`;
+    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   markLocked();
 }
 // ---------- Aluno monta o próprio treino ----------
@@ -1328,6 +1328,7 @@ function renderOwnTreino(p, greet, isToday) {
         ${isToday ? '<small>hoje</small>' : '<button class="link" data-act="today">voltar para hoje</button>'}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
+    ${weekSetsHtml(p)}
     ${!ws.length ? `<section class="card own-start"><h3 style="margin:0 0 4px">Monte seu treino</h3>
         <p class="hint" style="margin:0 0 12px">Escolha um treino pronto ou monte o seu escolhendo os exercícios.</p>
         <button class="btn primary big" data-act="own-new" data-step="ready">Treinos prontos</button>
@@ -1341,8 +1342,7 @@ function renderOwnTreino(p, greet, isToday) {
         <button class="${ui.layout === 'tiles' ? 'on' : ''}" data-act="layout" data-l="tiles">▦ Quadrados</button>
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Nenhum exercício. Toque em Editar para escolher.</p>'}
-      ${sendHtml()}`}
-    ${weekSetsHtml(p)}`;
+      ${sendHtml()}`}`;
   markLocked();
 }
 // Montar / editar um treino do aluno: treino pronto ou escolhendo os exercícios por grupo muscular
@@ -4739,7 +4739,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-18:38';
+const APP_VERSION = '05/10-18:41';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
