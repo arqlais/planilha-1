@@ -579,6 +579,7 @@ input,select,textarea{font-size:16px!important}
       <label class="f" id="authCodeF" hidden><span id="authCodeL">Código de convite (se recebeu do professor)</span><input name="code" autocomplete="off" autocapitalize="off" placeholder="ex.: k3j9x2ab-7QF2KD"></label>
       <label class="f">E-mail<input name="email" type="email" autocomplete="email" autocapitalize="off"></label>
       <label class="f">Senha<input name="pass" type="password" autocomplete="current-password" minlength="6"></label>
+      <label class="chk-line" style="margin-top:-4px"><input type="checkbox" id="authShow"> Mostrar a senha</label>
       <p class="hint" id="authMsg" role="status"></p>
       <button class="btn primary" id="authOk" style="width:100%;padding:12px">Entrar</button>
     </form>
@@ -1001,7 +1002,7 @@ const byPlanOrder = (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || byGroupOrde
 const letterExs = (L, pid = ui.profile) => profExs(pid).filter(e => e.letter === L).sort(byPlanOrder);
 // "Peito · Costas": grupos musculares que o treino tem
 const letterDesc = (L, pid = ui.profile) => [...new Set(letterExs(L, pid).map(e => e.group))].join(' · ');
-const planLabel = (x, pid) => x === CARDIO ? 'Cardio' : `${wName(x, pid)}${letterDesc(x, pid) ? ` (${letterDesc(x, pid)})` : ''}`;
+const planLabel = (x, pid) => x === CARDIO ? 'Cardio' : `${esc(wName(x, pid))}${letterDesc(x, pid) ? ` (${esc(letterDesc(x, pid))})` : ''}`;
 function trainedDates(pid = ui.profile) {
   return [...new Set([...profSessions(pid).map(s => s.date), ...profCardio(pid).map(c => c.date)])].sort();
 }
@@ -1202,7 +1203,7 @@ $setDlg.addEventListener('click', e => {
   // tocar numa cor já mostra o app nela; "Salvar" grava na conta do aluno
   if (b) { paintColor(b.dataset.color); renderSwatches(); return; }
   const tm = e.target.closest('[data-ctmode]'); if (tm) { shownTimer = tm.dataset.ctmode; renderTimerPick(); return; }
-  if (e.target.id === 'setLogout') logout();
+  if (e.target.id === 'setLogout') { $setDlg.close(); askLogout(); }
 });
 const statsDay = () => ui.view === 'historico' && ui.histDay ? ui.histDay : ui.date;
 function renderStats() {
@@ -3481,7 +3482,7 @@ $main.addEventListener('click', e => {
     case 'student-menu': return openStudent(profile(b.dataset.pid));
     case 'student-edit': return openStudent(profile(ui.profile));
     case 'student-mode': return setStudentMode(true);
-    case 'logout': return logout();
+    case 'logout': return askLogout();
     case 'copy-invite': {
       const t = inviteLink(profile(ui.profile));
       (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('Link copiado.'), () => toast('Copie o link acima manualmente.'));
@@ -4226,7 +4227,7 @@ async function fixOnce() {
     db.profiles.forEach(p => (p.workouts || []).forEach(w => {
       if (!w.hold) return;
       const ids = new Set(db.exercises.filter(e => e.profileId === p.id && e.letter === w.id).map(e => e.id));
-      if (db.sessions.some(x => ids.has(x.exId))) { delete w.hold; back.push(`${firstName(p)}: ${w.name}`); }
+      if (db.sessions.some(x => ids.has(x.exId))) { delete w.hold; back.push(esc(`${firstName(p)}: ${w.name}`)); }
     }));
     mark('liberar-usados');
     if (back.length) { save(); msgs.push(`Treinos que tinham sido escondidos do app voltaram: ${back.join(', ')}.`); }
@@ -4652,7 +4653,11 @@ async function syncNow() {
           const out = await writeMerged(path, was, doc);
           if (canon(out) !== canon(doc)) { merged = true; lastSynced.set(path, canon(out)); remote.set(path, plain(out)); }
           if (cloud.pending.delete(path)) savePending();
-        } catch (e) { if (e && e.code === 'permission-denied') throw e; offline.push(op); }
+        } catch (e) {
+          // sem permissão para gravar: não fica preso tentando para sempre (descarta o pendente desse documento)
+          if (e && e.code === 'permission-denied') { if (cloud.pending.delete(path)) savePending(); throw e; }
+          offline.push(op);
+        }
       }));
     } else offline.push(...ops);
     // ficha do aluno sem internet: fica guardada no aparelho e sobe (juntando com a nuvem) quando a internet voltar
@@ -4738,6 +4743,8 @@ function enterApp(skipRender) {
   if (!skipRender) render();
   setTimeout(() => installGuide(false), 1200); // primeira vez pelo celular: mostra como colocar na tela de início
 }
+// Sair sem querer obriga a digitar e-mail e senha de novo: pergunta antes
+function askLogout() { confirmAsk('Sair da conta?', 'Para entrar de novo, vai precisar digitar o e-mail e a senha.', 'Sair').then(ok => { if (ok) logout(); }); }
 async function logout() {
   if (syncTimer) await syncNow();
   await cloud.auth.signOut(); location.reload();
@@ -4747,6 +4754,7 @@ const accountHtml = () => CLOUD && cloud && cloud.user ? `<section class="card" 
     <div class="actions"><button class="btn" data-act="logout">Sair da conta</button></div></section>` : '';
 
 // ---------- Tela de login ----------
+document.addEventListener('change', e => { if (e.target.id === 'authShow') document.querySelector('#authForm [name=pass]').type = e.target.checked ? 'text' : 'password'; });
 const $auth = document.getElementById('auth'), $authForm = document.getElementById('authForm');
 let authMode = 'login';
 // Tela de carregando: halter ganhando anilhas (20 → 40 → 60 → 80 kg)
@@ -4790,13 +4798,13 @@ function showAuth(mode, msg = '') {
   } else { $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = false; document.getElementById('authOk').hidden = false; }
 }
 const AUTH_ERR = {
-  'auth/invalid-credential': 'E-mail ou senha incorretos.', 'auth/wrong-password': 'E-mail ou senha incorretos.', 'auth/user-not-found': 'E-mail ou senha incorretos.',
+  'auth/invalid-credential': 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha".', 'auth/wrong-password': 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha".', 'auth/user-not-found': 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha".',
   'auth/email-already-in-use': 'Já existe uma conta com este e-mail. Toque em "Já tenho conta: entrar".', 'auth/weak-password': 'A senha precisa ter pelo menos 6 caracteres.',
   'auth/invalid-email': 'E-mail inválido.', 'auth/too-many-requests': 'Muitas tentativas. Espere um pouco e tente de novo.', 'auth/network-request-failed': 'Sem internet.',
 };
 $authForm.addEventListener('submit', async e => {
   e.preventDefault();
-  const email = $authForm.email.value.trim(), pass = $authForm.pass.value, code = $authForm.code.value.trim();
+  const email = $authForm.email.value.trim().toLowerCase(), pass = $authForm.pass.value, code = $authForm.code.value.trim();
   const say = t => document.getElementById('authMsg').textContent = t;
   try {
     if (authMode === 'noprofile' || authMode === 'signup') {
@@ -4830,7 +4838,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-19:31';
+const APP_VERSION = '05/10-20:51';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
