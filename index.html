@@ -2783,18 +2783,9 @@ function payStatus(p, ym) {
   if (pay) return { k: 'ok', label: `Pago ${fmtDate(pay.date)}${pay.method ? ' · ' + pay.method : ''}`, pay };
   return today() > dueDate(p, ym) ? { k: 'late', label: `Atrasado (venceu ${fmtDate(dueDate(p, ym))})` } : { k: 'wait', label: `Vence ${fmtDate(dueDate(p, ym))}` };
 }
-// Mensagem de cobrança (WhatsApp): muda conforme a data — antes do vencimento, no dia, ou em atraso (com jeito)
 function chargeText(p, ym) {
-  const me = profile(ME), n = firstName(p), due = dueDate(p, ym), t = today(), mes = monthName(ym).toLowerCase().replace(/ de \d{4}$/, ''), val = brl(p.billing.value);
-  const plano = p.billing.plan ? ` (${p.billing.plan})` : '';
-  const pix = me.pixKey ? `\n\nChave Pix para pagamento:\n${me.pixKey}` : '';
-  const ass = `\n\n${firstName(me)}`;
-  if (t > due) {
-    const dias = Math.round((toDate(t) - toDate(due)) / 864e5);
-    return `Oi, ${n}! Tudo bem? 😊\n\nPassando para avisar que a mensalidade de *${mes}*${plano}, no valor de *${val}*, venceu dia ${fmtDate(due)} (há ${dias} dia${dias === 1 ? '' : 's'}) e ainda consta em aberto.${pix}\n\nSe já pagou, é só me mandar o comprovante por aqui que eu já registro. Se precisar de mais uns dias, me avisa que a gente combina, tá? 🙏${ass}`;
-  }
-  if (t === due) return `Oi, ${n}! Tudo bem? 😊\n\nLembrete rápido: a mensalidade de *${mes}*${plano}, no valor de *${val}*, vence *hoje*.${pix}\n\nAssim que pagar, me manda o comprovante por aqui, por favor. Obrigado e bora treinar! 💪${ass}`;
-  return `Oi, ${n}! Tudo bem? 😊\n\nPassando para lembrar da mensalidade de *${mes}*${plano}, no valor de *${val}*, com vencimento dia *${fmtDate(due)}*.${pix}\n\nAssim que pagar, me manda o comprovante por aqui, por favor. Obrigado pela confiança! 💪${ass}`;
+  const me = profile(ME);
+  return `Oi, ${firstName(p)}! Tudo bem? Passando para lembrar da mensalidade de ${monthName(ym).toLowerCase()} (${brl(p.billing.value)}), com vencimento em ${fmtDate(dueDate(p, ym))}.${me.pixKey ? ` Pix: ${me.pixKey}` : ''} Obrigado! 💪`;
 }
 function renderPagamentos() {
   const ym = ui.payMonth || (ui.payMonth = today().slice(0, 7));
@@ -4514,7 +4505,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-13:12';
+const APP_VERSION = '05/10-13:14';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
