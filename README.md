@@ -62,13 +62,15 @@ Com a tela larga (computador), o app do professor vira uma plataforma com **menu
 - A série só é confirmada com **carga e repetições** anotadas.
 - Professor e alunos escolhem a **cor do app** em ⚙ **Configurações** (canto superior direito); cada conta tem a sua cor. Nas Configurações do professor também fica a **meta diária de cardio** dele.
 - O login do aluno fica salvo no aparelho e o app abre direto no treino de hoje (melhor ainda instalando na tela de início).
-- O aluno vê: boas-vindas com o último recado ("Já treinou hoje? Não esquece do cardio :)"), o treino que você montou (sem poder editar o plano), cardio, o **Calendário** com os dias treinados marcados e a aba **Recados** com as mensagens enviadas. A evolução não aparece para o aluno (fica só com o professor).
+- O aluno vê: boas-vindas com o último recado ("Já treinou hoje? Não esquece do cardio :)"), o treino que você montou (sem poder editar o plano), cardio, o **Calendário** com os dias treinados marcados e a aba **Configurações** (recados do professor, medidas do corpo, cor do app, cronômetro e conta). O quadro de séries por grupo na semana fica só com o professor. A evolução não aparece para o aluno (fica só com o professor).
 - Tudo o que for marcado nesse modo (séries e cardio) fica registrado como **marcado pelo aluno**: aparece no histórico com a etiqueta *aluno* e no perfil em **Marcações do aluno**.
+
+- **Quem usa o app** (área do professor): quantas pessoas têm conta, quantas entraram hoje e nos últimos 7 dias (e quem), consultoria × só o app e pedidos esperando. Conta a partir de quando a pessoa abre o app com o login dela.
 
 ## Medidas do corpo
 
 - Professor e alunos anotam **peso, altura, idade** e as medidas (busto, cintura, abdômen, quadril, dorsal, braços, coxas e panturrilhas, direita e esquerda). Aceita número quebrado (58,5).
-- O aluno tem a aba **Medidas** embaixo; o professor abre pelo cartão **Medidas do corpo** na aba Evolução (as dele) ou no perfil do aluno (as do aluno).
+- O aluno abre as medidas pela aba **Configurações**; o professor abre pelo cartão **Medidas do corpo** na aba Evolução (as dele) ou no perfil do aluno (as do aluno).
 - Cada avaliação fica com a data. A tabela mostra o valor mais recente de cada medida, o anterior e a diferença; com peso e altura aparece o IMC.
 
 ## Histórico antigo do aluno

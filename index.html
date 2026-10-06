@@ -831,6 +831,7 @@ const SVG = {
   historico: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   evolucao: '<path d="M4 19h16M5 15l4-4 4 3 6-7"/>',
   perfil: '',
+  config: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
   recados: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
   medidas: '<path d="M3 16l13-13 5 5L8 21z"/><path d="M7 12l2 2M10 9l2 2M13 6l2 2"/>',
   alunos: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2c1.9.6 3.1 2.2 3.5 4.8"/>',
@@ -839,7 +840,9 @@ const SVG = {
 };
 const VIEWS = [['treino', 'Treino'], ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['alunos', 'Alunos']];
 // O aluno não vê a evolução (o professor mostra no celular dele): só treino, calendário e recados
-const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Calendário'], ['medidas', 'Medidas'], ['recados', 'Recados']];
+const STUDENT_VIEWS = [['treino', 'Treino'], ['historico', 'Calendário'], ['config', 'Configurações']];
+// telas que o aluno abre por dentro de Configurações
+const STUDENT_SUB = ['recados', 'medidas'];
 // Computador (tela larga), só para o professor: menu lateral com mais áreas
 const DESK_VIEWS = [['treino', 'Meu treino'], ['alunos', 'Alunos'], ['montar', 'Montar treinos'], ['pagamentos', 'Pagamentos'], ['historico', 'Histórico'], ['evolucao', 'Evolução']];
 const deskMq = matchMedia('(min-width: 1024px)');
@@ -960,7 +963,7 @@ let db = load();
 let ui = { view: 'treino', group: '', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas'].includes(u.view)) ui.view = u.view;
+  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas', 'config'].includes(u.view)) ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
   ui.group = u.group || '';
   if (u.layout) ui.layout = u.layout;
@@ -1122,19 +1125,19 @@ function renderHero() {
   $who.innerHTML = ui.studentMode ? `<span class="av">${esc(initials(p.name))}</span><span>Olá, ${esc(firstName(p))}!</span>`
     : `<span class="av">${esc(initials(p.name))}</span><span>${isMe ? esc(p.name) : 'Aluno: ' + esc(p.name)}</span> ▾`;
   // Professor: o botão abre a lista de alunos (ordem alfabética) para trocar de perfil
-  if (ui.studentMode) $who.dataset.view = 'recados'; else delete $who.dataset.view;
+  if (ui.studentMode) $who.dataset.view = 'config'; else delete $who.dataset.view;
   if (ui.view === 'alunos' && !(isDesk() && ui.profile !== ME) || ui.view === 'pagamentos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
   document.getElementById('stats').hidden = ['pagamentos', 'montar'].includes(ui.view);
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo' };
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações' };
   if (ui.studentMode) titles.historico = 'Calendário';
   if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
   document.getElementById('heroTitle').textContent = titles[ui.view];
   document.getElementById('dateLabel').textContent = ui.date === today() ? 'Hoje' : fmtDate(ui.date);
   // Aluno: no canto de cima fica o botão de Configurações (cor do app) no lugar da data
   document.getElementById('dateChip').hidden = !!ui.studentMode;
-  document.getElementById('settingsBtn').hidden = false;
+  document.getElementById('settingsBtn').hidden = !!ui.studentMode; // aluno: fica na aba Configurações
   applyColor();
   $date.value = ui.date;
   renderStats();
@@ -1233,7 +1236,7 @@ function renderStats() {
 }
 function renderNav() {
   $nav.innerHTML = views().map(([id, label]) =>
-    `<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' || id === 'treino' && ui.view === 'treino' ? 'on' : ''}" data-view="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG[id]}</svg>${label}</button>`).join('');
+    `<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' || id === 'config' && STUDENT_SUB.includes(ui.view) ? 'on' : ''}" data-view="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${SVG[id]}</svg>${label}</button>`).join('');
 }
 function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
@@ -1242,11 +1245,11 @@ function render() {
   if (desk && ui.view === 'perfil') ui.view = 'alunos'; // no computador o perfil abre dentro da área de alunos
   renderHero();
   renderNav();
-  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
+  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
 }
 deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
 function go(view) {
-  if (ui.studentMode && !STUDENT_VIEWS.some(v => v[0] === view)) view = 'treino';
+  if (ui.studentMode && !STUDENT_VIEWS.some(v => v[0] === view) && !STUDENT_SUB.includes(view)) view = 'treino';
   stopDemo(); ui.demo = false; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 // ---------- Treino ----------
@@ -1352,7 +1355,6 @@ function renderConsultTab(p, greet) {
       <ul class="consult-list">
         <li><b>Treino montado para você</b>, de acordo com o seu objetivo</li>
         <li><b>Planejamento das semanas</b>: o treino de cada dia já pronto no app</li>
-        <li><b>Séries por grupo muscular</b> na semana, para treinar cada músculo na medida certa</li>
         <li><b>Ajustes de carga e exercícios</b> conforme você evolui</li>
         <li><b>Mensagens e acompanhamento</b> direto com o professor</li>
       </ul>
@@ -2049,14 +2051,13 @@ function renderHistorico() {
     </section>`;
 
   if (ui.studentMode) {
-    const sp = profile(ui.profile), compact = isConsult(sp); // séries da semana: só para alunos da consultoria
     $main.innerHTML = `<section class="card">${monthsHtml}
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
-      <div class="cal ${compact ? 'compact' : ''}">${cells}</div>
+      <div class="cal compact">${cells}</div>
       <p class="hint" style="margin:10px 0 0">Dias destacados: dias treinados. Toque em um dia para ver o que foi marcado.</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>${monthDays.length === 1 ? 'dia treinado' : 'dias treinados'}</span></div></div>
-    </section>${compact ? weekSetsHtml(sp) : ''}${selHtml}`;
+    </section>${selHtml}`; // séries da semana: só o professor vê
     return;
   }
   let html = `<div class="banner"><div class="grow"><h2>Histórico</h2>
@@ -2409,6 +2410,7 @@ function renderAlunos() {
   $main.innerHTML = `
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
     ${CLOUD && cloud ? requestsHtml() : ''}
+    ${appUsageHtml()}
     ${rescueHtml()}
     <div class="actions" style="margin:4px 0 0"><button class="btn" data-act="go-view" data-v="pagamentos">Pagamentos</button><button class="btn" data-act="go-view" data-v="montar">Montar treinos</button></div>
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
@@ -2580,7 +2582,7 @@ function histImportHtml(p, top) {
 function renderMedidas() {
   const p = profile(ui.profile), list = bodyOf(p), last = list[list.length - 1], prev = list[list.length - 2];
   const d = ui.bodyDate || today(), cur = list.find(e => e.date === d) || {};
-  $main.innerHTML = `
+  $main.innerHTML = `${backToConfig()}
     <div class="banner"><div class="grow"><h2>Medidas do corpo</h2><small>${esc(p.name)}${last ? ` · ${list.length} ${list.length === 1 ? 'avaliação' : 'avaliações'}` : ''}</small></div></div>
     <section class="card">
       <div class="card-h"><div class="grow"><h3>${cur.id ? 'Editar avaliação' : 'Nova avaliação'}</h3><small>Preencha só o que tiver medido. Aceita número quebrado (ex.: 58,5)</small></div></div>
@@ -2638,10 +2640,26 @@ function inviteHtml(p) {
 }
 function renderRecados() {
   const p = profile(ui.profile), log = (p.messages || []).slice().reverse();
-  $main.innerHTML = `<div class="banner"><div class="grow"><h2>💬 Recados</h2><small>Mensagens do seu professor</small></div></div>
+  $main.innerHTML = `${backToConfig()}<div class="banner"><div class="grow"><h2>Recados</h2><small>Mensagens do seu professor</small></div></div>
     <section class="card">${log.map(m => `<div class="list-row" style="display:block"><small style="color:var(--muted)">${weekday(m.date)}, ${fmtDate(m.date)}</small>
-      <div style="white-space:pre-wrap;margin-top:2px">${esc(m.text)}</div></div>`).join('') || '<p class="empty">Nenhum recado ainda.</p>'}</section>
-    ${cloud && cloud.role === 'student' ? accountHtml() : ''}`;
+      <div style="white-space:pre-wrap;margin-top:2px">${esc(m.text)}</div></div>`).join('') || '<p class="empty">Nenhum recado ainda.</p>'}</section>`;
+}
+const backToConfig = () => ui.studentMode ? '<div class="actions" style="margin:0 0 4px"><button class="btn" data-view="config">← Voltar para Configurações</button></div>' : '';
+// Aluno: recados, medidas e ajustes do app numa aba só (a parte de treino fica mais limpa)
+function renderConfig() {
+  const p = profile(ui.profile), msgs = p.messages || [], last = msgs[msgs.length - 1];
+  const cor = (COLORS.find(c => c[0] === savedColor()) || COLORS[0])[1];
+  $main.innerHTML = `
+    <section class="card"><div class="card-h"><div class="grow"><h3>Recados do professor</h3>
+        <small>${last ? `${weekday(last.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(last.date)}` : 'Nenhum recado ainda'}</small></div></div>
+      ${last ? `<div style="white-space:pre-wrap;margin:0 0 10px">${esc(last.text)}</div>` : ''}
+      ${msgs.length > 1 ? `<button class="btn" data-view="recados">Ver todos os recados (${msgs.length})</button>` : ''}</section>
+    ${bodySummaryHtml(p)}
+    <section class="card"><div class="card-h"><div class="grow"><h3>Cor do app e cronômetro</h3>
+        <small>Cor: ${cor} · Cronômetro do cardio: ${ctPref() === 'up' ? 'Progressivo ↑' : 'Regressivo ↓'}</small></div></div>
+      <button class="btn primary" data-act="open-settings">Mudar</button></section>
+    ${accountHtml()}
+    <p class="hint" style="text-align:center;margin-top:14px">Versão do app: ${esc(APP_VERSION)}</p>`;
 }
 function setStudentMode(on) {
   ui.studentMode = on; stopDemo(); ui.demo = false;
@@ -2842,6 +2860,7 @@ function renderAlunosDesk() {
     </aside>
     <section class="spane">${sel ? perfilHtml(sel, true) : `
       ${CLOUD && cloud ? requestsHtml() : ''}
+      ${appUsageHtml()}
       ${rescueHtml()}
       <section class="card"><div class="card-h"><div class="grow"><h3>Seus alunos</h3><small>Escolha um aluno na lista para ver o resumo, montar o treino, planejar as semanas, ver medidas, mensagens e pagamento.</small></div></div>
         <div class="kv"><div><b>${real.length}</b><span>alunos</span></div>
@@ -3499,7 +3518,7 @@ $main.addEventListener('click', e => {
       const p = profile(ui.profile), on = !isConsult(p);
       if (on) { delete p.consult; delete p.consultReq; } else p.consult = false;
       save(); render();
-      return toast(on ? `✓ ${esc(firstName(p))} é da consultoria: vê o treino que você monta e as séries da semana.` : `${esc(firstName(p))} agora usa só o app: monta os próprios treinos e vê a área "Consultoria" para contratar.`);
+      return toast(on ? `✓ ${esc(firstName(p))} é da consultoria: vê o treino que você monta.` : `${esc(firstName(p))} agora usa só o app: monta os próprios treinos e vê a área "Consultoria" para contratar.`);
     }
     case 'consult-ask': {
       const p = profile(ui.profile), msg = (document.getElementById('consultMsg') || {}).value || '';
@@ -3742,6 +3761,7 @@ $main.addEventListener('click', e => {
         .finally(() => { b.disabled = false; b.textContent = `✓ Salvar treino de ${firstName(p)}`; });
       return;
     }
+    case 'open-settings': return openSettings();
     case 'open-medidas': ui.bodyDate = null; if (b.dataset.pid) ui.profile = b.dataset.pid; return go('medidas');
     case 'save-body': return saveBody();
     case 'edit-body': ui.bodyDate = b.dataset.d; render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4603,7 +4623,7 @@ function assemble(src = remote) {
     const has = new Set(d.exercises.map(e => e.id));
     (o.exercises || []).forEach(e => { if (!has.has(e.id)) d.exercises.push({ ...e, profileId: p.id, own: true }); });
   });
-  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; });
+  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
@@ -4615,7 +4635,7 @@ function assemble(src = remote) {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, body, ctMode, consultReq, ...meta } = p;
+    const { id, color, body, ctMode, consultReq, seen, ...meta } = p;
     // o aluno não lê o perfil do professor: nome e WhatsApp do professor vão na ficha de cada aluno
     if (id !== ME) { const me = profile(ME) || {}; meta.coachName = me.name || null; meta.coachWa = me.wa || null; }
     if (meta.workouts) meta.workouts = meta.workouts.filter(w => !w.own); // os do aluno vão no documento "own"
@@ -4632,7 +4652,7 @@ function splitDb() {
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
-  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}) });
+  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || p.seen || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}) });
   // Treinos que o aluno montou: documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id)) {
     const ws = (p.workouts || []).filter(w => w.own).map(({ own: _o, ...w }) => w), exs = db.exercises.filter(e => e.profileId === p.id && e.own).map(({ profileId, own: _o, ...e }) => e);
@@ -4814,7 +4834,26 @@ function enterApp(skipRender) {
   document.getElementById('auth').hidden = true;
   fixUi(); netState();
   if (!skipRender) render();
+  markSeen();
   setTimeout(() => installGuide(false), 1200); // primeira vez pelo celular: mostra como colocar na tela de início
+}
+// Aluno abriu o app (pelo login dele): guarda o dia, para o professor ver quem está usando
+function markSeen() {
+  if (!CLOUD || !cloud || cloud.role !== 'student' || !cloud.ready) return;
+  const p = profile(cloud.pid);
+  if (p && p.seen !== today()) { p.seen = today(); save(); }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') markSeen(); });
+// Professor: quantas pessoas têm conta e entraram no app
+function appUsageHtml() {
+  if (!CLOUD || !cloud) return '';
+  const acc = db.profiles.filter(p => p.id !== ME && !p.test && p.uid), t = today(), wk = addDays(t, -6);
+  const day = acc.filter(p => p.seen === t).length, week = acc.filter(p => p.seen && p.seen >= wk).sort((a, b) => b.seen.localeCompare(a.seen));
+  const cons = acc.filter(isConsult).length, reqs = (cloud.requests || []).length;
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Quem usa o app</h3><small>Pessoas com conta e quantas entraram pelo celular delas</small></div></div>
+    <div class="month-sum"><div><b>${acc.length}</b><span>com conta</span></div><div><b>${day}</b><span>${day === 1 ? 'entrou hoje' : 'entraram hoje'}</span></div><div><b>${week.length}</b><span>nos últimos 7 dias</span></div></div>
+    <p class="hint" style="margin:10px 0 0">Consultoria: <b>${cons}</b> · Só o app: <b>${acc.length - cons}</b>${reqs ? ` · Pedidos esperando: <b>${reqs}</b>` : ''}</p>
+    ${week.length ? `<p class="hint" style="margin:6px 0 0">Entraram: ${week.map(p => `${esc(firstName(p))} (${p.seen === t ? 'hoje' : fmtDate(p.seen)})`).join(', ')}</p>` : ''}</section>`;
 }
 // Sair sem querer obriga a digitar e-mail e senha de novo: pergunta antes
 function askLogout() { confirmAsk('Sair da conta?', 'Para entrar de novo, vai precisar digitar o e-mail e a senha.', 'Sair').then(ok => { if (ok) logout(); }); }
@@ -4911,7 +4950,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-22:04';
+const APP_VERSION = '05/10-22:54';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
