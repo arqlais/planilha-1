@@ -65,6 +65,7 @@ Com a tela larga (computador), o app do professor vira uma plataforma com **menu
 - O aluno vê: boas-vindas com o último recado ("Já treinou hoje? Não esquece do cardio :)"), o treino que você montou (sem poder editar o plano), cardio, o **Calendário** com os dias treinados marcados e a aba **Configurações** (recados do professor, medidas do corpo, cor do app, cronômetro e conta). O quadro de séries por grupo na semana fica só com o professor. A evolução não aparece para o aluno (fica só com o professor).
 - Tudo o que for marcado nesse modo (séries e cardio) fica registrado como **marcado pelo aluno**: aparece no histórico com a etiqueta *aluno* e no perfil em **Marcações do aluno**.
 
+- **Link de primeiro acesso** (área do professor): um link para qualquer pessoa (termina em `?cadastro`). Ao abrir pelo celular, o app já mostra como colocar o ícone na tela de início e abre em "Criar conta"; o pedido chega para o professor aceitar.
 - **Quem usa o app** (área do professor): quantas pessoas têm conta, quantas entraram hoje e nos últimos 7 dias (e quem), consultoria × só o app e pedidos esperando. Conta a partir de quando a pessoa abre o app com o login dela.
 
 ## Medidas do corpo

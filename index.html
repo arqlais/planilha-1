@@ -1651,7 +1651,7 @@ addEventListener('appinstalled', () => { try { localStorage.setItem('planilha-in
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 const isPhone = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 const SHARE_ICON = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
-function installGuide(force) {
+function installGuide(force, beforeSignup) {
   if (isStandalone()) { if (force) toast('O app já está aberto pela tela de início ✓'); return; }
   if (!force) {
     if (!isPhone()) return;
@@ -1675,6 +1675,7 @@ function installGuide(force) {
       ${step(1, 'Toque nos <b>três pontinhos ⋮</b> no canto de cima da tela.')}
       ${step(2, 'Toque em <b>Adicionar à tela inicial</b> (ou <b>Instalar app</b>) e confirme.')}
       <p class="ig-note">Pronto: o ícone fica na tela do celular. Abra sempre por ele.</p>`;
+  if (beforeSignup && !inApp) body += `<p class="ig-note">Depois, abra o app pelo ícone. Se ainda não tem conta, toque em <b>Primeiro acesso? Criar conta</b>.</p>`;
   const d = document.getElementById('installDlg');
   document.getElementById('installBody').innerHTML = body;
   d.showModal();
@@ -2411,6 +2412,7 @@ function renderAlunos() {
     ${ui.profile !== ME ? `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="open-profile" data-pid="${ME}" data-v="treino">← Voltar para o meu treino</button></div>` : ''}
     ${CLOUD && cloud ? requestsHtml() : ''}
     ${appUsageHtml()}
+      ${signupLinkHtml()}
     ${rescueHtml()}
     <div class="actions" style="margin:4px 0 0"><button class="btn" data-act="go-view" data-v="pagamentos">Pagamentos</button><button class="btn" data-act="go-view" data-v="montar">Montar treinos</button></div>
     <h3 style="margin:18px 4px 10px">Alunos (${students.length})</h3>
@@ -2629,6 +2631,15 @@ function appLinkText(p) {
   return p.uid
     ? `Oi, ${n}! Este é o link do nosso app de treino:\n\n${appLink()}\n\n1. Toque no link.\n2. Entre com o seu e-mail e a sua senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`
     : `Oi, ${n}! Este é o link do nosso app de treino:\n\n${inviteLink(p)}\n\n1. Toque no link.\n2. Crie sua conta com o seu e-mail e uma senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`;
+}
+// Professor: link de primeiro acesso para qualquer pessoa (cria a conta e pede para entrar)
+const signupText = () => `Oi! Este é o link do nosso app de treino:\n\n${signupLink()}\n\n1. Toque no link.\n2. O app mostra como colocar o ícone na tela do seu celular. Faça isso primeiro.\n3. Abra o app pelo ícone e crie sua conta com seu nome, e-mail e uma senha.\n4. Pronto! Assim que eu liberar, o app abre sozinho. 💪`;
+function signupLinkHtml() {
+  if (!CLOUD || !cloud) return '';
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Link de primeiro acesso</h3>
+      <small>Para qualquer pessoa: ela abre o link, coloca o app na tela do celular e cria a conta. O pedido chega aqui para você aceitar.</small></div></div>
+    <p class="note" style="word-break:break-all;margin-top:0">${esc(signupLink())}</p>
+    <button class="btn primary" style="width:100%;padding:13px" data-act="send-signup">Enviar link de primeiro acesso</button></section>`;
 }
 function inviteHtml(p) {
   if (!CLOUD) return '';
@@ -2861,6 +2872,7 @@ function renderAlunosDesk() {
     <section class="spane">${sel ? perfilHtml(sel, true) : `
       ${CLOUD && cloud ? requestsHtml() : ''}
       ${appUsageHtml()}
+      ${signupLinkHtml()}
       ${rescueHtml()}
       <section class="card"><div class="card-h"><div class="grow"><h3>Seus alunos</h3><small>Escolha um aluno na lista para ver o resumo, montar o treino, planejar as semanas, ver medidas, mensagens e pagamento.</small></div></div>
         <div class="kv"><div><b>${real.length}</b><span>alunos</span></div>
@@ -3505,6 +3517,7 @@ $main.addEventListener('click', e => {
     case 'new': return openDialog(null);
     case 'export': return exportData();
     case 'test-profile': return openTestProfile();
+    case 'send-signup': return shareMsg('Link de primeiro acesso', signupText());
     case 'send-applink': { const p = profile(b.dataset.pid); return shareMsg(`Link do app para ${firstName(p)}`, appLinkText(p), p); }
     case 'install-guide': return installGuide(true);
     case 'test-sim': {
@@ -4082,6 +4095,10 @@ let cloud = null, remote = new Map(), lastSynced = new Map(), syncTimer = null;
 const deletedProfiles = new Set();
 const pidOfPath = path => path.split('/')[1];
 const INVITE_KEY = 'planilha-convite';
+// Link de primeiro acesso (para qualquer pessoa): abre já em "Criar conta" e mostra como pôr o app na tela de início
+const NEW_KEY = 'planilha-primeiro-acesso';
+const firstAccess = () => { try { return !!localStorage.getItem(NEW_KEY); } catch (e) { return false; } };
+const signupLink = () => `${location.origin}${location.pathname}?cadastro`;
 // JSON com chaves em ordem fixa, para comparar o que está na nuvem com o que está no app
 const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x)
   ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
@@ -4094,6 +4111,7 @@ function loadScript(src) {
 async function cloudBoot() {
   const inv = new URLSearchParams(location.search).get('convite');
   if (inv) { try { localStorage.setItem(INVITE_KEY, inv.trim()); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  if (new URLSearchParams(location.search).has('cadastro')) { try { localStorage.setItem(NEW_KEY, '1'); } catch (e) {} history.replaceState(null, '', location.pathname); }
   showAuth('loading');
   try { for (const f of ['app', 'auth', 'firestore']) await loadScript(`vendor/firebase/firebase-${f}-compat.js`); }
   catch (e) { return showAuth('login', 'Sem conexão para carregar o app. Tente de novo.'); }
@@ -4103,7 +4121,7 @@ async function cloudBoot() {
   if (!CFG.emulator || CFG.emulator.persist) { try { await fs.enablePersistence({ synchronizeTabs: true }); } catch (e) {} } // funciona offline e guarda a cópia do resgate
   try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {} // login fica salvo no aparelho
   cloud = { auth, fs, role: null, ready: false, unsubs: [] };
-  auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() ? 'signup' : 'login'); });
+  auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() || firstAccess() ? 'signup' : 'login'); });
 }
 function pendingInvite() {
   let v = ''; try { v = localStorage.getItem(INVITE_KEY) || ''; } catch (e) {}
@@ -4114,6 +4132,7 @@ const clearInvite = () => { try { localStorage.removeItem(INVITE_KEY); } catch (
 
 async function startSession(user) {
   cloud.user = user;
+  try { localStorage.removeItem(NEW_KEY); } catch (e) {}
   showAuth('loading');
   const isAdm = !!ADMIN_EMAIL && (user.email || '').toLowerCase() === ADMIN_EMAIL;
   await saveRescueFromCache(user, isAdm);
@@ -4896,6 +4915,8 @@ function showAuth(mode, msg = '') {
   document.getElementById('authOut').hidden = mode !== 'noprofile';
   document.getElementById('authRescue').hidden = !(mode === 'noprofile' && myRescuePids().length && !(cloud && cloud.myRequest)); // se o pedido não foi, dá para mandar o arquivo
   document.getElementById('authMsg').textContent = msg;
+  // veio pelo link (primeiro acesso ou convite): o guia de pôr na tela de início aparece logo, antes de criar a conta
+  if ((mode === 'signup' || mode === 'login') && (firstAccess() || inv) && !showAuth.guided) { showAuth.guided = true; setTimeout(() => { if (authMode !== 'loading') installGuide(false, true); }, 1500); }
   if (mode === 'noprofile') {
     // Conta sem aluno: pede acesso ao professor (ou usa um código de convite)
     $authForm.hidden = false; $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = true;
@@ -4950,7 +4971,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-22:54';
+const APP_VERSION = '05/10-23:14';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
