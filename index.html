@@ -1933,7 +1933,15 @@ function drawCheckin() {
     g.fillStyle = '#6b7872'; g.font = F(600, 36); g.fillText(dateTxt, W / 2, cy + 275);
     if (cardio) pill(cardio, W / 2, cy + 320, 34, acc, '#fff', true);
     g.textAlign = 'left';
-    brand(story ? H - 130 : H - 70, true);
+    // link do app em destaque (divulgação)
+    const ly = story ? H - 250 : H - 235;
+    g.textAlign = 'center'; g.fillStyle = '#fff'; g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 12;
+    g.font = F(800, 34); g.fillText('Treine comigo pelo app 👇', W / 2, ly); g.shadowBlur = 0;
+    g.font = F(800, 40); const lt = siteTxt(), lw = g.measureText(lt).width + 80;
+    g.fillStyle = 'rgba(255,255,255,.95)'; rr(g, (W - lw) / 2, ly + 28, lw, 84, 42); g.fill();
+    g.fillStyle = '#121a16'; g.fillText(lt, W / 2, ly + 84);
+    g.font = F(900, 30); g.fillStyle = '#fff'; g.shadowBlur = 12; g.globalAlpha = .9; g.fillText('PLANILHA DE TREINO', W / 2, ly + 170); g.globalAlpha = 1; g.shadowBlur = 0;
+    g.textAlign = 'left';
   }
 }
 function checkinFile() {
@@ -1959,6 +1967,8 @@ document.getElementById('ciSave').onclick = async () => {
 };
 document.getElementById('ciShare').onclick = async () => {
   const f = await checkinFile(), text = `Treino feito ✓ Treino pelo app: ${appLink()}`;
+  // o link fica copiado: no Instagram é só usar o adesivo "Link" e colar
+  copyText(appLink()).then(ok => { if (ok) toast('🔗 Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
   if (navigator.canShare && navigator.canShare({ files: [f] })) {
     try { await navigator.share({ files: [f], text }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para compartilhar. Use "Baixar imagem".'); }
   } else document.getElementById('ciSave').click();
@@ -5245,7 +5255,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-20:48';
+const APP_VERSION = '06/10-20:50';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
