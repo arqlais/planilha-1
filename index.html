@@ -2713,16 +2713,24 @@ function openDate(iso) {
   document.getElementById('dayDefault').hidden = !o;
   $dayDlg.showModal();
 }
+// Treino colocado no planejamento (divisão da semana ou data de hoje em diante) já sai para o aluno: deixa de ficar escondido
+function releasePlanned(p) {
+  const t = today(), used = new Set([...Object.values(p.division || {}).flat(), ...Object.entries(p.plans || {}).filter(([d]) => d >= t).flatMap(([, o]) => o.w || [])]);
+  const out = [];
+  (p.workouts || []).forEach(w => { if (w.hold && used.has(w.id)) { delete w.hold; out.push(w.name); } });
+  return out;
+}
 function saveDay(groups) {
   const p = profile(ui.profile);
   if (typeof dayEditing === 'string') { // data específica
     const cmin = parseNum($dayForm.cmin.value);
     p.plans = p.plans || {};
     p.plans[dayEditing] = { w: groups, ...(groups.length && cmin > 0 ? { c: Math.min(300, cmin) } : {}) };
-    prunePlans(p); $dayDlg.close(); save(); render(); return;
+    prunePlans(p); releasePlanned(p); $dayDlg.close(); save(); render(); return;
   }
   p.division = p.division || {};
   p.division[dayEditing] = groups;
+  releasePlanned(p);
   // meta de cardio do dia (minutos): o aluno vê uma barra que completa ao atingir
   const cmin = parseNum($dayForm.cmin.value);
   const newG = groups.length && cmin > 0 ? Math.min(300, cmin) : 0;
@@ -2925,7 +2933,7 @@ function builderHtml(pid) {
       <button data-act="b-neww">＋ Novo treino</button></div>
     ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
       <div class="hold-bar ${isHeld(L, pid) ? 'held' : ''}">${isHeld(L, pid)
-        ? `<span class="grow"><b>Escondido</b> · está salvo, mas não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
+        ? `<span class="grow"><b>Escondido</b> · está salvo, mas não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}. Ao colocar no planejamento, ele é liberado sozinho.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
         : `<span class="grow"><b>✓ Liberado</b> · aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''} nos dias em que estiver na divisão ou no planejamento.</span><button class="btn" data-act="b-hold">Esconder do app</button>`}</div>
       <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="b-ren">✎ Renomear</button><button class="btn" data-act="b-dupw">⧉ Duplicar treino</button>
         <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button><button class="btn danger" data-act="b-delw">Excluir treino</button></div>
@@ -3688,7 +3696,7 @@ $main.addEventListener('click', e => {
           delete p.plans[t].skip; delete p.plans[t].was;
           msg += ` ${names} passou para hoje.`;
         }
-        save(); render(); toast(msg);
+        releasePlanned(p); save(); render(); toast(msg);
       });
       return;
     }
@@ -3704,7 +3712,7 @@ $main.addEventListener('click', e => {
         if (!ok) return;
         p.plans = p.plans || {};
         for (let i = 0; i < 7; i++) { const a = addDays(w, i), d = addDays(n, i); p.plans[d] = { w: dayPlan(p, a).slice(), ...(datePlan(p, a) && datePlan(p, a).c ? { c: datePlan(p, a).c } : {}) }; }
-        save(); render(); toast(`Semana de ${fmtDate(n)} planejada.`);
+        releasePlanned(p); save(); render(); toast(`Semana de ${fmtDate(n)} planejada.`);
       });
       return;
     }
@@ -3787,7 +3795,7 @@ $main.addEventListener('click', e => {
         p.plans = p.plans || {};
         if (o && !o.skip) o.w = [...new Set([...(o.w || []), L])];
         else p.plans[t] = { w: [...new Set([...dayPlan(p, t).filter(x => !o || !o.skip), L])] };
-        save(); render();
+        releasePlanned(p); save(); render();
       }
       b.disabled = true; b.textContent = 'Salvando…';
       (CLOUD && cloud && cloud.ready ? syncNow().then(() => { if ((cloud.syncState || '').startsWith('Erro')) throw 0; }) : Promise.resolve(save()))
@@ -4339,6 +4347,13 @@ async function fixOnce() {
     db.exercises.forEach(e => { const g = groupOf(e); if (g !== e.group && UPPER.includes(e.group)) { e.group = g; n++; } });
     mark('grupo-pelo-nome');
     if (n) msgs.push(`${n} exercício${n === 1 ? '' : 's'} de bíceps/tríceps estava${n === 1 ? '' : 'm'} em outro grupo e foi${n === 1 ? '' : 'ram'} corrigido${n === 1 ? '' : 's'}.`);
+  }
+  // 1b2) Treinos que estão no planejamento mas ficaram escondidos: o planejamento já libera para o aluno
+  if (!done.has('liberar-planejados')) {
+    const back = [];
+    db.profiles.forEach(p => { if (!p.test) releasePlanned(p).forEach(n => back.push(esc(`${firstName(p)}: ${n}`))); });
+    mark('liberar-planejados');
+    if (back.length) { save(); msgs.push(`Treinos que estavam no planejamento mas escondidos foram liberados para os alunos: ${back.join(', ')}.`); }
   }
   // 1c) Treinos que o aluno já fazia (têm treinos anotados) e foram escondidos sem querer: voltam para o app
   if (!done.has('liberar-usados')) {
@@ -5089,7 +5104,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-11:58';
+const APP_VERSION = '06/10-12:24';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
