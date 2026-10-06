@@ -2461,9 +2461,8 @@ $stForm.addEventListener('submit', e => {
   save(); render();
 });
 document.getElementById('stCancel').onclick = () => $st.close();
-document.getElementById('stDelete').onclick = async () => {
-  const p = stEditing; if (!p) return;
-  $st.close();
+document.getElementById('stDelete').onclick = () => { const p = stEditing; if (!p) return; $st.close(); deleteStudent(p); };
+async function deleteStudent(p) {
   if (CLOUD && cloud && cloud.ready) {
     if (!await confirmAsk(`Excluir ${p.name}?`, 'O aluno vai para a lixeira (aba Alunos, no fim da página) e perde o acesso ao app. Dá para trazer de volta com tudo.', 'Excluir')) return;
     try { await cloud.fs.doc('profiles/' + p.id).update({ deleted: true, deletedAt: new Date().toISOString() }); }
@@ -2641,6 +2640,13 @@ function signupLinkHtml() {
       <small>Para qualquer pessoa: ela abre o link, coloca o app na tela do celular e cria a conta. O pedido chega aqui para você aceitar.</small></div></div>
     <p class="note" style="word-break:break-all;margin-top:0">${esc(signupLink())}</p>
     <button class="btn primary" style="width:100%;padding:13px" data-act="send-signup">Enviar link de primeiro acesso</button></section>`;
+}
+// Professor: conta do aluno (tirar o acesso ao app ou excluir)
+function studentAccountHtml(p) {
+  if (p.test) return '';
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>Conta de ${esc(firstName(p))}</h3>
+      <small>${CLOUD && p.uid ? 'Tirar acesso: a pessoa não entra mais no app, mas os treinos e o histórico ficam aqui com você (dá para mandar um link novo depois).' : ''} Excluir: o aluno sai da lista e vai para a lixeira, no fim da área de alunos. De lá dá para trazer de volta ou apagar de vez.</small></div></div>
+    <div class="actions">${CLOUD && p.uid ? `<button class="btn" data-act="acc-unlink">Tirar acesso ao app</button>` : ''}<button class="btn danger" data-act="acc-delete">Excluir aluno</button></div></section>`;
 }
 function inviteHtml(p) {
   if (!CLOUD) return '';
@@ -3301,6 +3307,7 @@ function perfilHtml(p, desk) {
       ${recent || '<p class="empty">Ainda não treinou.</p>'}
     </section>
     ${inviteHtml(p)}
+    ${studentAccountHtml(p)}
     ${noHist ? '' : histImportHtml(p)}</div>
     <div data-tab="medidas">${bodySummaryHtml(p)}</div>
     <div data-tab="marcacoes">${marcacoesHtml(p)}</div>
@@ -3523,6 +3530,13 @@ $main.addEventListener('click', e => {
     case 'new': return openDialog(null);
     case 'export': return exportData();
     case 'test-profile': return openTestProfile();
+    case 'acc-delete': return deleteStudent(profile(ui.profile));
+    case 'acc-unlink': {
+      const p = profile(ui.profile);
+      return confirmAsk(`Tirar o acesso de ${firstName(p)}?`, `${firstName(p)} não vai conseguir mais entrar no app. Os treinos e o histórico continuam aqui com você. Para liberar de novo, é só mandar o link do app (com convite novo).`, 'Tirar acesso')
+        .then(ok => { if (!ok) return; p.uid = null; p.inviteCode = newInviteCode(); delete p.seen; save(); render(); toast(`${esc(firstName(p))} não tem mais acesso ao app.`); });
+    }
+    case 'purge': return purgeStudent(b.dataset.pid);
     case 'send-signup': return shareMsg('Link de primeiro acesso', signupText());
     case 'send-applink': { const p = profile(b.dataset.pid); return shareMsg(`Link do app para ${firstName(p)}`, appLinkText(p), p); }
     case 'install-guide': return installGuide(true);
@@ -4243,7 +4257,7 @@ async function noProfile(user) {
   // Quando o professor aceitar, o app abre sozinho
   if (cloud.waitProfile) cloud.waitProfile();
   cloud.waitProfile = cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).onSnapshot(snap => {
-    if (snap.empty || snap.docs[0].data().deleted) return;
+    if (snap.metadata.fromCache || snap.empty || snap.docs[0].data().deleted) return; // só vale o que veio do servidor (a cópia do aparelho pode ser de antes de tirar o acesso)
     cloud.waitProfile(); cloud.waitProfile = null;
     startStudent(snap.docs[0].id);
   }, () => {});
@@ -4407,17 +4421,31 @@ async function fixOnce() {
 }
 
 // ---------- Lixeira ----------
+// Apagar de vez: some a ficha, os treinos, as medidas e o acesso (a cópia diária guarda por 30 dias, só por segurança)
+async function purgeStudent(pid) {
+  const x = (cloud.trash || []).find(t => t.id === pid); if (!x) return;
+  if (!await confirmAsk(`Apagar ${x.name || 'este aluno'} de vez?`, 'Some tudo: ficha, treinos, histórico, medidas e o acesso ao app. Não dá para trazer de volta pelo app.', 'Apagar de vez')) return;
+  try {
+    const fs = cloud.fs, ms = await fs.collection(`profiles/${pid}/months`).get(), batch = fs.batch();
+    ms.forEach(m => batch.set(m.ref, {}));
+    batch.set(fs.doc('profiles/' + pid), { name: 'Aluno apagado', deleted: true, purged: true, deletedAt: x.deletedAt || new Date().toISOString(), uid: null, inviteCode: null, exercises: [] });
+    await batch.commit();
+    for (const m of ms.docs) { remote.delete(m.ref.path); lastSynced.delete(m.ref.path); }
+    { const r = readRescue(); delete r[pid]; writeRescue(r); }
+    toast(`${esc(x.name || 'Aluno')} foi apagado.`);
+  } catch (err) { cloudError(err); }
+}
 async function untrash(pid) {
   const del = firebase.firestore.FieldValue.delete();
   await cloud.fs.doc('profiles/' + pid).update({ deleted: del, deletedAt: del });
 }
 function trashHtml() {
-  const t = (CLOUD && cloud && cloud.trash) || [];
+  const t = ((CLOUD && cloud && cloud.trash) || []).filter(x => !x.purged);
   if (!t.length) return '';
   return `<section class="card" style="margin-top:14px"><details class="tbl"><summary>🗑 Lixeira (${t.length})</summary>
     <p class="hint" style="margin:8px 0">Alunos excluídos. Nada foi apagado: ao trazer de volta, voltam com treinos, histórico e acesso ao app.</p>
     ${t.map(x => `<div class="list-row"><div class="grow"><b>${esc(x.name || 'Aluno')}</b>${x.deletedAt ? `<small style="display:block;color:var(--muted)">excluído em ${fmtDate(x.deletedAt.slice(0, 10))}</small>` : ''}</div>
-      <button class="btn" data-act="untrash" data-pid="${x.id}">Trazer de volta</button></div>`).join('')}</details></section>`;
+      <button class="btn" data-act="untrash" data-pid="${x.id}">Trazer de volta</button><button class="btn danger" data-act="purge" data-pid="${x.id}">Apagar de vez</button></div>`).join('')}</details></section>`;
 }
 // ---------- Cópia automática diária na nuvem (30 dias) ----------
 const BK_DAYS = 30;
@@ -4542,16 +4570,27 @@ function startAdmin() {
     if (cloud.ready && ui.view === 'alunos' && !isTyping()) render();
   }, err => console.warn('pedidos (atualize as regras do Firebase):', err.code)));
 }
+// O professor tirou o acesso deste aluno: para de ouvir a nuvem e mostra a tela de pedir acesso
+function lostAccess() {
+  if (cloud.lost) return;
+  cloud.lost = true; cloud.unsubs.forEach(u => { try { u(); } catch (e) {} }); cloud.unsubs = [];
+  if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
+  cloud.pending && cloud.pending.clear(); try { localStorage.removeItem('planilha-pendente'); } catch (e) {}
+  noProfile(cloud.user);
+}
 function startStudent(pid) {
   // o aluno sempre abre direto no treino de hoje
   ui.view = 'treino'; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
-  cloud.pid = pid; cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false;
+  cloud.pid = pid; cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false; cloud.lost = false;
   cloud.unsubs.push(cloud.fs.doc('profiles/' + pid).onSnapshot(doc => {
-    if (!doc.exists || doc.data().deleted) return showAuth('noprofile');
+    if (cloud.lost) return;
+    // ficha sumiu para este login ou mudou de dono: o professor tirou o acesso
+    if (!doc.exists || doc.data().uid !== cloud.user.uid) return lostAccess();
+    if (doc.data().deleted) return showAuth('noprofile');
     remote.set('profiles/' + pid, doc.data());
     cloud.gotProfiles = true; onRemote();
     if (cloud.ready && document.body.classList.contains('locked')) enterApp(); // voltou da lixeira: abre sozinho
-  }, err => cloudError(err)));
+  }, err => err.code === 'permission-denied' ? lostAccess() : cloudError(err)));
   subscribeMonths(pid);
 }
 // Dados que valem para começar: vieram do servidor, ou o aparelho está sem internet / o servidor demorou
@@ -4632,7 +4671,7 @@ function assemble(src = remote) {
     else if (m[3] === 'own') owns[m[1]] = v; // treinos que o próprio aluno montou
     else if (m.length === 2) {
       const { exercises = [], claim, ...meta } = v;
-      if (meta.deleted) { trash.push({ id: m[1], name: meta.name, uid: meta.uid || null, deletedAt: meta.deletedAt || '' }); continue; } // lixeira
+      if (meta.deleted) { trash.push({ id: m[1], name: meta.name, uid: meta.uid || null, deletedAt: meta.deletedAt || '', purged: !!meta.purged }); continue; } // lixeira
       d.profiles.push({ ...meta, id: m[1] });
       exercises.forEach((e, i) => d.exercises.push(e.id ? { ...e, profileId: m[1] } : { ...e, id: fixedId(`${m[1]}|ex|${plainName(e.name)}|${i}`), profileId: m[1], loose: true }));
     } else {
@@ -4977,7 +5016,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-00:22';
+const APP_VERSION = '06/10-00:47';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
