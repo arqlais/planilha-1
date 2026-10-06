@@ -479,6 +479,10 @@ body.offline #offBar{display:block}
 .ci-row button{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 6px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .ci-row button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .ci-photo{display:flex;gap:6px;margin:0 0 10px}
+.ci-bgs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin:0 0 6px;scrollbar-width:thin}
+.ci-bgs button{flex:0 0 auto;border:3px solid transparent;border-radius:10px;padding:0;background:none;cursor:pointer;line-height:0}
+.ci-bgs button.on{border-color:var(--acc)}
+.ci-bgs canvas{width:46px;height:82px;border-radius:7px;display:block}
 .ci-photo label,.ci-photo button{flex:1;text-align:center;font-size:13px;padding:9px 4px;white-space:nowrap}
 .months{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;scrollbar-width:none}
 .months button{flex:none;border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:999px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
@@ -695,12 +699,11 @@ input,select,textarea{font-size:16px!important}
 <dialog id="ciDlg">
   <h2 style="margin:0">Check-in do treino</h2>
   <div class="ci-prev"><canvas id="ciCanvas" width="1080" height="1920"></canvas></div>
-  <div class="ci-row" id="ciTpl"></div>
+  <div class="ci-bgs" id="ciBgs"></div>
   <div class="ci-row" id="ciFmt"></div>
   <div class="ci-photo">
-    <label class="btn">📷 Tirar<input type="file" accept="image/*" capture="user" id="ciCam" hidden></label>
-    <label class="btn">🖼 Galeria<input type="file" accept="image/*" id="ciPick" hidden></label>
-    <button type="button" class="btn" id="ciNoPhoto">Sem foto</button>
+    <label class="btn">📷 Tirar foto<input type="file" accept="image/*" capture="user" id="ciCam" hidden></label>
+    <label class="btn">🖼 Foto da galeria<input type="file" accept="image/*" id="ciPick" hidden></label>
   </div>
   <button type="button" class="btn primary" id="ciShare" style="width:100%;padding:13px;font-size:15px">Compartilhar no Instagram</button>
   <div class="dlg-actions"><button type="button" class="btn" id="ciSave">Baixar imagem</button><span class="grow"></span><button type="button" class="btn" id="ciClose">Fechar</button></div>
@@ -1868,13 +1871,33 @@ function dayStats(pid, d) {
 }
 const durTxt = m => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') + 'min' : ''}` : `${m} min`;
 const siteTxt = () => (location.host + location.pathname).replace(/\/(index\.html)?$/, '');
-const ci = { tpl: 'strava', fmt: 'story', img: null, d: null };
+const ci = { bg: 'app', fmt: 'story', img: null, d: null };
+// Fundos prontos para escolher (desenhados pelo próprio app)
+const CI_BGS = ['app', 'sunset', 'night', 'neon', 'ocean', 'fire', 'pattern', 'graphite', 'rose', 'lime'];
+function ciBackground(g, W, H, kind, acc) {
+  const lin = (stops, x1 = 0, y1 = 0, x2 = W, y2 = H) => { const gr = g.createLinearGradient(x1, y1, x2, y2); stops.forEach(([o, c]) => gr.addColorStop(o, c)); g.fillStyle = gr; g.fillRect(0, 0, W, H); };
+  const glow = (x, y, r, c, a) => { const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, c); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = a; g.fillStyle = rg; g.fillRect(0, 0, W, H); g.globalAlpha = 1; };
+  const bell = (cx, cy, k, a, rot) => { g.save(); g.translate(cx, cy); g.rotate(rot || 0); g.globalAlpha = a; g.strokeStyle = '#fff'; g.lineCap = 'round'; g.lineWidth = 40 * k; g.beginPath(); g.moveTo(-250 * k, 0); g.lineTo(250 * k, 0); g.stroke(); g.lineWidth = 64 * k;
+    [[-190, 150], [-115, 110], [115, 110], [190, 150]].forEach(([dx, hh]) => { g.beginPath(); g.moveTo(dx * k, -hh * k); g.lineTo(dx * k, hh * k); g.stroke(); }); g.restore(); };
+  if (kind === 'sunset') { lin([[0, '#2b1055'], [.55, '#d6456b'], [1, '#ffb347']], 0, 0, 0, H); glow(W * .5, H * .78, H * .35, '#ffd27a', .7); }
+  else if (kind === 'night') { lin([[0, '#050816'], [1, '#1b2a5a']], 0, 0, 0, H); for (let i = 0; i < 140; i++) { const x = (i * 397) % W, y = (i * 733) % H, r = (i % 5) / 2 + .6; g.globalAlpha = .25 + (i % 7) / 10; g.fillStyle = '#fff'; g.beginPath(); g.arc(x, y, r * W / 1080 * 2, 0, 7); g.fill(); } g.globalAlpha = 1; glow(W * .8, H * .15, H * .3, '#6f8cff', .5); }
+  else if (kind === 'neon') { g.fillStyle = '#0a0612'; g.fillRect(0, 0, W, H); g.lineWidth = W / 90; [['#ff2bd6', .15], ['#7b5cff', .3], ['#00e5ff', .45]].forEach(([c, o], i) => { g.strokeStyle = c; g.shadowColor = c; g.shadowBlur = W / 30; g.beginPath(); g.moveTo(-W * .2, H * (o + .1)); g.lineTo(W * 1.2, H * (o - .25)); g.stroke(); }); g.shadowBlur = 0; glow(W * .2, H * .9, H * .4, '#ff2bd6', .35); }
+  else if (kind === 'ocean') { lin([[0, '#03203a'], [1, '#0a7ea4']], 0, 0, 0, H); g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = W / 140; for (let j = 0; j < 9; j++) { g.beginPath(); for (let x = 0; x <= W; x += W / 40) { const y = H * (.45 + j * .06) + Math.sin(x / W * 6 + j) * H * .015; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } }
+  else if (kind === 'fire') { lin([[0, '#1a0500'], [.6, '#b32400'], [1, '#ff8a00']], 0, 0, W * .3, H); glow(W * .7, H * .85, H * .45, '#ffcc33', .55); }
+  else if (kind === 'pattern') { lin([[0, '#101614'], [1, acc]]); for (let r = 0; r < 7; r++) for (let c = 0; c < 4; c++) bell(W * (.12 + c * .27 + (r % 2) * .13), H * (.07 + r * .15), W / 1080 * .32, .07, -.5); }
+  else if (kind === 'graphite') { lin([[0, '#2a2f35'], [1, '#0e1012']]); g.strokeStyle = 'rgba(255,255,255,.05)'; g.lineWidth = W / 40; for (let x = -H; x < W; x += W / 9) { g.beginPath(); g.moveTo(x, H); g.lineTo(x + H, 0); g.stroke(); } }
+  else if (kind === 'rose') { lin([[0, '#ffd1dc'], [1, '#b0457a']]); glow(W * .2, H * .2, H * .4, '#fff', .45); }
+  else if (kind === 'lime') { lin([[0, '#0f2b14'], [1, '#7ed957']], 0, 0, W, H * .8); glow(W * .85, H * .1, H * .35, '#e6ff8a', .45); }
+  else { g.fillStyle = '#0b100e'; g.fillRect(0, 0, W, H); glow(W * .85, H * .15, H * .75, acc, .85); glow(0, H, H * .6, acc, .45); bell(W * .62, H * .32, W / 1080 * 1.25, .08, -.35); }
+}
 function openCheckin(d) {
   ci.d = d || ui.date; ci.st = dayStats(ui.profile, ci.d);
   if (!ci.st.ex && !ci.st.cardio) return toast('Marque o treino do dia para fazer o check-in.');
-  const tpl = document.getElementById('ciTpl'), fmt = document.getElementById('ciFmt');
+  const bgs = document.getElementById('ciBgs'), fmt = document.getElementById('ciFmt');
   const paint = () => {
-    tpl.innerHTML = [['strava', 'Clean'], ['checkin', 'Check-in'], ['bold', 'Destaque']].map(([k, l]) => `<button type="button" class="${ci.tpl === k ? 'on' : ''}" data-ci-tpl="${k}">${l}</button>`).join('');
+    const acc0 = (getComputedStyle(document.documentElement).getPropertyValue('--acc-2') || '#3e6b52').trim() || '#3e6b52';
+    bgs.innerHTML = CI_BGS.map(k => `<button type="button" class="${!ci.img && ci.bg === k ? 'on' : ''}" data-ci-bg="${k}" aria-label="Fundo"><canvas width="92" height="164"></canvas></button>`).join('');
+    bgs.querySelectorAll('canvas').forEach((c, i) => ciBackground(c.getContext('2d'), 92, 164, CI_BGS[i], acc0));
     fmt.innerHTML = [['story', 'Story (9:16)'], ['feed', 'Feed (4:5)']].map(([k, l]) => `<button type="button" class="${ci.fmt === k ? 'on' : ''}" data-ci-fmt="${k}">${l}</button>`).join('');
     drawCheckin();
   };
@@ -1888,38 +1911,20 @@ function drawCheckin() {
   const g = cv.getContext('2d'), st = ci.st, cs = getComputedStyle(document.documentElement);
   const acc = (cs.getPropertyValue('--acc-2') || '#3e6b52').trim() || '#3e6b52';
   const F = (w, px) => `${w} ${px}px -apple-system, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
-  const shade = (y0, y1, a0, a1) => { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, `rgba(0,0,0,${a0})`); gr.addColorStop(1, `rgba(0,0,0,${a1})`); g.fillStyle = gr; g.fillRect(0, y0, W, y1 - y0); };
-  const dumbbell = (cx, cy, k, a) => { g.save(); g.globalAlpha = a; g.strokeStyle = '#fff'; g.lineCap = 'round'; g.lineWidth = 40 * k; g.beginPath(); g.moveTo(cx - 250 * k, cy); g.lineTo(cx + 250 * k, cy); g.stroke(); g.lineWidth = 64 * k;
-    [[-190, 150], [-115, 110], [115, 110], [190, 150]].forEach(([dx, hh]) => { g.beginPath(); g.moveTo(cx + dx * k, cy - hh * k); g.lineTo(cx + dx * k, cy + hh * k); g.stroke(); }); g.restore(); };
-  // fundo: foto (cobrindo tudo) ou degradê com brilho na cor do app
+  // fundo: foto (cobrindo tudo) ou um dos fundos prontos
   if (ci.img) { const im = ci.img, k = Math.max(W / im.width, H / im.height), w = im.width * k, h = im.height * k; g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
-  else {
-    g.fillStyle = '#0b100e'; g.fillRect(0, 0, W, H);
-    const rg = g.createRadialGradient(W * .85, H * .15, 40, W * .85, H * .15, H * .75); rg.addColorStop(0, acc); rg.addColorStop(1, 'rgba(0,0,0,0)');
-    g.globalAlpha = .85; g.fillStyle = rg; g.fillRect(0, 0, W, H);
-    const rg2 = g.createRadialGradient(0, H, 20, 0, H, H * .6); rg2.addColorStop(0, acc); rg2.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = .45; g.fillStyle = rg2; g.fillRect(0, 0, W, H); g.globalAlpha = 1;
-    g.save(); g.translate(W * .62, H * (ci.tpl === 'bold' ? .78 : .32)); g.rotate(-.35); dumbbell(0, 0, 1.25, .08); g.restore();
-  }
+  else ciBackground(g, W, H, ci.bg, acc);
   const dt = toDate(ci.d), dateTxt = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).replace(/^./, c => c.toUpperCase());
   const cardio = st.cardio ? `${fmtMin(st.cardio)} min de cardio` : '';
   const brand = (y, center, color = '#fff') => { // divulgação do app
     const x = center ? W / 2 : 80; g.fillStyle = color; g.textAlign = center ? 'center' : 'left';
-    g.font = F(900, 32); g.fillText('PLANILHA DE TREINO', x, y); g.globalAlpha = .7; g.font = F(500, 27); g.fillText(siteTxt(), x, y + 40); g.globalAlpha = 1; g.textAlign = 'left'; };
+    g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 12; g.font = F(900, 32); g.fillText('PLANILHA DE TREINO', x, y); g.globalAlpha = .8; g.font = F(500, 27); g.fillText(siteTxt(), x, y + 40); g.globalAlpha = 1; g.shadowBlur = 0; g.textAlign = 'left'; };
   const check = (cx, cy, r, bg, fg) => { g.fillStyle = bg; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill(); g.strokeStyle = fg; g.lineWidth = r * .2; g.lineCap = 'round'; g.lineJoin = 'round';
     g.beginPath(); g.moveTo(cx - r * .42, cy + r * .02); g.lineTo(cx - r * .1, cy + r * .34); g.lineTo(cx + r * .46, cy - r * .3); g.stroke(); };
   const pill = (txt, x, y, px, bg, fg, center) => { g.font = F(800, px); const tw = g.measureText(txt).width, w = tw + px * 1.4, h = px * 1.9, x0 = center ? x - w / 2 : x;
     g.fillStyle = bg; rr(g, x0, y, w, h, h / 2); g.fill(); g.fillStyle = fg; g.textAlign = 'left'; g.fillText(txt, x0 + px * .7, y + h * .68); };
   g.textBaseline = 'alphabetic';
-  if (ci.tpl === 'strava') { // Clean: foto livre, assinatura embaixo
-    shade(H * .5, H, 0, .85); if (ci.img) shade(0, 220, .3, 0);
-    const y = H - (story ? 300 : 220);
-    check(80 + 46, y - 330, 46, acc, '#fff');
-    g.fillStyle = '#fff'; g.font = F(700, 34); g.globalAlpha = .85; g.fillText(dateTxt, 80 + 46 * 2 + 24, y - 318); g.globalAlpha = 1;
-    g.font = F(900, 150); g.fillText('TREINO', 74, y - 140); g.fillText('FEITO.', 74, y + 4);
-    g.fillStyle = acc; g.fillRect(80, y + 44, 140, 10);
-    if (cardio) { g.fillStyle = '#fff'; g.font = F(700, 36); g.globalAlpha = .9; g.fillText('+ ' + cardio, 250, y + 60); g.globalAlpha = 1; }
-    brand(H - (story ? 140 : 90));
-  } else if (ci.tpl === 'checkin') { // Check-in: cartão branco no centro
+  {
     if (ci.img) { g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, 0, W, H); }
     const cw = 820, ch = cardio ? 440 : 340, cx = (W - cw) / 2, cy = story ? (H - ch) / 2 + 160 : (H - ch) / 2 + 60;
     g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 60; g.shadowOffsetY = 20; g.fillStyle = '#fff'; rr(g, cx, cy, cw, ch, 56); g.fill(); g.shadowBlur = 0; g.shadowOffsetY = 0;
@@ -1929,15 +1934,6 @@ function drawCheckin() {
     if (cardio) pill(cardio, W / 2, cy + 320, 34, acc, '#fff', true);
     g.textAlign = 'left';
     brand(story ? H - 130 : H - 70, true);
-  } else { // Destaque: tipografia grande
-    shade(0, H * .6, .65, 0); shade(H * .7, H, 0, .55);
-    g.fillStyle = '#fff'; g.font = F(700, 34); g.globalAlpha = .85; g.fillText(dateTxt.toUpperCase(), 80, story ? 170 : 130); g.globalAlpha = 1;
-    const top = story ? 420 : 400, px = 250;
-    g.font = F(900, px); g.lineWidth = 6; g.strokeStyle = '#fff'; g.strokeText('TREINO', 66, top); // contorno
-    g.fillStyle = '#fff'; g.fillText('FEITO', 66, top + px * .92);
-    const pw = g.measureText('FEITO').width; g.fillStyle = acc; g.beginPath(); g.arc(66 + pw + 52, top + px * .92 - 26, 30, 0, Math.PI * 2); g.fill();
-    if (cardio) pill('+ ' + cardio.toUpperCase(), 80, top + px * .92 + 60, 36, acc, '#fff');
-    brand(H - (story ? 140 : 90));
   }
 }
 function checkinFile() {
@@ -1946,17 +1942,16 @@ function checkinFile() {
 function loadCiPhoto(file) {
   if (!file) return;
   const url = URL.createObjectURL(file), im = new Image();
-  im.onload = () => { ci.img = im; drawCheckin(); };
+  im.onload = () => { ci.img = im; ci.paint(); };
   im.onerror = () => toast('Não foi possível abrir essa foto.');
   im.src = url;
 }
 document.getElementById('ciDlg').addEventListener('click', e => {
-  const t = e.target.closest('[data-ci-tpl]'), f = e.target.closest('[data-ci-fmt]');
-  if (t) { ci.tpl = t.dataset.ciTpl; ci.paint(); } else if (f) { ci.fmt = f.dataset.ciFmt; ci.paint(); }
+  const t = e.target.closest('[data-ci-bg]'), f = e.target.closest('[data-ci-fmt]');
+  if (t) { ci.bg = t.dataset.ciBg; ci.img = null; ci.paint(); } else if (f) { ci.fmt = f.dataset.ciFmt; ci.paint(); }
 });
 document.getElementById('ciCam').onchange = e => { loadCiPhoto(e.target.files[0]); e.target.value = ''; };
 document.getElementById('ciPick').onchange = e => { loadCiPhoto(e.target.files[0]); e.target.value = ''; };
-document.getElementById('ciNoPhoto').onclick = () => { ci.img = null; drawCheckin(); };
 document.getElementById('ciClose').onclick = () => document.getElementById('ciDlg').close();
 document.getElementById('ciSave').onclick = async () => {
   const f = await checkinFile(), a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
@@ -5250,7 +5245,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-20:36';
+const APP_VERSION = '06/10-20:48';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
