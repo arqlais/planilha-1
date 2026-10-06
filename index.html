@@ -4594,7 +4594,8 @@ function startStudent(pid) {
   cloud.unsubs.push(cloud.fs.doc('profiles/' + pid).onSnapshot(doc => {
     if (cloud.lost) return;
     // ficha sumiu para este login ou mudou de dono: o professor tirou o acesso
-    if (!doc.exists || doc.data().uid !== cloud.user.uid) return lostAccess();
+    if (!doc.exists && doc.metadata.fromCache) return; // ainda sem a resposta do servidor: espera
+    if (!doc.exists || doc.data().uid !== cloud.user.uid) { if (doc.metadata.fromCache) return; return lostAccess(); }
     if (doc.data().deleted) return showAuth('noprofile');
     remote.set('profiles/' + pid, doc.data());
     cloud.gotProfiles = true; onRemote();
@@ -5088,7 +5089,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-09:47';
+const APP_VERSION = '06/10-11:58';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
