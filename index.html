@@ -1915,19 +1915,18 @@ function drawCheckin() {
     const y = H - (story ? 300 : 220);
     check(80 + 46, y - 330, 46, acc, '#fff');
     g.fillStyle = '#fff'; g.font = F(700, 34); g.globalAlpha = .85; g.fillText(dateTxt, 80 + 46 * 2 + 24, y - 318); g.globalAlpha = 1;
-    g.font = F(900, 150); g.fillText('TREINO', 74, y - 140); g.fillText('PAGO.', 74, y + 4);
+    g.font = F(900, 150); g.fillText('TREINO', 74, y - 140); g.fillText('FEITO.', 74, y + 4);
     g.fillStyle = acc; g.fillRect(80, y + 44, 140, 10);
     if (cardio) { g.fillStyle = '#fff'; g.font = F(700, 36); g.globalAlpha = .9; g.fillText('+ ' + cardio, 250, y + 60); g.globalAlpha = 1; }
     brand(H - (story ? 140 : 90));
   } else if (ci.tpl === 'checkin') { // Check-in: cartão branco no centro
     if (ci.img) { g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, 0, W, H); }
-    const cw = 820, ch = cardio ? 560 : 480, cx = (W - cw) / 2, cy = story ? (H - ch) / 2 + 160 : (H - ch) / 2 + 60;
+    const cw = 820, ch = cardio ? 440 : 340, cx = (W - cw) / 2, cy = story ? (H - ch) / 2 + 160 : (H - ch) / 2 + 60;
     g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 60; g.shadowOffsetY = 20; g.fillStyle = '#fff'; rr(g, cx, cy, cw, ch, 56); g.fill(); g.shadowBlur = 0; g.shadowOffsetY = 0;
     check(W / 2, cy, 92, acc, '#fff'); g.strokeStyle = '#fff'; g.lineWidth = 12; g.beginPath(); g.arc(W / 2, cy, 98, 0, Math.PI * 2); g.stroke();
     g.textAlign = 'center'; g.fillStyle = '#121a16'; g.font = F(900, 84); g.fillText('Check-in feito', W / 2, cy + 210);
     g.fillStyle = '#6b7872'; g.font = F(600, 36); g.fillText(dateTxt, W / 2, cy + 275);
-    g.fillStyle = '#121a16'; g.font = F(800, 44); g.fillText('Treino pago ✓', W / 2, cy + 370);
-    if (cardio) pill(cardio, W / 2, cy + 410, 34, acc, '#fff', true);
+    if (cardio) pill(cardio, W / 2, cy + 320, 34, acc, '#fff', true);
     g.textAlign = 'left';
     brand(story ? H - 130 : H - 70, true);
   } else { // Destaque: tipografia grande
@@ -1935,8 +1934,8 @@ function drawCheckin() {
     g.fillStyle = '#fff'; g.font = F(700, 34); g.globalAlpha = .85; g.fillText(dateTxt.toUpperCase(), 80, story ? 170 : 130); g.globalAlpha = 1;
     const top = story ? 420 : 400, px = 250;
     g.font = F(900, px); g.lineWidth = 6; g.strokeStyle = '#fff'; g.strokeText('TREINO', 66, top); // contorno
-    g.fillStyle = '#fff'; g.fillText('PAGO', 66, top + px * .92);
-    const pw = g.measureText('PAGO').width; g.fillStyle = acc; g.beginPath(); g.arc(66 + pw + 52, top + px * .92 - 26, 30, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#fff'; g.fillText('FEITO', 66, top + px * .92);
+    const pw = g.measureText('FEITO').width; g.fillStyle = acc; g.beginPath(); g.arc(66 + pw + 52, top + px * .92 - 26, 30, 0, Math.PI * 2); g.fill();
     if (cardio) pill('+ ' + cardio.toUpperCase(), 80, top + px * .92 + 60, 36, acc, '#fff');
     brand(H - (story ? 140 : 90));
   }
