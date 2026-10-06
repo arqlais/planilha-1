@@ -1342,9 +1342,10 @@ function renderStudentTreino(p, greet, isToday) {
 // Abas no topo: "Treino do professor" (montado pelo professor) | "Meu treino" (o aluno escolhe)
 // Consultoria: aluno com treino montado pelo professor (os alunos de antes são todos da consultoria)
 const isConsult = p => !!p && p.consult !== false;
-const selfTabs = () => isConsult(profile(ui.profile)) ? [['prof', 'Treino do professor'], ['own', 'Meu treino']] : [['own', 'Meu treino'], ['consult', 'Consultoria']];
+// Aluno da consultoria: só o treino do professor (sem abas). Quem usa só o app: Meu treino | Consultoria
+const selfTabs = () => isConsult(profile(ui.profile)) ? [['prof', 'Treino do professor']] : [['own', 'Meu treino'], ['consult', 'Consultoria']];
 const selfTab = () => { let t = null; try { t = localStorage.getItem('planilha-aba-treino'); } catch (e) {} const ok = selfTabs().map(x => x[0]); return ok.includes(t) ? t : ok[0]; };
-const selfTabsHtml = () => `<div class="self-tabs">${selfTabs().map(([id, l]) => `<button class="${selfTab() === id ? 'on' : ''}" data-act="self-tab" data-t="${id}">${l}</button>`).join('')}</div>`;
+const selfTabsHtml = () => selfTabs().length < 2 ? '' : `<div class="self-tabs">${selfTabs().map(([id, l]) => `<button class="${selfTab() === id ? 'on' : ''}" data-act="self-tab" data-t="${id}">${l}</button>`).join('')}</div>`;
 // Quem usa só o app: área que apresenta a consultoria (com botão para falar com o professor)
 function renderConsultTab(p, greet) {
   const cn = p.coachName || (!CLOUD || (cloud && cloud.role === 'admin') ? (profile(ME) || {}).name : ''), coach = cn ? firstName({ name: cn }) : 'seu professor', asked = p.consultReq;
@@ -4971,7 +4972,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-23:14';
+const APP_VERSION = '06/10-00:20';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
