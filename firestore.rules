@@ -24,6 +24,16 @@ service cloud.firestore {
         && request.resource.data.uid == uid;
     }
 
+    // Visitantes: o app registra que alguém abriu (mesmo sem login). Só o professor lê.
+    match /visits/{vid} {
+      allow read, delete: if isAdmin();
+      allow create, update: if vid.size() <= 40
+        && request.resource.data.keys().hasOnly(['first', 'last', 'days', 'n', 'dev', 'src', 'uid', 'email', 'admin'])
+        && (!('days' in request.resource.data) || request.resource.data.days.size() <= 400)
+        && (!('email' in request.resource.data) || request.resource.data.email.size() <= 80)
+        && (!('src' in request.resource.data) || request.resource.data.src.size() <= 40);
+    }
+
     // Cópias automáticas diárias (só o professor)
     match /backups/{id} {
       allow read, write: if isAdmin();

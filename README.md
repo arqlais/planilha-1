@@ -67,6 +67,7 @@ Com a tela larga (computador), o app do professor vira uma plataforma com **menu
 
 - **Link de primeiro acesso** (área do professor): um link para qualquer pessoa (termina em `?cadastro`). Ao abrir pelo celular, o app já mostra como colocar o ícone na tela de início e abre em "Criar conta"; o pedido chega para o professor aceitar.
 - **Conta do aluno** (perfil do aluno, cartão **Conta de …**): **Tirar acesso ao app** (a pessoa não entra mais; treinos e histórico ficam com você, e dá para liberar de novo pelo link ou aceitando o pedido) ou **Excluir aluno** (vai para a lixeira). Na **Lixeira**: **Trazer de volta** ou **Apagar de vez** (some ficha, treinos, medidas e acesso; a cópia diária guarda por 30 dias).
+- **Acessos** (botão **Ver todos os acessos** no cartão Quem usa o app): por período (hoje, 7 ou 30 dias) mostra quem **treinou** (dias, séries, último treino), quem **só entrou**, quem **não entrou**, quem **não tem conta**, quem **pediu acesso** e os **visitantes sem conta** (aparelho, quantas vezes, por qual link veio). Os visitantes precisam das regras novas do Firebase (coleção `visits` em firestore.rules).
 - **Quem usa o app** (área do professor): quantas pessoas têm conta, quantas entraram hoje e nos últimos 7 dias (e quem), consultoria × só o app e pedidos esperando. Conta a partir de quando a pessoa abre o app com o login dela.
 
 ## Medidas do corpo

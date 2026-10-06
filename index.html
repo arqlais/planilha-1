@@ -963,7 +963,7 @@ let db = load();
 let ui = { view: 'treino', group: '', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas', 'config'].includes(u.view)) ui.view = u.view;
+  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas', 'config', 'acessos'].includes(u.view)) ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
   ui.group = u.group || '';
   if (u.layout) ui.layout = u.layout;
@@ -1127,10 +1127,10 @@ function renderHero() {
   // Professor: o botão abre a lista de alunos (ordem alfabética) para trocar de perfil
   if (ui.studentMode) $who.dataset.view = 'config'; else delete $who.dataset.view;
   if (ui.view === 'alunos' && !(isDesk() && ui.profile !== ME) || ui.view === 'pagamentos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
-  document.getElementById('stats').hidden = ['pagamentos', 'montar'].includes(ui.view);
+  document.getElementById('stats').hidden = ['pagamentos', 'montar', 'acessos'].includes(ui.view);
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
   if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações' };
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações', acessos: 'Acessos' };
   if (ui.studentMode) titles.historico = 'Calendário';
   if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
   document.getElementById('heroTitle').textContent = titles[ui.view];
@@ -1245,7 +1245,7 @@ function render() {
   if (desk && ui.view === 'perfil') ui.view = 'alunos'; // no computador o perfil abre dentro da área de alunos
   renderHero();
   renderNav();
-  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
+  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, acessos: renderAcessos, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
 }
 deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
 function go(view) {
@@ -3530,6 +3530,7 @@ $main.addEventListener('click', e => {
     case 'new': return openDialog(null);
     case 'export': return exportData();
     case 'test-profile': return openTestProfile();
+    case 'acc-p': ui.accP = +b.dataset.p; return render();
     case 'acc-delete': return deleteStudent(profile(ui.profile));
     case 'acc-unlink': {
       const p = profile(ui.profile);
@@ -4152,6 +4153,9 @@ const clearInvite = () => { try { localStorage.removeItem(INVITE_KEY); } catch (
 
 async function startSession(user) {
   cloud.user = user;
+  // este aparelho já apareceu como visitante: liga à conta (o professor não conta como visitante)
+  let seenHere = false; try { seenHere = !!localStorage.getItem(VISIT_KEY); } catch (e) {}
+  if (seenHere) logVisit(ADMIN_EMAIL && (user.email || '').toLowerCase() === ADMIN_EMAIL ? { admin: true } : { uid: user.uid, email: (user.email || '').slice(0, 80) });
   try { localStorage.removeItem(NEW_KEY); } catch (e) {}
   showAuth('loading');
   const isAdm = !!ADMIN_EMAIL && (user.email || '').toLowerCase() === ADMIN_EMAIL;
@@ -4569,6 +4573,11 @@ function startAdmin() {
     cloud.requests = snap.docs.map(d => d.data()).sort((a, b) => (a.at || '').localeCompare(b.at || ''));
     if (cloud.ready && ui.view === 'alunos' && !isTyping()) render();
   }, err => console.warn('pedidos (atualize as regras do Firebase):', err.code)));
+  cloud.visits = null;
+  cloud.unsubs.push(cloud.fs.collection('visits').onSnapshot(snap => {
+    cloud.visits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (cloud.ready && ui.view === 'acessos') render();
+  }, err => { cloud.visits = 'off'; console.warn('visitantes (atualize as regras do Firebase):', err.code); }));
 }
 // O professor tirou o acesso deste aluno: para de ouvir a nuvem e mostra a tela de pedir acesso
 function lostAccess() {
@@ -4687,7 +4696,7 @@ function assemble(src = remote) {
     const has = new Set(d.exercises.map(e => e.id));
     (o.exercises || []).forEach(e => { if (!has.has(e.id)) d.exercises.push({ ...e, profileId: p.id, own: true }); });
   });
-  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; });
+  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; delete p.seenAt; delete p.days; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; if (f && f.seenAt) p.seenAt = f.seenAt; if (f && f.days) p.days = f.days; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
@@ -4699,7 +4708,7 @@ function assemble(src = remote) {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, body, ctMode, consultReq, seen, ...meta } = p;
+    const { id, color, body, ctMode, consultReq, seen, seenAt, days, ...meta } = p;
     // o aluno não lê o perfil do professor: nome e WhatsApp do professor vão na ficha de cada aluno
     if (id !== ME) { const me = profile(ME) || {}; meta.coachName = me.name || null; meta.coachWa = me.wa || null; }
     if (meta.workouts) meta.workouts = meta.workouts.filter(w => !w.own); // os do aluno vão no documento "own"
@@ -4716,7 +4725,7 @@ function splitDb() {
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
-  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || p.seen || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}) });
+  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || p.seen || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}) });
   // Treinos que o aluno montou: documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id)) {
     const ws = (p.workouts || []).filter(w => w.own).map(({ own: _o, ...w }) => w), exs = db.exercises.filter(e => e.profileId === p.id && e.own).map(({ profileId, own: _o, ...e }) => e);
@@ -4904,8 +4913,27 @@ function enterApp(skipRender) {
 // Aluno abriu o app (pelo login dele): guarda o dia, para o professor ver quem está usando
 function markSeen() {
   if (!CLOUD || !cloud || cloud.role !== 'student' || !cloud.ready) return;
-  const p = profile(cloud.pid);
-  if (p && p.seen !== today()) { p.seen = today(); save(); }
+  const p = profile(cloud.pid); if (!p) return;
+  // guarda o dia e a hora (no máximo a cada 30 min) e a lista dos dias em que entrou (últimos 90)
+  if (p.seen === today() && p.seenAt && Date.now() - new Date(p.seenAt) < 30 * 6e4) return;
+  p.seen = today(); p.seenAt = new Date().toISOString();
+  p.days = [...new Set([...(p.days || []), today()])].sort().slice(-90);
+  save();
+}
+// Visitante (sem login): registra que abriu o app, para o professor ver quem só acessou
+const VISIT_KEY = 'planilha-visitante';
+function visitorId() {
+  let v = ''; try { v = localStorage.getItem(VISIT_KEY) || ''; } catch (e) {}
+  if (!/^[a-z0-9]{12,40}$/.test(v)) { v = (uid() + uid()).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20).padEnd(12, '0'); try { localStorage.setItem(VISIT_KEY, v); } catch (e) {} }
+  return v;
+}
+const devKind = () => /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'iPhone' : /android/i.test(navigator.userAgent) ? 'Android' : 'Computador';
+function logVisit(extra) {
+  if (!CLOUD || !cloud || !cloud.fs) return;
+  const F = firebase.firestore.FieldValue, now = new Date().toISOString();
+  let first = false; try { first = !localStorage.getItem(VISIT_KEY + '-1a'); localStorage.setItem(VISIT_KEY + '-1a', '1'); } catch (e) {}
+  const data = { last: now, dev: devKind(), ...(extra || { days: F.arrayUnion(today()), n: F.increment(1), src: logVisit.src || 'direto', ...(first ? { first: now } : {}) }) };
+  cloud.fs.doc('visits/' + visitorId()).set(data, { merge: true }).catch(() => {});
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') markSeen(); });
 // Professor: quantas pessoas têm conta e entraram no app
@@ -4917,7 +4945,50 @@ function appUsageHtml() {
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Quem usa o app</h3><small>Pessoas com conta e quantas entraram pelo celular delas</small></div></div>
     <div class="month-sum"><div><b>${acc.length}</b><span>com conta</span></div><div><b>${day}</b><span>${day === 1 ? 'entrou hoje' : 'entraram hoje'}</span></div><div><b>${week.length}</b><span>nos últimos 7 dias</span></div></div>
     <p class="hint" style="margin:10px 0 0">Consultoria: <b>${cons}</b> · Só o app: <b>${acc.length - cons}</b>${reqs ? ` · Pedidos esperando: <b>${reqs}</b>` : ''}</p>
-    ${week.length ? `<p class="hint" style="margin:6px 0 0">Entraram: ${week.map(p => `${esc(firstName(p))} (${p.seen === t ? 'hoje' : fmtDate(p.seen)})`).join(', ')}</p>` : ''}</section>`;
+    ${week.length ? `<p class="hint" style="margin:6px 0 0">Entraram: ${week.map(p => `${esc(firstName(p))} (${p.seen === t ? 'hoje' : fmtDate(p.seen)})`).join(', ')}</p>` : ''}
+    <button class="btn primary" style="margin-top:10px" data-act="go-view" data-v="acessos">Ver todos os acessos</button></section>`;
+}
+// ---------- Acessos (professor): quem entrou, quem treinou, quem só acessou, pedidos e visitantes ----------
+const whenTxt = iso => { if (!iso) return ''; const d = new Date(iso), day = isoDate(d), hm = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `${day === today() ? 'hoje' : day === addDays(today(), -1) ? 'ontem' : fmtDate(day)} ${hm}`; };
+function renderAcessos() {
+  const P = ui.accP || 7, t = today(), from = addDays(t, -(P - 1));
+  const inP = d => d && d >= from && d <= t;
+  const kind = p => !p.uid ? '<span class="pstat wait">sem conta</span>' : isConsult(p) ? '<span class="pstat ok">consultoria</span>' : '<span class="pstat wait">só o app</span>';
+  const studs = db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const info = studs.map(p => {
+    const ids = new Set(profExs(p.id).map(e => e.id));
+    const ss = db.sessions.filter(x => ids.has(x.exId) && inP(x.date) && x.sets.some(y => y.done));
+    const cc = db.cardio.filter(c => c.profileId === p.id && inP(c.date));
+    const tdays = [...new Set([...ss.map(x => x.date), ...cc.map(c => c.date)])].sort();
+    const byMe = tdays.length && !ss.some(x => x.by === 'aluno') && !cc.some(c => c.by === 'aluno');
+    const adays = (p.days || (p.seen ? [p.seen] : [])).filter(inP);
+    return { p, tdays, byMe, adays, sets: ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0) };
+  });
+  const trained = info.filter(x => x.tdays.length), onlyIn = info.filter(x => !x.tdays.length && x.adays.length);
+  const away = info.filter(x => x.p.uid && !x.tdays.length && !x.adays.length), noAcc = info.filter(x => !x.p.uid && !x.tdays.length);
+  const reqs = (cloud && cloud.requests) || [];
+  const vis = cloud && Array.isArray(cloud.visits) ? cloud.visits.filter(v => !v.uid && !v.admin && inP((v.last || '').slice(0, 10))).sort((a, b) => (b.last || '').localeCompare(a.last || '')) : [];
+  const row = (x, sub) => `<div class="list-row" role="button" tabindex="0" data-act="open-profile" data-pid="${x.p.id}" data-v="perfil" style="cursor:pointer">
+      <div class="grow"><b>${esc(x.p.name)}</b> ${kind(x.p)}<small style="display:block;color:var(--muted)">${sub}</small></div><span style="color:var(--muted)">›</span></div>`;
+  const lastIn = p => p.seenAt ? `entrou ${whenTxt(p.seenAt)}` : p.seen ? `entrou ${p.seen === t ? 'hoje' : fmtDate(p.seen)}` : 'nunca entrou pelo app';
+  const sec = (title, hint, list) => `<section class="card"><div class="card-h"><div class="grow"><h3>${title} (${list.length})</h3>${hint ? `<small>${hint}</small>` : ''}</div></div>${list.join('') || '<p class="empty" style="margin:0">Ninguém.</p>'}</section>`;
+  const pLabel = { 1: 'hoje', 7: 'nos últimos 7 dias', 30: 'nos últimos 30 dias' }[P];
+  $main.innerHTML = `<div class="actions" style="margin:0 0 4px"><button class="btn" data-act="go-view" data-v="alunos">← Voltar</button></div>
+    <div class="banner"><div class="grow"><h2>Acessos</h2><small>Quem entrou, quem treinou e quem só acessou ${pLabel}</small></div></div>
+    <div class="self-tabs">${[[1, 'Hoje'], [7, '7 dias'], [30, '30 dias']].map(([v, l]) => `<button class="${P === v ? 'on' : ''}" data-act="acc-p" data-p="${v}">${l}</button>`).join('')}</div>
+    <section class="card"><div class="month-sum" style="margin-top:0;flex-wrap:wrap">
+      <div><b>${trained.length}</b><span>treinaram</span></div><div><b>${onlyIn.length}</b><span>só entraram</span></div>
+      <div><b>${away.length}</b><span>não entraram</span></div><div><b>${reqs.length + vis.length}</b><span>visitantes</span></div></div></section>
+    ${sec('Treinaram', 'Alunos com treino ou cardio marcado no período', trained.map(x => row(x, `${x.tdays.length} ${x.tdays.length === 1 ? 'dia' : 'dias'} de treino (último ${x.tdays[x.tdays.length - 1] === t ? 'hoje' : fmtDate(x.tdays[x.tdays.length - 1])}) · ${x.sets} séries${x.byMe ? ' · marcado por você' : ''}${x.p.uid ? ' · ' + lastIn(x.p) : ''}`)))}
+    ${sec('Só entraram', 'Abriram o app e não marcaram treino', onlyIn.map(x => row(x, `${lastIn(x.p)} · ${x.adays.length} ${x.adays.length === 1 ? 'dia' : 'dias'} no período`)))}
+    ${sec('Não entraram', 'Têm conta, mas não abriram o app no período', away.map(x => row(x, lastIn(x.p))))}
+    ${noAcc.length ? sec('Sem conta no app', 'Ainda não criaram o login (mande o link do app pelo perfil)', noAcc.map(x => row(x, 'sem treino no período'))) : ''}
+    ${sec('Pediram acesso', 'Criaram conta e esperam você aceitar (na área de alunos)', reqs.map(q => `<div class="list-row"><div class="grow"><b>${esc(q.name || 'Sem nome')}</b> <span class="pstat late">visitante</span>
+      <small style="display:block;color:var(--muted)">${esc(q.email || '')}${q.at ? ' · pediu ' + whenTxt(q.at) : ''}</small></div></div>`))}
+    ${cloud && cloud.visits === 'off' ? `<section class="card"><div class="card-h"><div class="grow"><h3>Visitantes sem conta</h3><small>Para ver quem só abriu o link sem criar conta, atualize as regras do Firebase (arquivo firestore.rules).</small></div></div></section>`
+      : sec('Visitantes sem conta', 'Abriram o app pelo celular ou computador e não entraram com login', vis.map(v => `<div class="list-row"><div class="grow"><b>Visitante · ${esc(v.dev || 'aparelho')}</b>
+      <small style="display:block;color:var(--muted)">último acesso ${whenTxt(v.last)} · ${v.n || 1} ${(v.n || 1) === 1 ? 'vez' : 'vezes'} · veio por: ${esc(v.src || 'direto')}${v.first ? ' · primeira vez ' + whenTxt(v.first) : ''}</small></div></div>`))}`;
 }
 // Sair sem querer obriga a digitar e-mail e senha de novo: pergunta antes
 function askLogout() { confirmAsk('Sair da conta?', 'Para entrar de novo, vai precisar digitar o e-mail e a senha.', 'Sair').then(ok => { if (ok) logout(); }); }
@@ -4960,6 +5031,7 @@ function showAuth(mode, msg = '') {
   document.getElementById('authOut').hidden = mode !== 'noprofile';
   document.getElementById('authRescue').hidden = !(mode === 'noprofile' && myRescuePids().length && !(cloud && cloud.myRequest)); // se o pedido não foi, dá para mandar o arquivo
   document.getElementById('authMsg').textContent = msg;
+  if ((mode === 'signup' || mode === 'login') && !logVisit.done) { logVisit.done = true; logVisit.src = firstAccess() ? 'link de primeiro acesso' : inv ? 'convite' : 'direto'; logVisit(); }
   // veio pelo link (primeiro acesso ou convite): o guia de pôr na tela de início aparece logo, antes de criar a conta
   if ((mode === 'signup' || mode === 'login') && (firstAccess() || inv) && !showAuth.guided) { showAuth.guided = true; setTimeout(() => { if (authMode !== 'loading') installGuide(false, true); }, 1500); }
   if (mode === 'noprofile') {
@@ -5016,7 +5088,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-00:47';
+const APP_VERSION = '06/10-09:47';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
