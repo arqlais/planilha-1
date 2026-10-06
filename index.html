@@ -3197,13 +3197,18 @@ $payForm.addEventListener('submit', e => {
 document.getElementById('payCancel').onclick = () => $pay.close();
 
 // Planejamento pronto: o professor confirma que terminou de montar o planejamento do aluno
+// "Planejamento pronto" vale 1 semana (7 dias contando o dia marcado); depois volta a pedir revisão
+const READY_DAYS = 7;
+const readyOk = p => !!p.planReady && p.planReady.slice(0, 10) > addDays(today(), -READY_DAYS);
+const readyUntil = p => addDays(p.planReady.slice(0, 10), READY_DAYS - 1);
 function readyChip(p, compact) {
-  const r = p.planReady;
+  const r = readyOk(p) && p.planReady;
+  if (!r && p.planReady) return `<span class="pstat wait" title="Planejamento marcado em ${fmtDate(p.planReady.slice(0, 10))}: passou 1 semana, revise">⏳${compact ? '' : ' revisar'}</span>`;
   return r ? `<span class="pstat ok" title="Planejamento pronto em ${fmtDate(r.slice(0, 10))}">✓${compact ? '' : ' alinhado'}</span>` : `<span class="pstat wait" title="Planejamento ainda não confirmado">⏳${compact ? '' : ' planejar'}</span>`;
 }
-const readyBtn = p => p.planReady
-  ? `<button class="btn ready-btn on" data-act="plan-ready" title="Toque para desmarcar">✓ Planejamento pronto · ${fmtDate(p.planReady.slice(0, 10))}</button>`
-  : `<button class="btn ready-btn" data-act="plan-ready">Marcar planejamento pronto</button>`;
+const readyBtn = p => readyOk(p)
+  ? `<button class="btn ready-btn on" data-act="plan-ready" title="Toque para desmarcar">✓ Planejamento pronto · vale até ${fmtDate(readyUntil(p))}</button>`
+  : `<button class="btn ready-btn" data-act="plan-ready">Marcar planejamento pronto${p.planReady ? ` <small style="display:block;font-weight:500;opacity:.8">venceu em ${fmtDate(readyUntil(p))}: revise os treinos da semana</small>` : ''}</button>`;
 
 // Abas do aluno (computador)
 const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
@@ -3617,7 +3622,7 @@ $main.addEventListener('click', e => {
     case 'send-workout': return sendWorkout();
     case 'plan-ready': {
       const p = profile(ui.profile); if (!p) return;
-      if (p.planReady) { confirmAsk(`Desmarcar o planejamento de ${firstName(p)}?`, 'Ele volta para a lista como "planejar".', 'Desmarcar').then(ok => { if (!ok) return; delete p.planReady; save(); render(); }); return; }
+      if (readyOk(p)) { confirmAsk(`Desmarcar o planejamento de ${firstName(p)}?`, 'Ele volta para a lista como "planejar".', 'Desmarcar').then(ok => { if (!ok) return; delete p.planReady; save(); render(); }); return; }
       p.planReady = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString(); save(); render();
       return toast(`✓ Planejamento de ${esc(firstName(p))} pronto. Na lista ele aparece como alinhado.`);
     }
@@ -4972,7 +4977,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-00:20';
+const APP_VERSION = '06/10-00:22';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
