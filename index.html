@@ -471,6 +471,15 @@ body.offline #offBar{display:block}
 .lock-note{margin:10px 0 0;font-size:13px;font-weight:700;color:var(--muted)}
 .send-card button[disabled]{opacity:.45}
 .sent-card{border:2px solid var(--up)}
+/* ---- check-in (arte para o Instagram) ---- */
+#ciDlg{width:min(460px,calc(100vw - 20px));padding:14px;max-height:calc(100dvh - 20px);overflow:auto}
+.ci-prev{display:flex;justify-content:center;background:#0b0f0d;border-radius:14px;padding:8px;margin:8px 0 8px}
+.ci-prev canvas{display:block;height:min(40dvh,420px);width:auto;max-width:100%;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.ci-row{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.ci-row button{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 6px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ci-row button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.ci-photo{display:flex;gap:6px;margin:0 0 10px}
+.ci-photo label,.ci-photo button{flex:1;text-align:center;font-size:13px;padding:9px 4px;white-space:nowrap}
 .months{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;scrollbar-width:none}
 .months button{flex:none;border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:999px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .months button small{color:var(--muted);font-weight:600;margin-left:3px}
@@ -681,6 +690,20 @@ input,select,textarea{font-size:16px!important}
   <textarea class="msg" id="shareText" rows="6" style="width:100%"></textarea>
   <button type="button" class="btn primary" id="shareCopy" style="width:100%;margin-top:10px;padding:13px">Copiar mensagem</button>
   <div class="dlg-actions"><a class="btn" id="shareWa" href="#" style="flex:1;text-align:center">Abrir no WhatsApp</a><button type="button" class="btn" id="shareClose">Fechar</button></div>
+</dialog>
+
+<dialog id="ciDlg">
+  <h2 style="margin:0">Check-in do treino</h2>
+  <div class="ci-prev"><canvas id="ciCanvas" width="1080" height="1920"></canvas></div>
+  <div class="ci-row" id="ciTpl"></div>
+  <div class="ci-row" id="ciFmt"></div>
+  <div class="ci-photo">
+    <label class="btn">📷 Tirar<input type="file" accept="image/*" capture="user" id="ciCam" hidden></label>
+    <label class="btn">🖼 Galeria<input type="file" accept="image/*" id="ciPick" hidden></label>
+    <button type="button" class="btn" id="ciNoPhoto">Sem foto</button>
+  </div>
+  <button type="button" class="btn primary" id="ciShare" style="width:100%;padding:13px;font-size:15px">Compartilhar no Instagram</button>
+  <div class="dlg-actions"><button type="button" class="btn" id="ciSave">Baixar imagem</button><span class="grow"></span><button type="button" class="btn" id="ciClose">Fechar</button></div>
 </dialog>
 
 <dialog id="askDlg">
@@ -1037,6 +1060,7 @@ function ensureSession(ex, date) {
   if (date === today()) markActivity(date); // está treinando agora
   let s = sessionOn(ex.id, date);
   if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); db.sessions.push(s); }
+  if (date === today() && !s.t0 && !s.fin) s.t0 = new Date().toISOString(); // começou agora: dá a duração do treino no check-in
   if (ui.studentMode) s.by = 'aluno'; // marcação feita pelo aluno
   return s;
 }
@@ -1792,7 +1816,8 @@ function sendHtml() {
   const exs = sendableExs(); if (!exs.length) return '';
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
-      <small>Enviado às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Está salvo e registrado${ui.studentMode ? ' para você e seu professor' : ''}; não dá mais para alterar.</small></div></div></section>`;
+      <small>Enviado às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Está salvo e registrado${ui.studentMode ? ' para você e seu professor' : ''}; não dá mais para alterar.</small></div></div>
+      ${canCheckin() ? '<button class="btn primary" style="width:100%;padding:12px;margin-top:10px" data-act="checkin">📸 Fazer check-in (foto para o Instagram)</button>' : ''}</section>`;
   const open = exs.filter(e => !sentAt(e.id)), ready = open.every(e => isComplete(e.id));
   const missing = open.filter(e => !isComplete(e.id)).length;
   return `<section class="card send-card"><button class="btn primary" style="width:100%;padding:14px;font-size:16px" data-act="send-workout" ${ready ? '' : 'disabled'}>✓ Enviar treino</button>
@@ -1821,8 +1846,125 @@ async function sendWorkout(auto) {
   if (CLOUD && cloud && cloud.ready) { const s = syncNow(); if (navigator.onLine) await Promise.race([s, new Promise(r => setTimeout(r, 4000))]); }
   toast(!navigator.onLine ? '✓ Treino enviado! Está salvo no aparelho e vai para a nuvem quando a internet voltar.'
     : ui.studentMode ? '✓ Treino enviado! Seu professor já pode ver.' : '✓ Treino enviado e registrado.');
+  if (canCheckin()) return setTimeout(() => openCheckin(), 700); // já oferece a arte do check-in
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+// ---------- Check-in: arte do treino feito para postar (estilo Strava / Gympass) ----------
+// quem está usando o próprio app (aluno, ou o professor no treino dele / no perfil de teste)
+const canCheckin = () => (ui.studentMode && (!(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test)) || (!ui.studentMode && ui.profile === ME);
+function dayStats(pid, d) {
+  const ids = new Set(profExs(pid).map(e => e.id)), ss = db.sessions.filter(x => ids.has(x.exId) && x.date === d && x.sets.some(y => y.done));
+  const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0], t1 = ss.map(x => x.fin).filter(Boolean).sort().pop();
+  let min = t0 && t1 ? Math.round((new Date(t1) - new Date(t0)) / 6e4) : null;
+  if (min != null && (min < 5 || min > 300)) min = null; // tempo que não faz sentido: não mostra
+  const ws = [...new Set(ss.map(x => (exById(x.exId) || {}).letter).filter(Boolean))].map(L => wName(L, pid));
+  return { min, ws, sets: ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0), ex: ss.length,
+    kg: ss.reduce((a, x) => a + vol(x.sets), 0), cardio: db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) };
+}
+const durTxt = m => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') + 'min' : ''}` : `${m} min`;
+const siteTxt = () => (location.host + location.pathname).replace(/\/(index\.html)?$/, '');
+const ci = { tpl: 'strava', fmt: 'story', img: null, d: null };
+function openCheckin(d) {
+  ci.d = d || ui.date; ci.st = dayStats(ui.profile, ci.d);
+  if (!ci.st.ex && !ci.st.cardio) return toast('Marque o treino do dia para fazer o check-in.');
+  const tpl = document.getElementById('ciTpl'), fmt = document.getElementById('ciFmt');
+  const paint = () => {
+    tpl.innerHTML = [['strava', 'Clean'], ['checkin', 'Check-in'], ['bold', 'Destaque']].map(([k, l]) => `<button type="button" class="${ci.tpl === k ? 'on' : ''}" data-ci-tpl="${k}">${l}</button>`).join('');
+    fmt.innerHTML = [['story', 'Story (9:16)'], ['feed', 'Feed (4:5)']].map(([k, l]) => `<button type="button" class="${ci.fmt === k ? 'on' : ''}" data-ci-fmt="${k}">${l}</button>`).join('');
+    drawCheckin();
+  };
+  ci.paint = paint; paint();
+  const dl = document.getElementById('ciDlg'); if (!dl.open) dl.showModal();
+}
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function drawCheckin() {
+  const cv = document.getElementById('ciCanvas'), W = 1080, H = ci.fmt === 'story' ? 1920 : 1350;
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'), st = ci.st, cs = getComputedStyle(document.documentElement);
+  const acc = (cs.getPropertyValue('--acc-2') || '#3e6b52').trim() || '#3e6b52';
+  const F = (w, px) => `${w} ${px}px -apple-system, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
+  // fundo: foto (cobrindo tudo) ou degradê na cor do app
+  if (ci.img) { const im = ci.img, k = Math.max(W / im.width, H / im.height), w = im.width * k, h = im.height * k; g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
+  else { const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#0d1411'); gr.addColorStop(1, acc); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.globalAlpha = .07; g.strokeStyle = '#fff'; g.lineWidth = 46; g.lineCap = 'round'; // halter grande no fundo
+    const cx = W * .7, cy = ci.tpl === 'bold' ? H * .74 : H * .3; g.beginPath(); g.moveTo(cx - 260, cy); g.lineTo(cx + 260, cy); g.stroke(); g.lineWidth = 70;
+    [-200, -120, 120, 200].forEach((dx, i) => { g.beginPath(); g.moveTo(cx + dx, cy - (i % 3 ? 150 : 110)); g.lineTo(cx + dx, cy + (i % 3 ? 150 : 110)); g.stroke(); }); g.globalAlpha = 1; }
+  const shade = (y0, y1, a0, a1) => { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, `rgba(0,0,0,${a0})`); gr.addColorStop(1, `rgba(0,0,0,${a1})`); g.fillStyle = gr; g.fillRect(0, y0, W, y1 - y0); };
+  const dt = toDate(ci.d), dateTxt = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' }).replace('.', '');
+  const name = st.ws.length ? st.ws.join(' + ') : st.cardio ? 'Cardio' : 'Treino';
+  // números principais (sem excesso: tempo, cardio e séries)
+  const cells = [st.min ? ['Tempo', durTxt(st.min)] : null, st.cardio ? ['Cardio', `${fmtMin(st.cardio)} min`] : null, st.sets ? ['Séries', String(st.sets)] : null].filter(Boolean).slice(0, 3);
+  const brand = (y, color, center) => { // divulgação do app
+    g.fillStyle = color; g.textAlign = center ? 'center' : 'left'; const x = center ? W / 2 : 80;
+    g.font = F(800, 34); g.fillText('PLANILHA DE TREINO', x, y); g.globalAlpha = .75; g.font = F(500, 28); g.fillText(siteTxt(), x, y + 42); g.globalAlpha = 1; g.textAlign = 'left'; };
+  const fit = (txt, w, px, weight) => { let p = px; g.font = F(weight, p); while (g.measureText(txt).width > w && p > 30) { p -= 4; g.font = F(weight, p); } return p; };
+  const fitAll = (txts, w, px, weight) => Math.min(...txts.map(t => fit(t, w, px, weight)));
+  g.textBaseline = 'alphabetic';
+  if (ci.tpl === 'strava') {
+    shade(H * .42, H, 0, .82); if (ci.img) shade(0, 260, .35, 0);
+    let y = H - (ci.fmt === 'story' ? 330 : 250);
+    g.fillStyle = '#fff'; g.font = F(700, 30); g.globalAlpha = .8; g.fillText(dateTxt.toUpperCase(), 80, y - 265); g.globalAlpha = 1;
+    fit(name, W - 160, 76, 900); g.fillText(name, 80, y - 175);
+    const cw = (W - 160) / Math.max(1, cells.length);
+    const vp = fitAll(cells.map(c => c[1]), cw - 30, 82, 900);
+    cells.forEach(([l, v], i) => { const x = 80 + i * cw; g.font = F(600, 30); g.globalAlpha = .75; g.fillText(l, x, y - 70); g.globalAlpha = 1; g.font = F(900, vp); g.fillText(v, x, y + 10); });
+    g.fillStyle = acc; g.fillRect(80, y + 60, 120, 8);
+    brand(H - (ci.fmt === 'story' ? 150 : 100), '#fff');
+  } else if (ci.tpl === 'checkin') {
+    if (ci.img) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, W, H); }
+    const cw = 860, chh = 640, cx = (W - cw) / 2, cy = ci.fmt === 'story' ? H - chh - 260 : H - chh - 120;
+    g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 50; g.fillStyle = 'rgba(255,255,255,.95)'; rr(g, cx, cy, cw, chh, 48); g.fill(); g.shadowBlur = 0;
+    g.fillStyle = acc; g.beginPath(); g.arc(W / 2, cy, 82, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 16; g.lineCap = 'round'; g.lineJoin = 'round';
+    g.beginPath(); g.moveTo(W / 2 - 34, cy + 2); g.lineTo(W / 2 - 8, cy + 28); g.lineTo(W / 2 + 38, cy - 24); g.stroke();
+    g.textAlign = 'center'; g.fillStyle = '#16201b'; g.font = F(900, 70); g.fillText('Check-in feito', W / 2, cy + 175);
+    g.fillStyle = '#5b6862'; g.font = F(600, 34); g.fillText(dateTxt.replace(/^./, c => c.toUpperCase()), W / 2, cy + 230);
+    g.fillStyle = '#16201b'; fit(name, cw - 120, 46, 800); g.fillText(name, W / 2, cy + 300);
+    g.fillStyle = '#e6ece9'; g.fillRect(cx + 60, cy + 345, cw - 120, 3);
+    const n = Math.max(1, cells.length), w = (cw - 120) / n;
+    const vp = fitAll(cells.map(c => c[1]), w - 24, 70, 900);
+    cells.forEach(([l, v], i) => { const x = cx + 60 + w * i + w / 2; g.fillStyle = acc; g.font = F(900, vp); g.fillText(v, x, cy + 465); g.fillStyle = '#5b6862'; g.font = F(600, 30); g.fillText(l, x, cy + 515); });
+    g.textAlign = 'left';
+    brand(ci.fmt === 'story' ? H - 130 : H - 60, '#fff', true);
+  } else {
+    shade(0, H * .55, .7, 0); shade(H * .75, H, 0, .6);
+    g.fillStyle = '#fff'; g.font = F(700, 32); g.globalAlpha = .85; g.fillText(dateTxt.toUpperCase(), 80, 150); g.globalAlpha = 1;
+    const big = st.min ? durTxt(st.min).replace(' ', '') : `${st.sets || st.ex}`;
+    fit(big, W - 160, 280, 900); g.fillText(big, 72, ci.fmt === 'story' ? 470 : 420);
+    g.font = F(900, 54); g.fillText(st.min ? 'DE TREINO' : st.sets ? 'SÉRIES FEITAS' : 'EXERCÍCIOS', 80, ci.fmt === 'story' ? 550 : 495);
+    let y = ci.fmt === 'story' ? 620 : 555;
+    if (st.cardio) { const t = `+ ${fmtMin(st.cardio)} MIN DE CARDIO`; g.font = F(900, 40); const tw = g.measureText(t).width; g.fillStyle = acc; rr(g, 80, y, tw + 56, 76, 38); g.fill(); g.fillStyle = '#fff'; g.fillText(t, 108, y + 52); y += 110; }
+    g.fillStyle = '#fff'; fit(name, W - 160, 44, 700); g.globalAlpha = .9; g.fillText(name, 80, y + 40); g.globalAlpha = 1;
+    brand(H - (ci.fmt === 'story' ? 150 : 100), '#fff');
+  }
+}
+function checkinFile() {
+  return new Promise(r => document.getElementById('ciCanvas').toBlob(b => r(new File([b], `check-in-${ci.d}.png`, { type: 'image/png' })), 'image/png'));
+}
+function loadCiPhoto(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(file), im = new Image();
+  im.onload = () => { ci.img = im; drawCheckin(); };
+  im.onerror = () => toast('Não foi possível abrir essa foto.');
+  im.src = url;
+}
+document.getElementById('ciDlg').addEventListener('click', e => {
+  const t = e.target.closest('[data-ci-tpl]'), f = e.target.closest('[data-ci-fmt]');
+  if (t) { ci.tpl = t.dataset.ciTpl; ci.paint(); } else if (f) { ci.fmt = f.dataset.ciFmt; ci.paint(); }
+});
+document.getElementById('ciCam').onchange = e => { loadCiPhoto(e.target.files[0]); e.target.value = ''; };
+document.getElementById('ciPick').onchange = e => { loadCiPhoto(e.target.files[0]); e.target.value = ''; };
+document.getElementById('ciNoPhoto').onclick = () => { ci.img = null; drawCheckin(); };
+document.getElementById('ciClose').onclick = () => document.getElementById('ciDlg').close();
+document.getElementById('ciSave').onclick = async () => {
+  const f = await checkinFile(), a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+  toast('✓ Imagem salva. Agora é só postar no Instagram.');
+};
+document.getElementById('ciShare').onclick = async () => {
+  const f = await checkinFile(), text = `Treino feito ✓ Treino pelo app: ${appLink()}`;
+  if (navigator.canShare && navigator.canShare({ files: [f] })) {
+    try { await navigator.share({ files: [f], text }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para compartilhar. Use "Baixar imagem".'); }
+  } else document.getElementById('ciSave').click();
+};
 function isComplete(exId) {
   const s = sessionOn(exId, ui.date);
   return !!s && s.sets.length > 0 && s.sets.every(x => x.done);
@@ -2009,7 +2151,7 @@ function dayCard(d, list) {
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
     ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
-    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button></div>
+    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}">📸 Check-in</button>` : ''}</div>
   </section>`;
 }
 function renderHistorico() {
@@ -3643,6 +3785,7 @@ $main.addEventListener('click', e => {
       return;
     }
     case 'send-workout': return sendWorkout();
+    case 'checkin': return openCheckin(b.dataset.d);
     case 'plan-ready': {
       const p = profile(ui.profile); if (!p) return;
       if (readyOk(p)) { confirmAsk(`Desmarcar o planejamento de ${firstName(p)}?`, 'Ele volta para a lista como "planejar".', 'Desmarcar').then(ok => { if (!ok) return; delete p.planReady; save(); render(); }); return; }
@@ -5104,7 +5247,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-17:42';
+const APP_VERSION = '06/10-19:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
