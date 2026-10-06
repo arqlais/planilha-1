@@ -697,6 +697,7 @@ input,select,textarea{font-size:16px!important}
   <div class="ci-prev"><canvas id="ciCanvas" width="1080" height="1920"></canvas></div>
   <div class="ci-row" id="ciTpl"></div>
   <div class="ci-row" id="ciFmt"></div>
+  <label class="f" style="margin:0 0 8px;display:flex;align-items:center;gap:8px">Tempo de treino (min)<input id="ciMin" inputmode="numeric" style="flex:1;min-width:0" placeholder="ex.: 60"></label>
   <div class="ci-photo">
     <label class="btn">📷 Tirar<input type="file" accept="image/*" capture="user" id="ciCam" hidden></label>
     <label class="btn">🖼 Galeria<input type="file" accept="image/*" id="ciPick" hidden></label>
@@ -1856,7 +1857,12 @@ function dayStats(pid, d) {
   const ids = new Set(profExs(pid).map(e => e.id)), ss = db.sessions.filter(x => ids.has(x.exId) && x.date === d && x.sets.some(y => y.done));
   const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0], t1 = ss.map(x => x.fin).filter(Boolean).sort().pop();
   let min = t0 && t1 ? Math.round((new Date(t1) - new Date(t0)) / 6e4) : null;
-  if (min != null && (min < 5 || min > 300)) min = null; // tempo que não faz sentido: não mostra
+  if (min != null && (min < 5 || min > 300)) min = null; // tempo que não faz sentido
+  // treino inteiro (séries + descanso + cardio): no mínimo ~2,5 min por série feita mais o cardio
+  const sets = ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0);
+  const cmin = db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0);
+  const est = sets ? Math.round((sets * 2.5 + cmin) / 5) * 5 : 0;
+  if (est && (!min || min < est)) min = Math.min(300, est);
   const ws = [...new Set(ss.map(x => (exById(x.exId) || {}).letter).filter(Boolean))].map(L => wName(L, pid));
   return { min, ws, sets: ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0), ex: ss.length,
     kg: ss.reduce((a, x) => a + vol(x.sets), 0), cardio: db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) };
@@ -1873,7 +1879,7 @@ function openCheckin(d) {
     fmt.innerHTML = [['story', 'Story (9:16)'], ['feed', 'Feed (4:5)']].map(([k, l]) => `<button type="button" class="${ci.fmt === k ? 'on' : ''}" data-ci-fmt="${k}">${l}</button>`).join('');
     drawCheckin();
   };
-  ci.paint = paint; paint();
+  ci.paint = paint; document.getElementById('ciMin').value = ci.st.min || ''; paint();
   const dl = document.getElementById('ciDlg'); if (!dl.open) dl.showModal();
 }
 function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
@@ -1932,7 +1938,7 @@ function drawCheckin() {
     fit(big, W - 160, 280, 900); g.fillText(big, 72, ci.fmt === 'story' ? 470 : 420);
     g.font = F(900, 54); g.fillText(st.min ? 'DE TREINO' : st.sets ? 'SÉRIES FEITAS' : 'EXERCÍCIOS', 80, ci.fmt === 'story' ? 550 : 495);
     let y = ci.fmt === 'story' ? 620 : 555;
-    if (st.cardio) { const t = `+ ${fmtMin(st.cardio)} MIN DE CARDIO`; g.font = F(900, 40); const tw = g.measureText(t).width; g.fillStyle = acc; rr(g, 80, y, tw + 56, 76, 38); g.fill(); g.fillStyle = '#fff'; g.fillText(t, 108, y + 52); y += 110; }
+    if (st.cardio) { const t = `COM ${fmtMin(st.cardio)} MIN DE CARDIO`; g.font = F(900, 40); const tw = g.measureText(t).width; g.fillStyle = acc; rr(g, 80, y, tw + 56, 76, 38); g.fill(); g.fillStyle = '#fff'; g.fillText(t, 108, y + 52); y += 110; }
     g.fillStyle = '#fff'; fit(name, W - 160, 44, 700); g.globalAlpha = .9; g.fillText(name, 80, y + 40); g.globalAlpha = 1;
     brand(H - (ci.fmt === 'story' ? 150 : 100), '#fff');
   }
@@ -1953,6 +1959,7 @@ document.getElementById('ciDlg').addEventListener('click', e => {
 });
 document.getElementById('ciCam').onchange = e => { loadCiPhoto(e.target.files[0]); e.target.value = ''; };
 document.getElementById('ciPick').onchange = e => { loadCiPhoto(e.target.files[0]); e.target.value = ''; };
+document.getElementById('ciMin').oninput = e => { const v = parseInt(e.target.value); ci.st.min = v > 0 ? Math.min(600, v) : null; drawCheckin(); };
 document.getElementById('ciNoPhoto').onclick = () => { ci.img = null; drawCheckin(); };
 document.getElementById('ciClose').onclick = () => document.getElementById('ciDlg').close();
 document.getElementById('ciSave').onclick = async () => {
@@ -5247,7 +5254,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-19:42';
+const APP_VERSION = '06/10-20:26';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
