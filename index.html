@@ -96,6 +96,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 #setTimer button{font-size:14.5px;padding:12px 6px;min-height:46px;touch-action:manipulation}
 .noload{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12.5px;font-weight:700}
 .chk-line{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin:0 0 10px}.chk-line input{width:20px;height:20px}
+.consult-list{margin:0 0 6px;padding-left:20px;line-height:1.5}.consult-list li{margin:0 0 6px}
 .self-tabs{display:flex;gap:4px;background:var(--card);border-radius:14px;padding:4px;margin:0 0 10px;box-shadow:var(--shadow)}
 .self-tabs button{flex:1;border:0;background:transparent;color:var(--muted);border-radius:10px;padding:10px 6px;font-weight:800;font-size:14px}
 .self-tabs button.on{background:var(--acc);color:var(--acc-ink)}
@@ -1294,7 +1295,8 @@ function markLocked() {
 }
 // Aluno: vê só o treino que o professor passou para o dia (sem escolher grupo)
 function renderStudentTreino(p, greet, isToday) {
-  if (p.selfServe && selfTab() === 'own') return renderOwnTreino(p, greet, isToday);
+  if (selfTab() === 'own') return renderOwnTreino(p, greet, isToday);
+  if (selfTab() === 'consult') return renderConsultTab(p, greet);
   const plan = dayPlan(p, ui.date), groups = liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g));
   const blocks = groups.map(g => {
     const exs = letterExs(g);
@@ -1305,7 +1307,7 @@ function renderStudentTreino(p, greet, isToday) {
   const label = [...groups.map(g => wName(g)), ...(plan.includes(CARDIO) ? [CARDIO] : [])].join(' + ');
   const showPlan = groups.length || plan.includes(CARDIO); // só treino guardado: para o aluno é descanso
   $main.innerHTML = `${greet}
-    ${p.selfServe ? selfTabsHtml() : ''}
+    ${selfTabsHtml()}
     <div class="daynav">
       <button class="icon" data-act="shiftday" data-d="-1" aria-label="Dia anterior">‹</button>
       <div class="grow"><b>${weekday(ui.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(ui.date)}</b>
@@ -1328,8 +1330,29 @@ function renderStudentTreino(p, greet, isToday) {
 }
 // ---------- Aluno monta o próprio treino ----------
 // Abas no topo: "Treino do professor" (montado pelo professor) | "Meu treino" (o aluno escolhe)
-const selfTab = () => { try { return localStorage.getItem('planilha-aba-treino') || 'prof'; } catch (e) { return 'prof'; } };
-const selfTabsHtml = () => `<div class="self-tabs"><button class="${selfTab() === 'prof' ? 'on' : ''}" data-act="self-tab" data-t="prof">Treino do professor</button><button class="${selfTab() === 'own' ? 'on' : ''}" data-act="self-tab" data-t="own">Meu treino</button></div>`;
+// Consultoria: aluno com treino montado pelo professor (os alunos de antes são todos da consultoria)
+const isConsult = p => !!p && p.consult !== false;
+const selfTabs = () => isConsult(profile(ui.profile)) ? [['prof', 'Treino do professor'], ['own', 'Meu treino']] : [['own', 'Meu treino'], ['consult', 'Consultoria']];
+const selfTab = () => { let t = null; try { t = localStorage.getItem('planilha-aba-treino'); } catch (e) {} const ok = selfTabs().map(x => x[0]); return ok.includes(t) ? t : ok[0]; };
+const selfTabsHtml = () => `<div class="self-tabs">${selfTabs().map(([id, l]) => `<button class="${selfTab() === id ? 'on' : ''}" data-act="self-tab" data-t="${id}">${l}</button>`).join('')}</div>`;
+// Quem usa só o app: área que apresenta a consultoria (com botão para falar com o professor)
+function renderConsultTab(p, greet) {
+  const cn = p.coachName || (!CLOUD || (cloud && cloud.role === 'admin') ? (profile(ME) || {}).name : ''), coach = cn ? firstName({ name: cn }) : 'seu professor', asked = p.consultReq;
+  const msg = `Oi, ${coach}! Aqui é ${firstName(p)}, uso o app de treino e quero saber mais sobre a consultoria.`;
+  $main.innerHTML = `${greet}${selfTabsHtml()}
+    <section class="card consult-card"><h2 style="margin:0 0 6px">Treine com acompanhamento</h2>
+      <p style="margin:0 0 12px;color:var(--muted)">Na consultoria, ${esc(coach)} monta e ajusta o seu treino e acompanha a sua evolução de perto.</p>
+      <ul class="consult-list">
+        <li><b>Treino montado para você</b>, de acordo com o seu objetivo</li>
+        <li><b>Planejamento das semanas</b>: o treino de cada dia já pronto no app</li>
+        <li><b>Séries por grupo muscular</b> na semana, para treinar cada músculo na medida certa</li>
+        <li><b>Ajustes de carga e exercícios</b> conforme você evolui</li>
+        <li><b>Mensagens e acompanhamento</b> direto com o professor</li>
+      </ul>
+      ${asked ? `<p class="note" style="margin:12px 0 0">✓ Você pediu a consultoria em ${fmtDate(asked)}. ${esc(coach)} vai falar com você.</p>` : ''}
+      <button class="btn primary big" data-act="consult-ask">${asked ? 'Falar com o professor' : 'Quero a consultoria'}</button>
+      <input type="hidden" id="consultMsg" value="${esc(msg)}"></section>`;
+}
 const ownWorkouts = pid => workoutsOf(pid).filter(w => w.own);
 function renderOwnTreino(p, greet, isToday) {
   const ws = ownWorkouts(p.id);
@@ -1729,7 +1752,7 @@ const cardioLocked = (date = ui.date) => dayLocked(date) || daySent(date);
 const cardioLockMsg = () => dayLocked() ? LOCK_MSG.past : 'O treino de hoje já foi enviado: o cardio também ficou registrado e não pode mais ser alterado.';
 // Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
 function sendableExs() {
-  if (ui.studentMode && (profile(ui.profile) || {}).selfServe && selfTab() === 'own') return ui.ownW ? letterExs(ui.ownW) : [];
+  if (ui.studentMode && selfTab() === 'own') return ui.ownW ? letterExs(ui.ownW) : [];
   if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
   return isLetter(ui.group) ? letterExs(ui.group) : [];
 }
@@ -2019,7 +2042,7 @@ function renderHistorico() {
     </section>`;
 
   if (ui.studentMode) {
-    const sp = profile(ui.profile), compact = sp && sp.selfServe; // quem monta o próprio treino: calendário menor + séries da semana
+    const sp = profile(ui.profile), compact = isConsult(sp); // séries da semana: só para alunos da consultoria
     $main.innerHTML = `<section class="card">${monthsHtml}
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
@@ -2347,7 +2370,7 @@ function profileCard(p) {
       <span class="av">${esc(initials(p.name))}</span>
       <div class="grow"><h3>${esc(p.name)}</h3>
         <small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt} ${s.lastGroups}</small>
-        <div class="tags">${p.test ? '<span class="pstat wait">perfil de teste</span>' : isMe ? '' : readyChip(p)}<span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
+        <div class="tags">${p.test ? '<span class="pstat wait">perfil de teste</span>' : isMe ? '' : isConsult(p) ? readyChip(p) : `<span class="pstat ${p.consultReq ? 'late' : 'wait'}">${p.consultReq ? 'quer consultoria' : 'só o app'}</span>`}<span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
           ${s.now || s.before ? `<span class="pill eq">${fmt(s.now)} kg</span> ${delta(s.now, s.before)}` : ''}</div></div>
       ${isMe ? '' : `<button class="icon" data-act="student-menu" data-pid="${p.id}" aria-label="Opções do aluno">⋯</button>`}
     </div>
@@ -2801,7 +2824,7 @@ function renderAlunosDesk() {
   const q = ui.q.trim().toLowerCase(), shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   const ym = today().slice(0, 7);
   const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
-      <span class="grow"><b>${esc(p.name)}</b><small>${p.test ? 'só para testar · não conta nos números' : esc(profileSummary(p.id).lastTxt)}</small></span>${p.test ? '' : readyChip(p, true)}${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
+      <span class="grow"><b>${esc(p.name)}</b><small>${p.test ? 'só para testar · não conta nos números' : p.consultReq && !isConsult(p) ? 'quer a consultoria!' : esc(profileSummary(p.id).lastTxt)}</small></span>${p.test ? '' : isConsult(p) ? readyChip(p, true) : `<span class="pstat ${p.consultReq ? 'late' : 'wait'}">${p.consultReq ? '★' : 'app'}</span>`}${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
   const sel = ui.profile !== ME && profile(ui.profile), real = students.filter(p => !p.test);
   $main.innerHTML = `<div class="split">
     <aside class="slist">
@@ -3088,9 +3111,10 @@ function renderPagamentos() {
     </section>
     ${noPlan.length ? `<section class="card"><div class="card-h"><div class="grow"><h3>Alunos sem plano definido</h3><small>Defina plano, valor e dia do vencimento para entrar na lista de mensalidades.</small></div></div>
       ${noPlan.map(p => `<div class="list-row"><div class="grow"><b>${esc(p.name)}</b></div><button class="btn" data-act="bill-edit" data-pid="${p.id}">Definir plano</button></div>`).join('')}</section>` : ''}
-    <section class="card"><div class="card-h"><div class="grow"><h3>Sua chave Pix</h3><small>Vai junto na mensagem de cobrança.</small></div></div>
-      <div class="actions" style="margin-top:0"><input id="pixKey" class="search" style="flex:1;margin:0" placeholder="ex.: seu e-mail, CPF ou telefone" value="${esc(profile(ME).pixKey || '')}">
-        <button class="btn primary" data-act="pix-save">Salvar</button></div></section>`;
+    <section class="card"><div class="card-h"><div class="grow"><h3>Seus dados</h3><small>A chave Pix vai na mensagem de cobrança. O WhatsApp é para quem usa só o app pedir a consultoria.</small></div></div>
+      <label class="f" style="margin:0 0 8px">Chave Pix<input id="pixKey" placeholder="ex.: seu e-mail, CPF ou telefone" value="${esc(profile(ME).pixKey || '')}"></label>
+      <label class="f" style="margin:0 0 8px">Seu WhatsApp<input id="coachWa" inputmode="tel" placeholder="ex.: 11 99999-9999" value="${esc(profile(ME).wa || '')}"></label>
+      <button class="btn primary" data-act="pix-save">Salvar</button></section>`;
 }
 function studentPayHtml(p) {
   const b = p.billing, months = [];
@@ -3201,13 +3225,14 @@ function perfilHtml(p, desk) {
           ${p.goal ? `<div class="tags" style="margin-top:4px"><span class="pill up">🎯 ${esc(p.goal)}</span></div>` : ''}</div>
         <button class="icon" data-act="student-edit" aria-label="Editar dados">✎</button></div>
       ${p.notes ? `<div class="note">${esc(p.notes)}</div>` : ''}
+      ${p.consultReq && !isConsult(p) ? `<div class="note" style="border-left:4px solid var(--acc)"><b>★ ${esc(firstName(p))} pediu a consultoria em ${fmtDate(p.consultReq)}.</b> Para ${esc(firstName(p))} virar aluno da consultoria, toque em <b>Consultoria: não</b>.</div>` : ''}
       <div class="actions">
         <button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
         <button class="btn" data-act="goto-msg">Mensagem</button>
         <button class="btn" data-act="student-mode">Ver como o aluno</button>
-        ${p.test ? `<button class="btn ${p.selfServe ? 'primary' : ''}" data-act="self-toggle">Aluno monta o treino: ${p.selfServe ? 'ligado' : 'desligado'}</button>` : ''}
+        <button class="btn ${isConsult(p) ? 'primary' : ''}" data-act="consult-toggle">Consultoria: ${isConsult(p) ? 'sim' : 'não (só o app)'}</button>
         ${p.test ? '<button class="btn" data-act="test-sim">Simular semana feita</button>' : ''}
         ${p.test ? '<button class="btn danger" data-act="test-clear">Limpar teste</button>' : ''}
         ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${p.test ? '' : readyBtn(p)}`}
@@ -3463,6 +3488,18 @@ $main.addEventListener('click', e => {
     }
     case 'self-tab': case 'own-w': case 'own-new': case 'own-step': case 'own-cancel': case 'own-edit': case 'own-ready': case 'own-g':
     case 'own-pick': case 'own-unsel': case 'own-custom': case 'own-save': case 'own-del': return ownAct(act, b);
+    case 'consult-toggle': {
+      const p = profile(ui.profile), on = !isConsult(p);
+      if (on) { delete p.consult; delete p.consultReq; } else p.consult = false;
+      save(); render();
+      return toast(on ? `✓ ${esc(firstName(p))} é da consultoria: vê o treino que você monta e as séries da semana.` : `${esc(firstName(p))} agora usa só o app: monta os próprios treinos e vê a área "Consultoria" para contratar.`);
+    }
+    case 'consult-ask': {
+      const p = profile(ui.profile), msg = (document.getElementById('consultMsg') || {}).value || '';
+      if (!p.consultReq) { p.consultReq = today(); save(); render(); toast('✓ Pedido enviado! Seu professor vai ver no app dele.'); }
+      if (p.coachWa) location.href = waLink({ phone: p.coachWa }, msg);
+      return;
+    }
     case 'self-toggle': {
       const p = profile(ui.profile); p.selfServe = !p.selfServe; if (!p.selfServe) delete p.selfServe; save(); render();
       return toast(p.selfServe ? 'Ligado: no app do aluno aparecem as abas "Treino do professor" e "Meu treino".' : 'Desligado: o aluno volta a ver só o treino que você monta.');
@@ -3558,7 +3595,7 @@ $main.addEventListener('click', e => {
     case 'pay-mark': return openPay(profile(b.dataset.pid), b.dataset.m || ui.payMonth || today().slice(0, 7));
     case 'pay-undo': { const p = profile(b.dataset.pid), ym = b.dataset.m || ui.payMonth; if (p.payments) delete p.payments[ym]; save(); return render(); }
     case 'bill-edit': return openBill(profile(b.dataset.pid));
-    case 'pix-save': { profile(ME).pixKey = document.getElementById('pixKey').value.trim().slice(0, 80); save(); return toast('Chave Pix salva.'); }
+    case 'pix-save': { const me = profile(ME); me.pixKey = document.getElementById('pixKey').value.trim().slice(0, 80); const w = (document.getElementById('coachWa') || {}).value; if (w != null) { me.wa = w.trim().slice(0, 30); if (!me.wa) delete me.wa; } save(); return toast('Dados salvos.'); }
     case 'plan-day': return openDate(b.dataset.d);
     case 'plan-vers': return loadPlanVersions(ui.profile);
     case 'plan-vers-close': ui.planVers = null; return render();
@@ -4169,6 +4206,7 @@ function requestsHtml() {
       return `<div class="list-row" style="flex-wrap:wrap;gap:8px"><div class="grow" style="min-width:160px"><b>${esc(q.name || 'Sem nome')}</b>
           <small style="display:block;color:var(--muted)">${esc(q.email)}${old ? ` · traz a cópia dos treinos antigos (${n})` : ''}</small></div>
         ${!old && free.length ? `<select data-req-link="${q.uid}" aria-label="Ligar a"><option value="">Aluno novo</option>${free.map(p => `<option value="${p.id}" ${match && match.id === p.id ? 'selected' : ''}>Ligar a ${esc(p.name)}</option>`).join('')}</select>` : ''}
+        ${old ? '' : `<select data-req-kind="${q.uid}" aria-label="Tipo"><option value="consult">Consultoria</option><option value="app">Só o app</option></select>`}
         <button class="btn primary" data-act="req-ok" data-uid="${q.uid}">Aceitar</button>
         <button class="btn" data-act="req-no" data-uid="${q.uid}">Recusar</button></div>`;
     }).join('')}</section>`;
@@ -4187,7 +4225,7 @@ async function acceptRequest(uidReq) {
   } else {
     const sel = document.querySelector(`[data-req-link="${q.uid}"]`), link = sel && sel.value && profile(sel.value);
     if (link) { link.uid = q.uid; name = link.name; }
-    else { const id = createStudent({ name: q.name || 'Aluno' }); profile(id).uid = q.uid; }
+    else { const id = createStudent({ name: q.name || 'Aluno' }); profile(id).uid = q.uid; const k = document.querySelector(`[data-req-kind="${q.uid}"]`); if (k && k.value === 'app') profile(id).consult = false; }
   }
   save(); await syncNow();
   try { await cloud.fs.doc('requests/' + q.uid).delete(); } catch (e) {}
@@ -4532,7 +4570,7 @@ function assemble(src = remote) {
     const has = new Set(d.exercises.map(e => e.id));
     (o.exercises || []).forEach(e => { if (!has.has(e.id)) d.exercises.push({ ...e, profileId: p.id, own: true }); });
   });
-  d.profiles.forEach(p => { delete p.color; delete p.ctMode; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; });
+  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
@@ -4544,7 +4582,9 @@ function assemble(src = remote) {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, body, ctMode, ...meta } = p;
+    const { id, color, body, ctMode, consultReq, ...meta } = p;
+    // o aluno não lê o perfil do professor: nome e WhatsApp do professor vão na ficha de cada aluno
+    if (id !== ME) { const me = profile(ME) || {}; meta.coachName = me.name || null; meta.coachWa = me.wa || null; }
     if (meta.workouts) meta.workouts = meta.workouts.filter(w => !w.own); // os do aluno vão no documento "own"
     const exercises = db.exercises.filter(e => e.profileId === id && !e.own).map(({ profileId, ...e }) => e);
     const rem = remote.get('profiles/' + id);
@@ -4559,7 +4599,7 @@ function splitDb() {
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
-  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode)) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}) });
+  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}) });
   // Treinos que o aluno montou: documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id)) {
     const ws = (p.workouts || []).filter(w => w.own).map(({ own: _o, ...w }) => w), exs = db.exercises.filter(e => e.profileId === p.id && e.own).map(({ profileId, own: _o, ...e }) => e);
@@ -4838,7 +4878,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-20:51';
+const APP_VERSION = '05/10-21:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
