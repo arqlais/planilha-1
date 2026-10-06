@@ -709,6 +709,8 @@ input,select,textarea{font-size:16px!important}
       <label class="f">Repetições<input name="reps" inputmode="numeric" placeholder="opcional"></label>
     </div>
     <label class="chk-line"><input type="checkbox" name="noload"> Sem carga (só repetições) — ex.: abdominal livre, flexão, prancha</label>
+    <label class="f" id="twinF" hidden>Comparar com o histórico de<select name="twin" class="sel"></select>
+      <small style="color:var(--muted);font-weight:500">Use quando o aluno já fez este exercício com outro nome: o "antes" e a comparação passam a usar os treinos dele.</small></label>
     <p class="hint">É só o ponto de partida: depois do primeiro treino, o app já preenche tudo com os valores da última vez.</p>
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="exDelete">Excluir</button>
@@ -984,9 +986,14 @@ function profSessions(pid = ui.profile) {
 }
 // Mesmo exercício em dois treinos (ex.: Cadeira flexora na segunda e na quinta): o histórico é um só
 const sameName = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+// Exercícios "gêmeos" dividem o histórico (o "antes" e a comparação): mesmo nome, sem ligar para acento, maiúscula
+// ou espaço, ou ligados pelo professor ("Comparar com o histórico de…" no ⋯ do exercício)
+const twinKey = e => e.twin || (e.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 function twinIds(exId) {
   const e = exById(exId);
-  return new Set(e ? db.exercises.filter(x => x.profileId === e.profileId && sameName(x.name, e.name)).map(x => x.id) : [exId]);
+  if (!e) return new Set([exId]);
+  const k = twinKey(e);
+  return new Set(db.exercises.filter(x => x.profileId === e.profileId && twinKey(x) === k).map(x => x.id));
 }
 const exHistory = exId => { const ids = twinIds(exId); return db.sessions.filter(s => ids.has(s.exId) && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date)); };
 const prevSession = (exId, date) => exHistory(exId).filter(s => s.date < date).pop();
@@ -2934,7 +2941,7 @@ const ownHistory = ex => db.sessions.some(x => x.exId === ex.id && (x.date < tod
 function splitHistory(ex, oldName) {
   if (!ownHistory(ex)) return false;
   const oldId = ex.id, keep = { ...plain(ex), name: oldName, letter: null, archived: true };
-  delete keep.order;
+  delete keep.order; delete keep.twin; delete ex.twin;
   ex.id = uid(); ex.planDate = today();
   db.exercises.push(keep);
   // treino de hoje ainda em andamento fica com o exercício novo
@@ -3851,6 +3858,16 @@ function openDialog(ex, letter) {
   $form.letter.value = ex ? ex.letter || '' : letter || (isLetter(ui.group) ? ui.group : '');
   $form.group.value = ex ? ex.group : '';
   $form.noload.checked = !!(ex && ex.noLoad);
+  // ligar ao histórico de outro exercício do mesmo aluno
+  const tf = document.getElementById('twinF');
+  tf.hidden = !(ex && !ui.studentMode);
+  if (ex && !ui.studentMode) {
+    const seen = new Set([twinKey({ name: ex.name })]), opts = [];
+    profExs(ex.profileId).concat(db.exercises.filter(e => e.profileId === ex.profileId && !isLetter(e.letter, e.profileId)))
+      .forEach(o => { const k = twinKey(o); if (o.id === ex.id || seen.has(k)) return; const n = db.sessions.filter(x => x.exId === o.id && hasDone(x)).length; if (!n) return; seen.add(k); opts.push({ k, name: o.name, n }); });
+    opts.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    $form.twin.innerHTML = `<option value="">— só este exercício —</option>` + opts.map(o => `<option value="${esc(o.k)}" ${ex.twin === o.k ? 'selected' : ''}>${esc(o.name)} (${o.n} treino${o.n === 1 ? '' : 's'})</option>`).join('');
+  }
   $form.sets.value = w ? w.sets.length : '';
   $form.carga.value = w && w.sets[0] ? numVal(w.sets[0].carga) : '';
   $form.reps.value = w && w.sets[0] && w.sets[0].reps != null ? w.sets[0].reps : '';
@@ -3870,6 +3887,7 @@ $form.addEventListener('submit', e => {
     const oldName = editing.name;
     editing.name = name; editing.group = group; editing.letter = letter; if (letter) delete editing.archived;
     if ($form.noload.checked) editing.noLoad = true; else delete editing.noLoad;
+    if (!document.getElementById('twinF').hidden) { const tw = $form.twin.value; if (tw) editing.twin = tw; else delete editing.twin; }
     if (!nearName(oldName, name) && splitHistory(editing, oldName)) toast(`<b>${esc(name)}</b> começa com histórico novo. O histórico de ${esc(oldName)} continua guardado.`);
     // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
     if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
@@ -4299,6 +4317,21 @@ async function fixOnce() {
     const tp = db.profiles.find(x => x.test);
     if (tp) { const r = simulateWeek(tp); if (r.n) { save(); msgs.push(`Perfil de teste: semana simulada com ${r.workouts} treino${r.workouts === 1 ? '' : 's'} feitos.`); } }
     mark('teste-semana-0510');
+  }
+  // 1g) Leandro: o Supino inclinado de agora não comparava com o que ele já tinha feito (nome diferente). Liga os dois.
+  if (!done.has('leandro-supino-inclinado')) {
+    const pl = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Leandro'));
+    if (pl) {
+      await ensureFull(pl.id);
+      const nm = e => (e.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const list = db.exercises.filter(e => e.profileId === pl.id && /supino/.test(nm(e)) && /inclin/.test(nm(e)) && !/historico antigo/.test(nm(e)));
+      const count = e => db.sessions.filter(x => x.exId === e.id && hasDone(x)).length;
+      const best = list.slice().sort((a, b) => count(b) - count(a))[0];
+      let n = 0;
+      if (best) list.forEach(e => { if (e !== best && twinKey(e) !== twinKey(best)) { e.twin = twinKey(best); n++; } });
+      if (n) { save(); msgs.push(`Leandro: Supino inclinado ligado ao histórico anterior (${n} exercício${n === 1 ? '' : 's'}).`); }
+    }
+    mark('leandro-supino-inclinado');
   }
   // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
   if (!done.has('iris-remada-0110')) {
@@ -4878,7 +4911,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/10-21:35';
+const APP_VERSION = '05/10-22:04';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
