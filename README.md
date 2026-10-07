@@ -1,4 +1,4 @@
-# Planilha de Treino
+# PassosFit
 
 > Para professores: tem uma área para o **seu treino particular** e uma para **acompanhar cada aluno**.
 

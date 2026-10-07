@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#2b4637">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Planilha de Treino</title>
+<title>PassosFit</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-title" content="Treino">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="PassosFit">
 <style>
 :root{
   --bg:#f2f3f0; --card:#fff; --text:#1f2621; --muted:#6b736d; --line:#e1e4de;
@@ -156,6 +157,8 @@ body.locked > header, body.locked > main, body.locked > nav, body.locked > #stud
 @keyframes lift{0%,62%{transform:translateY(0)}70%{transform:translateY(-14px)}78%,100%{transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){.loader .pl,.loader .lift{animation:none;opacity:1}}
 .auth-logo svg{width:30px;height:30px;fill:none;stroke:var(--acc);stroke-width:1.8;stroke-linecap:round}
+.auth-logo svg.pf-mark{width:24px;height:31px;fill:var(--acc);stroke:none}
+.auth-slogan{margin:-4px 0 6px;color:var(--muted);font-size:14px;font-weight:600;letter-spacing:.04em}
 .auth-links{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
 .auth-links .link{font-size:14px}
 
@@ -368,7 +371,7 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 .demo-steps{margin:0;padding-left:20px;font-size:14.5px;line-height:1.45}.demo-steps li{margin-bottom:6px}
 /* ---- computador (professor) ---- */
 body.desk nav.bottom{top:0;bottom:0;right:auto;width:228px;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;border-top:0;border-right:1px solid var(--line);padding:20px 12px;box-shadow:none}
-body.desk nav.bottom::before{content:'Planilha de Treino';font-weight:800;font-size:16px;padding:4px 12px 16px;color:var(--text)}
+body.desk nav.bottom::before{content:'PassosFit';font-weight:800;font-size:16px;padding:4px 12px 16px;color:var(--text)}
 body.desk nav.bottom button{flex:none;max-width:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 12px;font-size:14.5px;border-radius:12px}
 body.desk .hero{margin-left:228px;border-radius:0 0 0 28px;padding-bottom:52px}
 body.desk .hero-in{max-width:1240px;padding:0 16px}
@@ -575,7 +578,7 @@ input,select,textarea{font-size:16px!important}
 <body>
 <div id="auth" hidden>
   <div class="auth-card">
-    <div class="auth-logo" id="authLogo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg></div>
+    <div class="auth-logo" id="authLogo" aria-hidden="true"><svg viewBox="0 0 100 128" class="pf-mark"><rect x="22" y="0" width="56" height="15" rx="7.5"/><rect x="0" y="24" width="100" height="18" rx="9"/><rect x="41" y="40" width="18" height="48"/><rect x="0" y="86" width="100" height="18" rx="9"/><rect x="22" y="113" width="56" height="15" rx="7.5"/></svg></div>
     <div class="loader" id="authLoader" hidden aria-hidden="true">
       <svg viewBox="0 0 220 90"><g class="lift">
         <rect class="bar" x="8" y="42" width="204" height="6" rx="3"/>
@@ -586,7 +589,8 @@ input,select,textarea{font-size:16px!important}
       </g></svg>
       <div class="loader-kg"><b id="loaderKg">20</b> kg</div>
     </div>
-    <h1>Planilha de Treino</h1>
+    <h1>Passos<span style="color:var(--acc)">Fit</span></h1>
+    <p class="auth-slogan">um passo por dia</p>
     <p id="authSub">Carregando…</p>
     <form id="authForm" hidden>
       <label class="f" id="authNameF" hidden>Seu nome<input name="nome" autocomplete="name" placeholder="ex.: Maria Souza"></label>
@@ -1376,7 +1380,7 @@ const selfTabsHtml = () => selfTabs().length < 2 ? '' : `<div class="self-tabs">
 // Quem usa só o app: área que apresenta a consultoria (com botão para falar com o professor)
 function renderConsultTab(p, greet) {
   const cn = p.coachName || (!CLOUD || (cloud && cloud.role === 'admin') ? (profile(ME) || {}).name : ''), coach = cn ? firstName({ name: cn }) : 'seu professor', asked = p.consultReq;
-  const msg = `Oi, ${coach}! Aqui é ${firstName(p)}, uso o app de treino e quero saber mais sobre a consultoria.`;
+  const msg = `Oi, ${coach}! Aqui é ${firstName(p)}, uso o app PassosFit e quero saber mais sobre a consultoria.`;
   $main.innerHTML = `${greet}${selfTabsHtml()}
     <section class="card consult-card"><h2 style="margin:0 0 6px">Treine com acompanhamento</h2>
       <p style="margin:0 0 12px;color:var(--muted)">Na consultoria, ${esc(coach)} monta e ajusta o seu treino e acompanha a sua evolução de perto.</p>
@@ -1918,7 +1922,7 @@ function drawCheckin() {
   const cardio = st.cardio ? `${fmtMin(st.cardio)} min de cardio` : '';
   const brand = (y, center, color = '#fff') => { // divulgação do app
     const x = center ? W / 2 : 80; g.fillStyle = color; g.textAlign = center ? 'center' : 'left';
-    g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 12; g.font = F(900, 32); g.fillText('PLANILHA DE TREINO', x, y); g.globalAlpha = .8; g.font = F(500, 27); g.fillText(siteTxt(), x, y + 40); g.globalAlpha = 1; g.shadowBlur = 0; g.textAlign = 'left'; };
+    g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 12; g.font = F(900, 32); g.fillText('PASSOSFIT', x, y); g.globalAlpha = .8; g.font = F(500, 27); g.fillText(siteTxt(), x, y + 40); g.globalAlpha = 1; g.shadowBlur = 0; g.textAlign = 'left'; };
   const check = (cx, cy, r, bg, fg) => { g.fillStyle = bg; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill(); g.strokeStyle = fg; g.lineWidth = r * .2; g.lineCap = 'round'; g.lineJoin = 'round';
     g.beginPath(); g.moveTo(cx - r * .42, cy + r * .02); g.lineTo(cx - r * .1, cy + r * .34); g.lineTo(cx + r * .46, cy - r * .3); g.stroke(); };
   const pill = (txt, x, y, px, bg, fg, center) => { g.font = F(800, px); const tw = g.measureText(txt).width, w = tw + px * 1.4, h = px * 1.9, x0 = center ? x - w / 2 : x;
@@ -1940,7 +1944,7 @@ function drawCheckin() {
     g.font = F(800, 40); const lt = siteTxt(), lw = g.measureText(lt).width + 80;
     g.fillStyle = 'rgba(255,255,255,.95)'; rr(g, (W - lw) / 2, ly + 28, lw, 84, 42); g.fill();
     g.fillStyle = '#121a16'; g.fillText(lt, W / 2, ly + 84);
-    g.font = F(900, 30); g.fillStyle = '#fff'; g.shadowBlur = 12; g.globalAlpha = .9; g.fillText('PLANILHA DE TREINO', W / 2, ly + 170); g.globalAlpha = 1; g.shadowBlur = 0;
+    g.font = F(900, 30); g.fillStyle = '#fff'; g.shadowBlur = 12; g.globalAlpha = .9; g.fillText('PASSOSFIT', W / 2, ly + 170); g.globalAlpha = 1; g.shadowBlur = 0;
     g.textAlign = 'left';
   }
 }
@@ -2779,11 +2783,11 @@ const appLink = () => `${location.origin}${location.pathname}`;
 function appLinkText(p) {
   const n = firstName(p);
   return p.uid
-    ? `Oi, ${n}! Este é o link do nosso app de treino:\n\n${appLink()}\n\n1. Toque no link.\n2. Entre com o seu e-mail e a sua senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`
-    : `Oi, ${n}! Este é o link do nosso app de treino:\n\n${inviteLink(p)}\n\n1. Toque no link.\n2. Crie sua conta com o seu e-mail e uma senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`;
+    ? `Oi, ${n}! Este é o link do app PassosFit:\n\n${appLink()}\n\n1. Toque no link.\n2. Entre com o seu e-mail e a sua senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`
+    : `Oi, ${n}! Este é o link do app PassosFit:\n\n${inviteLink(p)}\n\n1. Toque no link.\n2. Crie sua conta com o seu e-mail e uma senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`;
 }
 // Professor: link de primeiro acesso para qualquer pessoa (cria a conta e pede para entrar)
-const signupText = () => `Oi! Este é o link do nosso app de treino:\n\n${signupLink()}\n\n1. Toque no link.\n2. O app mostra como colocar o ícone na tela do seu celular. Faça isso primeiro.\n3. Abra o app pelo ícone e crie sua conta com seu nome, e-mail e uma senha.\n4. Pronto! Assim que eu liberar, o app abre sozinho. 💪`;
+const signupText = () => `Oi! Este é o link do app PassosFit:\n\n${signupLink()}\n\n1. Toque no link.\n2. O app mostra como colocar o ícone na tela do seu celular. Faça isso primeiro.\n3. Abra o app pelo ícone e crie sua conta com seu nome, e-mail e uma senha.\n4. Pronto! Assim que eu liberar, o app abre sozinho. 💪`;
 function signupLinkHtml() {
   if (!CLOUD || !cloud) return '';
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Link de primeiro acesso</h3>
@@ -5255,7 +5259,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-20:50';
+const APP_VERSION = '06/10-22:26';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {

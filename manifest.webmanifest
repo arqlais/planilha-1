@@ -1,6 +1,6 @@
 {
-  "name": "Planilha de Treino",
-  "short_name": "Treino",
+  "name": "PassosFit",
+  "short_name": "PassosFit",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#2b4637",
