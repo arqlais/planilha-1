@@ -4,6 +4,11 @@
 
 App simples (um único arquivo `index.html`) para registrar treinos de musculação, separado por grupo muscular: **Costas, Peito, Ombros, Bíceps, Tríceps, Abdômen** e, em **Pernas**, **Quadríceps, Posteriores e Panturrilha**. (Exercícios antigos de "Braços" e "Pernas" são distribuídos automaticamente pelo nome.)
 
+## Identidade visual (PassosFit)
+- **Símbolo:** halter em pé (também lembra a letra I), com as anilhas separadas. Está no ícone do app, na tela de login, na aba Treino, no menu do computador, no fundo do topo (bem suave) e na arte do check-in.
+- **Cores:** verde floresta `#1F3B2D`, verde passo `#3E6B52`, verde suave `#7CC48C`, gelo `#F4F6F1`, grafite `#141815`.
+- **Letras:** Archivo (títulos e logo) e Manrope (textos), guardadas em `fonts/` (licença OFL) para funcionar sem internet.
+
 ## Como usar
 
 1. Abra o `index.html` no navegador (celular ou computador). Para usar no celular, ative o **GitHub Pages** do repositório (Settings → Pages → branch principal) e salve o link na tela inicial.

@@ -12,11 +12,11 @@
 <meta name="apple-mobile-web-app-title" content="PassosFit">
 <style>
 :root{
-  --bg:#f2f3f0; --card:#fff; --text:#1f2621; --muted:#6b736d; --line:#e1e4de;
+  --bg:#f4f6f1; --card:#fff; --text:#141815; --muted:#6b736d; --line:#e1e4de;
   --acc:#3e6b52; --acc-2:#5d876e; --acc-soft:#e7ede8; --acc-ink:#fff;
   --up:#2f6b4a; --up-bg:#e3eee6; --down:#8a4b43; --down-bg:#f3e8e5;
   --input:#f7f8f5; --shadow:0 2px 10px rgba(31,38,33,.06);
-  --hero:linear-gradient(160deg,#2b4637 0%,#3e6b52 100%);
+  --hero:linear-gradient(160deg,#1f3b2d 0%,#3e6b52 100%); --brand-soft:#7cc48c;
   --c1:#23804f; --c2:#7f5fb0; --c3:#c0892a; --c4:#3d78b3; --c5:#b8533d;
   --c6:#1f8f8c; --c7:#c24f8a; --c8:#6f7f22; --c9:#8a6243; --c10:#b03a5b;
   --grid:#eceee9; --axis:#cfd4cc;
@@ -24,31 +24,37 @@
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#121613; --card:#1b211d; --text:#e4e9e4; --muted:#9aa49c; --line:#2b332d;
-    --acc:#7fa88c; --acc-2:#6b9a7c; --acc-soft:#243029; --acc-ink:#12201a;
+    --acc:#7cc48c; --acc-2:#6bb27c; --acc-soft:#243029; --acc-ink:#12201a;
     --up:#8fc0a0; --up-bg:#1f3327; --down:#d09a90; --down-bg:#3a2522;
     --input:#161b17; --shadow:0 2px 10px rgba(0,0,0,.3);
-    --hero:linear-gradient(160deg,#1a2a21 0%,#2b4637 100%);
+    --hero:linear-gradient(160deg,#13241b 0%,#1f3b2d 100%);
     --c1:#35975f; --c2:#9a74c4; --c3:#b98322; --c4:#4f8fd6; --c5:#cf6a52;
     --c6:#33b0ac; --c7:#d56aa0; --c8:#94a83a; --c9:#b0876a; --c10:#e0708f;
     --grid:#232a25; --axis:#3a443c;
   }
 }
+@font-face{font-family:'Archivo';src:url(fonts/archivo.woff2) format('woff2');font-weight:700 900;font-display:swap}
+@font-face{font-family:'Manrope';src:url(fonts/manrope.woff2) format('woff2');font-weight:400 800;font-display:swap}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;max-width:100%;overflow-x:hidden;overflow-x:clip;overscroll-behavior-x:none}
 html{touch-action:pan-y}
-body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);word-spacing:.05em;font:500 15px/1.45 "Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
 input,select,button{font:inherit;color:inherit}
 button{cursor:pointer}
 
 /* ---- topo ---- */
-.hero{background:var(--hero);color:#fff;padding:16px 16px 56px;border-radius:0 0 28px 28px}
+.hero{background:var(--hero);color:#fff;padding:16px 16px 56px;border-radius:0 0 28px 28px;position:relative;overflow:hidden}
+/* marca: o halter da PassosFit bem suave no fundo do topo */
+.hero::after{content:'';position:absolute;right:-26px;top:-6px;width:150px;height:197px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 131.5'%3E%3Crect x='27.3' y='0' width='45.4' height='14.8' rx='7.4' fill='%23ffffff'/%3E%3Crect x='0' y='19.4' width='100' height='14.9' rx='7.45' fill='%23ffffff'/%3E%3Crect x='42.1' y='33' width='15.8' height='65.5' rx='0' fill='%23ffffff'/%3E%3Crect x='0' y='97.2' width='100' height='14.9' rx='7.45' fill='%23ffffff'/%3E%3Crect x='27.3' y='116.7' width='45.4' height='14.8' rx='7.4' fill='%23ffffff'/%3E%3C/svg%3E") no-repeat center/contain;opacity:.07;pointer-events:none}
+.hero-in{position:relative;z-index:1}
+h1,h2,h3,.stats b,.month-sum b,.kv b{font-family:'Archivo',system-ui,sans-serif;letter-spacing:-.01em}
 .hero-in{max-width:760px;margin:0 auto}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .who{display:inline-flex;align-items:center;gap:6px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:4px 12px 4px 4px;font-size:13px;font-weight:700;max-width:100%}
 .who .av{width:24px;height:24px;font-size:11px;background:#fff;color:var(--acc)}
 .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hero h1{margin:8px 0 0;font-size:24px;letter-spacing:-.3px}
+.hero h1{margin:8px 0 0;font-size:25px;font-weight:900;letter-spacing:-.4px}
 .date-chip{position:relative;overflow:hidden;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;white-space:nowrap}
 .date-chip input{position:absolute;inset:0;opacity:0;width:100%;max-width:100%;min-width:0;height:100%;cursor:pointer;-webkit-appearance:none;appearance:none}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
@@ -140,7 +146,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 body.locked > header, body.locked > main, body.locked > nav, body.locked > #studentBar, body.locked > #rest{display:none!important}
 #auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--hero)}
 .auth-card{width:min(400px,100%);background:var(--card);border-radius:22px;padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.auth-card h1{margin:10px 0 2px;font-size:22px}
+.auth-card h1{margin:12px 0 2px;font-size:28px;font-weight:900;letter-spacing:-.02em}
 .auth-card #authSub{margin:0 0 16px;color:var(--muted)}
 .auth-logo{width:52px;height:52px;border-radius:16px;background:var(--acc-soft);display:grid;place-items:center}
 .loader{display:flex;flex-direction:column;align-items:center;margin:4px 0 6px}
@@ -157,7 +163,7 @@ body.locked > header, body.locked > main, body.locked > nav, body.locked > #stud
 @keyframes lift{0%,62%{transform:translateY(0)}70%{transform:translateY(-14px)}78%,100%{transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){.loader .pl,.loader .lift{animation:none;opacity:1}}
 .auth-logo svg{width:30px;height:30px;fill:none;stroke:var(--acc);stroke-width:1.8;stroke-linecap:round}
-.auth-logo svg.pf-mark{width:24px;height:31px;fill:var(--acc);stroke:none}
+.auth-logo svg.pf-mark{width:23px;height:30px;fill:var(--acc);stroke:none}
 .auth-slogan{margin:-4px 0 6px;color:var(--muted);font-size:14px;font-weight:600;letter-spacing:.04em}
 .auth-links{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
 .auth-links .link{font-size:14px}
@@ -371,7 +377,7 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 .demo-steps{margin:0;padding-left:20px;font-size:14.5px;line-height:1.45}.demo-steps li{margin-bottom:6px}
 /* ---- computador (professor) ---- */
 body.desk nav.bottom{top:0;bottom:0;right:auto;width:228px;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;border-top:0;border-right:1px solid var(--line);padding:20px 12px;box-shadow:none}
-body.desk nav.bottom::before{content:'PassosFit';font-weight:800;font-size:16px;padding:4px 12px 16px;color:var(--text)}
+body.desk nav.bottom::before{content:'PassosFit';font-family:'Archivo',sans-serif;font-weight:900;font-size:19px;padding:4px 12px 18px 38px;color:var(--text);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 131.5'%3E%3Crect x='27.3' y='0' width='45.4' height='14.8' rx='7.4' fill='%233e6b52'/%3E%3Crect x='0' y='19.4' width='100' height='14.9' rx='7.45' fill='%233e6b52'/%3E%3Crect x='42.1' y='33' width='15.8' height='65.5' rx='0' fill='%233e6b52'/%3E%3Crect x='0' y='97.2' width='100' height='14.9' rx='7.45' fill='%233e6b52'/%3E%3Crect x='27.3' y='116.7' width='45.4' height='14.8' rx='7.4' fill='%233e6b52'/%3E%3C/svg%3E") no-repeat 12px 3px/17px 22px}
 body.desk nav.bottom button{flex:none;max-width:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 12px;font-size:14.5px;border-radius:12px}
 body.desk .hero{margin-left:228px;border-radius:0 0 0 28px;padding-bottom:52px}
 body.desk .hero-in{max-width:1240px;padding:0 16px}
@@ -578,7 +584,7 @@ input,select,textarea{font-size:16px!important}
 <body>
 <div id="auth" hidden>
   <div class="auth-card">
-    <div class="auth-logo" id="authLogo" aria-hidden="true"><svg viewBox="0 0 100 128" class="pf-mark"><rect x="22" y="0" width="56" height="15" rx="7.5"/><rect x="0" y="24" width="100" height="18" rx="9"/><rect x="41" y="40" width="18" height="48"/><rect x="0" y="86" width="100" height="18" rx="9"/><rect x="22" y="113" width="56" height="15" rx="7.5"/></svg></div>
+    <div class="auth-logo" id="authLogo" aria-hidden="true"><svg viewBox="0 0 100 131.5" class="pf-mark"><rect x="27.3" y="0" width="45.4" height="14.8" rx="7.4"/><rect x="0" y="19.4" width="100" height="14.9" rx="7.45"/><rect x="42.1" y="33" width="15.8" height="65.5"/><rect x="0" y="97.2" width="100" height="14.9" rx="7.45"/><rect x="27.3" y="116.7" width="45.4" height="14.8" rx="7.4"/></svg></div>
     <div class="loader" id="authLoader" hidden aria-hidden="true">
       <svg viewBox="0 0 220 90"><g class="lift">
         <rect class="bar" x="8" y="42" width="204" height="6" rx="3"/>
@@ -857,7 +863,7 @@ const isHeld = (id, pid = ui.profile) => !!(workoutsOf(pid).find(w => w.id === i
 const liveWorkouts = (pid = ui.profile) => workoutsOf(pid).filter(w => !w.hold);
 const firstWorkout = (pid = ui.profile) => (workoutsOf(pid)[0] || {}).id || '';
 const SVG = {
-  treino: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
+  treino: '<path d="M9.6 3.2h4.8M6.6 6.4h10.8M12 6.4v11.2M6.6 17.6h10.8M9.6 20.8h4.8"/>',
   historico: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   evolucao: '<path d="M4 19h16M5 15l4-4 4 3 6-7"/>',
   perfil: '',
@@ -1906,6 +1912,7 @@ function openCheckin(d) {
     drawCheckin();
   };
   ci.paint = paint; paint();
+  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("900 40px 'Archivo'"), document.fonts.load("600 30px 'Manrope'")]).then(() => ci.paint && ci.paint()).catch(() => {});
   const dl = document.getElementById('ciDlg'); if (!dl.open) dl.showModal();
 }
 function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
@@ -1914,7 +1921,15 @@ function drawCheckin() {
   cv.width = W; cv.height = H;
   const g = cv.getContext('2d'), st = ci.st, cs = getComputedStyle(document.documentElement);
   const acc = (cs.getPropertyValue('--acc-2') || '#3e6b52').trim() || '#3e6b52';
-  const F = (w, px) => `${w} ${px}px -apple-system, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
+  const F = (w, px) => `${w} ${px}px ${w >= 800 ? "'Archivo', " : "'Manrope', "}-apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  // símbolo da marca: halter em pé (medidas do ícone)
+  const mark = (x, y, h, color) => { const k = h / 131.5; g.fillStyle = color;
+    [[27.3, 0, 45.4, 14.8, 7.4], [0, 19.4, 100, 14.9, 7.45], [42.1, 33, 15.8, 65.5, 0], [0, 97.2, 100, 14.9, 7.45], [27.3, 116.7, 45.4, 14.8, 7.4]]
+      .forEach(([a, b, w, hh, r]) => { if (r) { rr(g, x + a * k, y + b * k, w * k, hh * k, r * k); g.fill(); } else g.fillRect(x + a * k, y + b * k, w * k, hh * k); }); };
+  const lockup = (cx, base, px, color, accent) => { // halter + PassosFit, centrado em cx
+    g.font = F(900, px); const w1 = g.measureText('Passos').width, w2 = g.measureText('Fit').width, mh = px * 0.95, mw = mh * 100 / 131.5, gap = px * 0.16;
+    const x0 = cx - (mw + gap + w1 + w2) / 2; mark(x0, base - px * 0.72 - (mh - px * 0.72) / 2, mh, color);
+    g.textAlign = 'left'; g.fillStyle = color; g.fillText('Passos', x0 + mw + gap, base); g.fillStyle = accent; g.fillText('Fit', x0 + mw + gap + w1, base); };
   // fundo: foto (cobrindo tudo) ou um dos fundos prontos
   if (ci.img) { const im = ci.img, k = Math.max(W / im.width, H / im.height), w = im.width * k, h = im.height * k; g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
   else ciBackground(g, W, H, ci.bg, acc);
@@ -1944,7 +1959,7 @@ function drawCheckin() {
     g.font = F(800, 40); const lt = siteTxt(), lw = g.measureText(lt).width + 80;
     g.fillStyle = 'rgba(255,255,255,.95)'; rr(g, (W - lw) / 2, ly + 28, lw, 84, 42); g.fill();
     g.fillStyle = '#121a16'; g.fillText(lt, W / 2, ly + 84);
-    g.font = F(900, 30); g.fillStyle = '#fff'; g.shadowBlur = 12; g.globalAlpha = .9; g.fillText('PASSOSFIT', W / 2, ly + 170); g.globalAlpha = 1; g.shadowBlur = 0;
+    g.shadowBlur = 12; lockup(W / 2, ly + 178, 44, '#fff', '#a9ddb4'); g.shadowBlur = 0;
     g.textAlign = 'left';
   }
 }
@@ -5259,7 +5274,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-22:26';
+const APP_VERSION = '06/10-22:38';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
