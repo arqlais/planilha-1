@@ -164,6 +164,8 @@ body.locked > header, body.locked > main, body.locked > nav, body.locked > #stud
 @media (prefers-reduced-motion:reduce){.loader .pl,.loader .lift{animation:none;opacity:1}}
 .auth-logo svg{width:30px;height:30px;fill:none;stroke:var(--acc);stroke-width:1.8;stroke-linecap:round}
 .auth-logo svg.pf-mark{width:23px;height:30px;fill:var(--acc);stroke:none}
+.auth-logo{display:none!important}
+.auth-brand{margin:6px 0 12px;line-height:0}.auth-brand img{height:31px;width:auto;display:block}
 .auth-slogan{margin:-4px 0 6px;color:var(--muted);font-size:14px;font-weight:600;letter-spacing:.04em}
 .auth-links{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
 .auth-links .link{font-size:14px}
@@ -377,7 +379,8 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 .demo-steps{margin:0;padding-left:20px;font-size:14.5px;line-height:1.45}.demo-steps li{margin-bottom:6px}
 /* ---- computador (professor) ---- */
 body.desk nav.bottom{top:0;bottom:0;right:auto;width:228px;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;border-top:0;border-right:1px solid var(--line);padding:20px 12px;box-shadow:none}
-body.desk nav.bottom::before{content:'PassosFit';font-family:'Archivo',sans-serif;font-weight:900;font-size:19px;padding:4px 12px 18px 38px;color:var(--text);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 131.5'%3E%3Crect x='27.3' y='0' width='45.4' height='14.8' rx='7.4' fill='%233e6b52'/%3E%3Crect x='0' y='19.4' width='100' height='14.9' rx='7.45' fill='%233e6b52'/%3E%3Crect x='42.1' y='33' width='15.8' height='65.5' rx='0' fill='%233e6b52'/%3E%3Crect x='0' y='97.2' width='100' height='14.9' rx='7.45' fill='%233e6b52'/%3E%3Crect x='27.3' y='116.7' width='45.4' height='14.8' rx='7.4' fill='%233e6b52'/%3E%3C/svg%3E") no-repeat 12px 3px/17px 22px}
+body.desk nav.bottom::before{content:'';display:block;height:24px;margin:6px 12px 22px;background:url(brand/logo-i.svg) no-repeat left center/auto 24px}
+@media (prefers-color-scheme: dark){body.desk nav.bottom::before{background-image:url(brand/logo-i-escuro.svg)}}
 body.desk nav.bottom button{flex:none;max-width:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 12px;font-size:14.5px;border-radius:12px}
 body.desk .hero{margin-left:228px;border-radius:0 0 0 28px;padding-bottom:52px}
 body.desk .hero-in{max-width:1240px;padding:0 16px}
@@ -595,7 +598,7 @@ input,select,textarea{font-size:16px!important}
       </g></svg>
       <div class="loader-kg"><b id="loaderKg">20</b> kg</div>
     </div>
-    <h1>Passos<span style="color:var(--acc)">Fit</span></h1>
+    <h1 class="auth-brand"><picture><source srcset="brand/logo-i-escuro.svg" media="(prefers-color-scheme: dark)"><img src="brand/logo-i.svg" alt="PassosFit" width="214" height="31"></picture></h1>
     <p class="auth-slogan">um passo por dia</p>
     <p id="authSub">Carregando…</p>
     <form id="authForm" hidden>
@@ -1926,10 +1929,15 @@ function drawCheckin() {
   const mark = (x, y, h, color) => { const k = h / 131.5; g.fillStyle = color;
     [[27.3, 0, 45.4, 14.8, 7.4], [0, 19.4, 100, 14.9, 7.45], [42.1, 33, 15.8, 65.5, 0], [0, 97.2, 100, 14.9, 7.45], [27.3, 116.7, 45.4, 14.8, 7.4]]
       .forEach(([a, b, w, hh, r]) => { if (r) { rr(g, x + a * k, y + b * k, w * k, hh * k, r * k); g.fill(); } else g.fillRect(x + a * k, y + b * k, w * k, hh * k); }); };
-  const lockup = (cx, base, px, color, accent) => { // halter + PassosFit, centrado em cx
-    g.font = F(900, px); const w1 = g.measureText('Passos').width, w2 = g.measureText('Fit').width, mh = px * 0.95, mw = mh * 100 / 131.5, gap = px * 0.16;
-    const x0 = cx - (mw + gap + w1 + w2) / 2; mark(x0, base - px * 0.72 - (mh - px * 0.72) / 2, mh, color);
-    g.textAlign = 'left'; g.fillStyle = color; g.fillText('Passos', x0 + mw + gap, base); g.fillStyle = accent; g.fillText('Fit', x0 + mw + gap + w1, base); };
+  const lockup = (cx, base, px, color, accent) => { // logo PassosFit com o halter em pé no lugar do i, centrado em cx
+    g.font = F(900, px); const tr = -0.03 * px, cap = px * 0.72;
+    const wP = g.measureText('Passos').width + tr, wF = g.measureText('F').width + tr, wt = g.measureText('t').width;
+    const mh = cap * 1.06, mw = mh * 100 / 131.5, gl = px * 0.03, gr = px * 0.035, total = wP + wF + gl + mw + gr + wt;
+    let x = cx - total / 2; g.textAlign = 'left';
+    g.fillStyle = color; g.fillText('Passos', x, base); x += wP;
+    g.fillStyle = accent; g.fillText('F', x, base); x += wF + gl;
+    mark(x, base - mh, mh, accent); x += mw + gr;
+    g.fillStyle = accent; g.fillText('t', x, base); };
   // fundo: foto (cobrindo tudo) ou um dos fundos prontos
   if (ci.img) { const im = ci.img, k = Math.max(W / im.width, H / im.height), w = im.width * k, h = im.height * k; g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
   else ciBackground(g, W, H, ci.bg, acc);
@@ -5274,7 +5282,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '06/10-22:38';
+const APP_VERSION = '07/10-06:49';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
