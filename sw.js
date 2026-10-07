@@ -1,8 +1,8 @@
 // PassosFit: guarda o app no aparelho para abrir e anotar o treino sem internet.
 // Página e configuração: busca na internet primeiro (para pegar a versão nova) e, sem internet, usa a cópia guardada.
 // Arquivos que não mudam (Firebase, ícones): usa a cópia guardada.
-const CACHE = 'planilha-app-v1';
-const FILES = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'fonts/archivo.woff2', 'fonts/manrope.woff2', 'brand/logo-i.svg', 'brand/logo-i-escuro.svg',
+const CACHE = 'passosfit-v2'; // nome novo: apaga a cópia antiga (ícones e letras antigos)
+const FILES = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'icon-pf-192.png', 'icon-pf-512.png', 'apple-touch-icon.png', 'fonts/archivo.woff2', 'fonts/manrope.woff2', 'brand/logo-i.svg', 'brand/logo-i-escuro.svg',
   'vendor/firebase/firebase-app-compat.js', 'vendor/firebase/firebase-auth-compat.js', 'vendor/firebase/firebase-firestore-compat.js'];
 
 self.addEventListener('install', e => {
