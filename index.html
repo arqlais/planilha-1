@@ -506,6 +506,8 @@ body.offline #offBar{display:block}
 .cal button{height:34px;border:0;border-radius:8px;background:transparent;font-weight:600;font-size:13px;color:var(--text);padding:0;position:relative}
 .cal button.has{background:var(--hero);color:#fff}
 .cal button.planned{box-shadow:inset 0 -3px 0 var(--acc);background:var(--acc-soft)}
+.cal button.missed{background:var(--down-bg);color:var(--down);position:relative}
+.cal button.missed::after{content:'';position:absolute;left:22%;right:22%;top:50%;height:2px;background:currentColor;opacity:.7;transform:rotate(-12deg)}
 .cal button.today{outline:2px solid var(--acc-2);outline-offset:-2px}
 .cal button.sel{box-shadow:0 0 0 3px var(--text) inset}
 .cal button:not(.has):not(:disabled):hover{background:var(--acc-soft)}
@@ -2189,6 +2191,13 @@ function dayCard(d, list) {
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}">📸 Check-in</button>` : ''}</div>
   </section>`;
 }
+// Dia com treino planejado que já passou e o aluno não treinou (aparece no calendário como "não fez")
+function missedDay(p, iso) {
+  if (!p || iso >= today()) return false;
+  const first = trainedDates(p.id)[0]; if (!first || iso < first || iso < addDays(today(), -120)) return false; // antes de começar a usar o app não conta
+  const o = datePlan(p, iso); if (o && o.skip) return false; // dia apagado pelo professor
+  return dayPlan(p, iso).some(w => w !== CARDIO && !isHeld(w, p.id));
+}
 function renderHistorico() {
   const loadingOld = isOldMonth(ui.profile, ui.month);
   ensureFull(ui.profile); // traz também os meses antigos, para aparecerem em "meses com treino
@@ -2217,15 +2226,16 @@ function renderHistorico() {
     // Professor no calendário de um aluno: dias futuros abrem o planejamento daquela data
     const planner = !ui.studentMode && ui.profile !== ME, fut = iso > today();
     const planned = planner && fut && dayPlan(profile(ui.profile), iso).some(x => x !== CARDIO);
-    const cls = [has ? 'has' : '', iso === today() ? 'today' : '', iso === sel ? 'sel' : '', planned ? 'planned' : ''].join(' ');
-    cells += `<button class="${cls}" data-act="${planner && fut ? 'plan-day' : 'pickday'}" data-d="${iso}" ${fut && !planner ? 'disabled' : ''} aria-label="${weekday(iso)}, ${fmtDate(iso)}${has ? ', com treino' : planned ? ', treino planejado' : ''}">${d}</button>`;
+    const missed = !has && missedDay(profile(ui.profile), iso);
+    const cls = [has ? 'has' : '', iso === today() ? 'today' : '', iso === sel ? 'sel' : '', planned ? 'planned' : '', missed ? 'missed' : ''].join(' ');
+    cells += `<button class="${cls}" data-act="${planner && fut ? 'plan-day' : 'pickday'}" data-d="${iso}" ${fut && !planner ? 'disabled' : ''} aria-label="${weekday(iso)}, ${fmtDate(iso)}${has ? ', com treino' : planned ? ', treino planejado' : missed ? ', não fez o treino' : ''}">${d}</button>`;
   }
 
   let selHtml = '';
   if (sel && days[sel]) selHtml = dayCard(sel, days[sel]);
   else if (sel) selHtml = `<section class="card" id="day-${sel}">
       <div class="day-h"><div class="d">${sel.slice(8)}<small>${toDate(sel).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></div>
-        <div class="grow"><h3>${weekday(sel)}</h3><small style="color:var(--muted)">Nenhum treino anotado neste dia</small></div></div>
+        <div class="grow"><h3>${weekday(sel)}</h3><small style="color:${missedDay(profile(ui.profile), sel) ? 'var(--down)' : 'var(--muted)'}">${missedDay(profile(ui.profile), sel) ? `Não fez o treino deste dia (${dayPlan(profile(ui.profile), sel).filter(w => w !== CARDIO).map(w => esc(wName(w, ui.profile))).join(' + ')}). Não conta nas séries da semana.` : 'Nenhum treino anotado neste dia'}</small></div></div>
       ${sel === today() ? `<div class="actions"><button class="btn primary" data-act="openday" data-d="${sel}" data-g="${ui.group}">Anotar treino de hoje</button></div>` : '<p class="hint" style="margin:6px 0 0">Dias passados ficam só para consulta.</p>'}
     </section>`;
 
@@ -2234,7 +2244,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal compact">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">Dias destacados: dias treinados. Toque em um dia para ver o que foi marcado.</p>
+      <p class="hint" style="margin:10px 0 0">Dias destacados: dias treinados. Dias riscados em vermelho: tinha treino e não foi feito. Toque em um dia para ver o que foi marcado.</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>${monthDays.length === 1 ? 'dia treinado' : 'dias treinados'}</span></div></div>
     </section>${selHtml}`; // séries da semana: só o professor vê
     return;
@@ -2245,7 +2255,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : ui.profile !== ME ? 'Toque em um dia para ver o treino. Dias futuros: toque para planejar o treino daquela data (marcados = treino planejado).' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
+      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : ui.profile !== ME ? 'Toque em um dia para ver o treino. Riscados em vermelho: tinha treino e o aluno não fez (não contam nas séries da semana). Dias futuros: toque para planejar o treino daquela data (marcados = treino planejado).' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
         <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(Math.round(monthVol))}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
@@ -2949,7 +2959,8 @@ function weekSetsHtml(p) {
     const e = it.e, g = groupOf(e);
     let n = (e.sets || []).length;
     if (it.s) n = it.s.sets.length;
-    else if (it.d <= t && doneDay.has(it.d + '|' + it.w)) return;
+    else if (it.d < t && doneDay.has(it.d + '|' + it.w)) return; // dia que passou: exercício que ficou de fora não conta (hoje ainda conta)
+    else if (it.d < t) return; // dia que passou e o aluno não fez: não conta (se foi passado para outro dia, conta lá)
     else if (it.d <= t && e.planDate && e.planDate > it.d) { const pv = prevSession(e.id, e.planDate); if (pv) n = pv.sets.length; }
     plan[g] = (plan[g] || 0) + n;
     (why[g] = why[g] || []).push({ d: it.d, w: it.w, name: e.name, n });
@@ -5335,7 +5346,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '07/10-22:18';
+const APP_VERSION = '08/10-00:26';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
