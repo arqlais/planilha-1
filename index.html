@@ -2823,7 +2823,8 @@ function studentAccountHtml(p) {
   if (p.test) return '';
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Conta de ${esc(firstName(p))}</h3>
       <small>${CLOUD && p.uid ? 'Tirar acesso: a pessoa não entra mais no app, mas os treinos e o histórico ficam aqui com você (dá para mandar um link novo depois).' : ''} Excluir: o aluno sai da lista e vai para a lixeira, no fim da área de alunos. De lá dá para trazer de volta ou apagar de vez.</small></div></div>
-    <div class="actions">${CLOUD && p.uid ? `<button class="btn" data-act="acc-unlink">Tirar acesso ao app</button>` : ''}<button class="btn danger" data-act="acc-delete">Excluir aluno</button></div></section>`;
+    ${CLOUD && p.uid ? `<p class="hint" style="margin:0 0 10px">E-mail do login: <b>${p.loginEmail ? esc(p.loginEmail) : 'ainda não registrado (aparece quando ' + esc(firstName(p)) + ' abrir o app)'}</b></p>` : ''}
+    <div class="actions">${CLOUD && p.uid ? `<button class="btn" data-act="acc-reset">Enviar e-mail para trocar a senha</button><button class="btn" data-act="acc-unlink">Tirar acesso ao app</button>` : ''}<button class="btn danger" data-act="acc-delete">Excluir aluno</button></div></section>`;
 }
 function inviteHtml(p) {
   if (!CLOUD) return '';
@@ -3716,6 +3717,14 @@ $main.addEventListener('click', e => {
     case 'export': return exportData();
     case 'test-profile': return openTestProfile();
     case 'acc-p': ui.accP = +b.dataset.p; return render();
+    case 'acc-reset': {
+      const p = profile(ui.profile);
+      return ask({ title: `Trocar a senha de ${firstName(p)}`, msg: `Digite o e-mail que ${firstName(p)} usa para entrar. Chega um e-mail com um link para criar a senha nova.`, field: 'E-mail da conta', value: p.loginEmail || '', ok: 'Enviar e-mail' }).then(async r => {
+        const email = (r && r.value || '').trim().toLowerCase(); if (!r || r.action === 'cancel' || !email) return;
+        try { await sendReset(email); toast(`✓ E-mail enviado para <b>${esc(email)}</b>. Peça para ${esc(firstName(p))} olhar também no Spam.`); }
+        catch (err) { toast(AUTH_ERR[err.code] || 'Não foi possível enviar o e-mail (' + (err.code || 'erro') + ').'); }
+      });
+    }
     case 'acc-delete': return deleteStudent(profile(ui.profile));
     case 'acc-unlink': {
       const p = profile(ui.profile);
@@ -4327,6 +4336,7 @@ async function cloudBoot() {
   if (CFG.emulator) { auth.useEmulator(CFG.emulator.auth); fs.useEmulator(CFG.emulator.host, CFG.emulator.port); }
   if (!CFG.emulator || CFG.emulator.persist) { try { await fs.enablePersistence({ synchronizeTabs: true }); } catch (e) {} } // funciona offline e guarda a cópia do resgate
   try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {} // login fica salvo no aparelho
+  try { auth.languageCode = 'pt-BR'; } catch (e) {} // e-mails (troca de senha) em português
   cloud = { auth, fs, role: null, ready: false, unsubs: [] };
   auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() || firstAccess() ? 'signup' : 'login'); });
 }
@@ -4890,7 +4900,7 @@ function assemble(src = remote) {
     const has = new Set(d.exercises.map(e => e.id));
     (o.exercises || []).forEach(e => { if (!has.has(e.id)) d.exercises.push({ ...e, profileId: p.id, own: true }); });
   });
-  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; delete p.seenAt; delete p.days; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; if (f && f.seenAt) p.seenAt = f.seenAt; if (f && f.days) p.days = f.days; });
+  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; delete p.seenAt; delete p.days; delete p.loginEmail; const f = prefs[p.id]; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; if (f && f.seenAt) p.seenAt = f.seenAt; if (f && f.days) p.days = f.days; if (f && f.email) p.loginEmail = f.email; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
@@ -4902,7 +4912,7 @@ function assemble(src = remote) {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, body, ctMode, consultReq, seen, seenAt, days, ...meta } = p;
+    const { id, color, body, ctMode, consultReq, seen, seenAt, days, loginEmail, ...meta } = p;
     // o aluno não lê o perfil do professor: nome e WhatsApp do professor vão na ficha de cada aluno
     if (id !== ME) { const me = profile(ME) || {}; meta.coachName = me.name || null; meta.coachWa = me.wa || null; }
     if (meta.workouts) meta.workouts = meta.workouts.filter(w => !w.own); // os do aluno vão no documento "own"
@@ -4919,7 +4929,7 @@ function splitDb() {
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
-  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || p.seen || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}) });
+  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || p.seen || p.loginEmail || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}), ...(p.loginEmail ? { email: p.loginEmail } : {}) });
   // Treinos que o aluno montou: documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id)) {
     const ws = (p.workouts || []).filter(w => w.own).map(({ own: _o, ...w }) => w), exs = db.exercises.filter(e => e.profileId === p.id && e.own).map(({ profileId, own: _o, ...e }) => e);
@@ -5109,8 +5119,9 @@ function markSeen() {
   if (!CLOUD || !cloud || cloud.role !== 'student' || !cloud.ready) return;
   const p = profile(cloud.pid); if (!p) return;
   // guarda o dia e a hora (no máximo a cada 30 min) e a lista dos dias em que entrou (últimos 90)
-  if (p.seen === today() && p.seenAt && Date.now() - new Date(p.seenAt) < 30 * 6e4) return;
+  if (p.seen === today() && p.seenAt && Date.now() - new Date(p.seenAt) < 30 * 6e4 && p.loginEmail) return;
   p.seen = today(); p.seenAt = new Date().toISOString();
+  const em = ((cloud.user && cloud.user.email) || '').toLowerCase(); if (em) p.loginEmail = em;
   p.days = [...new Set([...(p.days || []), today()])].sort().slice(-90);
   save();
 }
@@ -5273,16 +5284,25 @@ document.getElementById('authOut').onclick = () => cloud.auth.signOut();
 // Aluno cujo perfil sumiu da nuvem: baixa a cópia que ficou no aparelho para o professor recuperar
 const myRescuePids = () => { const r = readRescue(), me = cloud && cloud.user && cloud.user.uid; return me ? Object.keys(r).filter(pid => (r[pid].docs['profiles/' + pid] || {}).uid === me) : []; };
 document.getElementById('authRescue').onclick = () => downloadText(`resgate-${today()}.json`, rescueFile(myRescuePids()));
+// Troca de senha por e-mail (Firebase). Depois de criar a senha nova, o link volta para o app.
+async function sendReset(email) {
+  const back = { url: location.origin + location.pathname, handleCodeInApp: false };
+  try { await cloud.auth.sendPasswordResetEmail(email, back); }
+  catch (err) { if (/continue-uri|unauthorized-domain|invalid-continue/.test(err.code || '')) await cloud.auth.sendPasswordResetEmail(email); else throw err; }
+}
+const RESET_OK = email => `✅ Pronto! Se <b>${esc(email)}</b> for o e-mail da conta, chega em alguns minutos uma mensagem para criar a senha nova.<br><br><b>Não achou?</b> Olhe no <b>Spam / Lixo eletrônico</b> e em <b>Promoções</b>. O remetente é <b>noreply@treino-8a1e0.firebaseapp.com</b>.<br><br>Abra o link, crie a senha nova e volte aqui para entrar.`;
 document.getElementById('authForgot').onclick = async () => {
-  const email = $authForm.email.value.trim();
-  if (!email) return document.getElementById('authMsg').textContent = 'Digite seu e-mail acima e toque em "Esqueci a senha" de novo.';
-  try { await cloud.auth.sendPasswordResetEmail(email); document.getElementById('authMsg').textContent = 'Enviamos um e-mail para você criar uma nova senha.'; }
-  catch (err) { document.getElementById('authMsg').textContent = AUTH_ERR[err.code] || 'Não foi possível enviar o e-mail.'; }
+  const msg = document.getElementById('authMsg'), email = $authForm.email.value.trim().toLowerCase();
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = 'Digite no campo "E-mail" o e-mail da sua conta e toque em "Esqueci a senha" de novo.'; $authForm.email.focus(); return; }
+  const b = document.getElementById('authForgot'); b.disabled = true; msg.textContent = 'Enviando…';
+  try { await sendReset(email); msg.innerHTML = RESET_OK(email); }
+  catch (err) { msg.textContent = AUTH_ERR[err.code] || ('Não foi possível enviar o e-mail (' + (err.code || 'erro') + '). Tente de novo em alguns minutos.'); }
+  finally { b.disabled = false; }
 };
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '07/10-20:58';
+const APP_VERSION = '07/10-21:31';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
