@@ -4585,6 +4585,39 @@ async function fixOnce() {
     mark('teste-semana-0510');
   }
   // 1g) Leandro: o Supino inclinado de agora não comparava com o que ele já tinha feito (nome diferente). Liga os dois.
+  // 1h) Professor: Peito/Costas feito em duas academias (máquinas e pesos diferentes).
+  //     O treino de até 03/10 vira "Peito/Costas Evoque"; o de depois (Sky) vira um treino novo "Costas/Peito Sky",
+  //     com os mesmos exercícios e o histórico separado (cada um compara só com a mesma academia).
+  if (!done.has('academias-evoque-sky')) {
+    await ensureFull(ME);
+    const me2 = profile(ME), nm = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const w = (me2.workouts || []).find(x => /peito/.test(nm(x.name)) && /costas/.test(nm(x.name)) && !/evoque|sky/.test(nm(x.name)));
+    if (w) {
+      const CUT = '2026-10-04', exs = db.exercises.filter(e => e.profileId === ME && e.letter === w.id);
+      const skyId = uid(), skyEx = [];
+      me2.workouts.splice(me2.workouts.indexOf(w) + 1, 0, { id: skyId, name: 'Costas/Peito Sky' });
+      let moved = 0;
+      exs.forEach(e => {
+        const k = nm(e.name).replace(/\s+/g, ' ').trim();
+        const sky = { ...plain(e), id: uid(), letter: skyId, twin: 'sky|' + k };
+        delete sky.planDate; delete sky.archived;
+        e.twin = 'evoque|' + k; // a partir daqui só compara com a Evoque
+        const later = db.sessions.filter(x => x.exId === e.id && x.date >= CUT);
+        later.forEach(x => { x.exId = sky.id; moved++; });
+        const last = later.sort((a, b) => b.date.localeCompare(a.date))[0];
+        if (last) sky.sets = last.sets.map(({ carga, reps }) => ({ carga, reps }));
+        const evo = db.sessions.filter(x => x.exId === e.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+        if (evo) e.sets = evo.sets.map(({ carga, reps }) => ({ carga, reps }));
+        skyEx.push(sky);
+      });
+      db.exercises.push(...skyEx);
+      w.name = 'Peito/Costas Evoque';
+      if (ui.profile === ME && ui.group === w.id && moved) ui.group = skyId;
+      msgs.push(`Seu treino foi separado por academia: <b>Peito/Costas Evoque</b> (até 03/10) e <b>Costas/Peito Sky</b> (${moved} exercício${moved === 1 ? '' : 's'} de hoje). Cada um compara só com a mesma academia.`);
+      save();
+    }
+    mark('academias-evoque-sky');
+  }
   if (!done.has('leandro-supino-inclinado')) {
     const pl = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Leandro'));
     if (pl) {
@@ -5302,7 +5335,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '07/10-21:31';
+const APP_VERSION = '07/10-22:18';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
