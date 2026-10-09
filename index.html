@@ -235,6 +235,17 @@ body.locked > header, body.locked > main, body.locked > nav, body.locked > #stud
 .set.up .meta .tot{color:var(--up)}
 .set.down .meta .tot{color:var(--down)}
 
+/* prancha: cronômetro em cada série */
+.set.plank{grid-template-columns:22px minmax(0,1fr) 92px 34px;justify-content:stretch;padding:7px 4px}
+.plank-go{height:38px;padding:0 10px;font-size:14px;font-weight:800;white-space:nowrap}
+.plank-go.stop{background:var(--down);border-color:var(--down);color:#fff;font-variant-numeric:tabular-nums;animation:plankPulse 1.2s infinite}
+@keyframes plankPulse{50%{opacity:.82}}
+.set.plank.running{background:var(--down-bg)}
+.plank-sec{display:flex;align-items:center;gap:4px;background:var(--input);border:1px solid var(--line);border-radius:9px;height:38px;padding:0 8px 0 4px}
+.plank-sec input{flex:1;min-width:0;width:100%;border:0;background:transparent;text-align:center;font-weight:800;font-size:16px;padding:0;outline:none;color:var(--text)}
+.plank-sec span{font-size:11px;color:var(--muted);font-weight:700}
+.set.plank.done .plank-sec{border-color:var(--acc-2)}
+
 /* séries em quadrados */
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:5px}
 .tile{border:1.5px solid var(--line);border-radius:12px;padding:4px;background:var(--input);display:grid;gap:4px;transition:background .2s,border-color .2s}
@@ -749,7 +760,7 @@ input,select,textarea{font-size:16px!important}
       <label class="f">Carga (kg)<input name="carga" inputmode="decimal" placeholder="0"></label>
       <label class="f">Repetições<input name="reps" inputmode="numeric" placeholder="opcional"></label>
     </div>
-    <label class="chk-line"><input type="checkbox" name="noload"> Sem carga (só repetições) — ex.: abdominal livre, flexão, prancha</label>
+    <label class="chk-line"><input type="checkbox" name="noload"> Sem carga (só repetições) — ex.: abdominal livre, flexão. A prancha já vem com cronômetro (segundos).</label>
     <label class="f" id="twinF" hidden>Comparar com o histórico de<select name="twin" class="sel"></select>
       <small style="color:var(--muted);font-weight:500">Use quando o aluno já fez este exercício com outro nome: o "antes" e a comparação passam a usar os treinos dele.</small></label>
     <p class="hint">É só o ponto de partida: depois do primeiro treino, o app já preenche tudo com os valores da última vez.</p>
@@ -838,13 +849,16 @@ const CATALOG = {
   Ombros: ['Desenvolvimento com halteres', 'Desenvolvimento máquina', 'Elevação lateral', 'Elevação frontal', 'Crucifixo inverso', 'Encolhimento'],
   'Bíceps': ['Rosca direta', 'Rosca alternada', 'Rosca martelo', 'Rosca Scott', 'Rosca na polia', 'Rosca concentrada'],
   'Tríceps': ['Tríceps polia', 'Tríceps corda', 'Tríceps testa', 'Tríceps francês', 'Tríceps banco', 'Tríceps coice'],
-  'Abdômen': ['Abdominal livre', 'Abdominal infra', 'Prancha', 'Abdominal na máquina', 'Elevação de pernas', 'Abdominal oblíquo'],
+  'Abdômen': ['Abdominal livre', 'Abdominal infra', 'Abdominal prancha', 'Abdominal na máquina', 'Elevação de pernas', 'Abdominal oblíquo'],
   'Quadríceps': ['Agachamento livre', 'Agachamento no Smith', 'Leg press', 'Cadeira extensora', 'Afundo', 'Agachamento búlgaro', 'Hack'],
   Posteriores: ['Cadeira flexora', 'Mesa flexora', 'Stiff', 'Levantamento terra romeno', 'Flexora em pé'],
   'Glúteos': ['Elevação pélvica', 'Cadeira abdutora', 'Glúteo na polia', 'Agachamento sumô', 'Passada', 'Cadeira adutora'],
   Panturrilha: ['Panturrilha em pé', 'Panturrilha sentado', 'Panturrilha no leg press'],
 };
 const NOLOAD_RX = /abdominal livre|abdominal infra|abdominal obliquo|prancha|elevacao de pernas|flexao de braco|barra fixa/;
+// Prancha: em vez de repetições, cada série guarda os SEGUNDOS que o aluno aguentou (cronômetro na série)
+const isTimed = ex => !!ex && /prancha/.test(normName(ex.name));
+const fmtSec = v => { if (v == null) return '–'; const t = Math.round(v), m = Math.floor(t / 60), r = t % 60; return m ? `${m} min${r ? ` ${String(r).padStart(2, '0')} s` : ''}` : `${r} s`; };
 const catGroup = name => { const n = (name || '').toLowerCase(); for (const [g, l] of Object.entries(CATALOG)) if (l.some(x => x.toLowerCase() === n)) return g; return null; };
 // Treinos prontos: o aluno escolhe um e já começa
 const READY = [
@@ -854,7 +868,7 @@ const READY = [
   { name: 'Peito e tríceps', ex: ['Supino reto', 'Supino inclinado', 'Crucifixo', 'Tríceps polia', 'Tríceps testa'] },
   { name: 'Costas e bíceps', ex: ['Puxada frontal', 'Remada baixa', 'Remada unilateral (serrote)', 'Rosca direta', 'Rosca martelo'] },
   { name: 'Pernas e glúteos', ex: ['Agachamento livre', 'Leg press', 'Cadeira extensora', 'Cadeira flexora', 'Elevação pélvica', 'Cadeira abdutora'] },
-  { name: 'Ombros e abdômen', ex: ['Desenvolvimento com halteres', 'Elevação lateral', 'Elevação frontal', 'Crucifixo inverso', 'Abdominal livre', 'Prancha'] },
+  { name: 'Ombros e abdômen', ex: ['Desenvolvimento com halteres', 'Elevação lateral', 'Elevação frontal', 'Crucifixo inverso', 'Abdominal livre', 'Abdominal prancha'] },
 ];
 const OLD_GROUPS = { 'Braços': ['Bíceps', 'Tríceps'], Pernas: LEGS };
 // Treinos de cada perfil com nome livre (ex.: "Superiores", "Treino A"). Cada exercício guarda o id do
@@ -2012,15 +2026,41 @@ const stepper = (f, v, label, hint) => `<div class="step">
   <input data-f="${f}" inputmode="${f === 'carga' ? 'decimal' : 'numeric'}" value="${numVal(v)}" placeholder="${hint != null ? numVal(hint) : f === 'carga' ? 'kg' : '–'}" aria-label="${label}">
   <button data-act="inc" data-f="${f}" aria-label="Aumentar ${label}">+</button></div>`;
 
+// Prancha: uma linha por série com o cronômetro (conta 3 s para a pessoa se posicionar e depois conta os segundos)
+function plankRowHtml(ex, x, p, h, i) {
+  const run = ui.plank && ui.plank.exId === ex.id && ui.plank.i === i;
+  return `<div class="set plank ${run ? 'running' : rowClass(x, p)}" data-i="${i}" data-base="set plank">
+    <span class="num">${i + 1}</span>
+    ${run ? `<button class="btn plank-go stop" data-act="plank-stop"><span data-plank-t>${plankText()}</span> · Parar</button>`
+      : `<button class="btn plank-go" data-act="plank-start" aria-label="Cronometrar a série ${i + 1}">⏱ ${x.done ? 'De novo' : 'Começar'}</button>`}
+    <label class="plank-sec"><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : '–'}" aria-label="segundos da série ${i + 1}"><span>seg</span></label>
+    <button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button>
+    <div class="meta"><span>${p && p.done ? `antes: ${fmtSec(p.reps)}` : 'sem registro anterior'}</span><span class="tot">${x.done && x.reps != null ? fmtSec(x.reps) : ''}</span></div>
+  </div>`;
+}
+function plankText() {
+  const pl = ui.plank; if (!pl) return '';
+  const ms = Date.now() - pl.start;
+  return ms < 0 ? `Prepare… ${Math.ceil(-ms / 1000)}` : fmtSec(Math.floor(ms / 1000));
+}
+let plankTimer = null, plankBeeped = false;
+function tickPlank() {
+  if (!ui.plank) { clearInterval(plankTimer); return; }
+  const ms = Date.now() - ui.plank.start;
+  if (ms >= 0 && !plankBeeped) { plankBeeped = true; if (navigator.vibrate) navigator.vibrate(200); }
+  document.querySelectorAll('[data-plank-t]').forEach(el => { el.textContent = plankText(); });
+}
+
 function cardHtml(ex) {
   const lock = lockReason(ex.id);
   if (lock === 'past' && !sessionOn(ex.id, ui.date)) return `<div class="card-h"><div class="grow"><h3>${esc(ex.name)}</h3><small>${ex.group} · sem registro neste dia</small></div></div>`;
   const s = sessionOn(ex.id, ui.date) || blankSession(ex, ui.date), hints = blankSession(ex, ui.date).sets;
   const prev = prevSession(ex.id, ui.date);
   const done = s.sets.filter(x => x.done).length, n = s.sets.length;
-  const tiles = ui.layout !== 'list';
+  const tiles = ui.layout !== 'list', tm = isTimed(ex);
   const rows = s.sets.map((x, i) => {
     const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
+    if (tm) return plankRowHtml(ex, x, p, h, i);
     if (tiles) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></div>
       ${ex.noLoad ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
@@ -2043,7 +2083,7 @@ function cardHtml(ex) {
         ${exDetailHtml(ex)}</div>
       ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
-    ${tiles ? `<div class="tile-key">Em cada série: ${ex.noLoad ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
+    ${tm ? `<div class="tile-key">Em cada série: toque em <b>⏱ Começar</b>, fique na prancha e toque em <b>Parar</b> quando não aguentar mais. O tempo fica anotado.</div><div class="plank-rows">${rows}</div>` : tiles ? `<div class="tile-key">Em cada série: ${ex.noLoad ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
     ${lock ? `<p class="lock-note">🔒 ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em ⋯'}</p>` : `<div class="actions">
       <button class="btn" data-act="addset">＋ série</button>
@@ -2095,18 +2135,19 @@ const setTotal = x => x.carga != null && x.reps != null ? `${fmt(x.carga * x.rep
 function rowClass(x, p) {
   if (!x.done) return '';
   if (!p || !p.done) return 'done';
-  const cv = setVol(x), pv = setVol(p);
+  let cv = setVol(x), pv = setVol(p);
+  if (x.carga == null && p.carga == null) { cv = x.reps || 0; pv = p.reps || 0; } // sem carga / prancha: compara repetições (segundos)
   return 'done' + (cv > pv ? ' up' : cv < pv ? ' down' : '');
 }
 function compareHtml(s, prev) {
-  const ex = exById(s.exId), nl = !!(ex && ex.noLoad), u = nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições
+  const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && ex.noLoad) || tm, u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
   const reps = sets => sets.reduce((a, x) => a + (x.done && x.reps != null ? x.reps : 0), 0);
   const total = nl ? reps(s.sets) : vol(s.sets), pt = prev ? (nl ? reps(prev.sets) : vol(prev.sets)) : 0, max = Math.max(total, pt, 1);
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
   return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}</small></span>
-      <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${fmt(total)} ${u}</b></div>
+      <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${tm ? fmtSec(total) : `${fmt(total)} ${u}`}</b></div>
     ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}</small></span>
-      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${fmt(pt)} ${u}</b></div>`
+      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${tm ? fmtSec(pt) : `${fmt(pt)} ${u}`}</b></div>`
       : '<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>'}
     <div>${prev ? progress(total, pt, finished, u) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
 }
@@ -2291,7 +2332,7 @@ function weeklySeries(n) {
     if (!e || i == null) continue;
     for (const x of s.sets) if (x.done) {
       const b = acc[e.group][i];
-      b.any = true; b.reps += x.reps || 0;
+      b.any = true; b.reps += isTimed(e) ? 0 : x.reps || 0; // segundos da prancha não somam como repetições
       if (x.carga != null) { b.sum += x.carga; b.cnt++; }
     }
   }
@@ -2501,7 +2542,8 @@ function renderEvolution() {
         return `<div class="ex-h">${esc(e.name)}</div><table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>
           ${h.slice().reverse().map((s, i, arr) => {
             const done = s.sets.filter(x => x.done), before = arr[i + 1];
-            return `<tr><td>${fmtDate(s.date)}</td><td>${done.length}</td><td>${done.reduce((a, x) => a + (x.reps || 0), 0)}</td>
+            const r = done.reduce((a, x) => a + (x.reps || 0), 0);
+            return `<tr><td>${fmtDate(s.date)}</td><td>${done.length}</td><td>${isTimed(e) ? fmtSec(r) : r}</td>
               <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
           }).join('')}</tbody></table>`;
       }).join('');
@@ -3693,7 +3735,7 @@ function autoCheck(inp) {
   const ex = exById(card.dataset.ex);
   if (lockReason(ex.id)) return;
   const s = ensureSession(ex, ui.date), i = +row.dataset.i, x = s.sets[i];
-  if (x.done || (x.carga == null && !ex.noLoad) || x.reps == null) return;
+  if (x.done || (x.carga == null && !ex.noLoad && !isTimed(ex)) || x.reps == null) return;
   const wasComplete = s.sets.every(y => y.done);
   x.done = true; save();
   if (navigator.vibrate) navigator.vibrate(30);
@@ -4070,9 +4112,24 @@ $main.addEventListener('click', e => {
   if (lockReason(ex.id)) return toast(LOCK_MSG[lockReason(ex.id)]);
   const s = ensureSession(ex, ui.date);
   const wasComplete = s.sets.every(x => x.done);
-  if (act === 'done') {
+  if (act === 'plank-start') {
+    const old = ui.plank;
+    ui.plank = { exId: ex.id, i: +b.closest('[data-i]').dataset.i, start: Date.now() + 3000 }; plankBeeped = false;
+    clearInterval(plankTimer); plankTimer = setInterval(tickPlank, 250);
+    if (old && old.exId !== ex.id) refreshCard(old.exId);
+    return refreshCard(ex.id);
+  } else if (act === 'plank-stop') {
+    const pl = ui.plank; ui.plank = null; clearInterval(plankTimer);
+    if (!pl) return refreshCard(ex.id);
+    const sec = Math.floor((Date.now() - pl.start) / 1000), x = s.sets[pl.i];
+    if (sec <= 0 || !x) return refreshCard(ex.id); // parou antes de começar: não anota nada
+    x.reps = sec; x.carga = null; x.done = true;
+    if (navigator.vibrate) navigator.vibrate(30);
+    toast(`Série ${pl.i + 1}: <b>${fmtSec(sec)}</b> na prancha 💪`);
+    if (!s.sets.every(y => y.done)) startRest(ex.rest);
+  } else if (act === 'done') {
     const x = s.sets[+b.closest('[data-i]').dataset.i];
-    if (!x.done && ((x.carga == null && !ex.noLoad) || x.reps == null)) return toast(ex.noLoad ? 'Anote as <b>repetições</b> para confirmar a série.' : 'Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
+    if (!x.done && ((x.carga == null && !ex.noLoad && !isTimed(ex)) || x.reps == null)) return toast(isTimed(ex) ? 'Use o <b>⏱ Começar</b> ou anote os <b>segundos</b> para confirmar a série.' : ex.noLoad ? 'Anote as <b>repetições</b> para confirmar a série.' : 'Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
     x.done = !x.done;
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(ex.rest); }
   } else if (act === 'inc' || act === 'dec') {
@@ -4087,7 +4144,7 @@ $main.addEventListener('click', e => {
   } else if (act === 'alldone') {
     if (s.sets.every(x => x.done)) s.sets.forEach(x => x.done = false);
     else {
-      const ok = s.sets.filter(x => (x.carga != null || ex.noLoad) && x.reps != null);
+      const ok = s.sets.filter(x => (x.carga != null || ex.noLoad || isTimed(ex)) && x.reps != null);
       if (!ok.length) return toast('Anote a <b>carga</b> e as <b>repetições</b> para confirmar as séries.');
       ok.forEach(x => x.done = true);
       if (ok.length < s.sets.length) toast('Só foram confirmadas as séries com carga e repetições anotadas.');
@@ -4588,6 +4645,21 @@ async function fixOnce() {
     db.exercises.forEach(e => { if (/abdominal livre/.test(normName(e.name)) && !e.noLoad) { e.noLoad = true; n++; } });
     mark('abdominal-livre-semcarga');
     if (n) save();
+  }
+  // 1e2) Professor (09/10): Abdominal prancha no treino de abdômen, com cronômetro em cada série
+  if (!done.has('abdominal-prancha')) {
+    await ensureFull(ME);
+    const mine = db.exercises.filter(e => e.profileId === ME);
+    if (!mine.some(e => isTimed(e) && !e.archived)) {
+      const abd = mine.filter(e => e.group === 'Abdômen' && !e.archived), ref = abd.find(e => e.letter) || abd[0];
+      const ex = { id: uid(), profileId: ME, group: 'Abdômen', letter: ref ? ref.letter || null : null, name: 'Abdominal prancha', noLoad: true, sets: [1, 2, 3].map(() => ({ carga: null, reps: null })) };
+      const at = ref ? db.exercises.lastIndexOf(abd.filter(e => e.letter === ex.letter).pop() || ref) + 1 : db.exercises.length;
+      db.exercises.splice(at, 0, ex);
+      const w = ex.letter && (profile(ME).workouts || []).find(x => x.id === ex.letter);
+      msgs.push(`<b>Abdominal prancha</b> entrou no seu treino${w ? ` (${esc(w.name)})` : ' de abdômen'}: em cada série tem o ⏱ para cronometrar quanto tempo você aguenta.`);
+      save();
+    }
+    mark('abdominal-prancha');
   }
   // 1f) Perfil de teste: simula a semana feita com os treinos montados (pedido do professor em 05/10)
   if (!done.has('teste-semana-0510')) {
@@ -5346,7 +5418,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '08/10-00:26';
+const APP_VERSION = '09/10-06:08';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
