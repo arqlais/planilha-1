@@ -1267,9 +1267,9 @@ const THEMES = {"azul": {"light": {"--acc": "#2f5fa7", "--acc-2": "#4a78bf", "--
 const THEME_VARS = ['--acc', '--acc-2', '--acc-soft', '--acc-ink', '--hero'];
 const darkMq = matchMedia('(prefers-color-scheme: dark)');
 let shownColor = 'verde';
-// Visual novo (teste): só no aparelho do professor (fica guardado no aparelho, não na conta). Aluno nunca vê.
-const skinAllowed = () => !CLOUD || !!(cloud && cloud.role === 'admin');
-function skinOn() { if (!skinAllowed()) return false; try { return localStorage.getItem('pf-visual') !== 'antigo'; } catch (e) { return true; } }
+// Visual novo (azul + lima, desenho da Passos Fit 2.0): vale para todos. Só o professor tem o botão para voltar ao antigo (no aparelho dele).
+const skinAllowed = () => !CLOUD || !!(cloud && cloud.role === 'admin'); // quem vê o botão de ligar/desligar e a prévia
+function skinOn() { if (!skinAllowed()) return true; try { return localStorage.getItem('pf-visual') !== 'antigo'; } catch (e) { return true; } }
 function applySkin() {
   const root = document.documentElement, on = skinOn();
   if (on === (root.dataset.skin === 'v2')) return;
@@ -1317,7 +1317,7 @@ function openSettings() {
   const me = profile(ME);
   document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
     ? `<label class="f">Minha meta de cardio por dia (minutos)<input id="setGoal" inputmode="numeric" placeholder="ex.: 20" value="${me.cardioDaily || ''}"></label>` : '';
-  document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', skinAllowed() ? `<div class="skin-row" style="display:flex;align-items:center;gap:10px;margin:0 0 14px"><div class="grow"><b>Visual novo (teste)</b><br><small style="color:var(--muted)">Só neste aparelho. Os alunos continuam com o visual de sempre.</small></div><button type="button" class="btn ${skinOn() ? 'primary' : ''}" id="skinTgl">${skinOn() ? 'Ligado' : 'Desligado'}</button></div>` : '');
+  document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', skinAllowed() ? `<div class="skin-row" style="display:flex;align-items:center;gap:10px;margin:0 0 14px"><div class="grow"><b>Visual novo</b><br><small style="color:var(--muted)">Desligar vale só neste aparelho. Os alunos ficam sempre no visual novo.</small></div><button type="button" class="btn ${skinOn() ? 'primary' : ''}" id="skinTgl">${skinOn() ? 'Ligado' : 'Desligado'}</button></div>` : '');
   if (skinAllowed()) document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', `<button type="button" class="btn primary" id="openV2" style="width:100%;margin:0 0 14px;padding:12px">✨ Abrir o app novo (prévia com seus dados)</button>`);
   const v2 = document.getElementById('openV2');
   if (v2) v2.onclick = ev => { // leva uma cópia dos dados só para ler; a prévia não grava nada
@@ -2986,8 +2986,8 @@ function renderConfig() {
       ${last ? `<div style="white-space:pre-wrap;margin:0 0 10px">${esc(last.text)}</div>` : ''}
       ${msgs.length > 1 ? `<button class="btn" data-view="recados">Ver todos os recados (${msgs.length})</button>` : ''}</section>
     ${bodySummaryHtml(p)}
-    <section class="card"><div class="card-h"><div class="grow"><h3>Cor do app e cronômetro</h3>
-        <small>Cor: ${cor} · Cronômetro do cardio: ${ctPref() === 'up' ? 'Progressivo ↑' : 'Regressivo ↓'}</small></div></div>
+    <section class="card"><div class="card-h"><div class="grow"><h3>${skinOn() ? 'Cronômetro do cardio' : 'Cor do app e cronômetro'}</h3>
+        <small>${skinOn() ? '' : `Cor: ${cor} · `}Cronômetro do cardio: ${ctPref() === 'up' ? 'Progressivo ↑' : 'Regressivo ↓'}</small></div></div>
       <button class="btn primary" data-act="open-settings">Mudar</button></section>
     ${accountHtml()}
     <p class="hint" style="text-align:center;margin-top:14px">Versão do app: ${esc(APP_VERSION)}</p>`;
@@ -5502,7 +5502,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '10/10-19:14';
+const APP_VERSION = '10/10-19:55';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
