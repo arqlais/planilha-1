@@ -1829,7 +1829,7 @@ function sendStatusHtml(exs) {
     const p = profile(ui.profile), who = ui.profile === ME ? 'você' : firstName(p);
     return dayUnlocked(ui.date)
       ? `<section class="card"><p style="margin:0 0 10px"><b>🔓 Dia ${fmtDate(ui.date)} destravado.</b><br><small style="color:var(--muted)">${ui.profile === ME ? 'Preencha o que faltou e envie o treino.' : `${esc(firstName(p))} pode preencher o que faltou e enviar (no app dela aparece o aviso). Você também pode preencher por aqui.`} Depois de enviado, trava de novo.</small></p>
-        <button class="btn" data-act="day-relock">🔒 Travar de novo</button></section>`
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${ui.profile !== ME && exs.some(e => { const s = sessionOn(e.id, ui.date); return s && !s.fin && s.sets.some(x => x.done); }) ? '<button class="btn primary" data-act="lock-student">✓ Salvar treino feito</button>' : ''}<button class="btn" data-act="day-relock">🔒 Travar de novo</button></div></section>`
       : `<section class="card"><p style="margin:0 0 10px"><small style="color:var(--muted)">Dia que já passou: só consulta. Se ${esc(who)} esqueceu de anotar alguma série, destrave este dia para preencher.</small></p>
         <button class="btn" data-act="day-unlock">🔓 Destravar este dia para corrigir</button></section>`;
   }
@@ -1837,9 +1837,9 @@ function sendStatusHtml(exs) {
   const p = profile(ui.profile), started = exs.filter(e => { const s = sessionOn(e.id, ui.date); return s && s.sets.some(x => x.done); });
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   const byMe = exs.some(e => { const x = sessionOn(e.id, ui.date); return x && x.finBy === 'professor'; });
-  if (sent.length && sent.length === started.length) return `<section class="card sent-card"><p style="margin:0"><b>🔒 ${byMe ? 'Você bloqueou este treino às' : `${esc(firstName(p))} enviou este treino às`} ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</b><br><small style="color:var(--muted)">Cargas, repetições e séries estão bloqueadas.</small></p></section>`;
-  if (started.length) return `<section class="card"><p style="margin:0 0 10px"><b>${esc(firstName(p))} ainda não enviou este treino.</b><br><small style="color:var(--muted)">Enquanto não enviar, dá para alterar. Se ${esc(firstName(p))} já terminou e esqueceu de enviar, bloqueie por aqui.</small></p>
-      <button class="btn primary" data-act="lock-student">🔒 Bloquear este treino</button></section>`;
+  if (sent.length && sent.length === started.length) return `<section class="card sent-card"><p style="margin:0"><b>🔒 ${byMe ? 'Você salvou este treino como feito às' : `${esc(firstName(p))} enviou este treino às`} ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</b><br><small style="color:var(--muted)">Cargas, repetições e séries estão bloqueadas.</small></p></section>`;
+  if (started.length) return `<section class="card"><p style="margin:0 0 10px"><b>${esc(firstName(p))} ainda não enviou este treino.</b><br><small style="color:var(--muted)">Você pode anotar por ${esc(firstName(p))} aqui (séries e cardio) e salvar como treino feito. Também serve se ${esc(firstName(p))} terminou e esqueceu de enviar.</small></p>
+      <button class="btn primary" data-act="lock-student">✓ Salvar treino feito</button></section>`;
   return '';
 }
 function sendHtml() {
@@ -3975,11 +3975,12 @@ $main.addEventListener('click', e => {
       const p = profile(ui.profile), exs = isLetter(ui.group) ? letterExs(ui.group) : [];
       const list = exs.map(e => sessionOn(e.id, ui.date)).filter(x => x && !x.fin && x.sets.some(y => y.done));
       if (!list.length) return;
-      confirmAsk(`Bloquear o treino de ${firstName(p)}?`, 'Fica registrado como enviado e ninguém (nem você, nem o aluno) consegue mais alterar as cargas e repetições de hoje.', 'Bloquear').then(async ok => {
+      confirmAsk(`Salvar o treino de ${firstName(p)} como feito?`, `Fica registrado como treino feito em ${fmtDate(ui.date)} e conta no histórico e na evolução. Depois disso ninguém (nem você, nem o aluno) consegue mais alterar as cargas, repetições e o cardio desse dia.`, 'Salvar treino feito').then(async ok => {
         if (!ok) return;
         const at = new Date().toISOString(); list.forEach(x => { x.fin = at; x.finBy = 'professor'; });
+        if (p.unlocks && p.unlocks[ui.date]) delete p.unlocks[ui.date]; // dia passado destravado: trava de novo
         save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow();
-        toast(`🔒 Treino de ${esc(firstName(p))} bloqueado.`);
+        toast(`✓ Treino de ${esc(firstName(p))} salvo como feito.`);
       });
       return;
     }
@@ -5418,7 +5419,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '09/10-06:08';
+const APP_VERSION = '10/10-13:37';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
