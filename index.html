@@ -595,6 +595,67 @@ label.f input{display:block;width:100%;margin-top:5px;background:var(--input);bo
 .dlg-actions{display:flex;gap:8px;align-items:center}
 /* iPhone aproxima a tela ao tocar em campos com letra menor que 16px: todos os campos ficam com 16px */
 input,select,textarea{font-size:16px!important}
+/* ==== Visual novo (teste): só liga no aparelho do professor. Não muda nenhum dado. ==== */
+:root[data-skin="v2"]{
+  --bg:#0A1330; --card:rgba(255,255,255,.085); --text:#F2F5FF; --muted:#A9B4D8; --line:rgba(255,255,255,.14);
+  --acc:#C9F03D; --acc-2:#C9F03D; --acc-soft:rgba(201,240,61,.16); --acc-ink:#12150F;
+  --up:#6FD196; --up-bg:rgba(111,209,150,.16); --down:#FF8A68; --down-bg:rgba(255,138,104,.16);
+  --input:rgba(255,255,255,.06); --shadow:0 18px 40px -26px rgba(0,0,0,.6);
+  --hero:transparent; --brand-soft:#C9F03D; --grid:rgba(255,255,255,.08); --axis:rgba(255,255,255,.2);
+  --lilac:#A895FF; --lilac-ink:#160F3D; --solid:#0E1A45;
+  color-scheme:dark;
+}
+:root[data-skin="v2"] body{background:radial-gradient(90% 45% at 90% 0%,#2C4FC4 0,rgba(44,79,196,0) 62%),radial-gradient(70% 45% at 0% 62%,#33247F 0,rgba(51,36,127,0) 62%),linear-gradient(180deg,#0A1330,#0D1A46 60%,#091231);background-attachment:fixed;min-height:100vh}
+:root[data-skin="v2"] h1,:root[data-skin="v2"] h2,:root[data-skin="v2"] h3{font-family:'Outfit','Archivo',system-ui,sans-serif;font-weight:600;letter-spacing:-.02em}
+:root[data-skin="v2"] .stats b,:root[data-skin="v2"] .month-sum b,:root[data-skin="v2"] .kv b{font-family:'Outfit','Archivo',system-ui,sans-serif;font-weight:600}
+/* topo */
+:root[data-skin="v2"] .hero{background:transparent;padding-bottom:58px}
+:root[data-skin="v2"] .hero::after{opacity:.05}
+:root[data-skin="v2"] .hero h1{font-size:30px;font-weight:300}
+:root[data-skin="v2"] .who,:root[data-skin="v2"] .date-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+:root[data-skin="v2"] .who .av{background:var(--acc);color:var(--acc-ink)}
+:root[data-skin="v2"] .stats div{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:20px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+:root[data-skin="v2"] .stats div:first-child{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+:root[data-skin="v2"] .av{background:var(--lilac);color:var(--lilac-ink)}
+/* cartões de vidro */
+:root[data-skin="v2"] .card,:root[data-skin="v2"] .slist{border-radius:28px;border:1px solid var(--line);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%)}
+:root[data-skin="v2"] .card.complete{border-color:var(--acc)}
+/* botões */
+:root[data-skin="v2"] .btn{border-radius:999px;padding:9px 16px;font-weight:800;color:var(--text);background:rgba(255,255,255,.07)}
+:root[data-skin="v2"] .btn.primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+:root[data-skin="v2"] .btn.danger{background:transparent;color:var(--down)}
+:root[data-skin="v2"] .btn.danger-fill{color:#12150F}
+:root[data-skin="v2"] .add{border-radius:999px;border-color:var(--acc);color:var(--acc);background:rgba(201,240,61,.06)}
+:root[data-skin="v2"] .tabs button,:root[data-skin="v2"] .chips button,:root[data-skin="v2"] .months button,:root[data-skin="v2"] .wchips button{background:rgba(255,255,255,.07);border-color:var(--line);color:var(--text)}
+:root[data-skin="v2"] .tabs button.on,:root[data-skin="v2"] .chips button.on,:root[data-skin="v2"] .months button.on,:root[data-skin="v2"] .wchips button.on,:root[data-skin="v2"] .ci-row button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+/* séries */
+:root[data-skin="v2"] .step,:root[data-skin="v2"] .plank-sec,:root[data-skin="v2"] .tile{border-radius:16px}
+:root[data-skin="v2"] .step input,:root[data-skin="v2"] .tile input{color:var(--text)}
+:root[data-skin="v2"] .tile label{background:rgba(255,255,255,.06)}
+:root[data-skin="v2"] .set.done,:root[data-skin="v2"] .tile.done{background:var(--acc-soft)}
+:root[data-skin="v2"] .set.done .num,:root[data-skin="v2"] .tile.done .num{background:var(--acc);color:var(--acc-ink)}
+:root[data-skin="v2"] .chk{border-color:rgba(255,255,255,.28);color:var(--muted)}
+:root[data-skin="v2"] .set.done .chk,:root[data-skin="v2"] .tile.done .chk{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+:root[data-skin="v2"] .ring{color:var(--text)}
+:root[data-skin="v2"] .track{background:rgba(255,255,255,.08)}
+:root[data-skin="v2"] .pill.eq{background:rgba(255,255,255,.06)}
+/* menu flutuante de vidro */
+:root[data-skin="v2"] nav.bottom{left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));border-radius:999px;border:1px solid var(--line);padding:7px;background:rgba(14,26,69,.72);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);box-shadow:0 14px 34px -14px rgba(0,0,0,.6)}
+:root[data-skin="v2"] nav.bottom button{border-radius:999px}
+:root[data-skin="v2"] nav.bottom button.on{background:var(--acc);color:var(--acc-ink)}
+:root[data-skin="v2"] #rest{bottom:calc(92px + env(safe-area-inset-bottom))}
+:root[data-skin="v2"] body.desk nav.bottom{left:0;right:auto;top:0;bottom:0;border-radius:0;border-width:0 1px 0 0;background:rgba(10,19,48,.6)}
+:root[data-skin="v2"] body.desk nav.bottom::before{background-image:url(brand/logo-i-escuro.svg)}
+:root[data-skin="v2"] body.desk nav.bottom button{border-radius:14px}
+:root[data-skin="v2"] body.desk #rest{bottom:24px}
+/* janelas e campos */
+:root[data-skin="v2"] dialog{background:var(--solid);border:1px solid var(--line);border-radius:28px}
+:root[data-skin="v2"] dialog::backdrop{background:rgba(3,6,18,.7)}
+:root[data-skin="v2"] input,:root[data-skin="v2"] select,:root[data-skin="v2"] textarea{color-scheme:dark}
+:root[data-skin="v2"] select option{background:var(--solid);color:var(--text)}
+:root[data-skin="v2"] #swatches,:root[data-skin="v2"] #colorLbl{display:none}
+:root[data-skin="v2"] #toast,:root[data-skin="v2"] .toast{background:#F2F5FF;color:#0A1330}
+
 </style>
 </head>
 <body>
@@ -776,7 +837,7 @@ input,select,textarea{font-size:16px!important}
 
 <dialog id="setDlg">
   <h2>Configurações</h2>
-  <p class="hint" style="margin-bottom:8px">Cor do app</p>
+  <p class="hint" id="colorLbl" style="margin-bottom:8px">Cor do app</p>
   <div class="swatches" id="swatches"></div>
   <p class="hint" style="margin:14px 0 8px">Cronômetro do cardio</p>
   <div class="ct-dir" id="setTimer" style="margin:0"></div>
@@ -1206,14 +1267,26 @@ const THEMES = {"azul": {"light": {"--acc": "#2f5fa7", "--acc-2": "#4a78bf", "--
 const THEME_VARS = ['--acc', '--acc-2', '--acc-soft', '--acc-ink', '--hero'];
 const darkMq = matchMedia('(prefers-color-scheme: dark)');
 let shownColor = 'verde';
+// Visual novo (teste): só no aparelho do professor (fica guardado no aparelho, não na conta). Aluno nunca vê.
+const skinAllowed = () => !CLOUD || !!(cloud && cloud.role === 'admin');
+function skinOn() { if (!skinAllowed()) return false; try { return localStorage.getItem('pf-visual') !== 'antigo'; } catch (e) { return true; } }
+function applySkin() {
+  const root = document.documentElement, on = skinOn();
+  if (on === (root.dataset.skin === 'v2')) return;
+  if (on) {
+    root.dataset.skin = 'v2';
+    if (!document.getElementById('skinFont')) { const l = document.createElement('link'); l.id = 'skinFont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap'; document.head.appendChild(l); }
+  } else delete root.dataset.skin;
+  paintColor(shownColor);
+}
 function paintColor(c) {
-  const root = document.documentElement, t = THEMES[c];
-  shownColor = t ? c : 'verde';
+  const root = document.documentElement, t = root.dataset.skin === 'v2' ? null : THEMES[c];
+  shownColor = THEMES[c] ? c : 'verde';
   THEME_VARS.forEach(v => root.style.removeProperty(v));
   if (t) { for (const [k, v] of Object.entries(t[darkMq.matches ? 'dark' : 'light'])) root.style.setProperty(k, v); root.dataset.color = c; }
   else delete root.dataset.color;
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.content = t ? t[darkMq.matches ? 'dark' : 'light']['--acc'] : '#2b4637';
+  if (m) m.content = root.dataset.skin === 'v2' ? '#0A1330' : t ? t[darkMq.matches ? 'dark' : 'light']['--acc'] : '#2b4637';
   // força o navegador a redesenhar agora (o topo colorido não é recriado pelo render)
   for (const el of document.querySelectorAll('.hero, nav.bottom, #rest')) { el.style.background = 'none'; void el.offsetHeight; el.style.background = ''; }
   void document.body.offsetHeight;
@@ -1224,7 +1297,7 @@ function savedColor() {
   const o = colorOwner(), pick = o && o.color;
   return COLORS.some(x => x[0] === pick) ? pick : 'verde';
 }
-function applyColor() { if (savedColor() !== shownColor) paintColor(savedColor()); }
+function applyColor() { applySkin(); if (savedColor() !== shownColor) paintColor(savedColor()); }
 darkMq.addEventListener && darkMq.addEventListener('change', () => paintColor(shownColor));
 const $setDlg = document.getElementById('setDlg');
 function renderSwatches() {
@@ -1244,6 +1317,9 @@ function openSettings() {
   const me = profile(ME);
   document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
     ? `<label class="f">Minha meta de cardio por dia (minutos)<input id="setGoal" inputmode="numeric" placeholder="ex.: 20" value="${me.cardioDaily || ''}"></label>` : '';
+  document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', skinAllowed() ? `<div class="skin-row" style="display:flex;align-items:center;gap:10px;margin:0 0 14px"><div class="grow"><b>Visual novo (teste)</b><br><small style="color:var(--muted)">Só neste aparelho. Os alunos continuam com o visual de sempre.</small></div><button type="button" class="btn ${skinOn() ? 'primary' : ''}" id="skinTgl">${skinOn() ? 'Ligado' : 'Desligado'}</button></div>` : '');
+  const sk = document.getElementById('skinTgl');
+  if (sk) sk.onclick = ev => { ev.preventDefault(); try { localStorage.setItem('pf-visual', skinOn() ? 'antigo' : 'v2'); } catch (e) {} applySkin(); render(); openSettings(); };
   document.getElementById('setAccount').innerHTML = cloud && cloud.user
     ? `<p class="hint" style="margin-bottom:8px">Conta: ${esc(cloud.user.email || '')}</p><button class="btn" id="setLogout" style="margin-bottom:14px">Sair da conta</button>` : '';
   if (!$setDlg.open) $setDlg.showModal();
@@ -5419,7 +5495,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '10/10-13:37';
+const APP_VERSION = '10/10-18:40';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
