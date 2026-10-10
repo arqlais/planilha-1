@@ -16,9 +16,9 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET' || url.origin !== location.origin) return; // Firebase (nuvem) cuida de si mesmo
   if (url.pathname.endsWith('version.json')) return; // sempre da internet
   const isPage = req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname) || url.pathname.endsWith('config.js');
-  if (isPage) {
+  if (isPage) { // só a página principal fica guardada como o app (novo.html não substitui)
     e.respondWith(fetch(req).then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req.mode === 'navigate' ? './' : req, copy)); }
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(/\/(index\.html)?$/.test(url.pathname) ? './' : req, copy)); }
       return res;
     }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./'))));
     return;

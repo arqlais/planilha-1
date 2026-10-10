@@ -1318,6 +1318,13 @@ function openSettings() {
   document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
     ? `<label class="f">Minha meta de cardio por dia (minutos)<input id="setGoal" inputmode="numeric" placeholder="ex.: 20" value="${me.cardioDaily || ''}"></label>` : '';
   document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', skinAllowed() ? `<div class="skin-row" style="display:flex;align-items:center;gap:10px;margin:0 0 14px"><div class="grow"><b>Visual novo (teste)</b><br><small style="color:var(--muted)">Só neste aparelho. Os alunos continuam com o visual de sempre.</small></div><button type="button" class="btn ${skinOn() ? 'primary' : ''}" id="skinTgl">${skinOn() ? 'Ligado' : 'Desligado'}</button></div>` : '');
+  if (skinAllowed()) document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', `<button type="button" class="btn primary" id="openV2" style="width:100%;margin:0 0 14px;padding:12px">✨ Abrir o app novo (prévia com seus dados)</button>`);
+  const v2 = document.getElementById('openV2');
+  if (v2) v2.onclick = ev => { // leva uma cópia dos dados só para ler; a prévia não grava nada
+    ev.preventDefault();
+    try { localStorage.setItem('pf-v2-data', JSON.stringify(db)); } catch (e) { return toast('Não deu para abrir a prévia neste aparelho (pouco espaço).'); }
+    location.href = 'novo.html';
+  };
   const sk = document.getElementById('skinTgl');
   if (sk) sk.onclick = ev => { ev.preventDefault(); try { localStorage.setItem('pf-visual', skinOn() ? 'antigo' : 'v2'); } catch (e) {} applySkin(); render(); openSettings(); };
   document.getElementById('setAccount').innerHTML = cloud && cloud.user
@@ -5495,7 +5502,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '10/10-18:40';
+const APP_VERSION = '10/10-19:14';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
