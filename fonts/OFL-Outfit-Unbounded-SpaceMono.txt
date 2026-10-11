@@ -1,0 +1,2 @@
+Outfit, Unbounded e Space Mono: fontes do Google Fonts sob a licença SIL Open Font License 1.1 (https://openfontlicense.org).
+Usadas no visual novo do app (desenho Passos Fit 2.0).
