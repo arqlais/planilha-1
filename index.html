@@ -4557,8 +4557,8 @@ function bodySummaryHtml(p) {
 }
 function histImportHtml(p, top) {
   return `<section class="card"${top ? ' style="border:2px solid var(--acc)"' : ''}><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
-      <small>Traga os treinos que ${p.id === ME ? 'você anotou' : esc(firstName(p)) + ' anotou'} antes do app (arquivo de histórico). Junta com o que já existe, sem apagar nada.</small></div></div>
-      <label class="btn"><i class="ic ic-up"></i> Importar histórico<input type="file" id="histFile" hidden></label></section>`;
+      <small>Traga os treinos que ${p.id === ME ? 'você anotou' : esc(firstName(p)) + ' anotou'} antes do app (arquivo de histórico), ou um arquivo de treinos prontos. Junta com o que já existe, sem apagar nada.</small></div></div>
+      <label class="btn"><i class="ic ic-up"></i> Importar arquivo<input type="file" id="histFile" hidden></label></section>`;
 }
 function renderMedidas() {
   const p = profile(ui.profile), list = bodyOf(p), last = list[list.length - 1], prev = list[list.length - 2];
@@ -6065,7 +6065,10 @@ function importHistory(file) {
     let d = null; try { d = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) {}
     if (!d || d.kind !== 'historico-aluno' || !Array.isArray(d.sessions)) return toast(`O arquivo escolhido (${esc(file.name)}) não é um histórico. Escolha o arquivo <b>historico-….json</b> que recebeu.`);
     const other = d.aluno && profile(pid) && !sameName(firstName({ name: d.aluno }), firstName(profile(pid))) ? `Atenção: este arquivo é de ${d.aluno}. ` : '';
-    if (!await confirmAsk(`Importar histórico para ${firstName(profile(pid))}?`, `${other}${d.sessions.length} exercícios treinados${d.body && d.body.length ? `, ${d.body.length} avaliação de medidas` : ''}${d.workouts && d.workouts.length ? ` e os treinos ${d.workouts.map(w => w.name).join(', ')}` : ''}. Nada do que já existe é apagado.`, 'Importar')) return;
+    const ready = !d.sessions.length && d.workouts && d.workouts.length; // só treinos prontos, sem histórico
+    if (!await confirmAsk(ready ? `Colocar os treinos prontos em ${firstName(profile(pid))}?` : `Importar histórico para ${firstName(profile(pid))}?`, ready
+      ? `${other}Treinos: ${d.workouts.map(w => w.name).join(', ')}.${d.workouts.some(w => w.hold) ? ' Eles chegam escondidos do aluno: revise e, quando estiver bom, coloque nos dias em Divisão da semana para liberar.' : ''} Nada do que já existe é apagado.`
+      : `${other}${d.sessions.length} exercícios treinados${d.body && d.body.length ? `, ${d.body.length} avaliação de medidas` : ''}${d.workouts && d.workouts.length ? ` e os treinos ${d.workouts.map(w => w.name).join(', ')}` : ''}. Nada do que já existe é apagado.`, 'Importar')) return;
     if (CLOUD) { toast('Carregando o histórico antigo…'); await ensureFull(pid); }
     const p = profile(pid); // pega de novo: a nuvem pode ter atualizado os dados enquanto a pergunta estava aberta
     if (!p) return;
@@ -6075,13 +6078,16 @@ function importHistory(file) {
     const newEx = (name, letter) => {
       const e = info.get(name.trim().toLowerCase()) || {};
       const ex = { id: uid(), profileId: p.id, name, group: GROUPS.includes(e.group) ? e.group : GROUPS[0], letter: letter || null,
-        sets: (e.sets && e.sets.length ? e.sets : [{ carga: null, reps: null }]).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })) };
+        sets: (e.sets && e.sets.length ? e.sets : [{ carga: null, reps: null }]).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })),
+        ...(typeof e.note === 'string' && e.note.trim() ? { note: e.note.trim().slice(0, 200) } : {}),
+        ...(e.noLoad || NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
       db.exercises.push(ex); return ex;
     };
     let nW = 0, nE = 0, nS = 0, nB = 0;
     (d.workouts || []).forEach(w => {
       let wk = p.workouts.find(x => sameName(x.name, w.name));
-      if (!wk) { wk = { id: uid(), name: w.name.slice(0, 40) }; p.workouts.push(wk); nW++; }
+      // Treino pronto (montado fora do app) chega escondido: o professor revisa e libera ao colocar na Divisão da semana
+      if (!wk) { wk = { id: uid(), name: w.name.slice(0, 40), ...(w.hold ? { hold: true } : {}) }; p.workouts.push(wk); nW++; }
       (w.exercises || []).forEach(name => {
         const same = mine().filter(e => sameName(e.name, name));
         if (same.some(e => e.letter === wk.id)) return;
@@ -6094,7 +6100,8 @@ function importHistory(file) {
       const cur = div[wd] || [];
       if (cur.some(x => x !== CARDIO)) return; // o dia já tem treino: não mexe
       const ids = names.map(n => (p.workouts.find(x => sameName(x.name, n)) || {}).id).filter(Boolean);
-      if (ids.length) div[wd] = [...ids, ...cur.filter(x => x === CARDIO)];
+      const cardio = cur.includes(CARDIO) || names.some(n => sameName(n, CARDIO));
+      if (ids.length || cardio) div[wd] = [...ids, ...(cardio ? [CARDIO] : [])];
     });
     d.sessions.forEach(x => {
       let ex = mine().find(e => sameName(e.name, x.ex));
@@ -6114,7 +6121,8 @@ function importHistory(file) {
     save();
     const lastDate = d.sessions.map(x => x.date).sort().pop();
     if (nS && lastDate) { ui.month = lastDate.slice(0, 7); ui.histDay = null; ui.profile = p.id; go('historico'); } else render();
-    toast(`Importado para ${esc(firstName(p))}: ${nS} exercícios treinados, ${nW} treinos novos, ${nE} exercícios novos${nB ? `, ${nB} avaliação` : ''}.${nS ? ' Use os meses no topo do Histórico para navegar.' : ''}`);
+    toast(ready ? `Pronto: ${nW} treino${nW === 1 ? '' : 's'} novo${nW === 1 ? '' : 's'} para ${esc(firstName(p))}, com ${nE} exercícios.`
+      : `Importado para ${esc(firstName(p))}: ${nS} exercícios treinados, ${nW} treinos novos, ${nE} exercícios novos${nB ? `, ${nB} avaliação` : ''}.${nS ? ' Use os meses no topo do Histórico para navegar.' : ''}`);
   }).catch(err => { console.error(err); toast('Não foi possível importar este arquivo.'); });
 }
 function importData(file) {
@@ -7218,7 +7226,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-00:55';
+const APP_VERSION = '11/10-01:10';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
