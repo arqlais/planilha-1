@@ -6755,8 +6755,9 @@ function showAuth(mode, msg = '') {
     document.getElementById('authMsg').innerHTML = msg || (sent ? '✅ <b>Pedido enviado.</b> Assim que o professor aceitar, o app abre sozinho.' : 'Toque para pedir acesso: o pedido chega para o seu professor aceitar.');
   } else { $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = false; document.getElementById('authOk').hidden = false; }
 }
+const NO_LOGIN = 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha". Ainda não tem conta? Toque em "Primeiro acesso? Criar conta".';
 const AUTH_ERR = {
-  'auth/invalid-credential': 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha".', 'auth/wrong-password': 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha".', 'auth/user-not-found': 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha".',
+  'auth/invalid-credential': NO_LOGIN, 'auth/wrong-password': NO_LOGIN, 'auth/user-not-found': NO_LOGIN,
   'auth/email-already-in-use': 'Já existe uma conta com este e-mail. Toque em "Já tenho conta: entrar".', 'auth/weak-password': 'A senha precisa ter pelo menos 6 caracteres.',
   'auth/invalid-email': 'E-mail inválido.', 'auth/too-many-requests': 'Muitas tentativas. Espere um pouco e tente de novo.', 'auth/network-request-failed': 'Sem internet.',
 };
@@ -6805,7 +6806,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '10/10-22:42';
+const APP_VERSION = '10/10-23:02';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
