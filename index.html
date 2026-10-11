@@ -850,6 +850,7 @@ body.v2-full main{margin-top:0}
 .v2-set.up small{color:var(--good)}.v2-set.down small{color:var(--coral)}
 .v2-acts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}
 .v2-acts button{display:grid;justify-items:center;gap:3px;padding:9px 4px;border-radius:14px;border:0;background:rgba(255,255,255,.07);font-size:11.5px;font-weight:800;color:var(--muted)}
+.v2-del{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;padding:9px;border:0;border-radius:14px;background:none;color:var(--down);font-size:12.5px;font-weight:800}
 .v2-acts button .v2i{width:18px;height:18px;color:var(--text)}
 .v2-exb .compare{margin-top:12px}
 .v2-exb .set.plank{padding:8px 2px}
@@ -2448,6 +2449,7 @@ function cardHtmlV2(ex) {
       <button data-act="addset">${V2I.plus}<span>Série</span></button><button data-act="rmset">${V2I.minus}<span>Série</span></button>
       <button data-act="alldone">${V2I.check}<span>${done === n ? 'Desmarcar' : 'Todas'}</span></button>${ui.studentMode ? '' : `<button data-act="edit">${V2I.edit}<span>Editar</span></button>`}</div>`}
     ${lock && !ui.studentMode ? `<div class="v2-acts"><button data-act="edit">${V2I.edit}<span>Editar</span></button></div>` : ''}
+    ${ui.studentMode ? '' : '<button class="v2-del" data-act="del-ex"><i class="ic ic-trash"></i> Tirar do treino</button>'}
     <div class="compare">${compareHtml(s, prev)}</div></div></div>`;
 }
 // Terminou um exercício: abre o próximo que falta (na ordem da tela)
@@ -3718,7 +3720,7 @@ function cardHtml(ex) {
       <div class="grow"><h3>${esc(ex.name)}${demoFor(ex) ? ` <button class="qhelp" data-act="demo-ex" data-id="${ex.id}" aria-label="Como fazer ${esc(ex.name)}">?</button>` : ''}</h3>
         <small>${ex.group} · ${prev ? `último treino ${fmtDate(prev.date)}` : 'primeiro treino'}</small>
         ${exDetailHtml(ex)}</div>
-      ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
+      ${ui.studentMode ? '' : '<button class="icon" data-act="del-ex" aria-label="Tirar do treino"><i class="ic ic-trash"></i></button><button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
     ${tm ? `<div class="tile-key">Em cada série: toque em <b><i class="ic ic-timer"></i> Começar</b>, fique na prancha e toque em <b>Parar</b> quando não aguentar mais. O tempo fica anotado.</div><div class="plank-rows">${rows}</div>` : tiles ? `<div class="tile-key">Em cada série: ${ex.noLoad ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
@@ -5904,6 +5906,7 @@ $main.addEventListener('click', e => {
   const ex = exById(card.dataset.ex);
   if (act === 'v2-open') { const was = ui.v2open; ui.v2open = was === ex.id ? null : ex.id; if (was && was !== ex.id) refreshCard(was); refreshCard(ex.id); PFA.start(); return; }
   if (act === 'edit') return openDialog(ex);
+  if (act === 'del-ex') { if (ui.studentMode) return; editing = ex; return deleteEditing(); }
   if (lockReason(ex.id)) return toast(LOCK_MSG[lockReason(ex.id)]);
   const s = ensureSession(ex, ui.date);
   const wasComplete = s.sets.every(x => x.done);
@@ -6072,6 +6075,8 @@ function importHistory(file) {
     let d = null; try { d = JSON.parse(t.replace(/^\uFEFF/, '')); } catch (e) {}
     if (!d || d.kind !== 'historico-aluno' || !Array.isArray(d.sessions)) return toast(`O arquivo escolhido (${esc(file.name)}) não é um histórico. Escolha o arquivo <b>historico-….json</b> que recebeu.`);
     const other = d.aluno && profile(pid) && !sameName(firstName({ name: d.aluno }), firstName(profile(pid))) ? `Atenção: este arquivo é de ${d.aluno}. ` : '';
+    // Arquivo de aluno aberto no perfil do professor: os exercícios iriam para o treino dele
+    if (other && pid === ME) return toast(`Este arquivo é de <b>${esc(d.aluno)}</b>. Abra o perfil de ${esc(firstName({ name: d.aluno }))} na aba Alunos e importe lá.`);
     const ready = !d.sessions.length && d.workouts && d.workouts.length; // só treinos prontos, sem histórico
     if (!await confirmAsk(ready ? `Colocar os treinos prontos em ${firstName(profile(pid))}?` : `Importar histórico para ${firstName(profile(pid))}?`, ready
       ? `${other}Treinos: ${d.workouts.map(w => w.name).join(', ')}.${d.workouts.some(w => w.hold) ? ' Eles chegam escondidos do aluno: revise e, quando estiver bom, coloque nos dias em Divisão da semana para liberar.' : ''} Nada do que já existe é apagado.`
@@ -7233,7 +7238,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-01:20';
+const APP_VERSION = '11/10-14:21';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
