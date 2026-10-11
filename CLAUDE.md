@@ -23,15 +23,27 @@ Leia antes de qualquer tarefa. Este repositório é **público**: nunca coloque 
 - As telas novas usam os mesmos dados e os mesmos botões (`data-act`) das telas antigas: só muda o desenho.
 - `novo.html` é a prévia original dela (só leitura), aberta pelo professor em Configurações.
 
-## Como publicar uma mudança
-1. `git pull --ff-only origin claude/sharp-gauss-tw16z1` antes de começar.
-2. Teste no navegador (Playwright, já instalado): rode os testes a partir do scratchpad, nunca grave prints dentro do repositório.
-3. `./bump-version.sh` antes de cada commit (faz o app avisar que tem versão nova).
-4. Commit com descrição em português e push para a mesma branch.
+## Tarefas e publicação: sempre por Issue + PR (vale para qualquer agente, de qualquer modelo)
+1. **Toda tarefa vira uma Issue** no GitHub antes de começar, com o tipo no título e na etiqueta:
+   `[Correção]` (algo quebrado), `[Melhoria]` (algo que já existe ficar melhor) ou `[Nova função]` (algo novo).
+   Procure antes se já existe uma Issue igual. Texto curto, em português simples: o que acontece hoje e o que deve acontecer.
+2. Trabalhe numa **branch separada**, criada a partir de `claude/sharp-gauss-tw16z1` (`git pull --ff-only` antes).
+   Nunca faça push direto em `claude/sharp-gauss-tw16z1`: ela é o site no ar.
+3. Teste no navegador (Playwright, já instalado): rode os testes a partir do scratchpad, nunca grave prints dentro do repositório.
+   Mudou `firestore.rules`? Teste as regras no emulador do Firebase antes.
+4. `./bump-version.sh` antes do commit (faz o app avisar que tem versão nova). Commit com descrição em português.
+5. **Abra um PR** para `claude/sharp-gauss-tw16z1`. A descrição **cita a Issue** (`Resolve #12`), explica em linguagem simples
+   o que muda para o professor e os alunos, e diz se o Igor precisa colar regras novas no Firebase.
+6. **Nada vai para o ar sem o Igor aprovar e juntar o PR.** Quando ele junta, o site atualiza sozinho e a Issue fecha.
 
 ## Pendências (o Igor pode pedir)
 - Biblioteca de exercícios no desenho dela (bonequinhos + "como fazer").
 - Mural da turma (precisa de regra nova no Firebase).
 - Telas Montar treino, Histórico e Evolução ainda com a arrumação antiga (já com as cores novas).
-- Segurança: tirar `PENDENCIAS.md` e prints antigos do repositório público, tirar nomes de alunos do código (`fixOnce`), limitar a coleção `visits` nas regras.
-- Perguntas sobre CNPJ / empresa: ver `PENDENCIAS.md` (já foram respondidas em outra conversa, projeto "Primeiro Passo").
+- Veja as Issues abertas no GitHub: é lá que ficam as tarefas para depois.
+- Perguntas sobre CNPJ / empresa ficam fora do repositório, nas notas do projeto (já foram respondidas em outra conversa, projeto "Primeiro Passo").
+
+## Segurança (repositório público)
+- Nada de nomes de alunos, dados, backups, prints ou anotações pessoais no código ou em arquivos. Ajustes em `fixOnce()` que citem um aluno: depois que rodarem, apague o trecho.
+- A chave do Firebase em `config.js` é pública por natureza; quem protege os dados são as regras (`firestore.rules`). Toda coleção nova precisa de regra; o que não tem regra fica fechado.
+- Texto que vem do usuário vai para a tela sempre com `esc()`.
