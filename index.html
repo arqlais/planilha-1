@@ -6045,7 +6045,6 @@ async function fixOnce() {
     if (tp) { const r = simulateWeek(tp); if (r.n) { save(); msgs.push(`Perfil de teste: semana simulada com ${r.workouts} treino${r.workouts === 1 ? '' : 's'} feitos.`); } }
     mark('teste-semana-0510');
   }
-  // 1g) Leandro: o Supino inclinado de agora não comparava com o que ele já tinha feito (nome diferente). Liga os dois.
   // 1h) Professor: Peito/Costas feito em duas academias (máquinas e pesos diferentes).
   //     O treino de até 03/10 vira "Peito/Costas Evoque"; o de depois (Sky) vira um treino novo "Costas/Peito Sky",
   //     com os mesmos exercícios e o histórico separado (cada um compara só com a mesma academia).
@@ -6078,44 +6077,6 @@ async function fixOnce() {
       save();
     }
     mark('academias-evoque-sky');
-  }
-  if (!done.has('leandro-supino-inclinado')) {
-    const pl = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Leandro'));
-    if (pl) {
-      await ensureFull(pl.id);
-      const nm = e => (e.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const list = db.exercises.filter(e => e.profileId === pl.id && /supino/.test(nm(e)) && /inclin/.test(nm(e)) && !/historico antigo/.test(nm(e)));
-      const count = e => db.sessions.filter(x => x.exId === e.id && hasDone(x)).length;
-      const best = list.slice().sort((a, b) => count(b) - count(a))[0];
-      let n = 0;
-      if (best) list.forEach(e => { if (e !== best && twinKey(e) !== twinKey(best)) { e.twin = twinKey(best); n++; } });
-      if (n) { save(); msgs.push(`Leandro: Supino inclinado ligado ao histórico anterior (${n} exercício${n === 1 ? '' : 's'}).`); }
-    }
-    mark('leandro-supino-inclinado');
-  }
-  // 2) Íris, 01/10: o treino travou à meia-noite antes de ela anotar a Remada baixa (3 × 10 com 20 kg). Anota e finaliza o treino.
-  if (!done.has('iris-remada-0110')) {
-    const p = db.profiles.find(x => x.id !== ME && sameName(firstName(x), 'Íris'));
-    const D = '2026-10-01', D2 = '2026-10-02';
-    if (p) {
-      await ensureFull(p.id);
-      const exs = profExs(p.id).filter(e => sameName(e.name, 'Remada baixa'));
-      const planned = dayPlan(p, D);
-      const ex = exs.find(e => planned.includes(e.letter)) || exs.find(e => sessionOn(e.id, D)) || exs[0];
-      if (ex) {
-        const twins = twinIds(ex.id);
-        let s = db.sessions.find(x => twins.has(x.exId) && x.date === D);
-        const stray = db.sessions.find(x => twins.has(x.exId) && x.date === D2 && !x.fin);
-        if (!s && stray) { stray.date = D; s = stray; } // anotou depois da meia-noite: volta para 01/10
-        else if (s && stray) db.sessions = db.sessions.filter(x => x !== stray);
-        if (!s) { s = { id: uid(), exId: ex.id, date: D, sets: [] }; db.sessions.push(s); }
-        s.sets = [0, 1, 2].map(() => ({ carga: 20, reps: 10, done: true })); s.by = 'aluno';
-        const at = new Date().toISOString();
-        profExs(p.id).forEach(e => { const x = sessionOn(e.id, D); if (x && !x.fin && x.sets.some(y => y.done)) { x.fin = at; x.finBy = 'professor'; } });
-        msgs.push(`Íris, 01/10: Remada baixa anotada (3 × 10 com 20 kg) e treino finalizado.`);
-      } else msgs.push('Íris: não encontrei o exercício Remada baixa para anotar o treino de 01/10.');
-      mark('iris-remada-0110');
-    }
   }
   if (profile(ME).fixes && profile(ME).fixes.length !== done.size) { save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow(); }
   if (msgs.length) toast(msgs.join('<br>'));
@@ -6844,7 +6805,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '10/10-21:58';
+const APP_VERSION = '10/10-22:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
@@ -6881,12 +6842,6 @@ addEventListener('offline', () => { netState(); toast('Sem internet: pode contin
 
 if (CLOUD) cloudBoot();
 else {
-  // Aluno cadastrado a pedido do professor (só uma vez; se for excluído, não volta)
-  if (!db.seeded) db.seeded = [];
-  if (!db.seeded.includes('lais')) {
-    if (!db.profiles.some(p => p.name === 'Laís')) createStudent({ name: 'Laís' });
-    db.seeded.push('lais'); save();
-  }
   render();
 }
 </script>

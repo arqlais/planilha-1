@@ -25,13 +25,36 @@ service cloud.firestore {
     }
 
     // Visitantes: o app registra que alguém abriu (mesmo sem login). Só o professor lê.
+    // Sem login dá para gravar, mas só no formato do app: campos curtos, contador sobe de 1 em 1,
+    // um dia novo por vez, e ninguém se passa por aluno ou professor (uid/e-mail/admin só da própria conta).
+    function visitShape(d) {
+      return d.keys().hasOnly(['first', 'last', 'days', 'n', 'dev', 'src', 'uid', 'email', 'admin'])
+        && (!('days' in d) || (d.days is list && d.days.size() <= 400))
+        && (!('n' in d) || (d.n is int && d.n >= 0))
+        && (!('first' in d) || (d.first is string && d.first.size() <= 30))
+        && (!('last' in d) || (d.last is string && d.last.size() <= 30))
+        && (!('dev' in d) || (d.dev is string && d.dev.size() <= 20))
+        && (!('src' in d) || (d.src is string && d.src.size() <= 40))
+        && (!('email' in d) || (d.email is string && d.email.size() <= 80))
+        && (!('admin' in d) || d.admin == true);
+    }
+    function visitWho(d, changed) {
+      return (!('uid' in changed) || (request.auth != null && d.uid == request.auth.uid))
+        && (!('email' in changed) || (request.auth != null
+              && (d.email == '' || d.email.lower() == request.auth.token.get('email', '').lower())))
+        && (!('admin' in changed) || isAdmin());
+    }
     match /visits/{vid} {
       allow read, delete: if isAdmin();
-      allow create, update: if vid.size() <= 40
-        && request.resource.data.keys().hasOnly(['first', 'last', 'days', 'n', 'dev', 'src', 'uid', 'email', 'admin'])
-        && (!('days' in request.resource.data) || request.resource.data.days.size() <= 400)
-        && (!('email' in request.resource.data) || request.resource.data.email.size() <= 80)
-        && (!('src' in request.resource.data) || request.resource.data.src.size() <= 40);
+      allow create: if vid.matches('[a-z0-9]{12,40}')
+        && visitShape(request.resource.data)
+        && visitWho(request.resource.data, request.resource.data.keys())
+        && request.resource.data.get('n', 0) <= 1
+        && request.resource.data.get('days', []).size() <= 1;
+      allow update: if visitShape(request.resource.data)
+        && visitWho(request.resource.data, request.resource.data.diff(resource.data).affectedKeys())
+        && request.resource.data.get('n', 0) <= resource.data.get('n', 0) + 1
+        && request.resource.data.get('days', []).size() <= resource.data.get('days', []).size() + 1;
     }
 
     // Cópias automáticas diárias (só o professor)
