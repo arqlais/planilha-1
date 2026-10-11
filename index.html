@@ -3629,6 +3629,7 @@ function weekReport(pid, ws) {
   return { ws, we, open: we >= t, did: did.size, planned: planned.length, hit: hit.length, missed, extra, sets, half, kg, kgPrev, cmin, cgoal, up, down, same, bw, bprev, score };
 }
 function weekReportHtml(p) {
+  if (!p || p.id !== ME || ui.studentMode) return ''; // por enquanto só no perfil do professor (teste antes de liberar para os alunos)
   const cur = sundayOf(today()), ws = ui.wkRep && ui.wkRep.pid === p.id ? ui.wkRep.ws : addDays(cur, -7), r = weekReport(p.id, ws);
   const wd = d => weekday(d).replace('-feira', '');
   const kgTxt = n => `${fmt(n.carga)} kg${n.reps ? ` × ${n.reps}` : ''}`;
@@ -6882,7 +6883,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '10/10-23:28';
+const APP_VERSION = '11/10-00:20';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
