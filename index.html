@@ -3681,7 +3681,7 @@ function weekReport(pid, ws) {
   return { ws, we, open: we >= t, dayList, prog: cmp.length ? Math.round(cmp.reduce((a, x) => a + x, 0) / cmp.length * 100) : null, did: did.size, planned: planned.length, hit: hit.length, missed, extra, sets, half, kg, kgPrev, cmin, cgoal, up, down, same, bw, bprev, score };
 }
 function weekReportHtml(p) {
-  if (!p || p.id !== ME || ui.studentMode) return ''; // por enquanto só no perfil do professor (teste antes de liberar para os alunos)
+  if (!p) return '';
   const cur = sundayOf(today()), ws = ui.wkRep && ui.wkRep.pid === p.id ? ui.wkRep.ws : addDays(cur, -7), r = weekReport(p.id, ws);
   const wd = d => weekday(d).replace('-feira', '');
   const kgTxt = n => `${fmt(n.carga)} kg${n.reps ? ` × ${n.reps}` : ''}`;
@@ -6938,7 +6938,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-00:34';
+const APP_VERSION = '11/10-00:37';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
