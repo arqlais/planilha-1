@@ -70,6 +70,36 @@ h1,h2,h3,.stats b,.month-sum b,.kv b{font-family:'Archivo',system-ui,sans-serif;
 main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 
 .av{width:40px;height:40px;border-radius:50%;background:var(--hero);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 auto}
+.av{justify-content:center;align-items:center;text-align:center;line-height:1;overflow:hidden;padding:0}.av>img,.v2-avbtn>img{width:100%;height:100%;object-fit:cover;display:block}
+.ic{display:inline-block;width:1.1em;height:1.1em;vertical-align:-.2em;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;flex:none}
+.ic-lock{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%225%22 y=%2211%22 width=%2214%22 height=%2210%22 rx=%222%22/%3E%3Cpath d=%22M8 11V8a4 4 0 0 1 8 0v3%22/%3E%3C/svg%3E")}
+.ic-unlock{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%225%22 y=%2211%22 width=%2214%22 height=%2210%22 rx=%222%22/%3E%3Cpath d=%22M8 11V8a4 4 0 0 1 7.5-2%22/%3E%3C/svg%3E")}
+.ic-cam{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 8h3l2-3h6l2 3h3v11H4z%22/%3E%3Ccircle cx=%2212%22 cy=%2213%22 r=%223.5%22/%3E%3C/svg%3E")}
+.ic-img{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%225%22 width=%2218%22 height=%2214%22 rx=%222%22/%3E%3Ccircle cx=%229%22 cy=%2210%22 r=%221.8%22/%3E%3Cpath d=%22M21 16l-5-5-9 8%22/%3E%3C/svg%3E")}
+.ic-eye{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3C/svg%3E")}
+.ic-nonet{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M2 8.5a15 15 0 0 1 5-3M10.5 4.6A15 15 0 0 1 22 8.5M5 12a10 10 0 0 1 3.5-2.2M15 10a10 10 0 0 1 4 2M8.5 15.5a5 5 0 0 1 7 0M3 3l18 18%22/%3E%3Ccircle cx=%2212%22 cy=%2219%22 r=%22.8%22/%3E%3C/svg%3E")}
+.ic-star{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z%22/%3E%3C/svg%3E")}
+.ic-moon{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z%22/%3E%3C/svg%3E")}
+.ic-link{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1%22/%3E%3Cpath d=%22M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1%22/%3E%3C/svg%3E")}
+.ic-note{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M6 3h9l4 4v14H6z%22/%3E%3Cpath d=%22M9 11h7M9 15h7M9 7h4%22/%3E%3C/svg%3E")}
+.ic-hour{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9%22/%3E%3C/svg%3E")}
+.ic-alarm{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2213%22 r=%227.5%22/%3E%3Cpath d=%22M12 9v4l2.5 2M4 5l3-2M20 5l-3-2%22/%3E%3C/svg%3E")}
+.ic-timer{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2213.5%22 r=%227.5%22/%3E%3Cpath d=%22M12 10v3.5l2.5 1.5M10 2.5h4M12 2.5V6%22/%3E%3C/svg%3E")}
+.ic-warn{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3.5l9.5 16.5h-19z%22/%3E%3Cpath d=%22M12 10v4.5M12 17.3v.2%22/%3E%3C/svg%3E")}
+.ic-up{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 19V5M6 11l6-6 6 6%22/%3E%3C/svg%3E")}
+.ic-down{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 5v14M6 13l6 6 6-6%22/%3E%3C/svg%3E")}
+.ic-plus{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2217%22 height=%2217%22 rx=%224%22/%3E%3Cpath d=%22M12 8v8M8 12h8%22/%3E%3C/svg%3E")}
+.ic-target{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%228.5%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%224.5%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%22.8%22/%3E%3C/svg%3E")}
+.ic-cal{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223.5%22 y=%225%22 width=%2217%22 height=%2215.5%22 rx=%222.5%22/%3E%3Cpath d=%22M3.5 10h17M8 3v4M16 3v4%22/%3E%3C/svg%3E")}
+.ic-chat{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 5h16v11H9l-5 4z%22/%3E%3C/svg%3E")}
+.ic-card{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%222.5%22 y=%225.5%22 width=%2219%22 height=%2213%22 rx=%222.5%22/%3E%3Cpath d=%22M2.5 10h19M6 15h4%22/%3E%3C/svg%3E")}
+.ic-gear{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3Cpath d=%22M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1%22/%3E%3C/svg%3E")}
+.ic-trash{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6%22/%3E%3C/svg%3E")}
+.ic-cloud{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M7 18.5h10a4 4 0 0 0 .6-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18.5z%22/%3E%3C/svg%3E")}
+.ic-okc{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M8 12.5l2.8 2.8L16.5 9.5%22/%3E%3C/svg%3E")}
+.ic-flame{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.1 2-5.2 3.6-7.3.4 1.7 1.3 2.8 2.4 3.4.2-2.9 1.3-5.6 3.6-7.4.3 3.4 3.4 5.6 3.4 10.6 0 4.3-2.7 6.9-6.5 6.9z%22/%3E%3C/svg%3E")}
+.ic-dumb{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11%22/%3E%3C/svg%3E")}
+.ic-smile{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5v.5M15 9.5v.5%22/%3E%3C/svg%3E")}
 
 /* ---- cores que o aluno pode escolher (Configurações) ---- */
 :root[data-color="azul"]{--acc:#2f5fa7;--acc-2:#4a78bf;--acc-soft:#e6edf7;--hero:linear-gradient(160deg,#1e3a66 0%,#2f5fa7 100%)}
@@ -126,6 +156,21 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ig-step{display:flex;gap:12px;align-items:flex-start;margin:0 0 14px;font-size:17px;line-height:1.4}
 .ig-step>span{flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--acc-ink);display:grid;place-items:center;font-weight:800;font-size:18px}
 .ig-go{width:100%;padding:16px;font-size:18px}.ig-big{padding:14px;font-size:16px}
+.ig-card{animation:igIn .35s ease}@keyframes igIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.ig-artbox{display:grid;place-items:center;margin:0 0 12px}.ig-art{width:150px;height:200px}
+.ig-ph{fill:var(--input,rgba(127,127,127,.12));stroke:var(--muted);stroke-width:2}
+.ig-ln{fill:color-mix(in srgb,var(--muted) 30%,transparent)}.ig-sep{stroke:color-mix(in srgb,var(--muted) 40%,transparent);stroke-width:1}
+.ig-sheet{fill:var(--card);stroke:color-mix(in srgb,var(--muted) 50%,transparent);stroke-width:1}
+.ig-on{fill:var(--accent,var(--acc))}.ig-app{fill:var(--accent,var(--acc))}.ig-dot{fill:var(--text)}
+.ig-ic{fill:none;stroke:var(--text);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ig-tx{font:700 6px system-ui,sans-serif;fill:var(--text)}.ig-tx.on{fill:var(--on-accent,var(--acc-ink,#000))}
+text.ig-tx.on[text-anchor="end"]{fill:var(--accent,var(--acc))}
+.ig-ring{fill:none;stroke:var(--accent,var(--acc));stroke-width:2.5;transform-box:fill-box;transform-origin:center;animation:igRing 1.6s ease-out infinite}.ig-ring.r2{animation-delay:.8s}
+@keyframes igRing{from{transform:scale(.6);opacity:1}to{transform:scale(2);opacity:0}}
+.ig-pop{transform-box:fill-box;transform-origin:center;animation:igPop 1.8s ease-in-out infinite}@keyframes igPop{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+.ig-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 4px}
+.ig-dots{display:flex;gap:6px}.ig-dots i{width:8px;height:8px;border-radius:50%;background:color-mix(in srgb,var(--muted) 45%,transparent)}.ig-dots i.on{background:var(--accent,var(--acc));width:20px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){.ig-ring,.ig-pop,.ig-card{animation:none}}
 .ct-save{width:100%;margin-top:10px;padding:13px;font-size:15.5px}
 .ct-in{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--muted)}
 .ct-in input{width:58px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:center;font-size:18px;font-weight:800}
@@ -377,6 +422,14 @@ nav.bottom button.on{background:var(--acc-soft);color:var(--acc)}
 .cal-h h3{margin:0;font-size:16px}
 .qhelp{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:900;font-size:14px;line-height:1;padding:0;vertical-align:2px;margin-left:4px;cursor:pointer}
 #demoDlg{width:min(440px,calc(100vw - 32px))}
+#photoDlg{width:min(360px,calc(100vw - 32px))}
+.ph-crop{position:relative;width:min(240px,64vw);aspect-ratio:1;margin:0 auto 10px;border-radius:50%;overflow:hidden;background:rgba(127,127,127,.15);touch-action:none}
+.ph-crop canvas{width:100%;height:100%;display:block;cursor:grab}
+.ph-empty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;color:var(--muted);font-weight:700}.ph-empty .ic{width:40px;height:40px}
+#phZoom{width:100%;margin:4px 0 12px}
+.ph-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.v2-phbtn{position:relative;border:0;background:none;padding:0;color:inherit;flex:none;cursor:pointer}
+.v2-phcam{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:var(--accent,var(--acc));color:var(--on-accent,#fff);display:grid;place-items:center;border:2px solid var(--bg,#0b1433)}.v2-phcam .ic{width:14px;height:14px}
 .demo-box{background:var(--input);border-radius:16px;padding:8px;margin-bottom:12px}
 .demo-svg{display:block;width:100%;max-height:300px}
 .demo-svg .d-floor{fill:var(--line)}
@@ -775,6 +828,10 @@ body.v2-full main{margin-top:0}
 .v2-howto{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border:0;border-radius:20px;padding:10px;width:100%;text-align:left;margin-bottom:12px;color:var(--text)}
 .v2-howto .grow{flex:1}.v2-howto b{display:block;font-weight:800}.v2-howto small{color:var(--muted);font-weight:600;font-size:12.5px}
 .v2-howto-anim{width:108px;height:84px;background:#1A2A5E;--halo:#1A2A5E}
+.v2-howto{align-items:flex-start;cursor:default}.v2-howto[role=button]{cursor:pointer}.v2-howto small{display:block;line-height:1.35;margin-top:2px}
+.v2-eq{display:inline-flex;margin-top:8px;background:rgba(255,255,255,.08);border-radius:99px;padding:3px;gap:2px}
+.v2-eq button{border:0;background:transparent;color:var(--text);font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:99px}
+.v2-eq button.on{background:var(--accent);color:var(--on-accent)}.v2-eq button:disabled{opacity:.6}
 .v2-sets-h,.v2-set{display:grid;grid-template-columns:30px 1fr 1fr 52px;gap:8px;align-items:center}
 .v2-sets-h{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 2px 6px}
 .v2-set{padding:6px 2px;border-radius:18px;transition:background .2s}
@@ -921,6 +978,11 @@ body.v2-stu main{margin-top:0;padding-top:calc(10px + env(safe-area-inset-top))}
 .v2-qr button{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 4px;border-radius:99px;border:1.5px solid var(--line);background:transparent;color:var(--text);font-weight:700;font-size:13px;white-space:nowrap}
 .v2-qr .v2i{width:15px;height:15px}
 .v2-composer{display:flex;gap:8px;align-items:center;margin-top:14px}
+body.v2-chatv main{padding-bottom:calc(240px + env(safe-area-inset-bottom))}
+body.v2-chatv .v2-dock{position:fixed;left:14px;right:14px;bottom:calc(94px + env(safe-area-inset-bottom));z-index:9;max-width:732px;margin:0 auto;padding:10px;border-radius:26px;background:rgba(9,17,48,.86);border:1px solid var(--line);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+body.v2-chatv .v2-dock .v2-qr{margin-top:0}body.v2-chatv .v2-dock .v2-composer{margin-top:8px}
+body.v2-chatv.kb .v2-dock{bottom:calc(var(--kb, 0px) + 8px)}
+body.v2-chatv.kb nav.bottom{display:none}
 .v2-composer input{flex:1;min-width:0;padding:13px 16px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font-weight:600;font-size:15px}
 .v2-composer button{width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
 .v2-me{display:flex;align-items:center;gap:14px;padding:18px!important}
@@ -966,7 +1028,7 @@ body.v2-done nav.bottom{display:none}
 .v2-brand{display:inline-flex;align-items:center;gap:9px}
 .v2-brand small{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-top:3px}
 .v2-brand .v2-wm.sm{font-size:17px}
-.v2-avbtn{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);font-weight:800;font-size:14px;flex:none}
+.v2-avbtn{overflow:hidden;padding:0;width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);font-weight:800;font-size:14px;flex:none}
 .v2-hello{font-family:'Outfit','Archivo',sans-serif;font-weight:600;font-size:26px;letter-spacing:-.02em;margin:6px 0 2px}
 .v2-kpis{display:grid;grid-template-columns:1.2fr 1fr;grid-template-rows:auto auto;gap:10px;margin-bottom:6px}
 .v2-kpis .v2-tile:first-child{grid-row:span 2;text-align:left;border:1px solid var(--line)}
@@ -1063,13 +1125,13 @@ body.desk .v2-navbrand{display:block}
       <button class="link" id="authToggle" type="button">Primeiro acesso? Criar conta</button>
       <button class="link" id="authForgot" type="button">Esqueci a senha</button>
       <button class="link" id="authCodeT" type="button" hidden>Tenho um código de convite</button>
-      <button class="btn" id="authRescue" type="button" hidden style="width:100%;margin-top:10px">⬇ Baixar cópia dos meus treinos (envie ao professor)</button>
+      <button class="btn" id="authRescue" type="button" hidden style="width:100%;margin-top:10px"><i class="ic ic-down"></i> Baixar cópia dos meus treinos (envie ao professor)</button>
       <button class="link" id="authOut" type="button" hidden>Sair desta conta</button>
     </div>
   </div>
 </div>
-<div id="offBar">📴 Sem internet: pode anotar normalmente. Tudo sobe para a nuvem quando a internet voltar.</div>
-<div id="studentBar" hidden>👁 Vendo como <b id="studentBarName"></b> vê o app <button data-act-global="exit-student">Sair</button></div>
+<div id="offBar"><i class="ic ic-nonet"></i> Sem internet: pode anotar normalmente. Tudo sobe para a nuvem quando a internet voltar.</div>
+<div id="studentBar" hidden><i class="ic ic-eye"></i> Vendo como <b id="studentBarName"></b> vê o app <button data-act-global="exit-student">Sair</button></div>
 <header class="hero">
   <div class="hero-in">
     <div class="hero-top">
@@ -1127,6 +1189,17 @@ body.desk .v2-navbrand{display:block}
     <div class="dlg-actions"><span class="grow"></span><button type="button" class="btn" id="copyCancel">Cancelar</button><button type="submit" class="btn primary">Copiar</button></div>
   </form>
 </dialog>
+<dialog id="photoDlg">
+  <h2>Foto de perfil</h2>
+  <div class="ph-crop"><canvas id="phCv" width="480" height="480"></canvas><div class="ph-empty" id="phEmpty"><i class="ic ic-cam"></i><span>Sem foto</span></div></div>
+  <p class="hint" id="phHint" style="text-align:center;margin:0 0 6px">Arraste a foto para ajeitar no círculo. A barra aproxima.</p>
+  <input type="range" id="phZoom" min="1" max="3" step="0.01" value="1" aria-label="Aproximar a foto">
+  <div class="ph-btns">
+    <label class="btn primary" id="phPick"><i class="ic ic-img"></i> <span>Escolher foto</span><input type="file" accept="image/*" id="phFile" hidden></label>
+    <button class="btn danger" id="phDel" type="button"><i class="ic ic-trash"></i> Remover foto</button>
+  </div>
+  <div class="dlg-actions"><button class="btn" id="phCancel" type="button">Cancelar</button><span class="grow"></span><button class="btn primary" id="phSave" type="button">Salvar</button></div>
+</dialog>
 <dialog id="demoDlg">
   <h2 id="demoTitle">Como fazer</h2>
   <div id="demoBody"></div>
@@ -1164,8 +1237,8 @@ body.desk .v2-navbrand{display:block}
   <div class="ci-bgs" id="ciBgs"></div>
   <div class="ci-row" id="ciFmt"></div>
   <div class="ci-photo">
-    <label class="btn">📷 Tirar foto<input type="file" accept="image/*" capture="user" id="ciCam" hidden></label>
-    <label class="btn">🖼 Foto da galeria<input type="file" accept="image/*" id="ciPick" hidden></label>
+    <label class="btn"><i class="ic ic-cam"></i> Tirar foto<input type="file" accept="image/*" capture="user" id="ciCam" hidden></label>
+    <label class="btn"><i class="ic ic-img"></i> Foto da galeria<input type="file" accept="image/*" id="ciPick" hidden></label>
   </div>
   <button type="button" class="btn primary" id="ciShare" style="width:100%;padding:13px;font-size:15px">Compartilhar no Instagram</button>
   <div class="dlg-actions"><button type="button" class="btn" id="ciSave">Baixar imagem</button><span class="grow"></span><button type="button" class="btn" id="ciClose">Fechar</button></div>
@@ -1380,6 +1453,9 @@ const weekday = s => toDate(s).toLocaleDateString('pt-BR', { weekday: 'long' });
 const numVal = v => v == null ? '' : String(v).replace('.', ',');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const initials = n => n.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+// Foto de perfil (pequena, guardada como texto). Só aceita imagem JPEG/PNG/WebP em base64.
+const okPhoto = s => typeof s === 'string' && s.length < 200000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s);
+const avIn = p => p && okPhoto(p.photo) ? `<img src="${esc(p.photo)}" alt="">` : esc(initials((p && p.name) || '?'));
 const daysBetween = (a, b) => Math.round((toDate(b) - toDate(a)) / 864e5);
 
 // ---------- Dados ----------
@@ -1577,7 +1653,7 @@ function openPicker() {
   search.hidden = students.length < 8; search.value = '';
   const draw = () => {
     const q = search.value.trim().toLowerCase();
-    const row = (p, sub) => `<button class="pick-row ${p.id === ui.profile ? 'on' : ''}" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
+    const row = (p, sub) => `<button class="pick-row ${p.id === ui.profile ? 'on' : ''}" data-pid="${p.id}"><span class="av">${avIn(p)}</span>
       <span class="grow"><b>${esc(p.name)}</b>${sub ? `<small>${sub}</small>` : ''}</span>${p.id === ui.profile ? '<span class="pill up">aberto</span>' : ''}</button>`;
     const list = students.filter(p => !q || p.name.toLowerCase().includes(q));
     document.getElementById('pickList').innerHTML = list.map(p => row(p, profileSummary(p.id).lastTxt)).join('')
@@ -1615,8 +1691,8 @@ $pick.addEventListener('click', e => {
 function renderHero() {
   const p = profile(ui.profile), isMe = ui.profile === ME;
   const $who = document.getElementById('who');
-  $who.innerHTML = ui.studentMode ? `<span class="av">${esc(initials(p.name))}</span><span>Olá, ${esc(firstName(p))}!</span>`
-    : `<span class="av">${esc(initials(p.name))}</span><span>${isMe ? esc(p.name) : 'Aluno: ' + esc(p.name)}</span> ▾`;
+  $who.innerHTML = ui.studentMode ? `<span class="av">${avIn(p)}</span><span>Olá, ${esc(firstName(p))}!</span>`
+    : `<span class="av">${avIn(p)}</span><span>${isMe ? esc(p.name) : 'Aluno: ' + esc(p.name)}</span> ▾`;
   // Professor: o botão abre a lista de alunos (ordem alfabética) para trocar de perfil
   if (ui.studentMode) $who.dataset.view = 'config'; else delete $who.dataset.view;
   if (ui.view === 'alunos' && !(isDesk() && ui.profile !== ME) || ui.view === 'pagamentos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
@@ -1693,7 +1769,7 @@ function openSettings() {
   document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
     ? `<label class="f">Minha meta de cardio por dia (minutos)<input id="setGoal" inputmode="numeric" placeholder="ex.: 20" value="${me.cardioDaily || ''}"></label>` : '';
   document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', skinAllowed() ? `<div class="skin-row" style="display:flex;align-items:center;gap:10px;margin:0 0 14px"><div class="grow"><b>Visual novo</b><br><small style="color:var(--muted)">Desligar vale só neste aparelho. Os alunos ficam sempre no visual novo.</small></div><button type="button" class="btn ${skinOn() ? 'primary' : ''}" id="skinTgl">${skinOn() ? 'Ligado' : 'Desligado'}</button></div>` : '');
-  if (skinAllowed()) document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', `<button type="button" class="btn primary" id="openV2" style="width:100%;margin:0 0 14px;padding:12px">✨ Abrir o app novo (prévia com seus dados)</button>`);
+  if (skinAllowed()) document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', `<button type="button" class="btn primary" id="openV2" style="width:100%;margin:0 0 14px;padding:12px"><i class="ic ic-star"></i> Abrir o app novo (prévia com seus dados)</button>`);
   const v2 = document.getElementById('openV2');
   if (v2) v2.onclick = ev => { // leva uma cópia dos dados só para ler; a prévia não grava nada
     ev.preventDefault();
@@ -1757,7 +1833,7 @@ function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
   const desk = isDesk();
   document.body.classList.toggle('desk', desk);
-  document.body.classList.remove('v2-full'); // tela do treino do aluno no app novo (liga de novo ao desenhar)
+  document.body.classList.remove('v2-full', 'v2-chatv'); // tela do treino do aluno no app novo (liga de novo ao desenhar)
   if (desk && ui.view === 'perfil') ui.view = 'alunos'; // no computador o perfil abre dentro da área de alunos
   renderHero();
   renderNav();
@@ -1791,7 +1867,7 @@ function renderTreino() {
   const loose = profExs().filter(e => !isLetter(e.letter) && !e.archived).sort(byGroupOrder);
   const isToday = ui.date === today();
   const p = profile(ui.profile), lastMsg = ui.studentMode && (p.messages || []).slice(-1)[0];
-  const greet = ui.studentMode && isToday ? `<div class="banner hello"><div class="grow"><h2>Olá, ${esc(firstName(p))}! 👋</h2>
+  const greet = ui.studentMode && isToday ? `<div class="banner hello"><div class="grow"><h2>Olá, ${esc(firstName(p))}!</h2>
       <small>Já treinou hoje? Não esquece do cardio :)</small>
       ${lastMsg ? `<div class="note"><b>Recado do professor · ${fmtDate(lastMsg.date)}</b><br>${esc(lastMsg.text)}</div>
       <div class="actions"><button class="btn" data-view="recados">Ver recados</button></div>` : ''}</div></div>` : '';
@@ -1853,9 +1929,9 @@ function renderStudentTreino(p, greet, isToday) {
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div>
     ${installTipHtml()}
-    ${Object.keys(p.unlocks || {}).filter(d => d < today() && d !== ui.date && !daySent(d, p.id)).sort().map(d => `<section class="card unlock-note"><p style="margin:0 0 10px"><b>🔓 Seu professor liberou o treino de ${fmtDate(d)}</b> para você completar o que faltou e enviar.</p>
+    ${Object.keys(p.unlocks || {}).filter(d => d < today() && d !== ui.date && !daySent(d, p.id)).sort().map(d => `<section class="card unlock-note"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Seu professor liberou o treino de ${fmtDate(d)}</b> para você completar o que faltou e enviar.</p>
       <button class="btn primary" data-act="goto-day" data-d="${d}">Abrir treino de ${fmtDate(d)}</button></section>`).join('')}
-    ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0">🔓 Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
+    ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0"><i class="ic ic-unlock"></i> Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
     ${showPlan ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
       ${cardioGoalHtml(p)}
       ${groups.length ? `<div class="layout">Séries em:
@@ -1863,7 +1939,7 @@ function renderStudentTreino(p, greet, isToday) {
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${blocks}
       ${sendHtml()}`
-    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
+    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   markLocked();
 }
 // ===== App novo (desenho Passos Fit 2.0): bonequinhos animados dos exercícios =====
@@ -1873,6 +1949,11 @@ const norm = v => String(v || '').toLowerCase().normalize('NFD').replace(/[\u030
 const P = (h, n, s, e, w, hp, k, a, t) => ({ h, n, s, e, w, hp, k, a, t });
 const FLOOR = '<path d="M4 80h112" stroke="var(--line)" stroke-width="2"/>';
 const EQ = 'stroke="color-mix(in srgb, currentColor 35%, transparent)" fill="none" stroke-linecap="round"';
+// Seta tracejada mostrando para onde vai a força (curva de (x1,y1) até (x2,y2), ponta no fim)
+const ARR = (x1, y1, cx, cy, x2, y2) => {
+  const a = Math.atan2(y2 - cy, x2 - cx), h = (d) => `${(x2 + 5 * Math.cos(a + d)).toFixed(1)} ${(y2 + 5 * Math.sin(a + d)).toFixed(1)}`;
+  return `<path d="M${x1} ${y1}Q${cx} ${cy} ${x2} ${y2}" fill="none" stroke="var(--accent, currentColor)" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3.5" opacity=".85"/><path d="M${h(Math.PI * .8)}L${x2} ${y2}L${h(-Math.PI * .8)}" fill="none" stroke="var(--accent, currentColor)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+};
 const POSES = {
   supino: { st: `${FLOOR}<path d="M18 61h66M26 63v16M76 63v16" ${EQ} stroke-width="5"/>`, w: 'bar',
     A: P([22, 52], [30, 55], [32, 55], [33, 41], [33, 28], [62, 56], [81, 54], [85, 78], [92, 78]),
@@ -1907,7 +1988,7 @@ const POSES = {
   legpress: { st: `${FLOOR}<path d="M14 34l22 30h16M58 66l44-38" ${EQ} stroke-width="5"/>`, w: 'plate',
     A: P([19, 33], [24, 40], [26, 42], [32, 54], [40, 62], [40, 60], [60, 48], [80, 36], [84, 30]),
     B: P([19, 33], [24, 40], [26, 42], [32, 54], [40, 62], [40, 60], [50, 40], [64, 47], [68, 41]) },
-  extensora: { st: `${FLOOR}<path d="M44 26l2 32M42 61h24M54 63v16" ${EQ} stroke-width="5"/>`, w: 'pad',
+  extensora: { st: `${FLOOR}<path d="M44 26l2 32M42 61h24M54 63v16" ${EQ} stroke-width="5"/>${ARR(78, 79, 96, 72, 94, 50)}`, w: 'padf',
     A: P([49, 22], [48, 30], [48, 32], [52, 44], [58, 56], [50, 56], [66, 57], [66, 76], [72, 77]),
     B: P([49, 22], [48, 30], [48, 32], [52, 44], [58, 56], [50, 56], [66, 57], [83, 49], [86, 43]) },
   flexora: { st: `${FLOOR}<path d="M18 58h74M28 60v19M84 60v19" ${EQ} stroke-width="5"/>`, w: 'pad',
@@ -2009,7 +2090,7 @@ Object.assign(POSES, {
 });
 
 Object.assign(POSES, {
-  cadflexora: { st: `${SEAT(44)}<circle cx="64" cy="51" r="3.2" ${EQ} stroke-width="3"/>`, w: 'pad',
+  cadflexora: { st: `${SEAT(44)}<rect x="55" y="45.5" width="16" height="6" rx="3" fill="color-mix(in srgb, currentColor 45%, transparent)"/>${ARR(96, 58, 92, 76, 74, 79)}`, w: 'padb',
     A: P([49, 22], [48, 30], [48, 32], [52, 44], [58, 56], [50, 56], [66, 57], [84, 52], [89, 47]),
     B: P([49, 22], [48, 30], [48, 32], [52, 44], [58, 56], [50, 56], [66, 57], [58, 74], [63, 79]) },
   crucinv: { front: true, st: FRONTSEAT, w: 'grip',
@@ -2053,6 +2134,43 @@ Object.assign(POSES, {
     B: P([58, 26], [55, 33], [55, 35], [67, 37], [79, 37], [44, 58], [60, 60], [58, 79], [66, 79]) },
 });
 
+const INCB = `${FLOOR}<path d="M24 36L58 62h20M32 43v36M72 63v16" ${EQ} stroke-width="5"/>`;
+Object.assign(POSES, {
+  // supino inclinado com barra: banco inclinado, barra sobe reto acima do alto do peito
+  supinoinc: { st: INCB, w: 'bar',
+    A: P([22, 30], [28, 35], [31, 37], [32, 23], [32, 10], [58, 56], [78, 54], [83, 78], [90, 78]),
+    B: P([22, 30], [28, 35], [31, 37], [45, 42], [38, 29], [58, 56], [78, 54], [83, 78], [90, 78]) },
+  supinoinchalter: { st: INCB, w: 'db',
+    A: P([22, 30], [28, 35], [31, 37], [32, 23], [32, 10], [58, 56], [78, 54], [83, 78], [90, 78]),
+    B: P([22, 30], [28, 35], [31, 37], [45, 42], [38, 29], [58, 56], [78, 54], [83, 78], [90, 78]) },
+  // supino inclinado na máquina: encosto inclinado, empurra as alças para a frente e para cima
+  chestpressinc: { st: `${FLOOR}<path d="M36 22l10 36M44 61h26M58 63v16" ${EQ} stroke-width="5"/><path d="M98 6v73" ${EQ} stroke-width="4"/>`, w: 'grip', lever: [98, 46],
+    A: P([41, 22], [43, 30], [44, 32], [40, 45], [52, 40], [50, 57], [70, 58], [71, 78], [78, 78]),
+    B: P([41, 22], [43, 30], [44, 32], [57, 26], [70, 17], [50, 57], [70, 58], [71, 78], [78, 78]) },
+  // remada cavalinho livre: tronco inclinado, barra presa no chão atrás, passando entre as pernas
+  cavalinho: { st: `${FLOOR}<circle cx="8" cy="78" r="3" ${EQ} stroke-width="2.5"/>`, w: 'bar', lever: [8, 78],
+    A: P([79, 24], [72, 28], [69, 30], [69, 44], [69, 58], [46, 44], [58, 58], [54, 79], [62, 79]),
+    B: P([79, 24], [72, 28], [69, 30], [57, 35], [64, 47], [46, 44], [58, 58], [54, 79], [62, 79]) },
+  // remada cavalinho na máquina: peito apoiado no banco, puxa as alças
+  cavalinhomaq: { st: `${FLOOR}<path d="M57 58l21-16M66 52v27M22 79h22" ${EQ} stroke-width="7"/><circle cx="104" cy="77" r="3" ${EQ} stroke-width="2.5"/>`, w: 'grip', lever: [104, 77],
+    A: P([78, 24], [71, 29], [68, 31], [70, 45], [72, 60], [44, 50], [38, 63], [34, 76], [41, 77]),
+    B: P([78, 24], [71, 29], [68, 31], [57, 37], [64, 50], [44, 50], [38, 63], [34, 76], [41, 77]) },
+  // desenvolvimento na máquina: sentado, alças guiadas
+  desenvmaq: { st: `${FLOOR}<path d="M47 28l2 32M44 61h26M57 63v16" ${EQ} stroke-width="5"/><path d="M92 2v77" ${EQ} stroke-width="4"/>`, w: 'grip', lever: [92, 30],
+    A: P([54, 22], [53, 30], [53, 32], [48, 44], [57, 33], [54, 56], [71, 57], [72, 78], [79, 78]),
+    B: P([54, 22], [53, 30], [53, 32], [56, 18], [57, 5], [54, 56], [71, 57], [72, 78], [79, 78]) },
+  // tríceps na polia com corda (de frente): mãos juntas no peito, descem e abrem a corda
+  tricorda: { front: true, st: `${FLOOR}<circle cx="60" cy="4" r="3" ${EQ} stroke-width="2.5"/>`, w: 'grip', cable: [60, 4],
+    A: P([60, 13], [60, 21], [52, 24], [51, 37], [57, 28], [55, 48], [55, 64], [55, 79], [51, 79]),
+    B: P([60, 13], [60, 21], [52, 24], [51, 37], [45, 50], [55, 48], [55, 64], [55, 79], [51, 79]) },
+  // tríceps coice: tronco inclinado com apoio no banco, cotovelo parado, estica o braço para trás
+  tricoice: { st: `${FLOOR}<rect x="20" y="55" width="56" height="5" rx="2" fill="color-mix(in srgb, currentColor 30%, transparent)"/><path d="M26 60v19M70 60v19" ${EQ} stroke-width="4"/><path d="M64 40l5 15" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`, w: 'db',
+    A: X(P([71, 35], [64, 38], [62, 39], [52, 40], [53, 53], [38, 42], [40, 55], [28, 56], [24, 54]), { k2: [32, 62], a2: [34, 79], t2: [41, 79] }),
+    B: X(P([71, 35], [64, 38], [62, 39], [52, 40], [39, 39], [38, 42], [40, 55], [28, 56], [24, 54]), { k2: [32, 62], a2: [34, 79], t2: [41, 79] }) },
+});
+// Mesmo exercício feito livre ou na máquina: [livre, máquina]
+const VARIANTS = [['supino', 'chestpress'], ['supinoinc', 'chestpressinc'], ['supinoinchalter', 'chestpressinc'], ['supinohalter', 'chestpress'], ['cavalinho', 'cavalinhomaq'], ['remada', 'remadamaq'], ['agacha', 'smith'], ['desenv', 'desenvmaq']];
+const pairOf = k => VARIANTS.find(v => v.includes(k)) || null;
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 const L = (p, q, w, extra = '') => `<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" stroke-width="${w}" ${extra}/>`;
 const mir = p => [120 - p[0], p[1]];
@@ -2062,6 +2180,9 @@ function weightAt(kind, w, a, e, k, hp) {
   if (kind === 'db') return `<rect x="${w[0] - 5}" y="${w[1] - 3}" width="10" height="6" rx="2" ${acc}/>`;
   if (kind === 'grip') return `<circle cx="${w[0]}" cy="${w[1]}" r="3.2" ${acc}/>`;
   if (kind === 'pad') return `<circle cx="${a[0]}" cy="${a[1]}" r="4.5" ${acc}/>`;
+  if ((kind === 'padf' || kind === 'padb') && k) { // rolo encostado na frente (extensora) ou atrás (flexora) da canela
+    const dx = a[0] - k[0], dy = a[1] - k[1], l = Math.hypot(dx, dy) || 1, s = kind === 'padf' ? 5.5 : -5.5;
+    return `<circle cx="${(a[0] - dx / l * 3 + dy / l * s).toFixed(1)}" cy="${(a[1] - dy / l * 3 - dx / l * s).toFixed(1)}" r="4.5" ${acc}/>`; }
   if (kind === 'epad' && e) return `<circle cx="${e[0]}" cy="${e[1]}" r="4.2" ${acc}/>`;
   if (kind === 'kpad' && k) return `<circle cx="${k[0]}" cy="${k[1]}" r="4.5" ${acc}/>`;
   if (kind === 'hipbar' && hp) return `<circle cx="${hp[0]}" cy="${hp[1] - 6}" r="7" ${acc}/><circle cx="${hp[0]}" cy="${hp[1] - 6}" r="1.6" fill="currentColor"/>`;
@@ -2087,6 +2208,7 @@ function figure(key, t) {
     if (q.k2) g += L(q.hp, q.k2, 6.5, far) + L(q.k2, q.a2, 6, far) + L(q.a2, q.t2, 4, far);
     if (q.e2) g += L(q.s, q.e2, 5.5, farArm) + L(q.e2, q.w2, 5, farArm);
     if (D.cable) g += cable(D.cable, D.cableTo === 'a' ? q.a : q.w);
+    if (D.lever) g += L(D.lever, q.w, 3.5, 'stroke="color-mix(in srgb, currentColor 55%, transparent)" stroke-linecap="round"');
     g += H(q.hp, q.k, 6.5, ink) + H(q.k, q.a, 6, ink) + L(q.a, q.t, 4, ink) + H(q.n, q.hp, 7.5, ink);
     g += `<circle cx="${q.h[0].toFixed(1)}" cy="${q.h[1].toFixed(1)}" r="6.5" fill="currentColor"/>`;
     g += H(q.s, q.e, 5.5, arm) + H(q.e, q.w, 5, arm) + weightAt(D.w, q.w, q.a, q.e, q.k, q.hp);
@@ -2116,12 +2238,18 @@ function animLoop(now) {
 }
 function guessAnim(name, group) {
   const n = norm(name);
-  const RX = [[/voador inverso|crucifixo inverso|peck deck inverso/, 'crucinv'], [/cadeira flexora|flexora sentad/, 'cadflexora'], [/elevacao frontal/, 'elevfrontal'], [/encolhimento/, 'encolhimento'], [/concentrad/, 'concentrada'], [/triceps (no )?banco|mergulho no banco/, 'mergulho'], [/sumo/, 'sumo'], [/ponte/, 'ponte'], [/infra|elevacao de pernas/, 'infra'], [/polichinelo/, 'polichinelo'], [/remo/, 'remoerg'], [/escada/, 'escada'], [/eliptico/, 'eliptico'], [/bicicleta|bike/, 'bike'], [/esteira|corrida|caminhada/, 'esteira'], [/voador|peck/, 'peck'], [/supino.*maquina|chest press/, 'chestpress'], [/remada baixa/, 'remadabaixa'], [/remada.*(maquina|sentad|articulad)/, 'remadamaq'], [/graviton|assistid/, 'graviton'], [/scott/, 'scott'], [/abdutora/, 'abdutora'], [/adutora/, 'adutora'], [/gluteo|coice|kickback/, 'gluteocabo'], [/pelvica|hip thrust/, 'pelvica'], [/panturrilha sentad/, 'pantsentado'], [/hack/, 'hack'], [/smith/, 'smith'], [/terra/, 'terra'], [/stiff/, 'stiff'], [/afundo|passada|bulgaro/, 'afundo'], [/martelo/, 'martelo'], [/frances/, 'frances'], [/testa/, 'testa'], [/serrote|unilateral/, 'serrote'], [/flexao/, 'flexao'], [/prancha/, 'prancha'], [/abdominal.*maquina/, 'abdmaq'], [/rosca.*(cabo|polia)/, 'roscacabo'], [/supino.*halter/, 'supinohalter'], [/crucifixo|fly/, 'crucifixo'], [/cross/, 'cross'], [/supino|flexao/, 'supino'], [/puxada|pulldown|barra fixa/, 'puxada'], [/remada|serrote|row/, 'remada'], [/desenvolvimento|militar|arnold/, 'desenv'], [/elevacao lateral|elevacao frontal|lateral/, 'lateral'], [/rosca|martelo|scott/, 'rosca'], [/tricep|frances|testa|pulley|coice|mergulho/, 'triceps'], [/leg|hack/, 'legpress'], [/extensora/, 'extensora'], [/flexora|mesa|romeno/, 'flexora'], [/panturrilha|gemeo|soleo/, 'pant'], [/abdom|crunch/, 'abdo'], [/agach|afundo|bulgaro|passada|smith/, 'agacha']];
+  const RX = [[/cavalinho.*(maquina|apoio|articulad)|remada.*(apoio no peito|peito apoiado)/, 'cavalinhomaq'], [/cavalinho|remada t\b|t-?bar/, 'cavalinho'],
+    [/supino inclinad.*(maquina|articulad)|chest press inclinad/, 'chestpressinc'], [/supino inclinad.*halter/, 'supinoinchalter'], [/supino inclinad/, 'supinoinc'],
+    [/desenvolvimento.*(maquina|articulad)/, 'desenvmaq'],
+    [/tricep.*corda|corda.*tricep/, 'tricorda'], [/tricep.*(coice|kickback)|coice.*tricep/, 'tricoice'], [/tricep.*unilateral/, 'triceps'],
+    [/voador inverso|crucifixo inverso|peck deck inverso/, 'crucinv'], [/cadeira flexora|flexora sentad/, 'cadflexora'], [/elevacao frontal/, 'elevfrontal'], [/encolhimento/, 'encolhimento'], [/concentrad/, 'concentrada'], [/triceps (no )?banco|mergulho no banco/, 'mergulho'], [/sumo/, 'sumo'], [/ponte/, 'ponte'], [/infra|elevacao de pernas/, 'infra'], [/polichinelo/, 'polichinelo'], [/remo/, 'remoerg'], [/escada/, 'escada'], [/eliptico/, 'eliptico'], [/bicicleta|bike/, 'bike'], [/esteira|corrida|caminhada/, 'esteira'], [/voador|peck/, 'peck'], [/supino.*maquina|chest press/, 'chestpress'], [/remada baixa/, 'remadabaixa'], [/remada.*(maquina|sentad|articulad)/, 'remadamaq'], [/graviton|assistid/, 'graviton'], [/scott/, 'scott'], [/abdutora/, 'abdutora'], [/adutora/, 'adutora'], [/gluteo|coice|kickback/, 'gluteocabo'], [/pelvica|hip thrust/, 'pelvica'], [/panturrilha sentad/, 'pantsentado'], [/hack/, 'hack'], [/smith/, 'smith'], [/terra/, 'terra'], [/stiff/, 'stiff'], [/afundo|passada|bulgaro/, 'afundo'], [/martelo/, 'martelo'], [/frances/, 'frances'], [/testa/, 'testa'], [/serrote|unilateral/, 'serrote'], [/flexao/, 'flexao'], [/prancha/, 'prancha'], [/abdominal.*maquina/, 'abdmaq'], [/rosca.*(cabo|polia)/, 'roscacabo'], [/supino.*halter/, 'supinohalter'], [/crucifixo|fly/, 'crucifixo'], [/cross/, 'cross'], [/supino|flexao/, 'supino'], [/puxada|pulldown|barra fixa/, 'puxada'], [/remada|serrote|row/, 'remada'], [/desenvolvimento|militar|arnold/, 'desenv'], [/elevacao lateral|elevacao frontal|lateral/, 'lateral'], [/rosca|martelo|scott/, 'rosca'], [/tricep|frances|testa|pulley|coice|mergulho/, 'triceps'], [/leg|hack/, 'legpress'], [/extensora/, 'extensora'], [/flexora|mesa|romeno/, 'flexora'], [/panturrilha|gemeo|soleo/, 'pant'], [/abdom|crunch/, 'abdo'], [/agach|afundo|bulgaro|passada|smith/, 'agacha']];
   for (const [r, k] of RX) if (r.test(n)) return k;
   return { Peito: 'supino', Costas: 'remada', Ombros: 'desenv', 'Bíceps': 'rosca', 'Tríceps': 'triceps', 'Abdômen': 'abdo', 'Quadríceps': 'agacha', Posteriores: 'flexora', Panturrilha: 'pant' }[group] || 'rosca';
 }
 let started = false;
-return { animHtml, guessAnim, figure, POSES, keyOf: ex => guessAnim(ex.name, ex.group), start() { if (!started) { started = true; requestAnimationFrame(animLoop); } } };
+// eq: 'livre' ou 'maq' (escolhido pelo professor ou marcado no dia); sem escolha, vale o que o nome diz
+const keyOf = (ex, eq) => { const k = guessAnim(ex.name, ex.group), pr = pairOf(k); return pr && eq ? pr[eq === 'maq' ? 1 : 0] : k; };
+return { animHtml, guessAnim, figure, POSES, pairOf, keyOf, start() { if (!started) { started = true; requestAnimationFrame(animLoop); } } };
 })();
 // ===== App novo (desenho Passos Fit 2.0): tela de treino do aluno =====
 // Início (semana + treino do dia) → "Começar treino" → treino em andamento (medidor + exercícios um por vez).
@@ -2139,7 +2267,60 @@ const V2I = {
   flame: '<svg viewBox="0 0 24 24" class="v2i"><path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.1 2-5.2 3.6-7.3.4 1.7 1.3 2.8 2.4 3.4.2-2.9 1.3-5.6 3.6-7.4.3 3.4 3.4 5.6 3.4 10.6 0 4.3-2.7 6.9-6.5 6.9z"/></svg>',
   dumb: '<svg viewBox="0 0 24 24" class="v2i"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>',
 };
-const v2Key = ex => PFA.keyOf(ex);
+// Livre ou máquina: o que foi marcado no dia vale mais que o padrão do exercício
+const exEq = (ex, date = ui.date) => (sessionOn(ex.id, date) || {}).equip || ex.equip || '';
+const v2Key = ex => PFA.keyOf(ex, exEq(ex));
+// "Como fazer" em uma frase, para cada desenho
+const HOWTO = {
+  supino: 'Deitado no banco reto: desça a barra até o peito e empurre para cima.',
+  supinohalter: 'Deitado no banco reto: desça os halteres ao lado do peito e empurre para cima.',
+  supinoinc: 'No banco inclinado: desça a barra até o alto do peito e empurre para cima.',
+  supinoinchalter: 'No banco inclinado: desça os halteres ao lado do peito e empurre para cima.',
+  chestpress: 'Sentado na máquina: empurre as alças para a frente e volte devagar.',
+  chestpressinc: 'Na máquina com encosto inclinado: empurre as alças para cima e para a frente.',
+  crucifixo: 'Deitado: abra os braços devagar, cotovelos levemente dobrados, e feche em cima do peito.',
+  peck: 'Sentado no voador: feche os braços na frente do peito e abra devagar.',
+  cross: 'Na polia alta: traga as mãos para a frente do corpo, de cima para baixo.',
+  cavalinho: 'Tronco inclinado e barra entre as pernas: puxe até a barriga e desça devagar.',
+  cavalinhomaq: 'Peito apoiado no banco da máquina: puxe as alças até o peito e solte devagar.',
+  remada: 'Tronco inclinado, costas retas: puxe a barra até a barriga.',
+  remadamaq: 'Sentado com o peito apoiado: puxe as alças levando os cotovelos para trás.',
+  remadabaixa: 'Sentado na polia baixa, costas retas: puxe até a barriga.',
+  puxada: 'Sentado: puxe a barra até a altura do peito e suba devagar.',
+  serrote: 'Mão e joelho no banco: puxe o halter até a cintura.',
+  desenv: 'Sentado: empurre os halteres para cima da cabeça e desça até a orelha.',
+  desenvmaq: 'Sentado na máquina: empurre as alças para cima e desça devagar.',
+  lateral: 'Em pé: suba os braços pelos lados até a altura dos ombros.',
+  elevfrontal: 'Em pé: suba os braços pela frente até a altura dos ombros.',
+  rosca: 'Em pé, cotovelos colados no corpo: suba a barra dobrando só os cotovelos.',
+  martelo: 'Palmas viradas uma para a outra: suba os halteres dobrando os cotovelos.',
+  scott: 'Braços apoiados no banco Scott: suba e desça devagar.',
+  triceps: 'Na polia, cotovelos colados: estique os braços para baixo e volte devagar.',
+  tricorda: 'Na polia com corda: estique os braços para baixo e abra a corda no final.',
+  tricoice: 'Tronco inclinado, cotovelo parado: estique o braço para trás.',
+  testa: 'Deitado: dobre só os cotovelos levando a barra até a testa e estique.',
+  frances: 'Peso atrás da cabeça: estique os braços para cima, cotovelos apontando para a frente.',
+  mergulho: 'Mãos no banco atrás do corpo: desça dobrando os cotovelos e suba.',
+  agacha: 'Barra nas costas: sente para trás até a coxa ficar paralela ao chão e suba.',
+  smith: 'Na máquina guiada (Smith): agache e suba com a barra presa no trilho.',
+  legpress: 'Costas apoiadas: desça a plataforma dobrando os joelhos e empurre.',
+  hack: 'Costas apoiadas na máquina: agache e suba empurrando com as pernas.',
+  extensora: 'Cadeira extensora: estique as pernas empurrando o rolo para cima e desça devagar.',
+  cadflexora: 'Cadeira flexora, coxa presa: puxe o rolo para baixo dobrando os joelhos.',
+  flexora: 'Mesa flexora, deitado de bruços: dobre os joelhos trazendo o rolo até o bumbum.',
+  stiff: 'Pernas quase esticadas: desça a barra rente às pernas e suba com as costas retas.',
+  terra: 'Barra no chão, costas retas: suba esticando pernas e quadril juntos.',
+  afundo: 'Um passo à frente: desça até o joelho de trás quase tocar o chão.',
+  pant: 'Na ponta dos pés: suba o mais alto que der e desça devagar.',
+  abdo: 'Deitado, joelhos dobrados: suba o tronco tirando os ombros do chão.',
+  prancha: 'Corpo reto apoiado nos antebraços: segure parado, sem deixar o quadril cair.',
+};
+function v2HowHtml(ex, lock) {
+  const k = v2Key(ex), pr = PFA.pairOf(k), eq = pr ? (k === pr[1] ? 'maq' : 'livre') : '', demo = !!demoFor(ex);
+  const can = !ui.studentMode || !lock;
+  return `<div class="v2-howto"${demo ? ` data-act="demo-ex" data-id="${ex.id}" role="button"` : ''}>${PFA.animHtml(k, 'v2-howto-anim', demo)}<span class="grow"><b>Como fazer</b><small>${esc(HOWTO[k] || 'Siga o movimento do bonequinho, devagar e com controle.')}</small>
+    ${pr ? `<span class="v2-eq">${[['livre', 'Livre'], ['maq', 'Máquina']].map(([v, l]) => `<button class="${eq === v ? 'on' : ''}" data-act="v2-equip" data-id="${ex.id}" data-v="${v}" ${can ? '' : 'disabled'}>${l}</button>`).join('')}</span>` : ''}</span></div>`;
+}
 function v2Gauge(p, label) {
   const N = 42, R1 = 86, R2 = 100, cx = 110, cy = 108; let t = '';
   for (let i = 0; i <= N; i++) {
@@ -2195,7 +2376,7 @@ function v2HomeHtml(p, d, isToday) {
       <p class="v2-muted">Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}. O corpo também cresce no descanso.</p>
       ${d.goal ? `<button class="v2-go" data-act="v2-start"><span class="ball">${V2I.run}</span>Cardio de hoje: ${fmtMin(d.goal)} min<span class="chev"><span>›</span><span>›</span><span>›</span></span></button>` : ''}</section>`}
     ${lastMsg ? `<div class="v2-sec"><h3>Recado do professor</h3><button data-view="recados">Ver todos</button></div>
-      <section class="card v2-note"><span class="av">${esc(initials((profile(ME) || {}).name || 'P'))}</span><div class="v2-bub">${esc(lastMsg.text)}<small>${fmtDate(lastMsg.date)}</small></div></section>` : ''}
+      <section class="card v2-note"><span class="av">${avIn(v2CoachP())}</span><div class="v2-bub">${esc(lastMsg.text)}<small>${fmtDate(lastMsg.date)}</small></div></section>` : ''}
     <div class="v2-sec"><h3>Sua semana</h3><button data-view="historico">Calendário</button></div>
     <div class="v2-tiles"><div class="v2-tile lil">${V2I.flame}<b>${wk}<small>/${planned || '–'}</small></b><span>dias treinados na semana</span></div>
       <div class="v2-tile sur">${V2I.dumb}<b>${fmt(volumeBetween(ws, addDays(ws, 6)))}<small> kg</small></b><span>levantados na semana</span></div></div>`;
@@ -2216,12 +2397,12 @@ function v2RunHtml(p, d, isToday) {
         ${isToday ? `<small>${weekday(ui.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(ui.date)}</small>` : `<small>${fmtDate(ui.date)} · <button class="link" data-act="today">voltar para hoje</button></small>`}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div></div><div class="v2-tw-b">
-    ${Object.keys(p.unlocks || {}).filter(x => x < today() && x !== ui.date && !daySent(x, p.id)).sort().map(x => `<section class="card unlock-note"><p style="margin:0 0 10px"><b>🔓 Seu professor liberou o treino de ${fmtDate(x)}</b> para você completar o que faltou e enviar.</p>
+    ${Object.keys(p.unlocks || {}).filter(x => x < today() && x !== ui.date && !daySent(x, p.id)).sort().map(x => `<section class="card unlock-note"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Seu professor liberou o treino de ${fmtDate(x)}</b> para você completar o que faltou e enviar.</p>
       <button class="btn primary" data-act="goto-day" data-d="${x}">Abrir treino de ${fmtDate(x)}</button></section>`).join('')}
-    ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0">🔓 Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
+    ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0"><i class="ic ic-unlock"></i> Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
     ${d.groups.length || d.plan.includes(CARDIO) ? `<div class="v2-wbar"><b>${d.exs.length} exercício${d.exs.length === 1 ? '' : 's'}${d.cardio ? ' + cardio' : ''}</b></div>
       ${blocks}${d.cardio ? cardioGoalHtml(p) : ''}${sendHtml()}`
-      : `${d.goal ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty">😴 Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
+      : `${d.goal ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
     </div></div>`;
 }
 function v2GaugeInner(d) {
@@ -2259,11 +2440,11 @@ function cardHtmlV2(ex) {
       <button class="chk v2-chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>`;
   }).join('');
   return `<div class="v2ex open ${complete ? 'done' : ''}">${head}<div class="v2-exb">
-    ${demoFor(ex) ? `<button class="v2-howto" data-act="demo-ex" data-id="${ex.id}">${PFA.animHtml(v2Key(ex), 'v2-howto-anim', true)}<span class="grow"><b>Como fazer</b><small>animação e passo a passo</small></span></button>` : ''}
+    ${v2HowHtml(ex, lock)}
     ${exDetailHtml(ex)}
     ${tm ? '' : `<div class="v2-sets-h"><span>#</span><span>${nl ? '' : 'Peso (kg)'}</span><span>Reps</span><span></span></div>`}
     ${rows}
-    ${lock ? `<p class="lock-note">🔒 ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em Editar'}</p>` : `<div class="v2-acts">
+    ${lock ? `<p class="lock-note"><i class="ic ic-lock"></i> ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em Editar'}</p>` : `<div class="v2-acts">
       <button data-act="addset">${V2I.plus}<span>Série</span></button><button data-act="rmset">${V2I.minus}<span>Série</span></button>
       <button data-act="alldone">${V2I.check}<span>${done === n ? 'Desmarcar' : 'Todas'}</span></button>${ui.studentMode ? '' : `<button data-act="edit">${V2I.edit}<span>Editar</span></button>`}</div>`}
     ${lock && !ui.studentMode ? `<div class="v2-acts"><button data-act="edit">${V2I.edit}<span>Editar</span></button></div>` : ''}
@@ -2290,7 +2471,9 @@ const V2_STUDENT_VIEWS = [['treino', 'Hoje'], ['historico', 'Agenda'], ['recados
 const v2Stu = () => skinOn() && ui.studentMode;
 const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const v2DayLabel = iso => `${weekday(iso).replace(/^./, c => c.toUpperCase()).replace('-feira', '')}, ${+iso.slice(8)} de ${MONTHS[+iso.slice(5, 7) - 1].slice(0, 3)}`;
-const v2Coach = () => (profile(ME) || {}).name || 'Seu professor';
+// Professor como o aluno vê (nome e foto vêm na ficha do aluno: ele não lê o perfil do professor)
+const v2CoachP = () => profile(ME) || { name: v2Coach(), photo: (profile(ui.profile) || {}).coachPhoto };
+const v2Coach = () => (profile(ME) || {}).name || (profile(ui.profile) || {}).coachName || MY_NAME;
 const v2Sign = () => `<div class="v2-sign"><span class="v2-mk sm">${v2Mark()}</span>passos.fit · por ${esc(v2Coach())}</div>`;
 // dias com treino ou cardio de um aluno
 const v2Days = pid => new Set([...trainedDates(pid), ...profCardio(pid).filter(c => c.min > 0).map(c => c.date)]);
@@ -2306,11 +2489,11 @@ function v2TopHtml() {
   const p = profile(ui.profile);
   if (ui.view === 'historico') return `<div class="v2-top"><div class="grow"><small>Sua agenda</small><h2>${MONTHS[+ui.month.slice(5) - 1].replace(/^./, c => c.toUpperCase())} ${ui.month.slice(0, 4)}</h2></div>
     <button class="v2-icbtn" data-act="v2-month" data-d="-1" aria-label="Mês anterior">${V2I.back}</button><button class="v2-icbtn flip" data-act="v2-month" data-d="1" aria-label="Próximo mês" ${ui.month >= today().slice(0, 7) ? 'disabled' : ''}>${V2I.back}</button></div>`;
-  if (ui.view === 'recados') return `<div class="v2-top"><div class="av">${esc(initials(v2Coach()))}</div><div class="grow"><small>Seu professor</small><b>${esc(v2Coach())}</b></div><span class="v2-chipok"><i></i>no app</span></div>`;
+  if (ui.view === 'recados') return `<div class="v2-top"><div class="av">${avIn(v2CoachP())}</div><div class="grow"><small>Seu professor</small><b>${esc(v2Coach())}</b></div><span class="v2-chipok"><i></i>no app</span></div>`;
   if (ui.view === 'config') return `<div class="v2-top"><div class="grow"><small>Perfil</small><h2>Eu</h2></div></div>`;
   if (ui.view === 'medidas') return `<div class="v2-top"><button class="v2-icbtn" data-view="config" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>Eu</small><h2>Medidas do corpo</h2></div></div>`;
   const unread = (p.messages || []).some(m => m.date >= addDays(today(), -2));
-  return `<div class="v2-top"><div class="av">${esc(initials(p.name))}</div><div class="grow"><small>${v2DayLabel(today())}</small></div>
+  return `<div class="v2-top"><div class="av">${avIn(p)}</div><div class="grow"><small>${v2DayLabel(today())}</small></div>
     <button class="v2-icbtn" data-view="recados" aria-label="Recados"><svg viewBox="0 0 24 24" class="v2i"><path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>${unread ? '<span class="dot"></span>' : ''}</button></div>`;
 }
 function renderAgendaV2() {
@@ -2348,6 +2531,13 @@ function renderAgendaV2() {
     ${v2Sign()}`;
 }
 // Recados: conversa com o professor (o aluno também responde)
+// Teclado aberto: a barra de escrever dos recados sobe junto com ele (iPhone e Android)
+function kbCheck() {
+  const vv = window.visualViewport; if (!vv) return;
+  const h = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop));
+  document.body.style.setProperty('--kb', h + 'px'); document.body.classList.toggle('kb', h > 80);
+}
+if (window.visualViewport) { visualViewport.addEventListener('resize', kbCheck); visualViewport.addEventListener('scroll', kbCheck); }
 function renderRecadosV2() {
   const p = profile(ui.profile);
   const all = [...(p.messages || []).map(m => ({ date: m.date, t: m.text, at: m.at || '', me: false })), ...(p.replies || []).map(r => ({ date: r.date, t: r.t, at: r.at || '', me: true }))]
@@ -2357,8 +2547,9 @@ function renderRecadosV2() {
   const rows = all.map(m => { const sep = m.date !== prevD ? `<div class="v2-daysep">${lbl(m.date)}</div>` : ''; prevD = m.date;
     return `${sep}<div class="v2-msg ${m.me ? 'me' : ''}">${esc(m.t)}<small>${m.me ? 'Você' : esc(v2Coach())}</small></div>`; }).join('');
   $main.innerHTML = `${v2TopHtml()}<div class="v2-chat">${rows || '<p class="v2-muted" style="text-align:center">Nenhum recado ainda.</p>'}</div>
-    <div class="v2-qr"><button data-act="v2-reply" data-t="Feito!">${V2I.check}Feito</button><button data-act="v2-reply" data-t="Tenho uma dúvida sobre um exercício">${V2NAV.recados ? `<svg viewBox="0 0 24 24" class="v2i">${V2NAV.recados}</svg>` : ''}Dúvida</button><button data-act="v2-reply" data-t="Hoje não vou conseguir ir">✕ Hoje não</button></div>
-    <form class="v2-composer" id="v2MsgForm"><input id="v2MsgIn" placeholder="Escreva para ${esc(firstName({ name: v2Coach() }))}" autocomplete="off" aria-label="Mensagem"><button aria-label="Enviar"><svg viewBox="0 0 24 24" class="v2i"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg></button></form>`;
+    <div class="v2-dock"><div class="v2-qr"><button data-act="v2-reply" data-t="Feito!">${V2I.check}Feito</button><button data-act="v2-reply" data-t="Tenho uma dúvida sobre um exercício">${V2NAV.recados ? `<svg viewBox="0 0 24 24" class="v2i">${V2NAV.recados}</svg>` : ''}Dúvida</button><button data-act="v2-reply" data-t="Hoje não vou conseguir ir">✕ Hoje não</button></div>
+    <form class="v2-composer" id="v2MsgForm"><input id="v2MsgIn" placeholder="Escreva para ${esc(firstName({ name: v2Coach() }))}" enterkeyhint="send" autocomplete="off" aria-label="Mensagem"><button aria-label="Enviar"><svg viewBox="0 0 24 24" class="v2i"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg></button></form></div>`;
+  document.body.classList.add('v2-chatv'); kbCheck();
   const c = $main.querySelector('.v2-chat'); if (c) setTimeout(() => window.scrollTo({ top: document.body.scrollHeight }), 30);
 }
 function v2SendReply(t) {
@@ -2379,7 +2570,7 @@ function renderEuV2() {
   const BI = { star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/>', flame: '<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.1 2-5.2 3.6-7.3.4 1.7 1.3 2.8 2.4 3.4.2-2.9 1.3-5.6 3.6-7.4.3 3.4 3.4 5.6 3.4 10.6 0 4.3-2.7 6.9-6.5 6.9z"/>', trophy: '<path d="M8 4h8v6a4 4 0 0 1-8 0z"/><path d="M8 6H4.5c0 3 1.5 4.5 3.7 4.8M16 6h3.5c0 3-1.5 4.5-3.7 4.8M12 14v3.5M8.5 20.5h7l-1-3h-5z"/>', dumb: '<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>', run: '<circle cx="14.5" cy="4.5" r="1.8"/><path d="M8 21l3-6 3 2.5V21M6 12l3-4 4 .5 3 3.5 3 .5"/><path d="M11 15l2-6"/>', bolt: '<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>' };
   const recs = v2Records(pid);
   $main.innerHTML = `${v2TopHtml()}
-    <section class="v2-hero v2-me"><div class="av lg">${esc(initials(p.name))}</div><div class="grow"><b>${esc(p.name)}</b><small>${first ? `Treinando desde ${fmtDate(first)}/${first.slice(2, 4)}` : 'Bem-vindo ao passos.fit'} · ${total} treino${total === 1 ? '' : 's'}</small></div></section>
+    <section class="v2-hero v2-me"><button class="v2-phbtn" data-act="photo-edit" aria-label="Mudar foto de perfil"><span class="av lg">${avIn(p)}</span><span class="v2-phcam"><i class="ic ic-cam"></i></span></button><div class="grow"><b>${esc(p.name)}</b><small>${first ? `Treinando desde ${fmtDate(first)}/${first.slice(2, 4)}` : 'Bem-vindo ao passos.fit'} · ${total} treino${total === 1 ? '' : 's'}</small></div></section>
     <div class="v2-sec"><h3>Conquistas</h3><span class="v2-muted" style="margin:0;font-size:13px">${badges.filter(b => b[3]).length} de 6</span></div>
     <section class="card"><div class="v2-badges">${badges.map(([i, n, c, on]) => `<div class="v2-badge ${on ? '' : 'off'}"><span class="md ${c}"><svg viewBox="0 0 24 24" class="v2i">${BI[i]}</svg></span>${n}</div>`).join('')}</div></section>
     <div class="v2-sec"><h3>Seus recordes</h3></div>
@@ -2387,8 +2578,9 @@ function renderEuV2() {
     ${bodySummaryHtml(p)}
     <div class="v2-sec"><h3>Ajustes</h3></div>
     <section class="card">
+      <div class="v2-row"><div class="grow"><b>Foto de perfil</b><small>${okPhoto(p.photo) ? 'Trocar, ajeitar ou remover' : 'Coloque uma foto sua'}</small></div><button class="v2-btn sm line" data-act="photo-edit">${okPhoto(p.photo) ? 'Mudar' : 'Colocar'}</button></div>
       <div class="v2-row"><div class="grow"><b>Cronômetro do cardio</b><small>${ctPref() === 'up' ? 'Progressivo: o tempo sobe (0:00 → 20:00)' : 'Regressivo: o tempo diminui (20:00 → 0:00)'}</small></div><button class="v2-btn sm line" data-act="open-settings">Mudar</button></div>
-      ${installTipHtml() ? '<div class="v2-row"><div class="grow"><b>App na tela de início</b><small>Abre direto no seu treino</small></div><button class="v2-btn sm line" data-act="install-guide">Como fazer</button></div>' : ''}
+      ${!isStandalone() ? '<div class="v2-row"><div class="grow"><b>App na tela de início</b><small>Abre direto no seu treino</small></div><button class="v2-btn sm line" data-act="install-guide">Como fazer</button></div>' : ''}
       ${cloud && cloud.user ? `<div class="v2-row"><div class="grow"><b>Sair da conta</b><small>${esc(cloud.user.email || '')}</small></div><button class="v2-btn sm line" data-act="logout">Sair</button></div>` : ''}
     </section>
     <p class="v2-muted" style="text-align:center;font-size:12px;margin-top:14px">Versão do app: ${esc(APP_VERSION)}</p>
@@ -2673,7 +2865,7 @@ function v2PostFile() {
 }
 async function v2SharePost(save) {
   const f = await v2PostFile();
-  if (!save) copyText(appLink()).then(ok => { if (ok) toast('🔗 Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
+  if (!save) copyText(appLink()).then(ok => { if (ok) toast('<i class="ic ic-link"></i> Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
   if (!save && navigator.canShare && navigator.canShare({ files: [f] })) {
     try { await navigator.share({ files: [f], text: `Treino feito ✓ Treine comigo pelo app: ${appLink()}` }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para compartilhar. Use "Salvar".'); }
     return;
@@ -2717,7 +2909,7 @@ function renderPainelV2() {
   const reqs = CLOUD && cloud ? requestsHtml() : '';
   $main.innerHTML = `<div class="v2-top">${v2BrandHtml()}<span class="grow"></span>
       <button class="v2-icbtn" data-view="acessos" aria-label="Acessos">${v2Ico('<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>')}${reqs ? '<span class="dot"></span>' : ''}</button>
-      <button class="v2-avbtn" data-view="ajustes" aria-label="Ajustes e conta">${esc(initials(me.name))}</button></div>
+      <button class="v2-avbtn" data-view="ajustes" aria-label="Ajustes e conta">${avIn(me)}</button></div>
     <h2 class="v2-hello">${v2Hello()}, ${esc(firstName(me))}</h2><p class="v2-muted" style="margin:0 0 16px">${v2DayLabel(today())}</p>
     <div class="v2-kpis"><button class="v2-tile dk" data-view="alunos">${v2Ico(V2PNAV.alunos)}<b class="xl">${sts.length}</b><span>alunos</span></button>
       <div class="v2-tile acc"><b>${todayL.length}</b><span>treinaram hoje</span></div><div class="v2-tile lil"><b>${week.length}</b><span>ativos na semana</span></div></div>
@@ -2725,13 +2917,13 @@ function renderPainelV2() {
     <div class="v2-d2"><div class="col">
     <div class="v2-sec"><h3>Precisa de atenção</h3><span class="v2-chipwarn">${att.length}</span></div>
     <div class="v2-stack">${att.map(p => { const [, t] = v2Status(p), inv = CLOUD && !p.uid;
-      return `<div class="v2-att"><button class="av" data-act="open-profile" data-pid="${p.id}" data-v="perfil">${esc(initials(p.name))}</button><div class="grow" data-act="open-profile" data-pid="${p.id}" data-v="perfil"><b>${esc(p.name)}</b><small>${t}</small></div>
+      return `<div class="v2-att"><button class="av" data-act="open-profile" data-pid="${p.id}" data-v="perfil">${avIn(p)}</button><div class="grow" data-act="open-profile" data-pid="${p.id}" data-v="perfil"><b>${esc(p.name)}</b><small>${t}</small></div>
         ${inv ? `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Seu treino já está no app. Crie sua senha por este link: ${inviteLink(p)}`)}">${v2Ico('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.5 6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.3-1.2"/>')}Reenviar</a>`
           : `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Sentimos sua falta. Bora voltar hoje? Seu treino está no app.`)}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}Lembrar</a>`}</div>`; }).join('') || '<section class="card v2-muted" style="text-align:center;margin:0">Todos em dia ✓</section>'}</div>
     <div class="v2-sec"><h3>Hoje nos treinos</h3><button data-view="alunos">Todos</button></div>
     <section class="card">${todayL.map(p => { const ss = profSessions(p.id).filter(s => s.date === today() && hasDone(s)), kg = ss.reduce((a, s) => a + vol(s.sets), 0), cm = cardioBetween(today(), today(), p.id);
       const fin = ss.map(s => s.fin).filter(Boolean).sort().pop();
-      return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${esc(initials(p.name))}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
+      return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
     </div><div class="col">
     <div class="v2-sec"><h3>Seu treino de hoje</h3><button data-act="v2-mytreino">Abrir</button></div>
     <button class="v2-feat" data-act="v2-mytreino">${v2Art(myEx ? v2Key(myEx) : 'remada', `<div class="v2-over"><span class="v2-chip">${esc(me.name)}</span></div><div class="v2-ph-title sm"><b>${esc(myPlan.map(g => wName(g, ME)).join(' + ') || (myW ? wName(myW, ME) : 'Meu treino'))}</b><small>Toque para começar · pesos da última vez</small></div><span class="arr">${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>`, 'v2-featph')}</button>
@@ -2752,11 +2944,11 @@ function renderAlunosV2() {
     <button class="v2-btn line full" style="margin-top:12px" data-act="test-profile">${testProfile() ? 'Abrir perfil de teste' : 'Criar perfil de teste'}</button>
     ${v2Sign()}`;
 }
-const v2ListHtml = list => list.map(p => { const [k, t] = v2Status(p); return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av">${esc(initials(p.name))}</span><div class="grow"><b>${esc(p.name)}</b>
+const v2ListHtml = list => list.map(p => { const [k, t] = v2Status(p); return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av">${avIn(p)}</span><div class="grow"><b>${esc(p.name)}</b>
     <small class="${k}">${t}${isConsult(p) ? '' : ' · só o app'}</small>${v2WeekDots(p.id)}</div>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</div>`; }).join('') || '<p class="v2-muted" style="text-align:center;margin:0">Ninguém aqui.</p>';
 function v2ProfHead(p) {
   const [k, t] = v2Status(p), ws = weekStart(today()), s = profileSummary(p.id), pc = s.before ? Math.round((s.now - s.before) / s.before * 100) : null;
-  return `<section class="v2-hero v2-pfh"><div class="v2-rowx"><span class="av lg">${esc(initials(p.name))}</span><div class="grow"><b>${esc(p.name)}</b><small>${[p.goal, p.phone].filter(Boolean).map(esc).join(' · ') || (p.since ? `Aluno desde ${fmtDate(p.since)}` : 'Aluno')}</small>
+  return `<section class="v2-hero v2-pfh"><div class="v2-rowx"><span class="av lg">${avIn(p)}</span><div class="grow"><b>${esc(p.name)}</b><small>${[p.goal, p.phone].filter(Boolean).map(esc).join(' · ') || (p.since ? `Aluno desde ${fmtDate(p.since)}` : 'Aluno')}</small>
       <span class="v2-st ${k}">${t}</span></div></div>
     <div class="v2-grid3"><div><b>${s.weekDays}</b><small>treinos/sem</small></div><div><b>${pc == null ? '–' : `${pc > 0 ? '+' : ''}${pc}%`}</b><small>peso total</small></div><div><b>${fmtMin(cardioBetween(ws, addDays(ws, 6), p.id))}</b><small>min cardio</small></div></div>
     <div class="v2-rowx" style="gap:8px;margin-top:14px"><a class="v2-btn sm pri" style="flex:1;margin:0" href="${waLink(p, '')}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}WhatsApp</a><button class="v2-btn sm" style="flex:1;margin:0;background:rgba(255,255,255,.12)" data-act="student-mode">${v2Ico('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>')}Ver como aluno</button></div>
@@ -2773,6 +2965,9 @@ function renderPerfilV2() {
 }
 function renderAjustesV2() {
   $main.innerHTML = `<div class="v2-top"><button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>Professor</small><h2>Ajustes e backup</h2></div></div>
+    <section class="card"><div class="v2-row" style="border:0;padding:0"><button class="v2-phbtn" data-act="photo-edit" data-pid="${ME}" aria-label="Mudar sua foto"><span class="av">${avIn(profile(ME))}</span><span class="v2-phcam"><i class="ic ic-cam"></i></span></button>
+      <div class="grow"><b>Sua foto</b><small>Aparece para os alunos nos recados</small></div><button class="v2-btn sm line" data-act="photo-edit" data-pid="${ME}">${okPhoto((profile(ME) || {}).photo) ? 'Mudar' : 'Colocar'}</button></div>
+      ${!isStandalone() ? '<div class="v2-row" style="padding-bottom:0"><div class="grow"><b>App na tela de início</b><small>iPhone ou Android</small></div><button class="v2-btn sm line" data-act="install-guide">Como fazer</button></div>' : ''}</section>
     ${CLOUD && cloud ? requestsHtml() : ''}
     ${appUsageHtml()}
     ${signupLinkHtml()}
@@ -2781,7 +2976,7 @@ function renderAjustesV2() {
     <section class="card" style="margin-top:14px">
       <div class="card-h"><div class="grow"><h3>Backup</h3>
         <small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou importe um backup.' : 'Os dados ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.'}</small></div></div>
-      <div class="actions"><button class="btn" data-act="export">⬇ Exportar</button><label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
+      <div class="actions"><button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button><label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
     ${trashHtml()}
     ${accountHtml()}
     ${v2Sign()}`;
@@ -2969,7 +3164,7 @@ function cardioGoalHtml(p) {
         <div class="fill" style="width:${from}%"></div></div>`;
   if (p.id !== ME && !ui.studentMode) return `<section class="card cardio-card">
       <div class="card-h"><div class="grow"><h3>Cardio de ${esc(firstName(p))}</h3>
-        <small>Você define a meta; o tempo realizado quem anota é o aluno, no app dele</small></div>
+        <small>Você define a meta. O tempo feito o aluno anota no app dele, ou você marca por ele aqui.</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       <label class="plan-g" for="goalDaily" style="display:block;margin:4px 0 6px">Meta de cardio (minutos por dia)</label>
       <div class="actions" style="margin-top:0;align-items:center">
@@ -2977,8 +3172,14 @@ function cardioGoalHtml(p) {
         <button class="btn primary" data-act="save-goal">Salvar meta</button>
       </div>
       ${bar}
-      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados pelo aluno` : 'O aluno ainda não fez cardio neste dia'}</span>
+      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados${today_.every(c => c.by === 'aluno') ? ' pelo aluno' : ''}` : 'Nenhum cardio marcado neste dia'}</span>
         <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
+      <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Marcar o cardio por ${esc(firstName(p))} (${ui.date === today() ? 'hoje' : 'dia ' + fmtDate(ui.date)})</label>
+      <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
+      <div class="actions" style="margin-top:8px;align-items:center">
+        <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="ex.: 20" value="${done ? fmtMin(done) : ''}"><span class="unit">min</span>
+        <button class="btn primary" data-act="cardio-save">${done ? 'Corrigir' : 'Marcar'}</button>
+      </div>
       ${done && !cardioLocked() && today_.some(c => c.by !== 'aluno') ? '<div class="actions"><button class="btn danger" style="padding-left:0" data-act="cardio-set" data-min="0">Apagar tempo marcado por engano</button></div>' : ''}
     </section>`;
   if (cardioLocked() && (p.id === ME || ui.studentMode)) return `<section class="card cardio-card ${full ? 'complete' : ''}">
@@ -2986,7 +3187,7 @@ function cardioGoalHtml(p) {
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado'}</span><span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
-      <p class="lock-note">🔒 ${dayLocked() ? 'Só consulta (dia passado)' : 'Treino enviado: cardio registrado'}</p>
+      <p class="lock-note"><i class="ic ic-lock"></i> ${dayLocked() ? 'Só consulta (dia passado)' : 'Treino enviado: cardio registrado'}</p>
     </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
@@ -3069,7 +3270,7 @@ function ctFinish(auto) {
   db.cardio = db.cardio.filter(c => !(c.profileId === t.pid && c.date === t.date));
   db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
   save(); render();
-  toast(`${auto ? '⏰ Tempo! ' : ''}${modeOf(t.mode)[1]}: ${fmtMin(min)} min salvos${g0 && total >= g0 ? ' · meta de cardio concluída!' : ''}`);
+  toast(`${auto ? '<i class="ic ic-alarm"></i> Tempo! ' : ''}${modeOf(t.mode)[1]}: ${fmtMin(min)} min salvos${g0 && total >= g0 ? ' · meta de cardio concluída!' : ''}`);
 }
 function beep() {
   try {
@@ -3119,27 +3320,49 @@ function installGuide(force, beforeSignup) {
     if (st.done || (st.later && Date.now() - st.later < 3 * 864e5)) return;
   }
   const ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inApp = /FBAN|FBAV|Instagram|WhatsApp|; wv\)/i.test(ua) || (ios && !/Safari\//.test(ua));
-  const step = (n, html) => `<div class="ig-step"><span>${n}</span><div>${html}</div></div>`;
-  let body;
-  if (inApp) body = `<p class="ig-lead">Primeiro, abra este link no navegador do celular:</p>
-      ${ios ? step(1, `Toque no ícone de <b>compartilhar</b> ${SHARE_ICON} ou nos <b>três pontinhos</b>.`) + step(2, 'Toque em <b>Abrir no Safari</b>.') : step(1, 'Toque nos <b>três pontinhos ⋮</b> no canto de cima.') + step(2, 'Toque em <b>Abrir no Chrome</b> (ou "Abrir no navegador").')}
-      ${step(3, 'Lá, este guia aparece de novo para terminar.')}`;
-  else if (installEvt) body = `<p class="ig-lead">Toque no botão abaixo e depois em <b>Instalar</b>. O ícone do app vai aparecer na tela do seu celular.</p>
-      <button class="btn primary ig-go" data-act="install-now">Colocar na tela de início</button>`;
-  else if (ios) body = `<p class="ig-lead">São 3 toques:</p>
-      ${step(1, `Toque no botão <b>Compartilhar</b> ${SHARE_ICON} na barra de baixo da tela.`)}
-      ${step(2, 'Desça a lista e toque em <b>Adicionar à Tela de Início</b> ➕.')}
-      ${step(3, 'Toque em <b>Adicionar</b>, no canto de cima.')}
-      <p class="ig-note">Pronto: o ícone fica na tela do celular. Abra sempre por ele.</p>`;
-  else body = `<p class="ig-lead">São 2 toques:</p>
-      ${step(1, 'Toque nos <b>três pontinhos ⋮</b> no canto de cima da tela.')}
-      ${step(2, 'Toque em <b>Adicionar à tela inicial</b> (ou <b>Instalar app</b>) e confirme.')}
-      <p class="ig-note">Pronto: o ícone fica na tela do celular. Abra sempre por ele.</p>`;
-  if (beforeSignup && !inApp) body += `<p class="ig-note">Depois, abra o app pelo ícone. Se ainda não tem conta, toque em <b>Primeiro acesso? Criar conta</b>.</p>`;
+  // um passo por vez, com um desenho do celular mostrando onde tocar
+  let steps, lead = '';
+  if (inApp) { lead = 'Primeiro, abra este link no navegador do celular:';
+    steps = ios ? [['share', `Toque no ícone de <b>compartilhar</b> ${SHARE_ICON} ou nos <b>três pontinhos</b>.`], ['open', 'Toque em <b>Abrir no Safari</b>.'], ['home', 'Lá, este guia aparece de novo para terminar.']]
+      : [['dots', 'Toque nos <b>três pontinhos ⋮</b> no canto de cima.'], ['open', 'Toque em <b>Abrir no Chrome</b> (ou "Abrir no navegador").'], ['home', 'Lá, este guia aparece de novo para terminar.']]; }
+  else if (installEvt) steps = [['go', 'Toque no botão abaixo e depois em <b>Instalar</b>.<button class="btn primary ig-go" data-act="install-now" style="margin-top:12px">Colocar na tela de início</button>'], ['home', 'Pronto: o ícone do app aparece na tela do celular. Abra sempre por ele.']];
+  else if (ios) steps = [['share', `Toque no botão <b>Compartilhar</b> ${SHARE_ICON} na barra de baixo da tela.`], ['addrow', 'Desça a lista e toque em <b>Adicionar à Tela de Início</b>.'], ['addtop', 'Toque em <b>Adicionar</b>, no canto de cima.'], ['home', 'Pronto: o ícone fica na tela do celular. Abra sempre por ele.']];
+  else steps = [['dots', 'Toque nos <b>três pontinhos ⋮</b> no canto de cima da tela.'], ['menurow', 'Toque em <b>Adicionar à tela inicial</b> (ou <b>Instalar app</b>) e confirme.'], ['home', 'Pronto: o ícone fica na tela do celular. Abra sempre por ele.']];
+  if (beforeSignup && !inApp) steps[steps.length - 1][1] += ' Se ainda não tem conta, toque em <b>Primeiro acesso? Criar conta</b>.';
   const d = document.getElementById('installDlg');
-  document.getElementById('installBody').innerHTML = body;
+  d._ig = { steps, lead, i: 0 }; igShow();
   d.showModal();
 }
+// Desenhos do guia: um celular com um círculo pulsando onde é para tocar
+function igArt(k, ios) {
+  const ring = (x, y) => `<circle cx="${x}" cy="${y}" r="9" class="ig-ring"/><circle cx="${x}" cy="${y}" r="9" class="ig-ring r2"/>`;
+  const row = (y, txt, on) => `<rect x="${on ? 26 : 28}" y="${y - 6}" width="${on ? 68 : 64}" height="12" rx="4" class="${on ? 'ig-on' : 'ig-ln'}"/>${txt ? `<text x="31" y="${y + 2.2}" class="ig-tx${on ? ' on' : ''}"${on ? ' textLength="50" lengthAdjust="spacingAndGlyphs"' : ''}>${txt}</text>` : ''}`;
+  const top = `<rect x="26" y="10" width="68" height="12" rx="6" class="ig-ln"/>`;
+  const share = '<path d="M60 139v-8M57 134l3-3 3 3M56 137v5h8v-5" class="ig-ic"/>';
+  const art = {
+    share: `${top}<rect x="28" y="30" width="64" height="40" rx="4" class="ig-ln"/><rect x="28" y="76" width="44" height="6" rx="3" class="ig-ln"/><rect x="28" y="88" width="56" height="6" rx="3" class="ig-ln"/><path d="M24 128h72" class="ig-sep"/><path d="M34 137l-3 3 3 3M86 136h4M86 140h4M86 144h4M44 135h6v8h-6z" class="ig-ic"/>${share}${ring(60, 137)}`,
+    addrow: `<rect x="24" y="40" width="72" height="112" rx="8" class="ig-sheet"/>${row(56, 'Copiar')}${row(72, 'Favoritos')}${row(90, 'Adicionar à Tela de Início', 1)}${row(108, 'Imprimir')}${row(124, '')}${ring(84, 90)}`,
+    addtop: `<text x="28" y="20" class="ig-tx">Cancelar</text><text x="92" y="20" class="ig-tx on" text-anchor="end">Adicionar</text><rect x="48" y="40" width="24" height="24" rx="6" class="ig-app"/><text x="60" y="76" class="ig-tx" text-anchor="middle">passos.fit</text>${ring(84, 17)}`,
+    dots: `<rect x="26" y="10" width="56" height="12" rx="6" class="ig-ln"/><circle cx="90" cy="12" r="1.4" class="ig-dot"/><circle cx="90" cy="16" r="1.4" class="ig-dot"/><circle cx="90" cy="20" r="1.4" class="ig-dot"/><rect x="28" y="32" width="64" height="40" rx="4" class="ig-ln"/><rect x="28" y="78" width="44" height="6" rx="3" class="ig-ln"/>${ring(90, 16)}`,
+    menurow: `<rect x="34" y="12" width="62" height="96" rx="6" class="ig-sheet"/>${row(26, 'Nova guia')}${row(42, 'Favoritos')}${row(60, 'Adicionar à tela inicial', 1)}${row(78, 'Compartilhar')}${row(94, '')}${ring(84, 60)}`,
+    open: `<rect x="24" y="40" width="72" height="112" rx="8" class="ig-sheet"/>${row(60, ios ? 'Abrir no Safari' : 'Abrir no Chrome', 1)}${row(78, 'Copiar link')}${row(96, '')}${ring(84, 60)}`,
+    go: `${top}<rect x="28" y="60" width="64" height="16" rx="8" class="ig-on"/><text x="60" y="70.5" class="ig-tx on" text-anchor="middle">Instalar</text>${ring(60, 68)}`,
+    home: Array.from({ length: 12 }, (_, i) => { const x = 30 + (i % 4) * 16, y = 28 + Math.floor(i / 4) * 18; return i === 5 ? `<image href="icon-192.png" x="${x - 1}" y="${y - 1}" width="14" height="14" class="ig-pop"/>` : `<rect x="${x}" y="${y}" width="12" height="12" rx="3.5" class="ig-ln"/>`; }).join(''),
+  }[k] || '';
+  return `<svg viewBox="0 0 120 160" class="ig-art" aria-hidden="true"><rect x="20" y="3" width="80" height="154" rx="13" class="ig-ph"/>${art}</svg>`;
+}
+function igShow(dir = 0) {
+  const d = document.getElementById('installDlg'), g = d._ig; if (!g) return;
+  g.i = Math.max(0, Math.min(g.steps.length - 1, g.i + dir));
+  const [k, html] = g.steps[g.i], n = g.steps.length, ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  document.getElementById('installBody').innerHTML = `${g.lead ? `<p class="ig-lead">${g.lead}</p>` : ''}
+    <div class="ig-card" key="${g.i}"><div class="ig-artbox">${igArt(k, ios)}</div>
+      <div class="ig-step"><span>${g.i + 1}</span><div>${html}</div></div></div>
+    <div class="ig-nav"><button type="button" class="btn" data-ig="-1" ${g.i ? '' : 'style="visibility:hidden"'}>Voltar</button>
+      <span class="ig-dots">${g.steps.map((_, j) => `<i class="${j === g.i ? 'on' : ''}"></i>`).join('')}</span>
+      <button type="button" class="btn primary" data-ig="1" ${g.i < n - 1 ? '' : 'style="visibility:hidden"'}>Próximo</button></div>`;
+}
+document.getElementById('installDlg').addEventListener('click', e => { const b = e.target.closest('[data-ig]'); if (b) igShow(+b.dataset.ig); });
 document.addEventListener('click', e => {
   const t = e.target.closest('#installDlg [data-act]'); if (!t) return;
   const d = document.getElementById('installDlg'), set = v => { try { localStorage.setItem('planilha-guia-instalar', JSON.stringify(v)); } catch (er) {} };
@@ -3218,7 +3441,9 @@ const LOCK_MSG = { past: 'Dias passados ficam só para consulta: só dá para al
 const dayLocked = (date = ui.date) => date !== today() && !dayUnlocked(date);
 // Cardio também trava depois que o treino do dia é enviado
 const daySent = (date = ui.date, pid = ui.profile) => profExs(pid).some(e => sentAt(e.id, date));
-const cardioLocked = (date = ui.date) => dayLocked(date) || daySent(date);
+// (o professor, na ficha do aluno, pode marcar ou corrigir o cardio dele em qualquer dia)
+const profForStudent = () => ui.profile !== ME && !ui.studentMode && cloudRole() !== 'student';
+const cardioLocked = (date = ui.date) => !profForStudent() && (dayLocked(date) || daySent(date));
 const cardioLockMsg = () => dayLocked() ? LOCK_MSG.past : 'O treino de hoje já foi enviado: o cardio também ficou registrado e não pode mais ser alterado.';
 // Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
 function sendableExs() {
@@ -3231,16 +3456,16 @@ function sendStatusHtml(exs) {
   if (!ui.studentMode && ui.date < today() && exs.length) { // dia passado: o professor pode destravar para corrigir
     const p = profile(ui.profile), who = ui.profile === ME ? 'você' : firstName(p);
     return dayUnlocked(ui.date)
-      ? `<section class="card"><p style="margin:0 0 10px"><b>🔓 Dia ${fmtDate(ui.date)} destravado.</b><br><small style="color:var(--muted)">${ui.profile === ME ? 'Preencha o que faltou e envie o treino.' : `${esc(firstName(p))} pode preencher o que faltou e enviar (no app dela aparece o aviso). Você também pode preencher por aqui.`} Depois de enviado, trava de novo.</small></p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">${ui.profile !== ME && exs.some(e => { const s = sessionOn(e.id, ui.date); return s && !s.fin && s.sets.some(x => x.done); }) ? '<button class="btn primary" data-act="lock-student">✓ Salvar treino feito</button>' : ''}<button class="btn" data-act="day-relock">🔒 Travar de novo</button></div></section>`
+      ? `<section class="card"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Dia ${fmtDate(ui.date)} destravado.</b><br><small style="color:var(--muted)">${ui.profile === ME ? 'Preencha o que faltou e envie o treino.' : `${esc(firstName(p))} pode preencher o que faltou e enviar (no app dela aparece o aviso). Você também pode preencher por aqui.`} Depois de enviado, trava de novo.</small></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${ui.profile !== ME && exs.some(e => { const s = sessionOn(e.id, ui.date); return s && !s.fin && s.sets.some(x => x.done); }) ? '<button class="btn primary" data-act="lock-student">✓ Salvar treino feito</button>' : ''}<button class="btn" data-act="day-relock"><i class="ic ic-lock"></i> Travar de novo</button></div></section>`
       : `<section class="card"><p style="margin:0 0 10px"><small style="color:var(--muted)">Dia que já passou: só consulta. Se ${esc(who)} esqueceu de anotar alguma série, destrave este dia para preencher.</small></p>
-        <button class="btn" data-act="day-unlock">🔓 Destravar este dia para corrigir</button></section>`;
+        <button class="btn" data-act="day-unlock"><i class="ic ic-unlock"></i> Destravar este dia para corrigir</button></section>`;
   }
   if (ui.profile === ME || ui.studentMode || ui.date !== today() || !exs.length) return '';
   const p = profile(ui.profile), started = exs.filter(e => { const s = sessionOn(e.id, ui.date); return s && s.sets.some(x => x.done); });
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   const byMe = exs.some(e => { const x = sessionOn(e.id, ui.date); return x && x.finBy === 'professor'; });
-  if (sent.length && sent.length === started.length) return `<section class="card sent-card"><p style="margin:0"><b>🔒 ${byMe ? 'Você salvou este treino como feito às' : `${esc(firstName(p))} enviou este treino às`} ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</b><br><small style="color:var(--muted)">Cargas, repetições e séries estão bloqueadas.</small></p></section>`;
+  if (sent.length && sent.length === started.length) return `<section class="card sent-card"><p style="margin:0"><b><i class="ic ic-lock"></i> ${byMe ? 'Você salvou este treino como feito às' : `${esc(firstName(p))} enviou este treino às`} ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</b><br><small style="color:var(--muted)">Cargas, repetições e séries estão bloqueadas.</small></p></section>`;
   if (started.length) return `<section class="card"><p style="margin:0 0 10px"><b>${esc(firstName(p))} ainda não enviou este treino.</b><br><small style="color:var(--muted)">Você pode anotar por ${esc(firstName(p))} aqui (séries e cardio) e salvar como treino feito. Também serve se ${esc(firstName(p))} terminou e esqueceu de enviar.</small></p>
       <button class="btn primary" data-act="lock-student">✓ Salvar treino feito</button></section>`;
   return '';
@@ -3252,7 +3477,7 @@ function sendHtml() {
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
       <small>Enviado às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Está salvo e registrado${ui.studentMode ? ' para você e seu professor' : ''}; não dá mais para alterar.</small></div></div>
-      ${canCheckin() ? '<button class="btn primary" style="width:100%;padding:12px;margin-top:10px" data-act="checkin">📸 Fazer check-in (foto para o Instagram)</button>' : ''}</section>`;
+      ${canCheckin() ? '<button class="btn primary" style="width:100%;padding:12px;margin-top:10px" data-act="checkin"><i class="ic ic-cam"></i> Fazer check-in (foto para o Instagram)</button>' : ''}</section>`;
   const open = exs.filter(e => !sentAt(e.id)), ready = open.every(e => isComplete(e.id));
   const missing = open.filter(e => !isComplete(e.id)).length;
   return `<section class="card send-card"><button class="btn primary" style="width:100%;padding:14px;font-size:16px" data-act="send-workout" ${ready ? '' : 'disabled'}>✓ Enviar treino</button>
@@ -3273,7 +3498,7 @@ async function sendWorkout(auto) {
   if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
   if (ct && ct.pid === ui.profile && ct.date === ui.date && !auto) ctFinish(false); // cronômetro ligado: o tempo feito vai junto
   const pp = profile(ui.profile), noCardio = (dayPlan(pp, ui.date).includes(CARDIO) || cardioGoalOf(pp, ui.date)) && !profCardio().some(c => c.date === ui.date);
-  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? '⚠️ O cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
+  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? 'Atenção: o cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode) s.by = 'aluno'; });
   if (dayUnlocked(ui.date) && !(CLOUD && cloud && cloud.role === 'student')) delete profile(ui.profile).unlocks[ui.date]; // enviado: o dia trava de novo
@@ -3383,7 +3608,7 @@ function drawCheckin() {
     // link do app em destaque (divulgação)
     const ly = story ? H - 250 : H - 235;
     g.textAlign = 'center'; g.fillStyle = '#fff'; g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 12;
-    g.font = F(800, 34); g.fillText('Treine comigo pelo app 👇', W / 2, ly); g.shadowBlur = 0;
+    g.font = F(800, 34); g.fillText('Treine comigo pelo app', W / 2, ly); g.shadowBlur = 0;
     g.font = F(800, 40); const lt = siteTxt(), lw = g.measureText(lt).width + 80;
     g.fillStyle = 'rgba(255,255,255,.95)'; rr(g, (W - lw) / 2, ly + 28, lw, 84, 42); g.fill();
     g.fillStyle = '#121a16'; g.fillText(lt, W / 2, ly + 84);
@@ -3415,7 +3640,7 @@ document.getElementById('ciSave').onclick = async () => {
 document.getElementById('ciShare').onclick = async () => {
   const f = await checkinFile(), text = `Treino feito ✓ Treino pelo app: ${appLink()}`;
   // o link fica copiado: no Instagram é só usar o adesivo "Link" e colar
-  copyText(appLink()).then(ok => { if (ok) toast('🔗 Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
+  copyText(appLink()).then(ok => { if (ok) toast('<i class="ic ic-link"></i> Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
   if (navigator.canShare && navigator.canShare({ files: [f] })) {
     try { await navigator.share({ files: [f], text }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para compartilhar. Use "Baixar imagem".'); }
   } else document.getElementById('ciSave').click();
@@ -3436,7 +3661,7 @@ function plankRowHtml(ex, x, p, h, i) {
   return `<div class="set plank ${run ? 'running' : rowClass(x, p)}" data-i="${i}" data-base="set plank">
     <span class="num">${i + 1}</span>
     ${run ? `<button class="btn plank-go stop" data-act="plank-stop"><span data-plank-t>${plankText()}</span> · Parar</button>`
-      : `<button class="btn plank-go" data-act="plank-start" aria-label="Cronometrar a série ${i + 1}">⏱ ${x.done ? 'De novo' : 'Começar'}</button>`}
+      : `<button class="btn plank-go" data-act="plank-start" aria-label="Cronometrar a série ${i + 1}"><i class="ic ic-timer"></i> ${x.done ? 'De novo' : 'Começar'}</button>`}
     <label class="plank-sec"><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : '–'}" aria-label="segundos da série ${i + 1}"><span>seg</span></label>
     <button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button>
     <div class="meta"><span>${p && p.done ? `antes: ${fmtSec(p.reps)}` : 'sem registro anterior'}</span><span class="tot">${x.done && x.reps != null ? fmtSec(x.reps) : ''}</span></div>
@@ -3488,9 +3713,9 @@ function cardHtml(ex) {
         ${exDetailHtml(ex)}</div>
       ${ui.studentMode ? '' : '<button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
-    ${tm ? `<div class="tile-key">Em cada série: toque em <b>⏱ Começar</b>, fique na prancha e toque em <b>Parar</b> quando não aguentar mais. O tempo fica anotado.</div><div class="plank-rows">${rows}</div>` : tiles ? `<div class="tile-key">Em cada série: ${ex.noLoad ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
+    ${tm ? `<div class="tile-key">Em cada série: toque em <b><i class="ic ic-timer"></i> Começar</b>, fique na prancha e toque em <b>Parar</b> quando não aguentar mais. O tempo fica anotado.</div><div class="plank-rows">${rows}</div>` : tiles ? `<div class="tile-key">Em cada série: ${ex.noLoad ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
-    ${lock ? `<p class="lock-note">🔒 ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em ⋯'}</p>` : `<div class="actions">
+    ${lock ? `<p class="lock-note"><i class="ic ic-lock"></i> ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em ⋯'}</p>` : `<div class="actions">
       <button class="btn" data-act="addset">＋ série</button>
       <button class="btn" data-act="rmset">− série</button>
       <button class="btn" data-act="alldone">${done === n ? 'Desmarcar todas' : '✓ Marcar todas'}</button>
@@ -3530,10 +3755,57 @@ function openDemo(ex) {
 document.getElementById('demoClose').onclick = () => document.getElementById('demoDlg').close();
 document.getElementById('demoDlg').addEventListener('click', e => { if (e.target.id === 'demoDlg') e.target.close(); });
 
+// ---------- Foto de perfil: escolher, ajeitar (arrastar e aproximar) e remover ----------
+const PH = { pid: null, img: null, had: false, z: 1, x: 0, y: 0 };
+const $ph = document.getElementById('photoDlg'), $phCv = document.getElementById('phCv'), $phZoom = document.getElementById('phZoom');
+function phDraw() {
+  const g = $phCv.getContext('2d'), S = $phCv.width, has = !!PH.img;
+  g.clearRect(0, 0, S, S);
+  document.getElementById('phEmpty').hidden = has; $phZoom.hidden = !has; document.getElementById('phHint').hidden = !has;
+  document.getElementById('phDel').hidden = !PH.had; document.getElementById('phSave').hidden = !has;
+  document.querySelector('#phPick span').textContent = has ? 'Trocar foto' : 'Escolher foto';
+  if (!has) return;
+  const img = PH.img, sc = S / Math.min(img.width, img.height) * PH.z, w = img.width * sc, h = img.height * sc;
+  PH.x = Math.min((w - S) / 2, Math.max(-(w - S) / 2, PH.x)); PH.y = Math.min((h - S) / 2, Math.max(-(h - S) / 2, PH.y)); // sem sobrar espaço vazio
+  g.drawImage(img, (S - w) / 2 + PH.x, (S - h) / 2 + PH.y, w, h);
+}
+function phLoad(src) {
+  const img = new Image();
+  img.onload = () => { PH.img = img; PH.z = 1; PH.x = PH.y = 0; $phZoom.value = 1; phDraw(); };
+  img.onerror = () => toast('Não deu para abrir essa foto. Tente outra.');
+  img.src = src;
+}
+function openPhoto(pid) {
+  const p = profile(pid); if (!p) return;
+  Object.assign(PH, { pid, img: null, had: okPhoto(p.photo), z: 1, x: 0, y: 0 });
+  phDraw(); if (PH.had) phLoad(p.photo);
+  $ph.showModal(); if (document.activeElement) document.activeElement.blur();
+}
+document.getElementById('phFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) phLoad(URL.createObjectURL(f)); };
+let phDrag = null;
+$phCv.addEventListener('pointerdown', e => { if (!PH.img) return; phDrag = { x: e.clientX, y: e.clientY }; $phCv.setPointerCapture(e.pointerId); });
+$phCv.addEventListener('pointermove', e => {
+  if (!phDrag) return; const k = $phCv.width / $phCv.clientWidth;
+  PH.x += (e.clientX - phDrag.x) * k; PH.y += (e.clientY - phDrag.y) * k; phDrag = { x: e.clientX, y: e.clientY }; phDraw();
+});
+['pointerup', 'pointercancel'].forEach(ev => $phCv.addEventListener(ev, () => { phDrag = null; }));
+$phZoom.oninput = () => { PH.z = +$phZoom.value; phDraw(); };
+document.getElementById('phCancel').onclick = () => $ph.close();
+document.getElementById('phSave').onclick = () => {
+  const p = profile(PH.pid); if (!p || !PH.img) return $ph.close();
+  const c = document.createElement('canvas'); c.width = c.height = 240; c.getContext('2d').drawImage($phCv, 0, 0, 240, 240);
+  p.photo = c.toDataURL('image/jpeg', 0.82);
+  $ph.close(); save(); render(); toast('<i class="ic ic-okc"></i> Foto salva');
+};
+document.getElementById('phDel').onclick = () => {
+  const p = profile(PH.pid); if (p) delete p.photo;
+  $ph.close(); save(); render(); toast('Foto removida');
+};
+
 // Detalhes que o professor montou (técnica, descanso, observação): só aparecem se preenchidos
 function exDetailHtml(ex) {
-  const bits = [ex.method && ex.method !== 'Normal' ? `<span class="pill eq">${esc(ex.method)}</span>` : '', ex.rest ? `<span class="pill eq">⏱ ${fmtRest(ex.rest)}</span>` : ''].filter(Boolean).join(' ');
-  return (bits ? `<div class="tags" style="margin-top:4px">${bits}</div>` : '') + (ex.note ? `<small class="ex-note">📝 ${esc(ex.note)}</small>` : '');
+  const bits = [ex.method && ex.method !== 'Normal' ? `<span class="pill eq">${esc(ex.method)}</span>` : '', ex.rest ? `<span class="pill eq"><i class="ic ic-timer"></i> ${fmtRest(ex.rest)}</span>` : ''].filter(Boolean).join(' ');
+  return (bits ? `<div class="tags" style="margin-top:4px">${bits}</div>` : '') + (ex.note ? `<small class="ex-note"><i class="ic ic-note"></i> ${esc(ex.note)}</small>` : '');
 }
 const fmtRest = sec => sec >= 60 ? `${Math.floor(sec / 60)}min${sec % 60 ? ' ' + (sec % 60) + 's' : ''}` : `${sec}s`;
 const setTotal = x => x.carga != null && x.reps != null ? `${fmt(x.carga * x.reps)} kg` : '';
@@ -3634,7 +3906,7 @@ function dayCard(d, list) {
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
     ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
-    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}">📸 Check-in</button>` : ''}</div>
+    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}"><i class="ic ic-cam"></i> Check-in</button>` : ''}</div>
   </section>`;
 }
 // Dia com treino planejado que já passou e o aluno não treinou (aparece no calendário como "não fez")
@@ -3685,8 +3957,8 @@ function weekReportHtml(p) {
   const cur = sundayOf(today()), ws = ui.wkRep && ui.wkRep.pid === p.id ? ui.wkRep.ws : addDays(cur, -7), r = weekReport(p.id, ws);
   const wd = d => weekday(d).replace('-feira', '');
   const kgTxt = n => `${fmt(n.carga)} kg${n.reps ? ` × ${n.reps}` : ''}`;
-  const [lvl, emo, txt] = !r.did ? ['down', '😴', r.open ? 'Semana ainda sem treino' : 'Semana sem treino']
-    : r.score >= .9 ? ['up', '🔥', 'Semana excelente'] : r.score >= .7 ? ['up', '💪', 'Semana boa'] : r.score >= .4 ? ['eq', '🙂', 'Semana regular'] : ['down', '⚠️', 'Semana fraca'];
+  const [lvl, emo, txt] = !r.did ? ['down', '<i class="ic ic-moon"></i>', r.open ? 'Semana ainda sem treino' : 'Semana sem treino']
+    : r.score >= .9 ? ['up', '<i class="ic ic-flame"></i>', 'Semana excelente'] : r.score >= .7 ? ['up', '<i class="ic ic-dumb"></i>', 'Semana boa'] : r.score >= .4 ? ['eq', '<i class="ic ic-smile"></i>', 'Semana regular'] : ['down', '<i class="ic ic-warn"></i>', 'Semana fraca'];
   const good = [], bad = [];
   if (r.planned && r.hit === r.planned && !r.open) good.push(`Não faltou nenhum dia: ${r.hit} de ${r.planned} treinos feitos`);
   if (r.extra.length) good.push(`Treinou também fora do planejado (${r.extra.map(wd).join(', ')})`);
@@ -3712,7 +3984,7 @@ function weekReportHtml(p) {
       <div><b>${fmtMin(r.cmin)}${r.cgoal ? `<small>/${fmtMin(r.cgoal)}</small>` : ''}</b><span>min cardio</span></div></div>
     <h4 class="wk-h up">O que foi bem</h4>${li(good, r.did ? 'Ainda não dá para comparar: faltam treinos anteriores.' : 'Nada marcado nesta semana.')}
     <h4 class="wk-h down">O que pode melhorar</h4>${li(bad, r.did ? 'Nada a apontar. Continue assim!' : r.open ? 'A semana ainda está rolando.' : 'Voltar a treinar na próxima semana.')}
-    ${r.did ? `<button class="btn primary" style="width:100%;margin-top:12px" data-act="wk-post" data-pid="${p.id}" data-ws="${ws}">📸 Arte para postar</button>` : ''}
+    ${r.did ? `<button class="btn primary" style="width:100%;margin-top:12px" data-act="wk-post" data-pid="${p.id}" data-ws="${ws}"><i class="ic ic-cam"></i> Arte para postar</button>` : ''}
     ${df != null ? `<p class="hint" style="margin:10px 0 0">Peso: ${fmtMin(r.bprev.peso)} → <b>${fmtMin(r.bw.peso)} kg</b> (${df > 0 ? '+' : ''}${fmtMin(df)} kg desde ${fmtDate(r.bprev.date)})</p>` : ''}
   </section>`;
 }
@@ -4084,7 +4356,7 @@ function profileCard(p) {
   const isMe = p.id === ME, s = profileSummary(p.id), active = ui.profile === p.id;
   return `<section class="card ${isMe ? 'me-card' : ''} ${active ? 'complete' : ''}">
     <div class="student">
-      <span class="av">${esc(initials(p.name))}</span>
+      <span class="av">${avIn(p)}</span>
       <div class="grow"><h3>${esc(p.name)}</h3>
         <small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt} ${s.lastGroups}</small>
         <div class="tags">${p.test ? '<span class="pstat wait">perfil de teste</span>' : isMe ? '' : isConsult(p) ? readyChip(p) : `<span class="pstat ${p.consultReq ? 'late' : 'wait'}">${p.consultReq ? 'quer consultoria' : 'só o app'}</span>`}<span class="pill eq">${s.weekDays} ${s.weekDays === 1 ? 'treino' : 'treinos'} na semana</span>
@@ -4102,11 +4374,11 @@ function profileCard(p) {
 function myProfileHtml() {
   const me = profile(ME), list = bodyOf(me), n = trainedDates(ME).length;
   return `<div>
-    <div class="card-h"><span class="av">${esc(initials(me.name))}</span><div class="grow"><h3>Meu perfil · ${esc(me.name)}</h3>
+    <div class="card-h"><span class="av">${avIn(me)}</span><div class="grow"><h3>Meu perfil · ${esc(me.name)}</h3>
       <small>${n} ${n === 1 ? 'dia' : 'dias'} de treino${list.length ? ` · medidas de ${fmtDate(list[list.length - 1].date)}/${list[list.length - 1].date.slice(2, 4)}` : ''}</small></div></div>
     <p class="hint" style="margin:0 0 10px">Traga os treinos que você anotou antes do app (arquivo <b>historico-….json</b>). Junta com o que já existe, sem apagar nada.</p>
     <div class="actions">
-      <label class="btn primary">⬆ Importar meu histórico<input type="file" id="histFileMe" hidden></label>
+      <label class="btn primary"><i class="ic ic-up"></i> Importar meu histórico<input type="file" id="histFileMe" hidden></label>
       <button class="btn" data-act="open-medidas" data-pid="${ME}">Minhas medidas</button>
       <button class="btn" data-act="open-profile" data-pid="${ME}" data-v="historico">Meu histórico</button>
     </div>
@@ -4132,8 +4404,8 @@ function renderAlunos() {
       <div class="card-h"><div class="grow"><h3>Backup</h3>
         <small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou importe um backup (ex.: dados de outro aparelho).' : 'Os dados (seus e dos alunos) ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.'}</small></div></div>
       <div class="actions">
-        <button class="btn" data-act="export">⬇ Exportar</button>
-        <label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label>
+        <button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button>
+        <label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label>
       </div>${backupsHtml()}</section>
     ${trashHtml()}
     ${accountHtml()}`;
@@ -4231,16 +4503,16 @@ function msgTemplate(kind, p) {
   if (kind === 'treino') {
     const g = isLetter(ui.tplGroup, p.id) ? ui.tplGroup : firstWorkout(p.id);
     const exs = letterExs(g, p.id);
-    return `Oi, ${n}! Seu treino *${wName(g, p.id)}*${letterDesc(g, p.id) ? ` (${letterDesc(g, p.id)})` : ''}:\n` + (exs.map(e => `• ${e.name}: ${planText(e)}`).join('\n') || '(ainda sem exercícios)') + '\n\nBom treino! 💪';
+    return `Oi, ${n}! Seu treino *${wName(g, p.id)}*${letterDesc(g, p.id) ? ` (${letterDesc(g, p.id)})` : ''}:\n` + (exs.map(e => `• ${e.name}: ${planText(e)}`).join('\n') || '(ainda sem exercícios)') + '\n\nBom treino!';
   }
   if (kind === 'semana') {
     const [now, before] = weekPair(null, p.id, today());
     const ws = weekStart(today()), dias = trainedDates(p.id).filter(d => d >= ws).length, cm = cardioBetween(ws, addDays(ws, 6), p.id);
     const pc = before ? Math.round((now - before) / before * 100) : null;
-    return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${cm} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim! 🔥' : 'Vamos pra cima essa semana! 💪'}`;
+    return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${cm} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim!' : 'Vamos pra cima essa semana!'}`;
   }
-  if (kind === 'lembrete') return `Oi, ${n}! Passando pra lembrar do treino de hoje. Te espero! 💪`;
-  if (kind === 'parabens') return `Parabéns, ${n}! Você está evoluindo muito nos treinos. Continue assim! 🎉`;
+  if (kind === 'lembrete') return `Oi, ${n}! Passando pra lembrar do treino de hoje. Te espero!`;
+  if (kind === 'parabens') return `Parabéns, ${n}! Você está evoluindo muito nos treinos. Continue assim!`;
   return '';
 }
 function updateWaLink() {
@@ -4286,7 +4558,7 @@ function bodySummaryHtml(p) {
 function histImportHtml(p, top) {
   return `<section class="card"${top ? ' style="border:2px solid var(--acc)"' : ''}><div class="card-h"><div class="grow"><h3>Histórico antigo</h3>
       <small>Traga os treinos que ${p.id === ME ? 'você anotou' : esc(firstName(p)) + ' anotou'} antes do app (arquivo de histórico). Junta com o que já existe, sem apagar nada.</small></div></div>
-      <label class="btn">⬆ Importar histórico<input type="file" id="histFile" hidden></label></section>`;
+      <label class="btn"><i class="ic ic-up"></i> Importar histórico<input type="file" id="histFile" hidden></label></section>`;
 }
 function renderMedidas() {
   const p = profile(ui.profile), list = bodyOf(p), last = list[list.length - 1], prev = list[list.length - 2];
@@ -4336,11 +4608,11 @@ const appLink = () => `${location.origin}${location.pathname}`;
 function appLinkText(p) {
   const n = firstName(p);
   return p.uid
-    ? `Oi, ${n}! Este é o link do app PassosFit:\n\n${appLink()}\n\n1. Toque no link.\n2. Entre com o seu e-mail e a sua senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`
-    : `Oi, ${n}! Este é o link do app PassosFit:\n\n${inviteLink(p)}\n\n1. Toque no link.\n2. Crie sua conta com o seu e-mail e uma senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir. 💪`;
+    ? `Oi, ${n}! Este é o link do app PassosFit:\n\n${appLink()}\n\n1. Toque no link.\n2. Entre com o seu e-mail e a sua senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir.`
+    : `Oi, ${n}! Este é o link do app PassosFit:\n\n${inviteLink(p)}\n\n1. Toque no link.\n2. Crie sua conta com o seu e-mail e uma senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir.`;
 }
 // Professor: link de primeiro acesso para qualquer pessoa (cria a conta e pede para entrar)
-const signupText = () => `Oi! Este é o link do app PassosFit:\n\n${signupLink()}\n\n1. Toque no link.\n2. O app mostra como colocar o ícone na tela do seu celular. Faça isso primeiro.\n3. Abra o app pelo ícone e crie sua conta com seu nome, e-mail e uma senha.\n4. Pronto! Assim que eu liberar, o app abre sozinho. 💪`;
+const signupText = () => `Oi! Este é o link do app PassosFit:\n\n${signupLink()}\n\n1. Toque no link.\n2. O app mostra como colocar o ícone na tela do seu celular. Faça isso primeiro.\n3. Abra o app pelo ícone e crie sua conta com seu nome, e-mail e uma senha.\n4. Pronto! Assim que eu liberar, o app abre sozinho.`;
 function signupLinkHtml() {
   if (!CLOUD || !cloud) return '';
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Link de primeiro acesso</h3>
@@ -4359,7 +4631,7 @@ function studentAccountHtml(p) {
 function inviteHtml(p) {
   if (!CLOUD) return '';
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Link do app para ${esc(firstName(p))}</h3>
-      <small>${p.uid ? `✅ ${esc(firstName(p))} já tem conta. Mande o link para ele abrir o app e entrar com o e-mail e a senha dele.` : `${esc(firstName(p))} ainda não tem conta. Mande o link: ele cria o login e já cai no app dele.`}</small></div></div>
+      <small>${p.uid ? `<i class="ic ic-okc"></i> ${esc(firstName(p))} já tem conta. Mande o link para ele abrir o app e entrar com o e-mail e a senha dele.` : `${esc(firstName(p))} ainda não tem conta. Mande o link: ele cria o login e já cai no app dele.`}</small></div></div>
     <p class="note" style="word-break:break-all;margin-top:0">${esc(p.uid ? appLink() : inviteLink(p))}${p.uid ? '' : `<br><small style="color:var(--muted)">Código: <b>${p.id}-${p.inviteCode}</b></small>`}</p>
     <button class="btn primary" style="width:100%;padding:13px" data-act="send-applink" data-pid="${p.id}">Enviar link do app</button>
     <p class="hint" style="margin:8px 0 0">A mensagem já explica o passo a passo. Quando ${esc(firstName(p))} abrir, o app mostra como colocar o ícone na tela do celular.</p></section>`;
@@ -4530,7 +4802,7 @@ function plannerHtml(p) {
     return `<button class="pday ${own && !(o && o.skip) ? 'own' : ''} ${o && o.skip ? 'skip' : ''} ${did ? 'did' : ''} ${iso === today() ? 'today' : ''} ${plan.length ? '' : 'rest'}" data-act="${act}" data-d="${iso}" ${act ? '' : 'disabled'}>
       <span class="pd">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][(toDate(iso).getDay() + 6) % 7]} ${iso.slice(8)}</span><span class="pt">${txt}</span></button>`;
   };
-  return `<section class="card" id="plannerCard"><div class="card-h"><div class="grow"><h3>📆 Planejamento das próximas semanas</h3>
+  return `<section class="card" id="plannerCard"><div class="card-h"><div class="grow"><h3><i class="ic ic-cal"></i> Planejamento das próximas semanas</h3>
       <small>Toque em um dia para escolher o treino só daquela data. Os outros dias seguem a divisão da semana. <b class="own-key">Borda</b> = planejado só para a data · — = descanso. Dia que passou sem treino: toque para <b>apagar o treino</b> (não conta nas séries da semana) ou passar para hoje.</small></div></div>
     <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="plan-off" data-d="-1" ${off <= 0 ? 'disabled' : ''}>‹ Anteriores</button>
       <span class="grow"></span><button class="btn" data-act="plan-off" data-d="1">Próximas ›</button></div>
@@ -4583,8 +4855,8 @@ function renderAlunosDesk() {
   const students = db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const q = ui.q.trim().toLowerCase(), shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   const ym = today().slice(0, 7);
-  const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span>
-      <span class="grow"><b>${esc(p.name)}</b><small>${p.test ? 'só para testar · não conta nos números' : p.consultReq && !isConsult(p) ? 'quer a consultoria!' : esc(profileSummary(p.id).lastTxt)}</small></span>${p.test ? '' : isConsult(p) ? readyChip(p, true) : `<span class="pstat ${p.consultReq ? 'late' : 'wait'}">${p.consultReq ? '★' : 'app'}</span>`}${st && st.k === 'late' ? '<span class="pstat late">💳</span>' : ''}</button>`; };
+  const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${avIn(p)}</span>
+      <span class="grow"><b>${esc(p.name)}</b><small>${p.test ? 'só para testar · não conta nos números' : p.consultReq && !isConsult(p) ? 'quer a consultoria!' : esc(profileSummary(p.id).lastTxt)}</small></span>${p.test ? '' : isConsult(p) ? readyChip(p, true) : `<span class="pstat ${p.consultReq ? 'late' : 'wait'}">${p.consultReq ? '★' : 'app'}</span>`}${st && st.k === 'late' ? '<span class="pstat late"><i class="ic ic-card"></i></span>' : ''}</button>`; };
   const sel = ui.profile !== ME && profile(ui.profile), real = students.filter(p => !p.test);
   $main.innerHTML = `<div class="split">
     <aside class="slist">
@@ -4604,7 +4876,7 @@ function renderAlunosDesk() {
           <div><b>${real.filter(p => profileSummary(p.id).weekDays > 0).length}</b><span>ativos na semana</span></div>
           <div><b>${real.filter(p => (payStatus(p, ym) || {}).k === 'late').length}</b><span>pagamentos atrasados</span></div></div></section>
       <section class="card"><div class="card-h"><div class="grow"><h3>Backup</h3><small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou restaure um backup.' : 'Exporte de vez em quando para não perder nada.'}</small></div></div>
-        <div class="actions"><button class="btn" data-act="export">⬇ Exportar</button><label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
+        <div class="actions"><button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button><label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
       ${trashHtml()}
       ${accountHtml()}`}
     </section></div>`;
@@ -4844,7 +5116,7 @@ function payStatus(p, ym) {
 }
 function chargeText(p, ym) {
   const me = profile(ME);
-  return `Oi, ${firstName(p)}! Tudo bem? Passando para lembrar da mensalidade de ${monthName(ym).toLowerCase()} (${brl(p.billing.value)}), com vencimento em ${fmtDate(dueDate(p, ym))}.${me.pixKey ? ` Pix: ${me.pixKey}` : ''} Obrigado! 💪`;
+  return `Oi, ${firstName(p)}! Tudo bem? Passando para lembrar da mensalidade de ${monthName(ym).toLowerCase()} (${brl(p.billing.value)}), com vencimento em ${fmtDate(dueDate(p, ym))}.${me.pixKey ? ` Pix: ${me.pixKey}` : ''} Obrigado!`;
 }
 function renderPagamentos() {
   const ym = ui.payMonth || (ui.payMonth = today().slice(0, 7));
@@ -4868,7 +5140,7 @@ function renderPagamentos() {
           <td><span class="pstat ${st.k}">${st.label}</span></td>
           <td class="pay-acts" style="text-align:right;white-space:nowrap">${st.k === 'ok' ? `<button class="btn" data-act="pay-undo" data-pid="${p.id}">Desfazer</button>`
             : `<button class="btn primary" data-act="pay-mark" data-pid="${p.id}">Marcar pago</button> <button class="btn" data-act="pay-charge" data-pid="${p.id}" data-m="${ym}">Cobrar</button>`}
-            <button class="icon" data-act="bill-edit" data-pid="${p.id}" title="Plano">⚙</button></td></tr>`).join('')}</tbody></table>`
+            <button class="icon" data-act="bill-edit" data-pid="${p.id}" title="Plano"><i class="ic ic-gear"></i></button></td></tr>`).join('')}</tbody></table>`
       : '<p class="empty">Nenhum aluno com cobrança neste mês. Defina o plano de cada aluno abaixo.</p>'}
     </section>
     ${noPlan.length ? `<section class="card"><div class="card-h"><div class="grow"><h3>Alunos sem plano definido</h3><small>Defina plano, valor e dia do vencimento para entrar na lista de mensalidades.</small></div></div>
@@ -4881,7 +5153,7 @@ function renderPagamentos() {
 function studentPayHtml(p) {
   const b = p.billing, months = [];
   for (let i = 0; i < 6; i++) { const d = new Date(+today().slice(0, 4), +today().slice(5, 7) - 1 - i, 1); months.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`); }
-  return `<section class="card"><div class="card-h"><div class="grow"><h3>💳 Pagamento</h3>
+  return `<section class="card"><div class="card-h"><div class="grow"><h3><i class="ic ic-card"></i> Pagamento</h3>
       <small>${b && b.value > 0 ? `${esc(b.plan || 'Plano')} · ${brl(b.value)} por mês · vence dia ${b.due || 10}${b.active === false ? ' · cobrança pausada' : ''}` : 'Nenhum plano definido ainda'}</small></div>
       <button class="btn" data-act="bill-edit" data-pid="${p.id}">${b ? '✎ Plano' : 'Definir plano'}</button></div>
     ${b && b.value > 0 ? months.map(ym => { const st = payStatus(p, ym); if (!st) return ''; return `<div class="list-row"><div class="grow"><b>${monthName(ym)}</b></div>
@@ -4926,8 +5198,8 @@ const readyOk = p => !!p.planReady && p.planReady.slice(0, 10) > addDays(today()
 const readyUntil = p => addDays(p.planReady.slice(0, 10), READY_DAYS - 1);
 function readyChip(p, compact) {
   const r = readyOk(p) && p.planReady;
-  if (!r && p.planReady) return `<span class="pstat wait" title="Planejamento marcado em ${fmtDate(p.planReady.slice(0, 10))}: passou 1 semana, revise">⏳${compact ? '' : ' revisar'}</span>`;
-  return r ? `<span class="pstat ok" title="Planejamento pronto em ${fmtDate(r.slice(0, 10))}">✓${compact ? '' : ' alinhado'}</span>` : `<span class="pstat wait" title="Planejamento ainda não confirmado">⏳${compact ? '' : ' planejar'}</span>`;
+  if (!r && p.planReady) return `<span class="pstat wait" title="Planejamento marcado em ${fmtDate(p.planReady.slice(0, 10))}: passou 1 semana, revise"><i class="ic ic-hour"></i>${compact ? '' : ' revisar'}</span>`;
+  return r ? `<span class="pstat ok" title="Planejamento pronto em ${fmtDate(r.slice(0, 10))}">✓${compact ? '' : ' alinhado'}</span>` : `<span class="pstat wait" title="Planejamento ainda não confirmado"><i class="ic ic-hour"></i>${compact ? '' : ' planejar'}</span>`;
 }
 const readyBtn = p => readyOk(p)
   ? `<button class="btn ready-btn on" data-act="plan-ready" title="Toque para desmarcar">✓ Planejamento pronto · vale até ${fmtDate(readyUntil(p))}</button>`
@@ -4986,10 +5258,10 @@ function perfilHtml(p, desk) {
   const tab = ST_TABS.some(t => t[0] === ui.stTab) ? ui.stTab : 'resumo';
   return `<div class="ws" data-active="${desk ? tab : 'all'}">
     <section class="card">
-      <div class="prof-h"><span class="av">${esc(initials(p.name))}</span>
+      <div class="prof-h"><span class="av">${avIn(p)}</span>
         <div class="grow"><h2>${esc(p.name)}</h2>
           <small style="color:var(--muted)">${p.since ? `Aluno desde ${fmtDate(p.since)}/${p.since.slice(2, 4)}` : 'Aluno'}${p.phone ? ' · ' + esc(p.phone) : ''}</small>
-          ${p.goal ? `<div class="tags" style="margin-top:4px"><span class="pill up">🎯 ${esc(p.goal)}</span></div>` : ''}</div>
+          ${p.goal ? `<div class="tags" style="margin-top:4px"><span class="pill up"><i class="ic ic-target"></i> ${esc(p.goal)}</span></div>` : ''}</div>
         <button class="icon" data-act="student-edit" aria-label="Editar dados">✎</button></div>
       ${p.notes ? `<div class="note">${esc(p.notes)}</div>` : ''}
       ${p.consultReq && !isConsult(p) ? `<div class="note" style="border-left:4px solid var(--acc)"><b>★ ${esc(firstName(p))} pediu a consultoria em ${fmtDate(p.consultReq)}.</b> Para ${esc(firstName(p))} virar aluno da consultoria, toque em <b>Consultoria: não</b>.</div>` : ''}
@@ -5030,7 +5302,7 @@ function perfilHtml(p, desk) {
     <div data-tab="marcacoes">${marcacoesHtml(p)}</div>
     <div data-tab="plano">${plannerHtml(p)}
     <section class="card">
-      <div class="card-h"><div class="grow"><h3>📅 Divisão da semana</h3>
+      <div class="card-h"><div class="grow"><h3><i class="ic ic-cal"></i> Divisão da semana</h3>
         <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
       <div class="goal-set"><label for="goalDaily"><b>Meta de cardio</b><small>minutos por dia, vale todos os dias</small></label>
         <input id="goalDaily" class="time-in" inputmode="decimal" placeholder="ex.: 20" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}"><span class="unit">min</span>
@@ -5045,13 +5317,13 @@ function perfilHtml(p, desk) {
       ${savePlanHtml(p, true)}
     </section>`}</div>
     <div data-tab="mensagens"><section class="card" id="msgCard">
-      <div class="card-h"><div class="grow"><h3>💬 Mensagem para ${esc(firstName(p))}</h3>
+      <div class="card-h"><div class="grow"><h3><i class="ic ic-chat"></i> Mensagem para ${esc(firstName(p))}</h3>
         <small>${p.phone ? 'Abre o WhatsApp com a mensagem pronta' : 'Cadastre o WhatsApp do aluno (✎) para enviar direto para ele'}</small></div></div>
       <div class="tpl">
         <button class="btn" data-act="tpl" data-k="treino">Enviar</button>
         <select id="tplGroup" aria-label="Treino">${workoutsOf(p.id).map(w => `<option value="${w.id}" ${w.id === ui.tplGroup ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select>
         <button class="btn" data-act="tpl" data-k="semana">Resumo da semana</button>
-        <button class="btn" data-act="tpl" data-k="lembrete">⏰ Lembrete</button>
+        <button class="btn" data-act="tpl" data-k="lembrete"><i class="ic ic-alarm"></i> Lembrete</button>
         <button class="btn" data-act="tpl" data-k="parabens">Parabéns</button>
       </div>
       <textarea class="msg" id="msgText" placeholder="Escreva a mensagem ou escolha um modelo acima">${esc(ui.msgDraft)}</textarea>
@@ -5177,7 +5449,7 @@ $main.addEventListener('input', e => {
   if (e.target.id === 'search' && isDesk()) {
     ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
     document.getElementById('studentList').innerHTML = db.profiles.filter(p => p.id !== ME && p.name.toLowerCase().includes(q))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${esc(initials(p.name))}</span><span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${readyChip(p, true)}</button>`).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${avIn(p)}</span><span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${readyChip(p, true)}</button>`).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
     return;
   }
   if (e.target.id === 'search') {
@@ -5278,6 +5550,7 @@ $main.addEventListener('click', e => {
     case 'send-signup': return shareMsg('Link de primeiro acesso', signupText());
     case 'send-applink': { const p = profile(b.dataset.pid); return shareMsg(`Link do app para ${firstName(p)}`, appLinkText(p), p); }
     case 'install-guide': return installGuide(true);
+    case 'photo-edit': return openPhoto(b.dataset.pid || ui.profile);
     case 'test-sim': {
       const p = testProfile(); if (!p) return;
       const r = simulateWeek(p); save(); render();
@@ -5382,6 +5655,12 @@ $main.addEventListener('click', e => {
     case 'ws-week': ui.wsOff = Math.max(-26, Math.min(8, (ui.wsOff || 0) + +b.dataset.d)); ui.wsOpen = null; return render();
     case 'ws-why': ui.wsOpen = ui.wsOpen === b.dataset.g ? null : b.dataset.g; return render();
     case 'demo-ex': return openDemo(exById(b.dataset.id));
+    case 'v2-equip': { // livre ou máquina: o professor muda o padrão (e o dia aberto); o aluno marca só o dia de hoje
+      const ex = exById(b.dataset.id), v = b.dataset.v; if (!ex) return;
+      if (!ui.studentMode) { ex.equip = v; const s = sessionOn(ex.id, ui.date); if (s) s.equip = v; }
+      else { const lr = lockReason(ex.id); if (lr) return toast(LOCK_MSG[lr]); ensureSession(ex, ui.date).equip = v; }
+      save(); return render();
+    }
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
     case 'st-tab': ui.stTab = b.dataset.t; return render();
     case 'wk-post': ui.wkPost = { pid: b.dataset.pid, ws: b.dataset.ws }; render(); return window.scrollTo({ top: 0 });
@@ -5456,7 +5735,7 @@ $main.addEventListener('click', e => {
     case 'v2-save': return v2SharePost(true);
     case 'v2-mytreino': ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.v2done = null; return go('treino');
     case 'v2-filter': ui.v2filter = b.dataset.f; return render();
-    case 'v2-signup': copyText(signupLink()).then(ok => toast(ok ? '🔗 Link de cadastro copiado! Mande para quem quiser usar o app.' : signupLink())); return;
+    case 'v2-signup': copyText(signupLink()).then(ok => toast(ok ? '<i class="ic ic-link"></i> Link de cadastro copiado! Mande para quem quiser usar o app.' : signupLink())); return;
     case 'v2-cal': ui.histDay = b.dataset.d; return render();
     case 'v2-month': { const [yy, mm] = ui.month.split('-').map(Number), d0 = new Date(yy, mm - 1 + +b.dataset.d, 1); ui.month = isoDate(d0).slice(0, 7); ui.histDay = null; return render(); }
     case 'v2-openday': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); ui.v2run = true; ui.view = 'treino'; saveUi(); render(); return window.scrollTo({ top: 0 });
@@ -5470,13 +5749,13 @@ $main.addEventListener('click', e => {
       profExs(p.id).forEach(e => { const x = sessionOn(e.id, d); if (x) { delete x.fin; delete x.finBy; } }); // pode completar e enviar de novo
       for (const k of Object.keys(p.unlocks)) if (k < addDays(today(), -30)) delete p.unlocks[k];
       save(); render();
-      return toast(`🔓 Dia ${fmtDate(d)} destravado${p.id === ME ? '' : `: ${esc(firstName(p))} já pode preencher e enviar`}.`);
+      return toast(`<i class="ic ic-unlock"></i> Dia ${fmtDate(d)} destravado${p.id === ME ? '' : `: ${esc(firstName(p))} já pode preencher e enviar`}.`);
     }
     case 'day-relock': {
       const p = profile(ui.profile), d = ui.date, at = new Date().toISOString();
       if (p.unlocks) delete p.unlocks[d];
       profExs(p.id).forEach(e => { const x = sessionOn(e.id, d); if (x && x.sets.some(y => y.done) && !x.fin) { x.fin = at; x.finBy = 'professor'; } });
-      save(); render(); return toast(`🔒 Dia ${fmtDate(d)} travado de novo.`);
+      save(); render(); return toast(`<i class="ic ic-lock"></i> Dia ${fmtDate(d)} travado de novo.`);
     }
     case 'lock-student': {
       const p = profile(ui.profile), exs = isLetter(ui.group) ? letterExs(ui.group) : [];
@@ -5634,12 +5913,12 @@ $main.addEventListener('click', e => {
     if (sec <= 0 || !x) return refreshCard(ex.id); // parou antes de começar: não anota nada
     x.reps = sec; x.carga = null; x.done = true;
     if (navigator.vibrate) navigator.vibrate(30);
-    toast(`Série ${pl.i + 1}: <b>${fmtSec(sec)}</b> na prancha 💪`);
+    toast(`Série ${pl.i + 1}: <b>${fmtSec(sec)}</b> na prancha`);
     if (!s.sets.every(y => y.done)) startRest(ex.rest);
   } else if (act === 'done') {
     const x = s.sets[+b.closest('[data-i]').dataset.i], ai = +b.closest('[data-i]').dataset.i;
     if (x.done && ui.autoAt && ui.autoAt.ex === ex.id && ui.autoAt.i === ai && Date.now() - ui.autoAt.t < 800) { ui.autoAt = null; return; } // acabou de marcar sozinho ao sair do campo
-    if (!x.done && ((x.carga == null && !ex.noLoad && !isTimed(ex)) || x.reps == null)) return toast(isTimed(ex) ? 'Use o <b>⏱ Começar</b> ou anote os <b>segundos</b> para confirmar a série.' : ex.noLoad ? 'Anote as <b>repetições</b> para confirmar a série.' : 'Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
+    if (!x.done && ((x.carga == null && !ex.noLoad && !isTimed(ex)) || x.reps == null)) return toast(isTimed(ex) ? 'Use o <b><i class="ic ic-timer"></i> Começar</b> ou anote os <b>segundos</b> para confirmar a série.' : ex.noLoad ? 'Anote as <b>repetições</b> para confirmar a série.' : 'Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
     x.done = !x.done;
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(ex.rest); }
   } else if (act === 'inc' || act === 'dec') {
@@ -6166,7 +6445,7 @@ async function fixOnce() {
       const at = ref ? db.exercises.lastIndexOf(abd.filter(e => e.letter === ex.letter).pop() || ref) + 1 : db.exercises.length;
       db.exercises.splice(at, 0, ex);
       const w = ex.letter && (profile(ME).workouts || []).find(x => x.id === ex.letter);
-      msgs.push(`<b>Abdominal prancha</b> entrou no seu treino${w ? ` (${esc(w.name)})` : ' de abdômen'}: em cada série tem o ⏱ para cronometrar quanto tempo você aguenta.`);
+      msgs.push(`<b>Abdominal prancha</b> entrou no seu treino${w ? ` (${esc(w.name)})` : ' de abdômen'}: em cada série tem o <i class="ic ic-timer"></i> para cronometrar quanto tempo você aguenta.`);
       save();
     }
     mark('abdominal-prancha');
@@ -6236,7 +6515,7 @@ async function untrash(pid) {
 function trashHtml() {
   const t = ((CLOUD && cloud && cloud.trash) || []).filter(x => !x.purged);
   if (!t.length) return '';
-  return `<section class="card" style="margin-top:14px"><details class="tbl"><summary>🗑 Lixeira (${t.length})</summary>
+  return `<section class="card" style="margin-top:14px"><details class="tbl"><summary><i class="ic ic-trash"></i> Lixeira (${t.length})</summary>
     <p class="hint" style="margin:8px 0">Alunos excluídos. Nada foi apagado: ao trazer de volta, voltam com treinos, histórico e acesso ao app.</p>
     ${t.map(x => `<div class="list-row"><div class="grow"><b>${esc(x.name || 'Aluno')}</b>${x.deletedAt ? `<small style="display:block;color:var(--muted)">excluído em ${fmtDate(x.deletedAt.slice(0, 10))}</small>` : ''}</div>
       <button class="btn" data-act="untrash" data-pid="${x.id}">Trazer de volta</button><button class="btn danger" data-act="purge" data-pid="${x.id}">Apagar de vez</button></div>`).join('')}</details></section>`;
@@ -6286,7 +6565,7 @@ async function loadBackupDay(day) {
 }
 function backupsHtml() {
   if (!CLOUD || !cloud || cloud.role !== 'admin') return '';
-  if (!ui.bk) return `<button class="btn" data-act="bk-open">☁ Cópias automáticas (30 dias)</button>`;
+  if (!ui.bk) return `<button class="btn" data-act="bk-open"><i class="ic ic-cloud"></i> Cópias automáticas (30 dias)</button>`;
   const b = ui.bk;
   return `<div style="margin-top:10px"><p class="plan-g">Cópias automáticas na nuvem</p>
     ${b.dates.length ? `<div class="months">${b.dates.map(d => `<button class="${d === b.date ? 'on' : ''}" data-act="bk-day" data-d="${d}">${fmtDate(d)}/${d.slice(2, 4)}</button>`).join('')}</div>` : '<p class="hint">Ainda não há cópias. A primeira é feita hoje, sozinha.</p>'}
@@ -6487,7 +6766,7 @@ function assemble(src = remote) {
     const has = new Set(d.exercises.map(e => e.id));
     (o.exercises || []).forEach(e => { if (!has.has(e.id)) d.exercises.push({ ...e, profileId: p.id, own: true }); });
   });
-  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; delete p.seenAt; delete p.days; delete p.loginEmail; delete p.replies; const f = prefs[p.id]; if (f && Array.isArray(f.replies) && f.replies.length) p.replies = f.replies; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; if (f && f.seenAt) p.seenAt = f.seenAt; if (f && f.days) p.days = f.days; if (f && f.email) p.loginEmail = f.email; });
+  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; delete p.seenAt; delete p.days; delete p.loginEmail; delete p.replies; if (p.id !== ME) delete p.photo; const f = prefs[p.id]; if (f && f.photo && p.id !== ME) p.photo = f.photo; if (f && Array.isArray(f.replies) && f.replies.length) p.replies = f.replies; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; if (f && f.seenAt) p.seenAt = f.seenAt; if (f && f.days) p.days = f.days; if (f && f.email) p.loginEmail = f.email; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
@@ -6499,9 +6778,10 @@ function assemble(src = remote) {
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, body, ctMode, consultReq, seen, seenAt, days, loginEmail, replies, ...meta } = p;
+    const { id, color, body, ctMode, consultReq, seen, seenAt, days, loginEmail, replies, photo, ...meta } = p;
+    if (id === ME && photo) meta.photo = photo;
     // o aluno não lê o perfil do professor: nome e WhatsApp do professor vão na ficha de cada aluno
-    if (id !== ME) { const me = profile(ME) || {}; meta.coachName = me.name || null; meta.coachWa = me.wa || null; }
+    if (id !== ME) { const me = profile(ME) || {}; meta.coachName = me.name || null; meta.coachWa = me.wa || null; meta.coachPhoto = me.photo || null; }
     if (meta.workouts) meta.workouts = meta.workouts.filter(w => !w.own); // os do aluno vão no documento "own"
     const exercises = db.exercises.filter(e => e.profileId === id && !e.own).map(({ profileId, ...e }) => e);
     const rem = remote.get('profiles/' + id);
@@ -6516,7 +6796,7 @@ function splitDb() {
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
-  for (const p of db.profiles) if (own.has(p.id) && (p.color || p.ctMode || p.consultReq || p.seen || p.loginEmail || (p.replies && p.replies.length) || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.replies && p.replies.length ? { replies: p.replies } : {}), ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}), ...(p.loginEmail ? { email: p.loginEmail } : {}) });
+  for (const p of db.profiles) if (own.has(p.id) && ((p.id !== ME && p.photo) || p.color || p.ctMode || p.consultReq || p.seen || p.loginEmail || (p.replies && p.replies.length) || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.replies && p.replies.length ? { replies: p.replies } : {}), ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}), ...(p.loginEmail ? { email: p.loginEmail } : {}), ...(p.photo && p.id !== ME ? { photo: p.photo } : {}) });
   // Treinos que o aluno montou: documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id)) {
     const ws = (p.workouts || []).filter(w => w.own).map(({ own: _o, ...w }) => w), exs = db.exercises.filter(e => e.profileId === p.id && e.own).map(({ profileId, own: _o, ...e }) => e);
@@ -6884,7 +7164,7 @@ function showAuth(mode, msg = '') {
     document.getElementById('authOk').hidden = sent && !useCode;
     document.getElementById('authOk').textContent = useCode ? 'Usar código' : 'Pedir acesso ao professor';
     document.getElementById('authCodeT').hidden = useCode;
-    document.getElementById('authMsg').innerHTML = msg || (sent ? '✅ <b>Pedido enviado.</b> Assim que o professor aceitar, o app abre sozinho.' : 'Toque para pedir acesso: o pedido chega para o seu professor aceitar.');
+    document.getElementById('authMsg').innerHTML = msg || (sent ? '<i class="ic ic-okc"></i> <b>Pedido enviado.</b> Assim que o professor aceitar, o app abre sozinho.' : 'Toque para pedir acesso: o pedido chega para o seu professor aceitar.');
   } else { $authForm.email.parentElement.hidden = $authForm.pass.parentElement.hidden = false; document.getElementById('authOk').hidden = false; }
 }
 const NO_LOGIN = 'E-mail ou senha incorretos. Confira e tente de novo, ou toque em "Esqueci a senha". Ainda não tem conta? Toque em "Primeiro acesso? Criar conta".';
@@ -6926,7 +7206,7 @@ async function sendReset(email) {
   try { await cloud.auth.sendPasswordResetEmail(email, back); }
   catch (err) { if (/continue-uri|unauthorized-domain|invalid-continue/.test(err.code || '')) await cloud.auth.sendPasswordResetEmail(email); else throw err; }
 }
-const RESET_OK = email => `✅ Pronto! Se <b>${esc(email)}</b> for o e-mail da conta, chega em alguns minutos uma mensagem para criar a senha nova.<br><br><b>Não achou?</b> Olhe no <b>Spam / Lixo eletrônico</b> e em <b>Promoções</b>. O remetente é <b>noreply@treino-8a1e0.firebaseapp.com</b>.<br><br>Abra o link, crie a senha nova e volte aqui para entrar.`;
+const RESET_OK = email => `<i class="ic ic-okc"></i> Pronto! Se <b>${esc(email)}</b> for o e-mail da conta, chega em alguns minutos uma mensagem para criar a senha nova.<br><br><b>Não achou?</b> Olhe no <b>Spam / Lixo eletrônico</b> e em <b>Promoções</b>. O remetente é <b>noreply@treino-8a1e0.firebaseapp.com</b>.<br><br>Abra o link, crie a senha nova e volte aqui para entrar.`;
 document.getElementById('authForgot').onclick = async () => {
   const msg = document.getElementById('authMsg'), email = $authForm.email.value.trim().toLowerCase();
   if (!email || !/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = 'Digite no campo "E-mail" o e-mail da sua conta e toque em "Esqueci a senha" de novo.'; $authForm.email.focus(); return; }
@@ -6938,7 +7218,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-00:37';
+const APP_VERSION = '11/10-00:55';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
