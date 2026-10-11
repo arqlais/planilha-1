@@ -957,6 +957,71 @@ body.v2-done nav.bottom{display:none}
 .v2-postbig.feed canvas{aspect-ratio:4/5;width:min(100%,340px)}
 @media (min-width:880px){.v2-post{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:32px}.v2-postbig canvas{width:100%}}
 
+/* ==== App novo: professor ==== */
+.v2-brand{display:inline-flex;align-items:center;gap:9px}
+.v2-brand small{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-top:3px}
+.v2-brand .v2-wm.sm{font-size:17px}
+.v2-avbtn{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);font-weight:800;font-size:14px;flex:none}
+.v2-hello{font-family:'Outfit','Archivo',sans-serif;font-weight:600;font-size:26px;letter-spacing:-.02em;margin:6px 0 2px}
+.v2-kpis{display:grid;grid-template-columns:1.2fr 1fr;grid-template-rows:auto auto;gap:10px;margin-bottom:6px}
+.v2-kpis .v2-tile:first-child{grid-row:span 2;text-align:left;border:1px solid var(--line)}
+.v2-tile.dk{background:rgba(6,12,34,.55);color:var(--text);border:1px solid var(--line);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.v2-tile b.xl{font-size:44px;margin-top:auto}
+.v2-tile b.md{font-size:16px;font-family:inherit;font-weight:800;letter-spacing:0;margin-top:auto}
+button.v2-tile{border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.v2-tile .v2i{width:22px;height:22px}
+.v2-chipwarn{display:inline-flex;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:800;background:rgba(255,138,104,.16);color:var(--coral)}
+.v2-stack{display:grid;gap:10px}
+.v2-att{display:flex;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:20px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.v2-att .grow{flex:1;min-width:0;cursor:pointer}.v2-att b{display:block;font-weight:800}.v2-att small{color:var(--coral);font-weight:700;font-size:12.5px}
+.v2-att .av{border:0;width:44px;height:44px;background:var(--lilac);color:var(--lilac-ink);font-weight:800}
+.v2-btn.ink .v2i,.v2-btn .v2i{width:16px;height:16px}
+a.v2-btn{text-decoration:none}
+.v2-row .av{background:var(--lilac);color:var(--lilac-ink)}
+.v2-row .av.sm{width:34px;height:34px;font-size:12px}
+.v2-row small.warn{color:var(--coral)}.v2-row small.ok{color:var(--good)}
+.v2-t{font-size:12px;color:var(--muted);font-weight:700;flex:none}
+.v2-feat{display:block;width:100%;border:0;padding:0;background:none;text-align:left;border-radius:28px;overflow:hidden}
+.v2-featph{height:170px;border-radius:28px}
+.v2-ph-title.sm{left:16px;bottom:14px;right:70px}
+.v2-ph-title.sm b{display:block;font-family:'Outfit','Archivo',sans-serif;font-weight:500;font-size:21px}
+.v2-ph-title.sm small{color:rgba(255,255,255,.75);font-weight:700;font-size:12.5px}
+.v2-feat .arr{position:absolute;right:14px;bottom:14px;z-index:2;width:46px;height:46px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.v2-search{position:relative;display:block;margin-bottom:12px}
+.v2-search .v2i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.v2-search input{width:100%;padding:14px 16px 14px 44px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font-size:16px;font-weight:600}
+.v2-dots{display:flex;gap:3px;margin-top:5px}.v2-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.v2-dots i.on{background:var(--good)}
+.v2-pfh{padding:20px!important}
+.v2-rowx{display:flex;align-items:center;gap:12px}
+.v2-pfh .grow{flex:1;min-width:0}.v2-pfh b{display:block;font-size:19px;font-weight:800}.v2-pfh small{color:var(--muted);font-weight:700;font-size:13px;display:block}
+.v2-pfh .av.lg{width:64px;height:64px;font-size:20px;background:var(--lilac);color:var(--lilac-ink)}
+.v2-st{display:inline-flex;margin-top:6px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:800;background:rgba(255,255,255,.12)}
+.v2-st.ok{background:rgba(111,209,150,.18);color:var(--good)}.v2-st.warn{background:rgba(255,138,104,.18);color:var(--coral)}
+.v2-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px;text-align:center}
+.v2-grid3 div{background:rgba(255,255,255,.08);border-radius:16px;padding:10px 4px}
+.v2-grid3 b{font-family:'Outfit','Archivo',sans-serif;font-weight:600;font-size:19px}.v2-grid3 small{font-size:11.5px}
+.v2-pfacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.v2-pfacts button{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:99px;padding:7px 12px;font-weight:700;font-size:12.5px}
+.v2-pfacts button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.v2-note2{margin-top:12px;background:rgba(255,255,255,.07);border-radius:14px;padding:10px 12px;font-size:13px;white-space:pre-wrap}
+.v2-pf-b .ws > section.card:first-child{display:none}
+:root[data-skin="v2"] .v2-pf-b .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px;margin:16px 0 14px;gap:2px}
+:root[data-skin="v2"] .v2-pf-b .tabs::-webkit-scrollbar{display:none}
+:root[data-skin="v2"] .v2-pf-b .tabs button{flex:none;border:0;background:transparent;color:var(--muted);border-radius:99px;padding:9px 14px;font-weight:800;font-size:13px;white-space:nowrap}
+:root[data-skin="v2"] .v2-pf-b .tabs button.on{background:var(--accent);color:var(--on-accent)}
+:root[data-skin="v2"] .v2-pf-b .tabs .ready-btn{flex:none}
+.v2-d2 .col{min-width:0}
+body.desk .v2-d2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:0 32px;align-items:start}
+body.desk .v2-kpis{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto}
+body.desk .v2-kpis .v2-tile:first-child{grid-row:auto}
+body.desk .v2-hello{font-size:46px}
+body.desk .v2-pf{display:grid;grid-template-columns:360px minmax(0,1fr);gap:28px;align-items:start}
+body.desk .v2-pf-a{position:sticky;top:12px}
+
+:root[data-skin="v2"] body.desk nav.bottom::before{display:none}
+.v2-navbrand{display:none;padding:4px 8px 22px}
+body.desk .v2-navbrand{display:block}
+
 </style>
 </head>
 <body>
@@ -1269,7 +1334,7 @@ const DESK_VIEWS = [['treino', 'Meu treino'], ['alunos', 'Alunos'], ['montar', '
 const deskMq = matchMedia('(min-width: 1024px)');
 const cloudRole = () => { try { return cloud && cloud.role; } catch (e) { return null; } }; // nuvem ainda não iniciada
 const isDesk = () => deskMq.matches && !ui.studentMode && cloudRole() !== 'student';
-const views = () => ui.studentMode ? (skinOn() ? V2_STUDENT_VIEWS : STUDENT_VIEWS) : isDesk() ? DESK_VIEWS : VIEWS;
+const views = () => ui.studentMode ? (skinOn() ? V2_STUDENT_VIEWS : STUDENT_VIEWS) : skinOn() ? (isDesk() ? V2_PROF_DESK : V2_PROF_VIEWS) : isDesk() ? DESK_VIEWS : VIEWS;
 const KEY = 'planilha-treino-v1';
 const UI_KEY = 'planilha-treino-ui';
 const STEP = { carga: 2.5, reps: 1 };
@@ -1384,8 +1449,9 @@ let db = load();
 let ui = { view: 'treino', group: '', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas', 'config', 'acessos'].includes(u.view)) ui.view = u.view;
+  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(u.view)) ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
+  if (!ui.studentMode && document.documentElement.dataset.skin === 'v2') ui.view = 'painel'; // visual novo: o professor abre no Painel
   ui.group = u.group || '';
   if (u.layout) ui.layout = u.layout;
   if (u.mode) ui.mode = u.mode;
@@ -1395,7 +1461,7 @@ try {
   if (u.restSec) ui.rest = u.restSec;
 } catch (e) {}
 if (ui.profile === ME) ui.studentMode = false;
-if (!views().some(v => v[0] === ui.view) && !(ui.view === 'perfil' && !ui.studentMode)) ui.view = 'treino';
+if (!['treino', 'historico', 'evolucao', 'alunos', 'perfil', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(ui.view) || ui.studentMode && !['treino', 'historico', 'config', 'recados', 'medidas'].includes(ui.view)) ui.view = 'treino';
 const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode, color: ui.color })); } catch (e) {} };
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
@@ -1679,8 +1745,8 @@ function renderStats() {
 }
 function renderNav() {
   const v2 = skinOn(), sub = v2 && ui.studentMode ? ['medidas'] : STUDENT_SUB;
-  $nav.innerHTML = views().map(([id, label]) => { const svg = `<svg viewBox="0 0 24 24" aria-hidden="true">${(v2 && ui.studentMode && V2NAV[id]) || SVG[id]}</svg>`;
-    return `<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' || id === 'config' && sub.includes(ui.view) ? 'on' : ''}" data-view="${id}">${v2 ? `<span class="nb">${svg}</span>` : svg}${label}</button>`; }).join('');
+  $nav.innerHTML = views().map(([id, label]) => { const svg = `<svg viewBox="0 0 24 24" aria-hidden="true">${(v2 && ui.studentMode && V2NAV[id]) || (v2 && !ui.studentMode && V2PNAV[id]) || SVG[id]}</svg>`;
+    return `${v2 && isDesk() && id === views()[0][0] ? `<div class="v2-navbrand">${v2BrandHtml()}</div>` : ''}<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' || v2 && !ui.studentMode && id === 'treino' && ui.profile === ME && ['historico', 'evolucao'].includes(ui.view) && !isDesk() || v2 && !ui.studentMode && id === 'painel' && ['ajustes', 'acessos'].includes(ui.view) && !isDesk() || id === 'config' && sub.includes(ui.view) ? 'on' : ''}" data-view="${id}">${v2 ? `<span class="nb">${svg}</span>` : svg}${label}</button>`; }).join('');
 }
 function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
@@ -1690,11 +1756,16 @@ function render() {
   if (desk && ui.view === 'perfil') ui.view = 'alunos'; // no computador o perfil abre dentro da área de alunos
   renderHero();
   renderNav();
-  document.body.classList.toggle('v2-stu', v2Stu()); document.body.classList.remove('v2-done');
+  document.body.classList.toggle('v2-stu', skinOn()); document.body.classList.remove('v2-done');
+  if (v2Prof()) {
+    const R = { painel: renderPainelV2, ajustes: renderAjustesV2, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
+    if (R) return R();
+  }
   if (ui.v2done && skinOn() && ui.view === 'treino') return renderDoneV2();
   if (v2Stu() && { historico: 1, recados: 1, config: 1 }[ui.view]) return ({ historico: renderAgendaV2, recados: renderRecadosV2, config: renderEuV2 })[ui.view]();
   if (v2Stu() && ui.view === 'medidas') { renderMedidas(); return $main.insertAdjacentHTML('afterbegin', v2TopHtml()); }
-  ({ treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, acessos: renderAcessos, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
+  ({ painel: renderPainelV2, ajustes: renderAjustesV2, treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, acessos: renderAcessos, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
+  if (v2Prof()) { const t = v2ProfTop(); if (t) $main.insertAdjacentHTML('afterbegin', t); }
 }
 deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
 function go(view) {
@@ -2553,6 +2624,121 @@ async function v2SharePost(save) {
   }
   const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
   toast('✓ Imagem salva. Agora é só postar.');
+}
+// ===== App novo: lado do professor (Painel, Alunos, Perfil do aluno, Ajustes) no desenho Passos Fit 2.0 =====
+const V2PNAV = {
+  painel: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
+  alunos: '<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 19.5c.9-3.3 3.4-5 6.5-5s5.6 1.7 6.5 5M16 5a3.5 3.5 0 0 1 0 7M18 14.5c1.9.6 3 2.2 3.5 5"/>',
+  montar: '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',
+  pagamentos: '<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10.5h18M7 15h4"/>',
+  treino: '<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  historico: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  evolucao: '<path d="M4 19.5h16M5.5 15l4-4.5 3.5 3 6-7"/>',
+  ajustes: '<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l3 3"/>',
+};
+const V2_PROF_VIEWS = [['painel', 'Painel'], ['alunos', 'Alunos'], ['montar', 'Montar'], ['pagamentos', 'Pagamentos'], ['treino', 'Meu treino']];
+const V2_PROF_DESK = [...V2_PROF_VIEWS, ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['ajustes', 'Ajustes e backup']];
+const v2Prof = () => skinOn() && !ui.studentMode;
+const v2Ico = d => `<svg viewBox="0 0 24 24" class="v2i">${d}</svg>`;
+const v2Students = () => db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+// Situação do aluno: convite não aceito, treinou hoje, sumido…
+function v2Status(p) {
+  if (CLOUD && !p.uid) return ['warn', 'Convite não aceito'];
+  const last = trainedDates(p.id).pop();
+  if (!last) return ['', 'Ainda não treinou'];
+  const n = daysBetween(last, today());
+  return n === 0 ? ['ok', 'Treinou hoje'] : n === 1 ? ['', 'Treinou ontem'] : n >= 7 ? ['warn', `Há ${n} dias sem treinar`] : ['', `Último treino há ${n} dias`];
+}
+const v2WeekDots = pid => { const ws = weekStart(today()), d = v2Days(pid); return `<div class="v2-dots">${Array.from({ length: 7 }, (_, i) => `<i class="${d.has(addDays(ws, i)) ? 'on' : ''}"></i>`).join('')}</div>`; };
+const v2Hello = () => { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; };
+function v2BrandHtml() { return `<span class="v2-brand"><span class="v2-mk">${v2Mark()}</span><span><span class="v2-wm sm">passos<em>.fit</em></span><small>por ${esc(v2Coach())}</small></span></span>`; }
+function renderPainelV2() {
+  const sts = v2Students(), ws = weekStart(today());
+  const todayL = sts.filter(p => v2Days(p.id).has(today())), week = sts.filter(p => [...v2Days(p.id)].some(d => d >= ws));
+  const att = sts.filter(p => v2Status(p)[0] === 'warn');
+  const me = profile(ME), myPlan = liveWorkouts(ME).map(w => w.id).filter(g => dayPlan(me, today()).includes(g)), myW = myPlan[0] || firstWorkout(ME);
+  const myEx = myW ? letterExs(myW, ME)[0] : null;
+  const reqs = CLOUD && cloud ? requestsHtml() : '';
+  $main.innerHTML = `<div class="v2-top">${v2BrandHtml()}<span class="grow"></span>
+      <button class="v2-icbtn" data-view="acessos" aria-label="Acessos">${v2Ico('<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>')}${reqs ? '<span class="dot"></span>' : ''}</button>
+      <button class="v2-avbtn" data-view="ajustes" aria-label="Ajustes e conta">${esc(initials(me.name))}</button></div>
+    <h2 class="v2-hello">${v2Hello()}, ${esc(firstName(me))}</h2><p class="v2-muted" style="margin:0 0 16px">${v2DayLabel(today())}</p>
+    <div class="v2-kpis"><button class="v2-tile dk" data-view="alunos">${v2Ico(V2PNAV.alunos)}<b class="xl">${sts.length}</b><span>alunos</span></button>
+      <div class="v2-tile acc"><b>${todayL.length}</b><span>treinaram hoje</span></div><div class="v2-tile lil"><b>${week.length}</b><span>ativos na semana</span></div></div>
+    ${reqs}
+    <div class="v2-d2"><div class="col">
+    <div class="v2-sec"><h3>Precisa de atenção</h3><span class="v2-chipwarn">${att.length}</span></div>
+    <div class="v2-stack">${att.map(p => { const [, t] = v2Status(p), inv = CLOUD && !p.uid;
+      return `<div class="v2-att"><button class="av" data-act="open-profile" data-pid="${p.id}" data-v="perfil">${esc(initials(p.name))}</button><div class="grow" data-act="open-profile" data-pid="${p.id}" data-v="perfil"><b>${esc(p.name)}</b><small>${t}</small></div>
+        ${inv ? `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Seu treino já está no app. Crie sua senha por este link: ${inviteLink(p)}`)}">${v2Ico('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.5 6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.3-1.2"/>')}Reenviar</a>`
+          : `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Sentimos sua falta. Bora voltar hoje? Seu treino está no app.`)}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}Lembrar</a>`}</div>`; }).join('') || '<section class="card v2-muted" style="text-align:center;margin:0">Todos em dia ✓</section>'}</div>
+    <div class="v2-sec"><h3>Hoje nos treinos</h3><button data-view="alunos">Todos</button></div>
+    <section class="card">${todayL.map(p => { const ss = profSessions(p.id).filter(s => s.date === today() && hasDone(s)), kg = ss.reduce((a, s) => a + vol(s.sets), 0), cm = cardioBetween(today(), today(), p.id);
+      const fin = ss.map(s => s.fin).filter(Boolean).sort().pop();
+      return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${esc(initials(p.name))}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
+    </div><div class="col">
+    <div class="v2-sec"><h3>Seu treino de hoje</h3><button data-act="v2-mytreino">Abrir</button></div>
+    <button class="v2-feat" data-act="v2-mytreino">${v2Art(myEx ? v2Key(myEx) : 'remada', `<div class="v2-over"><span class="v2-chip">${esc(me.name)}</span></div><div class="v2-ph-title sm"><b>${esc(myPlan.map(g => wName(g, ME)).join(' + ') || (myW ? wName(myW, ME) : 'Meu treino'))}</b><small>Toque para começar · pesos da última vez</small></div><span class="arr">${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>`, 'v2-featph')}</button>
+    <div class="v2-sec"><h3>Atalhos</h3></div>
+    <div class="v2-tiles"><button class="v2-tile sur" data-act="add-student">${v2Ico('<path d="M12 5v14M5 12h14"/>')}<b class="md">Novo aluno</b></button>
+      <button class="v2-tile sur" data-act="v2-signup">${v2Ico('<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17.5 9a4 4 0 0 1 0 6"/>')}<b class="md">Link de cadastro</b></button></div>
+    </div></div>
+    ${v2Sign()}`;
+  PFA.start();
+}
+function renderAlunosV2() {
+  const sts = v2Students(), f = ui.v2filter || 'Todos', q = (ui.q || '').trim().toLowerCase();
+  const list = sts.filter(p => (!q || p.name.toLowerCase().includes(q)) && (f === 'Todos' || (f === 'Hoje' && v2Status(p)[1] === 'Treinou hoje') || (f === 'Sumidos' && /dias sem treinar/.test(v2Status(p)[1])) || (f === 'Convite' && v2Status(p)[1] === 'Convite não aceito')));
+  $main.innerHTML = `<div class="v2-top"><div class="grow"><small>${sts.length} aluno${sts.length === 1 ? '' : 's'}</small><h2>Alunos</h2></div><button class="v2-btn sm pri" data-act="add-student">${v2Ico('<path d="M12 5v14M5 12h14"/>')}Novo aluno</button></div>
+    <label class="v2-search">${v2Ico('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>')}<input id="v2Q" placeholder="Buscar aluno" value="${esc(ui.q || '')}" aria-label="Buscar aluno" autocomplete="off"></label>
+    <div class="v2-segin" style="margin-bottom:14px">${['Todos', 'Hoje', 'Sumidos', 'Convite'].map(x => `<button class="${x === f ? 'on' : ''}" data-act="v2-filter" data-f="${x}">${x}</button>`).join('')}</div>
+    <section class="card" id="v2List">${v2ListHtml(list)}</section>
+    <button class="v2-btn line full" style="margin-top:12px" data-act="test-profile">${testProfile() ? 'Abrir perfil de teste' : 'Criar perfil de teste'}</button>
+    ${v2Sign()}`;
+}
+const v2ListHtml = list => list.map(p => { const [k, t] = v2Status(p); return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av">${esc(initials(p.name))}</span><div class="grow"><b>${esc(p.name)}</b>
+    <small class="${k}">${t}${isConsult(p) ? '' : ' · só o app'}</small>${v2WeekDots(p.id)}</div>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</div>`; }).join('') || '<p class="v2-muted" style="text-align:center;margin:0">Ninguém aqui.</p>';
+function v2ProfHead(p) {
+  const [k, t] = v2Status(p), ws = weekStart(today()), s = profileSummary(p.id), pc = s.before ? Math.round((s.now - s.before) / s.before * 100) : null;
+  return `<section class="v2-hero v2-pfh"><div class="v2-rowx"><span class="av lg">${esc(initials(p.name))}</span><div class="grow"><b>${esc(p.name)}</b><small>${[p.goal, p.phone].filter(Boolean).map(esc).join(' · ') || (p.since ? `Aluno desde ${fmtDate(p.since)}` : 'Aluno')}</small>
+      <span class="v2-st ${k}">${t}</span></div></div>
+    <div class="v2-grid3"><div><b>${s.weekDays}</b><small>treinos/sem</small></div><div><b>${pc == null ? '–' : `${pc > 0 ? '+' : ''}${pc}%`}</b><small>peso total</small></div><div><b>${fmtMin(cardioBetween(ws, addDays(ws, 6), p.id))}</b><small>min cardio</small></div></div>
+    <div class="v2-rowx" style="gap:8px;margin-top:14px"><a class="v2-btn sm pri" style="flex:1;margin:0" href="${waLink(p, '')}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}WhatsApp</a><button class="v2-btn sm" style="flex:1;margin:0;background:rgba(255,255,255,.12)" data-act="student-mode">${v2Ico('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>')}Ver como aluno</button></div>
+    <div class="v2-pfacts"><button data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button><button data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button><button data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button><button data-act="go-montar">Montar detalhado</button>
+      <button class="${isConsult(p) ? 'on' : ''}" data-act="consult-toggle">Consultoria: ${isConsult(p) ? 'sim' : 'não'}</button>${p.test ? '<button data-act="test-sim">Simular semana</button><button data-act="test-clear">Limpar teste</button>' : ''}</div>
+    ${p.notes ? `<div class="v2-note2">${esc(p.notes)}</div>` : ''}
+    ${p.consultReq && !isConsult(p) ? `<div class="v2-note2"><b>★ ${esc(firstName(p))} pediu a consultoria em ${fmtDate(p.consultReq)}.</b> Para virar aluno da consultoria, toque em <b>Consultoria: não</b>.</div>` : ''}</section>`;
+}
+function renderPerfilV2() {
+  const p = profile(ui.profile);
+  if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
+  $main.innerHTML = `<div class="v2-top"><button class="v2-icbtn" data-view="alunos" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>Perfil do aluno</small><h2>${esc(firstName(p))}</h2></div><button class="v2-icbtn" data-act="student-edit" aria-label="Editar dados do aluno">${V2I.edit}</button></div>
+    <div class="v2-pf"><div class="v2-pf-a">${v2ProfHead(p)}</div><div class="v2-pf-b">${perfilHtml(p, true)}</div></div>`;
+}
+function renderAjustesV2() {
+  $main.innerHTML = `<div class="v2-top"><button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>Professor</small><h2>Ajustes e backup</h2></div></div>
+    ${CLOUD && cloud ? requestsHtml() : ''}
+    ${appUsageHtml()}
+    ${signupLinkHtml()}
+    ${rescueHtml()}
+    <section class="card"><div class="card-h"><div class="grow"><h3>Visual do app</h3><small>${skinOn() ? 'Visual novo (Passos Fit 2.0)' : 'Visual antigo'} · desligar vale só neste aparelho</small></div></div><button class="v2-btn sm line" data-act="open-settings">Mudar</button></section>
+    <section class="card" style="margin-top:14px">
+      <div class="card-h"><div class="grow"><h3>Backup</h3>
+        <small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou importe um backup.' : 'Os dados ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.'}</small></div></div>
+      <div class="actions"><button class="btn" data-act="export">⬇ Exportar</button><label class="btn">⬆ Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
+    ${trashHtml()}
+    ${accountHtml()}
+    ${v2Sign()}`;
+}
+// Telas que continuam as mesmas por dentro: ganham o topo do visual novo
+function v2ProfTop() {
+  const p = profile(ui.profile), other = ui.profile !== ME;
+  const t = { treino: other ? `Treino de ${firstName(p)}` : 'Meu treino', historico: other ? `Histórico · ${firstName(p)}` : 'Seu histórico', evolucao: other ? `Evolução · ${firstName(p)}` : 'Sua evolução',
+    montar: 'Montar treinos', pagamentos: 'Pagamentos', acessos: 'Acessos', medidas: 'Medidas', recados: 'Recados', alunos: 'Alunos' }[ui.view] || '';
+  if (!t) return '';
+  const back = other && ['treino', 'historico', 'evolucao', 'medidas'].includes(ui.view) ? `<button class="v2-icbtn" data-act="open-profile" data-pid="${p.id}" data-v="perfil" aria-label="Voltar">${V2I.back}</button>` : ui.view === 'acessos' ? `<button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button>` : '';
+  const extra = ui.view === 'treino' ? `<button class="v2-icbtn" data-view="historico" aria-label="Histórico">${v2Ico(V2PNAV.historico)}</button><button class="v2-icbtn" data-view="evolucao" aria-label="Evolução">${v2Ico(V2PNAV.evolucao)}</button>` : '';
+  return `<div class="v2-top">${back}<div class="grow"><small>${esc(other ? p.name : profile(ME).name)}</small><h2>${esc(t)}</h2></div>${extra}</div>`;
 }
 // ---------- Aluno monta o próprio treino ----------
 // Abas no topo: "Treino do professor" (montado pelo professor) | "Meu treino" (o aluno escolhe)
@@ -4853,6 +5039,12 @@ $date.addEventListener('change', () => { if ($date.value) { ui.date = $date.valu
 
 // Digitar carga/reps: atualiza os números sem redesenhar os campos (não perde o foco)
 $main.addEventListener('input', e => {
+  if (e.target.id === 'v2Q') {
+    ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
+    const f = ui.v2filter || 'Todos', el = document.getElementById('v2List');
+    if (el) el.innerHTML = v2ListHtml(v2Students().filter(p => (!q || p.name.toLowerCase().includes(q)) && (f === 'Todos' || (f === 'Hoje' && v2Status(p)[1] === 'Treinou hoje') || (f === 'Sumidos' && /dias sem treinar/.test(v2Status(p)[1])) || (f === 'Convite' && v2Status(p)[1] === 'Convite não aceito'))));
+    return;
+  }
   if (e.target.id === 'search' && isDesk()) {
     ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
     document.getElementById('studentList').innerHTML = db.profiles.filter(p => p.id !== ME && p.name.toLowerCase().includes(q))
@@ -5130,6 +5322,9 @@ $main.addEventListener('click', e => {
     case 'v2-tpl': ui.v2tpl = +b.dataset.k; return render();
     case 'v2-share': return v2SharePost(false);
     case 'v2-save': return v2SharePost(true);
+    case 'v2-mytreino': ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.v2done = null; return go('treino');
+    case 'v2-filter': ui.v2filter = b.dataset.f; return render();
+    case 'v2-signup': copyText(signupLink()).then(ok => toast(ok ? '🔗 Link de cadastro copiado! Mande para quem quiser usar o app.' : signupLink())); return;
     case 'v2-cal': ui.histDay = b.dataset.d; return render();
     case 'v2-month': { const [yy, mm] = ui.month.split('-').map(Number), d0 = new Date(yy, mm - 1 + +b.dataset.d, 1); ui.month = isoDate(d0).slice(0, 7); ui.histDay = null; return render(); }
     case 'v2-openday': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); ui.v2run = true; ui.view = 'treino'; saveUi(); render(); return window.scrollTo({ top: 0 });
@@ -6649,7 +6844,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '10/10-21:47';
+const APP_VERSION = '10/10-21:58';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
