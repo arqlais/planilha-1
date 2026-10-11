@@ -2870,8 +2870,15 @@ async function v2SharePost(save) {
     try { await navigator.share({ files: [f], text: `Treino feito ✓ Treine comigo pelo app: ${appLink()}` }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para compartilhar. Use "Salvar".'); }
     return;
   }
+  // iPhone/iPad: baixar arquivo vai para "Arquivos", não para a galeria. A tela de compartilhar tem "Salvar imagem", que vai direto para Fotos.
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (save && ios && navigator.canShare && navigator.canShare({ files: [f] })) {
+    toast('Toque em <b>Salvar imagem</b> para guardar na galeria.');
+    try { await navigator.share({ files: [f] }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para salvar. Tente "Compartilhar".'); }
+    return;
+  }
   const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
-  toast('✓ Imagem salva. Agora é só postar.');
+  toast('✓ Imagem salva na galeria. Agora é só postar.');
 }
 // ===== App novo: lado do professor (Painel, Alunos, Perfil do aluno, Ajustes) no desenho Passos Fit 2.0 =====
 const V2PNAV = {
@@ -3477,7 +3484,7 @@ function sendHtml() {
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
       <small>Enviado às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Está salvo e registrado${ui.studentMode ? ' para você e seu professor' : ''}; não dá mais para alterar.</small></div></div>
-      ${canCheckin() ? '<button class="btn primary" style="width:100%;padding:12px;margin-top:10px" data-act="checkin"><i class="ic ic-cam"></i> Fazer check-in (foto para o Instagram)</button>' : ''}</section>`;
+      ${canCheckin() ? '<button class="btn primary" style="width:100%;padding:12px;margin-top:10px" data-act="checkin"><i class="ic ic-cam"></i> Postar ou salvar a arte do treino</button>' : ''}</section>`;
   const open = exs.filter(e => !sentAt(e.id)), ready = open.every(e => isComplete(e.id));
   const missing = open.filter(e => !isComplete(e.id)).length;
   return `<section class="card send-card"><button class="btn primary" style="width:100%;padding:14px;font-size:16px" data-act="send-workout" ${ready ? '' : 'disabled'}>✓ Enviar treino</button>
@@ -7226,7 +7233,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-01:10';
+const APP_VERSION = '11/10-01:20';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
