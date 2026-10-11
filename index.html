@@ -1762,6 +1762,7 @@ function render() {
   renderHero();
   renderNav();
   document.body.classList.toggle('v2-stu', skinOn()); document.body.classList.remove('v2-done');
+  if (ui.wkPost) return renderWeekPost();
   if (v2Prof()) {
     const R = { painel: renderPainelV2, ajustes: renderAjustesV2, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
     if (R) return R();
@@ -1775,7 +1776,7 @@ function render() {
 deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
 function go(view) {
   if (ui.studentMode && !STUDENT_VIEWS.some(v => v[0] === view) && !STUDENT_SUB.includes(view)) view = 'treino';
-  stopDemo(); ui.demo = false; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  stopDemo(); ui.demo = false; ui.wkPost = null; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 // ---------- Treino ----------
 function bannerHtml(L) {
@@ -2568,6 +2569,34 @@ const FEEDS = [
   },
 ];
 
+// Arte da semana (domingo a sábado): treinos feitos, dias, cardio e progresso. Pouca informação, para postar.
+function weekArt(c, D, A, H) {
+  const acc = A.acc, ink = A.on;
+  c.fillStyle = acc; c.fillRect(0, 0, PW, H);
+  if (H !== PH) { const k = H / PH; c.translate((PW - PW * k) / 2, 0); c.scale(k, k); }
+  c.save(); c.globalAlpha = .08; c.fillStyle = ink; [[540, 1180, 160, 760], [720, 860, 160, 1080], [900, 520, 160, 1420]].forEach(([x, y, w, h]) => { rr(c, x, y, w, h, 48); c.fill(); }); c.restore();
+  brandRow(c, 80, 100, ink, A);
+  c.fillStyle = ink; c.textAlign = 'right'; c.font = '700 38px Manrope'; c.fillText(D.range.toUpperCase(), PW - 80, 150);
+  c.textAlign = 'left'; c.font = '800 46px Manrope'; c.fillText(`SEMANA DE ${D.name.toUpperCase()}`, 84, 400);
+  fitFont(c, D.treinos, 700, 'Unbounded', 420, 920); c.fillText(D.treinos, 60, 790);
+  fitFont(c, 'TREINOS FEITOS', 700, 'Unbounded', 110, 920); c.fillText('TREINOS FEITOS', 80, 950);
+  const n = 7, gap = 22, bw = (PW - 160 - gap * (n - 1)) / n, y = 1090;
+  D.days.forEach((st, i) => {
+    const x = 80 + i * (bw + gap); rr(c, x, y, bw, bw, bw / 2);
+    if (st === 'done') { c.fillStyle = ink; c.fill(); c.strokeStyle = acc; c.lineWidth = 9; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(x + bw * .3, y + bw * .52); c.lineTo(x + bw * .45, y + bw * .66); c.lineTo(x + bw * .72, y + bw * .36); c.stroke(); }
+    else { c.strokeStyle = rgba(ink, st === 'miss' ? .9 : .3); c.lineWidth = 6; c.setLineDash(st === 'miss' ? [] : [12, 10]); c.stroke(); c.setLineDash([]); }
+    c.fillStyle = ink; c.textAlign = 'center'; c.font = '800 38px Manrope'; c.fillText(['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][i], x + bw / 2, y + bw + 56);
+  });
+  c.textAlign = 'left'; c.font = '600 54px Outfit'; c.fillStyle = ink; c.fillText(D.diasTxt, 84, 1350);
+  D.tiles.forEach(([v, l], i) => { const x = 80 + i * 470, ty = 1440; rr(c, x, ty, 450, 280, 48); c.fillStyle = ink; c.fill(); c.fillStyle = acc; c.textAlign = 'left'; fitFont(c, v, 600, 'Outfit', 140, 390); c.fillText(v, x + 36, ty + 160); fitFont(c, l, 700, 'Manrope', 38, 380); c.fillText(l, x + 38, ty + 236); });
+  c.fillStyle = ink; c.textAlign = 'left'; c.font = '700 38px Manrope'; c.fillText('passos.fit', 84, 1840); c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 80, 1840);
+}
+async function drawWeek(cv, D, fmt = 'story') {
+  await postFonts();
+  const acc = cssVar('--accent') || '#C9F03D', on = cssVar('--on-accent') || '#12150F', H = fmt === 'feed' ? FH : PH;
+  const c = cv.getContext('2d'); c.setTransform(cv.width / PW, 0, 0, cv.height / H, 0, 0); c.clearRect(0, 0, PW, H);
+  c.save(); weekArt(c, D, { acc, on }, H); c.restore();
+}
 let fontsReady = null;
 function postFonts() { return fontsReady = fontsReady || Promise.all(['700 100px Unbounded', '500 100px Unbounded', '600 100px Outfit', '500 100px Outfit', '800 40px Manrope', '700 40px Manrope', '600 40px Manrope', '700 40px "Space Mono"', '400 40px "Space Mono"'].map(f => document.fonts.load(f).catch(() => null))).catch(() => null); }
 async function drawPost(cv, k, D, fmt = 'story') {
@@ -2578,7 +2607,7 @@ async function drawPost(cv, k, D, fmt = 'story') {
   const c = cv.getContext('2d'); c.setTransform(cv.width / PW, 0, 0, cv.height / H, 0, 0); c.clearRect(0, 0, PW, H);
   c.save(); (fmt === 'feed' ? FEEDS[k] : TEMPLATES[k].draw)(c, D, { acc, on, fig, sym, photo }); c.restore();
 }
-return { drawPost, TEMPLATES, PW, PH, FH };
+return { drawPost, drawWeek, TEMPLATES, PW, PH, FH };
 })();
 // ===== App novo: tela "Treino completo" com as artes para postar =====
 function v2PostData(pid, d) {
@@ -2617,9 +2646,30 @@ function renderDoneV2() {
   $main.querySelectorAll('.v2-tpls canvas').forEach(cv => PFP.drawPost(cv, +cv.dataset.k, D, fmt));
   PFP.drawPost(document.getElementById('v2PostBig'), k, D, fmt);
 }
+function weekPostData(pid, ws) {
+  const p = profile(pid), r = weekReport(pid, ws);
+  // progresso: média de quanto a carga de cada exercício mudou em relação à última vez
+  const prog = r.prog > 0 ? [`+${r.prog}%`, 'progressão de carga'] : r.up.length ? [String(r.up.length), r.up.length === 1 ? 'exercício evoluiu' : 'exercícios evoluíram'] : [String(r.sets), 'séries feitas'];
+  return { name: firstName(p), coach: v2Coach(), range: rangeLabel(r.ws, r.we), treinos: r.planned ? `${r.hit}/${r.planned}` : String(r.did), days: r.dayList,
+    diasTxt: r.planned && r.hit === r.planned ? 'Todos os treinos feitos ✓' : `${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino`,
+    tiles: [[`${fmtMin(Math.round(r.cmin))}`, 'min de cardio'], prog] };
+}
+function renderWeekPost() {
+  const o = ui.wkPost, D = weekPostData(o.pid, o.ws), fmt = ui.v2fmt || 'story';
+  document.body.classList.add('v2-stu', 'v2-done');
+  $main.innerHTML = `<div class="v2-donetop"><div class="grow"><h2>Arte da semana</h2><small>${esc(D.range)}</small></div>
+      <button class="v2-icbtn" data-act="wk-post-close" aria-label="Fechar"><svg viewBox="0 0 24 24" class="v2i"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="v2-post"><div class="v2-post-ctl">
+        <div class="v2-segin">${[['story', 'Story 9:16'], ['feed', 'Feed 4:5']].map(([v, n]) => `<button class="${fmt === v ? 'on' : ''}" data-act="v2-postfmt" data-v="${v}">${n}</button>`).join('')}</div>
+        <div class="v2-cc"><button class="v2-btn pri" data-act="v2-share"><svg viewBox="0 0 24 24" class="v2i"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 13v6.5h14V13"/></svg>Compartilhar</button><button class="v2-btn ink" data-act="v2-save"><svg viewBox="0 0 24 24" class="v2i"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19.5h14"/></svg>Salvar</button></div>
+      </div>
+      <div class="v2-postbig ${fmt}"><canvas id="v2PostBig" width="${PFP.PW}" height="${fmt === 'feed' ? PFP.FH : PFP.PH}" aria-label="Arte da semana"></canvas></div>
+    </div>`;
+  PFP.drawWeek(document.getElementById('v2PostBig'), D, fmt);
+}
 function v2PostFile() {
-  const cv = document.getElementById('v2PostBig'), d = (ui.v2done || {}).d || today();
-  return new Promise(r => cv.toBlob(b => r(new File([b], `passosfit-treino-${d}.png`, { type: 'image/png' })), 'image/png'));
+  const cv = document.getElementById('v2PostBig'), d = ui.wkPost ? ui.wkPost.ws : (ui.v2done || {}).d || today();
+  return new Promise(r => cv.toBlob(b => r(new File([b], `passosfit-${ui.wkPost ? 'semana' : 'treino'}-${d}.png`, { type: 'image/png' })), 'image/png'));
 }
 async function v2SharePost(save) {
   const f = await v2PostFile();
@@ -3610,7 +3660,7 @@ function weekReport(pid, ws) {
   const kg = volumeBetween(ws, we, null, pid), kgPrev = volumeBetween(addDays(ws, -7), addDays(ws, -1), null, pid);
   const cmin = cardioBetween(ws, we, pid), cgoal = days.reduce((a, d) => a + (d < t || did.has(d) ? cardioGoalOf(p, d) : 0), 0);
   // cada exercício (gêmeos juntos): melhor série da semana x última vez antes da semana
-  const up = [], down = [], same = [], seen = new Set();
+  const up = [], down = [], same = [], cmp = [], seen = new Set();
   for (const s of ss.slice().sort((a, b) => b.date.localeCompare(a.date))) {
     const ex = exById(s.exId); if (!ex || seen.has(twinKey(ex))) continue; seen.add(twinKey(ex));
     const mine = ss.filter(x => twinIds(s.exId).has(x.exId)).map(topSet).filter(Boolean);
@@ -3618,6 +3668,7 @@ function weekReport(pid, ws) {
     const hist = exHistory(s.exId).filter(x => x.date < ws), prev = hist.length && topSet(hist[hist.length - 1]);
     if (!now || !prev) continue;
     const it = { name: ex.name, a: prev, b: now };
+    if (prev.carga > 0) cmp.push((now.carga - prev.carga) / prev.carga);
     if (now.carga > prev.carga || now.carga === prev.carga && (now.reps || 0) > (prev.reps || 0)) up.push(it);
     else if (now.carga < prev.carga) down.push(it);
     else if (hist.length >= 2 && (topSet(hist[hist.length - 2]) || {}).carga === now.carga) same.push(it); // 3 treinos na mesma carga
@@ -3626,7 +3677,8 @@ function weekReport(pid, ws) {
   // nota da semana: presença nos dias com treino (70%) e meta de cardio (30%)
   const att = planned.length ? hit.length / planned.length : Math.min(1, did.size / 3), car = cgoal ? Math.min(1, cmin / cgoal) : null;
   const score = car == null ? att : att * .7 + car * .3;
-  return { ws, we, open: we >= t, did: did.size, planned: planned.length, hit: hit.length, missed, extra, sets, half, kg, kgPrev, cmin, cgoal, up, down, same, bw, bprev, score };
+  const dayList = Array.from({ length: 7 }, (_, i) => addDays(ws, i)).map(d => did.has(d) ? 'done' : missed.includes(d) ? 'miss' : 'off');
+  return { ws, we, open: we >= t, dayList, prog: cmp.length ? Math.round(cmp.reduce((a, x) => a + x, 0) / cmp.length * 100) : null, did: did.size, planned: planned.length, hit: hit.length, missed, extra, sets, half, kg, kgPrev, cmin, cgoal, up, down, same, bw, bprev, score };
 }
 function weekReportHtml(p) {
   if (!p || p.id !== ME || ui.studentMode) return ''; // por enquanto só no perfil do professor (teste antes de liberar para os alunos)
@@ -3660,6 +3712,7 @@ function weekReportHtml(p) {
       <div><b>${fmtMin(r.cmin)}${r.cgoal ? `<small>/${fmtMin(r.cgoal)}</small>` : ''}</b><span>min cardio</span></div></div>
     <h4 class="wk-h up">O que foi bem</h4>${li(good, r.did ? 'Ainda não dá para comparar: faltam treinos anteriores.' : 'Nada marcado nesta semana.')}
     <h4 class="wk-h down">O que pode melhorar</h4>${li(bad, r.did ? 'Nada a apontar. Continue assim!' : r.open ? 'A semana ainda está rolando.' : 'Voltar a treinar na próxima semana.')}
+    ${r.did ? `<button class="btn primary" style="width:100%;margin-top:12px" data-act="wk-post" data-pid="${p.id}" data-ws="${ws}">📸 Arte para postar</button>` : ''}
     ${df != null ? `<p class="hint" style="margin:10px 0 0">Peso: ${fmtMin(r.bprev.peso)} → <b>${fmtMin(r.bw.peso)} kg</b> (${df > 0 ? '+' : ''}${fmtMin(df)} kg desde ${fmtDate(r.bprev.date)})</p>` : ''}
   </section>`;
 }
@@ -5331,6 +5384,8 @@ $main.addEventListener('click', e => {
     case 'demo-ex': return openDemo(exById(b.dataset.id));
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
     case 'st-tab': ui.stTab = b.dataset.t; return render();
+    case 'wk-post': ui.wkPost = { pid: b.dataset.pid, ws: b.dataset.ws }; render(); return window.scrollTo({ top: 0 });
+    case 'wk-post-close': ui.wkPost = null; render(); return window.scrollTo({ top: 0 });
     case 'wk-rep': ui.wkRep = { pid: b.dataset.pid, ws: b.dataset.ws }; return render();
     case 'go-montar': return go('montar');
     case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
@@ -6883,7 +6938,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-00:20';
+const APP_VERSION = '11/10-00:34';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
