@@ -2988,7 +2988,7 @@ function renderPainelV2() {
       return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
     ${cardioWeekListHtml(sts)}
     </div><div class="col">
-    ${me ? cardioWeekHtml(me, 'Seu cardio da semana') : ''}
+    ${me ? cardioDaysHtml(me, 'Seu cardio da semana') : ''}
     <div class="v2-sec"><h3>Seu treino de hoje</h3><button data-act="v2-mytreino">Abrir</button></div>
     <button class="v2-feat" data-act="v2-mytreino">${v2Art(myEx ? v2Key(myEx) : 'remada', `<div class="v2-over"><span class="v2-chip">${esc(me.name)}</span></div><div class="v2-ph-title sm"><b>${esc(myPlan.map(g => wName(g, ME)).join(' + ') || (myW ? wName(myW, ME) : 'Meu treino'))}</b><small>Toque para começar · pesos da última vez</small></div><span class="arr">${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>`, 'v2-featph')}</button>
     <div class="v2-sec"><h3>Atalhos</h3></div>
@@ -3298,18 +3298,18 @@ function cardioWeekHtml(p, title) {
     </section>`;
 }
 // perfil do aluno (Resumo): o cardio feito em cada dia da semana junto com a meta semanal (a meta só muda em Montar)
-function cardioDaysHtml(p) {
+function cardioDaysHtml(p, title) {
   const w = cardioWeekOf(p), t = today();
   const days = [0, 1, 2, 3, 4, 5, 6].map(k => { const d = addDays(w.ws, k); return { d, min: Math.round(cardioBetween(d, d, p.id) * 100) / 100, goal: cardioGoalOf(p, d) }; });
   const top = Math.max(1, ...days.map(x => Math.max(x.min, x.goal)));
   const met = w.goal && w.done >= w.goal;
   return `<section class="card wk-card ${met ? 'complete' : ''}">
-      <div class="card-h"><div class="grow"><h3>Cardio da semana</h3><small>${rangeLabel(w.ws, w.we)} · domingo a sábado</small></div>
+      <div class="card-h"><div class="grow"><h3>${title || 'Cardio da semana'}</h3><small>${rangeLabel(w.ws, w.we)} · domingo a sábado</small></div>
         ${met ? '<span class="pill up">✓ Meta cumprida</span>' : ''}</div>
       ${w.goal ? `${cardioWeekBar(w)}
       <div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos</span><span>${w.left ? `faltam <b>${fmtMin(w.left)} min</b>` : w.done > w.goal ? `<b>+${fmtMin(Math.round((w.done - w.goal) * 100) / 100)} min</b> além da meta` : 'meta batida'}</span></div>`
       : `<div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos na semana</span></div>`}
-      <div class="cd-days">${days.map(x => `<button class="cd-day${x.d === t ? ' today' : ''}${x.d > t ? ' fut' : ''}" data-act="openday" data-d="${x.d}" data-g="${CARDIO}" title="${weekday(x.d)} ${fmtDate(x.d)}: ${fmtMin(x.min)} min${x.goal ? ` de ${fmtMin(x.goal)}` : ''}">
+      <div class="cd-days">${days.map(x => `<button class="cd-day${x.d === t ? ' today' : ''}${x.d > t ? ' fut' : ''}" data-act="openday" data-pid="${p.id}" data-d="${x.d}" data-g="${CARDIO}" title="${weekday(x.d)} ${fmtDate(x.d)}: ${fmtMin(x.min)} min${x.goal ? ` de ${fmtMin(x.goal)}` : ''}">
           <b>${x.min ? fmtMin(x.min) : x.d > t ? '' : '0'}</b>
           <div class="cd-col"><i style="height:${x.min / top * 100}%"></i>${x.goal ? `<span class="cd-goal" style="bottom:${Math.min(94, x.goal / top * 100)}%"></span>` : ''}</div>
           <span class="ok">${x.goal && x.min >= x.goal ? '✓' : '&nbsp;'}</span>
@@ -3317,7 +3317,7 @@ function cardioDaysHtml(p) {
       <div class="goal-txt" style="margin-top:10px"><span>Minutos por dia${days.some(x => x.goal) ? ' · tracejado = meta do dia' : ''}</span>
         <span>Meta: <b>${w.goal ? fmtMin(w.goal) + ' min' : 'sem meta'}</b> <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button></span></div>
       ${cardioDaysPickHtml(p)}
-      <small class="cd-hint">Toque em um dia para ver, corrigir ou marcar o cardio de ${esc(firstName(p))}.</small>
+      <small class="cd-hint">Toque em um dia para ver, corrigir ou marcar ${p.id === ME ? 'o seu cardio' : `o cardio de ${esc(firstName(p))}`}.</small>
     </section>`;
 }
 // Montar treinos: o único lugar onde o professor vê e troca as metas de cardio (por dia e por semana)
@@ -5969,7 +5969,7 @@ $main.addEventListener('click', e => {
       const el = document.getElementById('day-' + ui.histDay); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    case 'openday': ui.date = b.dataset.d; ui.group = b.dataset.g; return go('treino');
+    case 'openday': if (b.dataset.pid && profile(b.dataset.pid)) ui.profile = b.dataset.pid; ui.date = b.dataset.d; ui.group = b.dataset.g; return go('treino');
     case 'layout': ui.layout = b.dataset.l; saveUi(); return render();
     case 'mode': {
       ui.mode = b.dataset.m; saveUi();
@@ -7461,7 +7461,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/10-20:10';
+const APP_VERSION = '12/10-20:15';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
