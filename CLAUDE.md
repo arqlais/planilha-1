@@ -30,6 +30,7 @@ Leia antes de qualquer tarefa. Este repositório é **público**: nunca coloque 
 2. Trabalhe numa **branch separada**, criada a partir de `claude/sharp-gauss-tw16z1` (`git pull --ff-only` antes).
    Nunca faça push direto em `claude/sharp-gauss-tw16z1`: ela é o site no ar.
 3. Teste no navegador (Playwright, já instalado): rode os testes a partir do scratchpad, nunca grave prints dentro do repositório.
+   Ao abrir o site no ar (passosfit.com.br), use o link com `?claude` para o acesso aparecer como "Claude (teste)" em Acessos (o Playwright já é marcado sozinho).
    Mudou `firestore.rules`? Teste as regras no emulador do Firebase antes.
 4. `./bump-version.sh` antes do commit (faz o app avisar que tem versão nova). Commit com descrição em português.
 5. **Abra um PR** para `claude/sharp-gauss-tw16z1`. A descrição **cita a Issue** (`Resolve #12`), explica em linguagem simples
