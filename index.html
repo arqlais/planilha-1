@@ -503,7 +503,11 @@ body.desk .ws[data-active=resumo] [data-tab=resumo]{display:grid;grid-template-c
 body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:14px}
 /* cardio dia a dia (domingo a sábado) */
 .cd-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:16px;text-align:center}
-.cd-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.cd-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer}
+.cd-pick{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.cd-pick button{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:9px 0;font-weight:800;font-size:12.5px;min-width:0}
+.cd-pick button.on{background:var(--acc);color:var(--on-accent,#111);border-color:var(--acc)}
+.cd-hint{display:block;margin-top:8px;color:var(--muted);font-size:12.5px}
 .cd-day b{font-size:13px;line-height:1.1;white-space:nowrap}
 .cd-col{position:relative;width:100%;max-width:34px;height:84px;border-radius:10px;background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
 .cd-col i{position:absolute;left:0;right:0;bottom:0;border-radius:10px;background:var(--acc);transition:height .9s ease-out}
@@ -3207,6 +3211,8 @@ const cardioGoalOf = (p, date) => {
   // dia que já passou com cardio salvo: vale a meta gravada junto com o cardio
   if (date !== today()) { const rec = db.cardio.find(c => c.profileId === p.id && c.date === date && c.goal > 0); if (rec) return rec.goal; }
   const o = datePlan(p, date); if (o && o.skip) return 0; if (o && o.c) return o.c;
+  const cd = cardioDaysOf(p); // dias escolhidos: a meta da semana dividida igual entre eles (60 min em 2 dias = 30 e 30)
+  if (cd) return cd.includes(toDate(date).getDay()) ? cardioShare(p) : 0;
   const b = goalBase(p, date); return (!o && b.wk[toDate(date).getDay()]) || b.daily || 0;
 };
 function cardioGoalHtml(p) {
@@ -3259,6 +3265,16 @@ function cardioGoalHtml(p) {
 // ---------- Meta semanal de cardio (domingo a sábado): 150 min se o professor não definir outra ----------
 const CARDIO_WEEK = 150;
 const cardioWeekGoal = p => p && p.cardioWeek != null ? p.cardioWeek : CARDIO_WEEK;
+const cardioDaysOf = p => p && Array.isArray(p.cardioDays) && p.cardioDays.length && cardioWeekGoal(p) ? p.cardioDays : null;
+const cardioShare = p => { const cd = cardioDaysOf(p); return cd ? Math.round(cardioWeekGoal(p) / cd.length * 100) / 100 : 0; };
+// escolher os dias do cardio (o aluno no app dele; o professor também pode ajustar no perfil do aluno)
+function cardioDaysPickHtml(p) {
+  if (!cardioWeekGoal(p)) return '';
+  const cd = cardioDaysOf(p) || [], n = cd.length;
+  return `<p class="plan-g" style="margin:14px 0 6px">Dias do cardio</p>
+      <div class="cd-pick">${[0, 1, 2, 3, 4, 5, 6].map(d => `<button class="${cd.includes(d) ? 'on' : ''}" data-act="cd-day" data-pid="${p.id}" data-d="${d}" aria-pressed="${cd.includes(d)}">${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d]}</button>`).join('')}</div>
+      <small class="cd-hint">${n ? `<b>${fmtMin(cardioShare(p))} min</b> em cada um dos ${n} dia${n === 1 ? '' : 's'} (${fmtMin(cardioWeekGoal(p))} min ÷ ${n})` : 'Toque nos dias em que vai fazer cardio: a meta da semana é dividida igual entre eles.'}</small>`;
+}
 function cardioWeekOf(p, ref = today()) {
   const ws = sundayOf(ref), we = addDays(ws, 6), goal = cardioWeekGoal(p), done = Math.round(cardioBetween(ws, we, p.id) * 100) / 100;
   return { ws, we, goal, done, left: Math.max(0, Math.round((goal - done) * 100) / 100), pct: goal ? Math.min(100, done / goal * 100) : 0 };
@@ -3278,6 +3294,7 @@ function cardioWeekHtml(p, title) {
       ${w.goal ? `${cardioWeekBar(w)}
       <div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos</span><span>${w.left ? `faltam <b>${fmtMin(w.left)} min</b>` : w.done > w.goal ? `<b>+${fmtMin(Math.round((w.done - w.goal) * 100) / 100)} min</b> além da meta` : 'meta batida'}</span></div>` : ''}
       <div class="goal-txt">${goalTxt}</div>
+      ${cardioDaysPickHtml(p)}
     </section>`;
 }
 // perfil do aluno (Resumo): o cardio feito em cada dia da semana junto com a meta semanal (a meta só muda em Montar)
@@ -3292,13 +3309,15 @@ function cardioDaysHtml(p) {
       ${w.goal ? `${cardioWeekBar(w)}
       <div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos</span><span>${w.left ? `faltam <b>${fmtMin(w.left)} min</b>` : w.done > w.goal ? `<b>+${fmtMin(Math.round((w.done - w.goal) * 100) / 100)} min</b> além da meta` : 'meta batida'}</span></div>`
       : `<div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos na semana</span></div>`}
-      <div class="cd-days">${days.map(x => `<div class="cd-day${x.d === t ? ' today' : ''}${x.d > t ? ' fut' : ''}" title="${weekday(x.d)} ${fmtDate(x.d)}: ${fmtMin(x.min)} min${x.goal ? ` de ${fmtMin(x.goal)}` : ''}">
+      <div class="cd-days">${days.map(x => `<button class="cd-day${x.d === t ? ' today' : ''}${x.d > t ? ' fut' : ''}" data-act="openday" data-d="${x.d}" data-g="${CARDIO}" title="${weekday(x.d)} ${fmtDate(x.d)}: ${fmtMin(x.min)} min${x.goal ? ` de ${fmtMin(x.goal)}` : ''}">
           <b>${x.min ? fmtMin(x.min) : x.d > t ? '' : '0'}</b>
-          <div class="cd-col"><i style="height:${x.min / top * 100}%"></i>${x.goal ? `<span class="cd-goal" style="bottom:${x.goal / top * 100}%"></span>` : ''}</div>
+          <div class="cd-col"><i style="height:${x.min / top * 100}%"></i>${x.goal ? `<span class="cd-goal" style="bottom:${Math.min(94, x.goal / top * 100)}%"></span>` : ''}</div>
           <span class="ok">${x.goal && x.min >= x.goal ? '✓' : '&nbsp;'}</span>
-          <small>${x.d === t ? 'hoje' : weekday(x.d).slice(0, 3)}</small></div>`).join('')}</div>
+          <small>${x.d === t ? 'hoje' : weekday(x.d).slice(0, 3)}</small></button>`).join('')}</div>
       <div class="goal-txt" style="margin-top:10px"><span>Minutos por dia${days.some(x => x.goal) ? ' · tracejado = meta do dia' : ''}</span>
         <span>Meta: <b>${w.goal ? fmtMin(w.goal) + ' min' : 'sem meta'}</b> <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button></span></div>
+      ${cardioDaysPickHtml(p)}
+      <small class="cd-hint">Toque em um dia para ver, corrigir ou marcar o cardio de ${esc(firstName(p))}.</small>
     </section>`;
 }
 // Montar treinos: o único lugar onde o professor vê e troca as metas de cardio (por dia e por semana)
@@ -3392,7 +3411,7 @@ function ctFinish(auto) {
   const prev = db.cardio.filter(c => c.profileId === t.pid && c.date === t.date), had = prev.reduce((a, c) => a + c.min, 0);
   const total = Math.min(300, Math.round((had + min) * 100) / 100), g0 = cardioGoalOf(p, t.date);
   db.cardio = db.cardio.filter(c => !(c.profileId === t.pid && c.date === t.date));
-  db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
+  db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
   save(); render();
   toast(`${auto ? '<i class="ic ic-alarm"></i> Tempo! ' : ''}${modeOf(t.mode)[1]}: ${fmtMin(min)} min salvos${g0 && total >= g0 ? ' · meta de cardio concluída!' : ''}`);
 }
@@ -3413,7 +3432,7 @@ function setCardio(min) {
   const p = profile(ui.profile), mode = ui.mode, g0 = cardioGoalOf(p, ui.date);
   min = Math.min(300, Math.round((min || 0) * 100) / 100);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
-  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(g0 > 0 ? { goal: g0 } : {}), ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...(ui.studentMode ? { by: 'aluno' } : {}) });
   save(); render();
   const goal = cardioGoalOf(p, ui.date);
   if (min > 0 && goal && min >= goal) toast(`Cardio concluído! ${modeOf(mode)[1]} ${fmtMin(min)} min`);
@@ -5992,6 +6011,15 @@ $main.addEventListener('click', e => {
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
       return setCardio(v);
     }
+    case 'cd-day': {
+      const p = profile(b.dataset.pid); if (!p) return;
+      if (cloudRole() === 'student' && p.id !== ui.profile) return;
+      const d = +b.dataset.d, cd = new Set(p.cardioDays || []);
+      cd.has(d) ? cd.delete(d) : cd.add(d);
+      if (cd.size) p.cardioDays = [...cd].sort(); else delete p.cardioDays;
+      save(); render();
+      return toast(cd.size ? `Cardio em ${cd.size} dia${cd.size === 1 ? '' : 's'}: <b>${fmtMin(cardioShare(p))} min</b> por dia` : 'Dias do cardio desmarcados: volta a meta de antes.');
+    }
     case 'goal-montar': ui.profile = b.dataset.pid || ME; return go('montar');
     case 'mg-save': {
       const p = profile(b.dataset.pid); if (!p || ui.studentMode) return;
@@ -6961,6 +6989,7 @@ function assemble(src = remote) {
       (v.cardio || []).forEach(c => d.cardio.push({ ...c, profileId: m[1] }));
     }
   }
+  d.cardio = oneCardioPerDay(d.cardio);
   linkLoose(d, loose); d.exercises.forEach(e => { delete e.loose; });
   d.profiles.forEach(p => { // treinos montados pelo aluno (documento que ele mesmo grava)
     p.workouts = (p.workouts || []).filter(w => !w.own);
@@ -6969,7 +6998,7 @@ function assemble(src = remote) {
     const has = new Set(d.exercises.map(e => e.id));
     (o.exercises || []).forEach(e => { if (!has.has(e.id)) d.exercises.push({ ...e, profileId: p.id, own: true }); });
   });
-  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; delete p.seenAt; delete p.days; delete p.loginEmail; delete p.replies; if (p.id !== ME) delete p.photo; const f = prefs[p.id]; if (f && f.photo && p.id !== ME) p.photo = f.photo; if (f && Array.isArray(f.replies) && f.replies.length) p.replies = f.replies; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; if (f && f.seenAt) p.seenAt = f.seenAt; if (f && f.days) p.days = f.days; if (f && f.email) p.loginEmail = f.email; });
+  d.profiles.forEach(p => { delete p.color; delete p.ctMode; delete p.consultReq; delete p.seen; delete p.seenAt; delete p.days; delete p.cardioDays; delete p.loginEmail; delete p.replies; if (p.id !== ME) delete p.photo; const f = prefs[p.id]; if (f && f.photo && p.id !== ME) p.photo = f.photo; if (f && Array.isArray(f.replies) && f.replies.length) p.replies = f.replies; if (f && f.color) p.color = f.color; if (f && f.ctMode) p.ctMode = f.ctMode; if (f && f.consultReq) p.consultReq = f.consultReq; if (f && f.seen) p.seen = f.seen; if (f && f.seenAt) p.seenAt = f.seenAt; if (f && f.days) p.days = f.days; if (f && Array.isArray(f.cardioDays) && f.cardioDays.length) p.cardioDays = f.cardioDays; if (f && f.email) p.loginEmail = f.email; });
   d.profiles.forEach(p => { delete p.body; if (bodies[p.id] && bodies[p.id].length) p.body = bodies[p.id]; });
   migrate(d);
   if (cloud.role === 'student') d.profiles = d.profiles.filter(p => p.id === cloud.pid);
@@ -6977,11 +7006,22 @@ function assemble(src = remote) {
   if (src === remote && cloud) cloud.trash = trash;
   return d;
 }
+// Aluno tem um só cardio por dia (marcar ou o cronômetro trocam o total do dia). Dois aparelhos salvando ao mesmo
+// tempo deixavam dois registros e o dia somava em dobro (ex.: 20 + 20 = 40): fica só o mais recente.
+function oneCardioPerDay(list) {
+  const keep = new Map(), out = [];
+  for (const c of list) {
+    if (c.profileId === ME) { out.push(c); continue; }
+    const k = c.profileId + '|' + c.date, o = keep.get(k);
+    if (!o || (c.at || '') > (o.at || '') || (!c.at && !o.at && c.min >= o.min)) keep.set(k, c);
+  }
+  return [...out, ...keep.values()];
+}
 // O app (db) dividido nos documentos da nuvem
 function splitDb() {
   const out = new Map(), own = new Set(cloud.role === 'student' ? [cloud.pid] : db.profiles.map(p => p.id));
   if (cloud.role === 'admin') for (const p of db.profiles) {
-    const { id, color, body, ctMode, consultReq, seen, seenAt, days, loginEmail, replies, photo, ...meta } = p;
+    const { id, color, body, ctMode, consultReq, seen, seenAt, days, cardioDays, loginEmail, replies, photo, ...meta } = p;
     if (id === ME && photo) meta.photo = photo;
     // o aluno não lê o perfil do professor: nome e WhatsApp do professor vão na ficha de cada aluno
     if (id !== ME) { const me = profile(ME) || {}; meta.coachName = me.name || null; meta.coachWa = me.wa || null; meta.coachPhoto = me.photo || null; }
@@ -6999,7 +7039,7 @@ function splitDb() {
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
   for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
-  for (const p of db.profiles) if (own.has(p.id) && ((p.id !== ME && p.photo) || p.color || p.ctMode || p.consultReq || p.seen || p.loginEmail || (p.replies && p.replies.length) || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.replies && p.replies.length ? { replies: p.replies } : {}), ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}), ...(p.loginEmail ? { email: p.loginEmail } : {}), ...(p.photo && p.id !== ME ? { photo: p.photo } : {}) });
+  for (const p of db.profiles) if (own.has(p.id) && ((p.id !== ME && p.photo) || p.color || p.ctMode || (p.cardioDays && p.cardioDays.length) || p.consultReq || p.seen || p.loginEmail || (p.replies && p.replies.length) || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.replies && p.replies.length ? { replies: p.replies } : {}), ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}), ...(p.cardioDays && p.cardioDays.length ? { cardioDays: p.cardioDays } : {}), ...(p.loginEmail ? { email: p.loginEmail } : {}), ...(p.photo && p.id !== ME ? { photo: p.photo } : {}) });
   // Treinos que o aluno montou: documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id)) {
     const ws = (p.workouts || []).filter(w => w.own).map(({ own: _o, ...w }) => w), exs = db.exercises.filter(e => e.profileId === p.id && e.own).map(({ profileId, own: _o, ...e }) => e);
@@ -7421,7 +7461,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/10-19:18';
+const APP_VERSION = '12/10-20:10';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
