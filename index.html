@@ -2920,7 +2920,7 @@ function v2PostFile() {
 }
 async function v2SharePost(save) {
   const f = await v2PostFile();
-  if (!save) copyText(appLink()).then(ok => { if (ok) toast('<i class="ic ic-link"></i> Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
+  if (!save) copyText(appLink() + '?de=ig').then(ok => { if (ok) toast('<i class="ic ic-link"></i> Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
   if (!save && navigator.canShare && navigator.canShare({ files: [f] })) {
     try { await navigator.share({ files: [f], text: `Treino feito ✓ Treine comigo pelo app: ${appLink()}` }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para compartilhar. Use "Salvar".'); }
     return;
@@ -3781,9 +3781,9 @@ document.getElementById('ciSave').onclick = async () => {
   toast('✓ Imagem salva. Agora é só postar no Instagram.');
 };
 document.getElementById('ciShare').onclick = async () => {
-  const f = await checkinFile(), text = `Treino feito ✓ Treino pelo app: ${appLink()}`;
+  const f = await checkinFile(), text = `Treino feito ✓ Treino pelo app: ${appLink()}?de=ig`;
   // o link fica copiado: no Instagram é só usar o adesivo "Link" e colar
-  copyText(appLink()).then(ok => { if (ok) toast('<i class="ic ic-link"></i> Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
+  copyText(appLink() + '?de=ig').then(ok => { if (ok) toast('<i class="ic ic-link"></i> Link do app copiado! No Instagram, use o adesivo <b>Link</b> e cole.'); });
   if (navigator.canShare && navigator.canShare({ files: [f] })) {
     try { await navigator.share({ files: [f], text }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para compartilhar. Use "Baixar imagem".'); }
   } else document.getElementById('ciSave').click();
@@ -4756,17 +4756,19 @@ function appLinkText(p) {
     : `Oi, ${n}! Este é o link do app PassosFit:\n\n${inviteLink(p)}\n\n1. Toque no link.\n2. Crie sua conta com o seu e-mail e uma senha.\n3. O próprio app vai mostrar como colocar o ícone na tela do seu celular. Depois é só tocar no ícone para abrir.`;
 }
 // Professor: link de primeiro acesso para qualquer pessoa (cria a conta e pede para entrar)
-const signupText = () => `Oi! Este é o link do app PassosFit:\n\n${signupLink()}\n\n1. Toque no link.\n2. O app mostra como colocar o ícone na tela do seu celular. Faça isso primeiro.\n3. Abra o app pelo ícone e crie sua conta com seu nome, e-mail e uma senha.\n4. Pronto! Assim que eu liberar, o app abre sozinho.`;
+const signupText = tag => `Oi! Este é o link do app PassosFit:\n\n${signupLink(tag || 'wa')}\n\n1. Toque no link.\n2. O app mostra como colocar o ícone na tela do seu celular. Faça isso primeiro.\n3. Abra o app pelo ícone e crie sua conta com seu nome, e-mail e uma senha.\n4. Pronto! Assim que eu liberar, o app abre sozinho.`;
 function signupLinkHtml() {
   if (!CLOUD || !cloud) return '';
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Link de primeiro acesso</h3>
       <small>Para qualquer pessoa: ela abre o link, coloca o app na tela do celular e cria a conta. O pedido chega aqui para você aceitar.</small></div></div>
     <p class="note" style="word-break:break-all;margin-top:0">${esc(signupLink())}</p>
-    <div class="actions" style="margin:0"><button class="btn primary" style="flex:1;padding:13px" data-act="send-signup">Enviar link de primeiro acesso</button><button class="btn" style="flex:1;padding:13px" data-act="show-qr">Mostrar QR code</button></div></section>`;
+    <div class="actions" style="margin:0"><button class="btn primary" style="flex:1;padding:13px" data-act="send-signup">Enviar link de primeiro acesso</button><button class="btn" style="flex:1;padding:13px" data-act="show-qr">Mostrar QR code</button></div>
+    <div class="list-row" style="margin-top:12px"><div class="grow"><b>Link para o Instagram</b><small style="display:block;color:var(--muted)">Cole na bio ou nos stories. Em Acessos vai aparecer "veio por: Instagram".</small></div>
+      <button class="btn" data-act="copy-ig">Copiar</button></div></section>`;
 }
 // Professor: QR code em tela cheia para mostrar a quem quer conhecer o app (abre o link de primeiro acesso)
 async function showQr() {
-  const d = document.getElementById('qrDlg'), url = CLOUD ? signupLink() : appLink();
+  const d = document.getElementById('qrDlg'), url = CLOUD ? signupLink('qr') : appLink();
   if (!window.qrcode) await loadScript('vendor/qrcode.js').catch(() => {});
   if (!window.qrcode) return toast('Não deu para gerar o QR code. Abra com internet e tente de novo.');
   const qr = qrcode(0, 'M'); qr.addData(url); qr.make();
@@ -5901,6 +5903,7 @@ $main.addEventListener('click', e => {
     case 'v2-mytreino': ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.v2done = null; return go('treino');
     case 'v2-filter': ui.v2filter = b.dataset.f; return render();
     case 'show-qr': return showQr();
+    case 'copy-ig': return copyText(signupLink('ig')).then(ok => toast(ok ? '<i class="ic ic-link"></i> Link copiado. Cole na bio do Instagram.' : 'Não deu para copiar sozinho: ' + signupLink('ig')));
     case 'v2-signup': copyText(signupLink()).then(ok => toast(ok ? '<i class="ic ic-link"></i> Link de cadastro copiado! Mande para quem quiser usar o app.' : signupLink())); return;
     case 'v2-cal': ui.histDay = b.dataset.d; return render();
     case 'v2-month': { const [yy, mm] = ui.month.split('-').map(Number), d0 = new Date(yy, mm - 1 + +b.dataset.d, 1); ui.month = isoDate(d0).slice(0, 7); ui.histDay = null; return render(); }
@@ -6402,7 +6405,20 @@ const INVITE_KEY = 'planilha-convite';
 // Link de primeiro acesso (para qualquer pessoa): abre já em "Criar conta" e mostra como pôr o app na tela de início
 const NEW_KEY = 'planilha-primeiro-acesso';
 const firstAccess = () => { try { return !!localStorage.getItem(NEW_KEY); } catch (e) { return false; } };
-const signupLink = () => `${location.origin}${location.pathname}?cadastro`;
+function visitSrc(inv) {
+  let tag = '', ref = ''; try { tag = localStorage.getItem(NEW_KEY) || ''; ref = localStorage.getItem(NEW_KEY + '-ref') || ''; } catch (e) {}
+  return SRC_TAG[tag] || (tag ? 'link de primeiro acesso' : inv ? 'convite' : ref || 'direto');
+}
+// marca de onde a pessoa veio (qr, wa, ig): aparece para o professor em Acessos, em "veio por"
+const signupLink = tag => `${location.origin}${location.pathname}?cadastro${tag ? '=' + tag : ''}`;
+const SRC_TAG = { qr: 'QR code', wa: 'WhatsApp', ig: 'Instagram' };
+// sem marca no link: tenta pelo site de onde a pessoa clicou (só o nome do site, nada pessoal)
+function refSrc() {
+  let h = ''; try { h = document.referrer ? new URL(document.referrer).hostname.replace(/^(www|m|l|lm)\./, '') : ''; } catch (e) {}
+  if (!h || h === location.hostname) return '';
+  const known = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['whatsapp', 'WhatsApp'], ['google', 'Google'], ['tiktok', 'TikTok'], ['youtube', 'YouTube']].find(([k]) => h.includes(k));
+  return known ? known[1] : ('site ' + h).slice(0, 40);
+}
 // JSON com chaves em ordem fixa, para comparar o que está na nuvem com o que está no app
 const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x)
   ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
@@ -6415,7 +6431,8 @@ function loadScript(src) {
 async function cloudBoot() {
   const inv = new URLSearchParams(location.search).get('convite');
   if (inv) { try { localStorage.setItem(INVITE_KEY, inv.trim()); } catch (e) {} history.replaceState(null, '', location.pathname); }
-  if (new URLSearchParams(location.search).has('cadastro')) { try { localStorage.setItem(NEW_KEY, '1'); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  if (new URLSearchParams(location.search).has('cadastro')) { const tag = new URLSearchParams(location.search).get('cadastro'); try { localStorage.setItem(NEW_KEY, SRC_TAG[tag] ? tag : '1'); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  else { const de = new URLSearchParams(location.search).get('de'), rs = SRC_TAG[de] || refSrc(); if (rs) try { localStorage.setItem(NEW_KEY + '-ref', rs); } catch (e) {} if (de) history.replaceState(null, '', location.pathname); }
   showAuth('loading');
   try { for (const f of ['app', 'auth', 'firestore']) await loadScript(`vendor/firebase/firebase-${f}-compat.js`); }
   catch (e) { return showAuth('login', 'Sem conexão para carregar o app. Tente de novo.'); }
@@ -7247,7 +7264,7 @@ function logVisit(extra) {
   if (!CLOUD || !cloud || !cloud.fs) return;
   const F = firebase.firestore.FieldValue, now = new Date().toISOString();
   let first = false; try { first = !localStorage.getItem(VISIT_KEY + '-1a'); localStorage.setItem(VISIT_KEY + '-1a', '1'); } catch (e) {}
-  const data = { last: now, dev: devKind(), ...(extra || { days: F.arrayUnion(today()), n: F.increment(1), src: logVisit.src || 'direto', ...(first ? { first: now } : {}) }) };
+  const data = { last: now, dev: devKind(), ...(extra || { days: F.arrayUnion(today()), n: F.increment(1), ...(logVisit.src && logVisit.src !== 'direto' ? { src: logVisit.src } : {}), ...(first ? { first: now } : {}) }) };
   cloud.fs.doc('visits/' + visitorId()).set(data, { merge: true }).catch(() => {});
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') markSeen(); });
@@ -7394,7 +7411,7 @@ function showAuth(mode, msg = '') {
   document.getElementById('authOut').hidden = mode !== 'noprofile';
   document.getElementById('authRescue').hidden = !(mode === 'noprofile' && myRescuePids().length && !(cloud && cloud.myRequest)); // se o pedido não foi, dá para mandar o arquivo
   document.getElementById('authMsg').textContent = msg;
-  if ((mode === 'signup' || mode === 'login') && !logVisit.done) { logVisit.done = true; logVisit.src = firstAccess() ? 'link de primeiro acesso' : inv ? 'convite' : 'direto'; logVisit(); }
+  if ((mode === 'signup' || mode === 'login') && !logVisit.done) { logVisit.done = true; logVisit.src = visitSrc(inv); logVisit(); }
   // veio pelo link (primeiro acesso ou convite): o guia de pôr na tela de início aparece logo, antes de criar a conta
   if ((mode === 'signup' || mode === 'login') && (firstAccess() || inv) && !showAuth.guided) { showAuth.guided = true; setTimeout(() => { if (authMode !== 'loading') installGuide(false, true); }, 1500); }
   if (mode === 'noprofile') {
@@ -7461,7 +7478,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/10-20:15';
+const APP_VERSION = '12/10-20:21';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
