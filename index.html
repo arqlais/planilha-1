@@ -1775,7 +1775,7 @@ function openSettings() {
   document.getElementById('setVersion').textContent = 'Versão do app: ' + APP_VERSION;
   const me = profile(ME);
   document.getElementById('setGoalBox').innerHTML = !ui.studentMode && me
-    ? `<label class="f">Minha meta de cardio por dia (minutos)<input id="setGoal" inputmode="numeric" placeholder="ex.: 20" value="${me.cardioDaily || ''}"></label>` : '';
+    ? `<p class="hint" style="margin:0 0 14px">Sua meta de cardio fica em <b>Montar</b> (escolha Meu treino).</p>` : '';
   document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', skinAllowed() ? `<div class="skin-row" style="display:flex;align-items:center;gap:10px;margin:0 0 14px"><div class="grow"><b>Visual novo</b><br><small style="color:var(--muted)">Desligar vale só neste aparelho. Os alunos ficam sempre no visual novo.</small></div><button type="button" class="btn ${skinOn() ? 'primary' : ''}" id="skinTgl">${skinOn() ? 'Ligado' : 'Desligado'}</button></div>` : '');
   if (skinAllowed()) document.getElementById('setGoalBox').insertAdjacentHTML('beforeend', `<button type="button" class="btn primary" id="openV2" style="width:100%;margin:0 0 14px;padding:12px"><i class="ic ic-star"></i> Abrir o app novo (prévia com seus dados)</button>`);
   const v2 = document.getElementById('openV2');
@@ -3184,16 +3184,11 @@ function cardioGoalHtml(p) {
         <div class="fill" style="width:${from}%"></div></div>`;
   if (p.id !== ME && !ui.studentMode) return `<section class="card cardio-card">
       <div class="card-h"><div class="grow"><h3>Cardio de ${esc(firstName(p))}</h3>
-        <small>Você define a meta. O tempo feito o aluno anota no app dele, ou você marca por ele aqui.</small></div>
+        <small>O tempo feito o aluno anota no app dele, ou você marca por ele aqui.</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
-      <label class="plan-g" for="goalDaily" style="display:block;margin:4px 0 6px">Meta de cardio (minutos por dia)</label>
-      <div class="actions" style="margin-top:0;align-items:center">
-        <input id="goalDaily" class="time-in" inputmode="decimal" placeholder="ex.: 20" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}"><span class="unit">min</span>
-        <button class="btn primary" data-act="save-goal">Salvar meta</button>
-      </div>
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados${today_.every(c => c.by === 'aluno') ? ' pelo aluno' : ''}` : 'Nenhum cardio marcado neste dia'}</span>
-        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
+        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b> <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button></span></div>
       <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Marcar o cardio por ${esc(firstName(p))} (${ui.date === today() ? 'hoje' : 'dia ' + fmtDate(ui.date)})</label>
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
       <div class="actions" style="margin-top:8px;align-items:center">
@@ -3216,9 +3211,7 @@ function cardioGoalHtml(p) {
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min feitos${timing ? '' : ' <button class="link" data-act="cardio-zero">zerar</button>'}` : 'Nada feito ainda'}</span>
-        ${p.id === ME && !ui.studentMode && ui.goalEdit
-          ? `<span class="goal-edit">Meta <input id="goalDaily" class="time-in sm" inputmode="decimal" placeholder="0" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}" aria-label="Meta em minutos"> min <button class="btn primary sm" data-act="save-goal">OK</button></span>`
-          : `<span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b>${p.id === ME && !ui.studentMode ? ' <button class="link" data-act="goal-edit">alterar</button>' : ''}</span>`}</div>
+        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b>${p.id === ME && !ui.studentMode ? ` <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button>` : ''}</span></div>
       ${ctHtml(p, goal, done)}
     </section>`;
 }
@@ -3235,17 +3228,32 @@ function cardioWeekBar(w, sm) {
     <i style="width:${w.pct}%"></i></div>`;
 }
 function cardioWeekHtml(p, title) {
-  const w = cardioWeekOf(p), coach = !ui.studentMode, edit = coach && ui.wkEdit === p.id;
+  const w = cardioWeekOf(p), coach = !ui.studentMode;
   if (!w.goal && !coach) return '';
-  const goalTxt = edit
-    ? `<span class="goal-edit">Meta <input id="wkGoal" class="time-in sm" inputmode="decimal" placeholder="${CARDIO_WEEK}" value="${fmtMin(w.goal)}" aria-label="Meta da semana em minutos"> min <button class="btn primary sm" data-act="wk-goal-save" data-pid="${p.id}">OK</button></span>`
-    : `<span>Meta: <b>${w.goal ? fmtMin(w.goal) + ' min' : 'sem meta'}</b>${coach ? ` <button class="link" data-act="wk-goal-edit" data-pid="${p.id}">alterar</button>` : ''}</span>`;
+  const goalTxt = `<span>Meta: <b>${w.goal ? fmtMin(w.goal) + ' min' : 'sem meta'}</b>${coach ? ` <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button>` : ''}</span>`;
   return `<section class="card wk-card ${w.goal && w.done >= w.goal ? 'complete' : ''}">
       <div class="card-h"><div class="grow"><h3>${title || 'Meta de cardio da semana'}</h3><small>${rangeLabel(w.ws, w.we)} · domingo a sábado</small></div>
         ${w.goal && w.done >= w.goal ? '<span class="pill up">✓ Meta cumprida</span>' : ''}</div>
       ${w.goal ? `${cardioWeekBar(w)}
       <div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos</span><span>${w.left ? `faltam <b>${fmtMin(w.left)} min</b>` : w.done > w.goal ? `<b>+${fmtMin(Math.round((w.done - w.goal) * 100) / 100)} min</b> além da meta` : 'meta batida'}</span></div>` : ''}
       <div class="goal-txt">${goalTxt}</div>
+    </section>`;
+}
+// Montar treinos: o único lugar onde o professor vê e troca as metas de cardio (por dia e por semana)
+function cardioGoalsMontarHtml(p) {
+  const w = cardioWeekOf(p), past = [1, 2, 3].map(k => cardioWeekOf(p, addDays(w.ws, -7 * k)));
+  return `<section class="card wk-card">
+      <div class="card-h"><div class="grow"><h3>Metas de cardio${p.id === ME ? ' (suas)' : ` de ${esc(firstName(p))}`}</h3>
+        <small>É só aqui que você muda as metas. ${p.id === ME ? 'A barra aparece no seu painel.' : 'O aluno vê a barra no painel dele.'}</small></div></div>
+      <div class="goal-set"><label for="mgDay"><b>Por dia</b><small>minutos em cada dia (vazio = sem meta por dia)</small></label>
+        <input id="mgDay" class="time-in" inputmode="decimal" placeholder="—" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}"><span class="unit">min</span></div>
+      <div class="goal-set"><label for="mgWeek"><b>Por semana</b><small>domingo a sábado (vazio = ${CARDIO_WEEK}; 0 = sem meta)</small></label>
+        <input id="mgWeek" class="time-in" inputmode="decimal" placeholder="${CARDIO_WEEK}" value="${p.cardioWeek != null ? fmtMin(p.cardioWeek) : ''}"><span class="unit">min</span></div>
+      <button class="btn primary" data-act="mg-save" data-pid="${p.id}">Salvar metas</button>
+      ${w.goal ? `<p class="plan-g" style="margin:16px 0 0">Esta semana · ${rangeLabel(w.ws, w.we)}</p>${cardioWeekBar(w)}
+      <div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos</span><span>${w.left ? `faltam <b>${fmtMin(w.left)} min</b>` : '✓ meta batida'}</span></div>
+      <p class="plan-g" style="margin:14px 0 4px">Semanas anteriores</p>
+      ${past.map(x => `<div class="wk-rt" style="margin-top:8px"><small style="color:var(--text)">${rangeLabel(x.ws, x.we)}</small><small>${fmtMin(x.done)} de ${fmtMin(x.goal)} min${x.done >= x.goal ? ' ✓' : ''}</small></div>${cardioWeekBar(x, true)}`).join('')}` : ''}
     </section>`;
 }
 // painel do professor: cada aluno com a barrinha da semana (quem está mais longe da meta aparece primeiro)
@@ -4990,6 +4998,7 @@ function renderMontar() {
       <label class="f" style="max-width:420px;margin:0">De quem é o treino<select class="sel" id="bWho"><option value="${ME}" ${p.id === ME ? 'selected' : ''}>Meu treino (${esc(profile(ME).name)})</option>
         ${students.map(x => `<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
       ${p.id !== ME ? `<div class="actions"><button class="btn" data-act="desk-pick" data-pid="${p.id}" data-t="plano">Planejar semanas de ${esc(firstName(p))}</button></div>` : ''}</section>
+    ${cardioGoalsMontarHtml(p)}
     ${builderHtml(p.id)}`;
 }
 // grava a mudança e redesenha mantendo o cursor no campo em que a pessoa estava
@@ -5358,9 +5367,7 @@ function perfilHtml(p, desk) {
     <section class="card">
       <div class="card-h"><div class="grow"><h3><i class="ic ic-cal"></i> Divisão da semana</h3>
         <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
-      <div class="goal-set"><label for="goalDaily"><b>Meta de cardio</b><small>minutos por dia, vale todos os dias</small></label>
-        <input id="goalDaily" class="time-in" inputmode="decimal" placeholder="ex.: 20" value="${p.cardioDaily ? fmtMin(p.cardioDaily) : ''}"><span class="unit">min</span>
-        <button class="btn primary" data-act="save-goal">Salvar</button></div>
+      <p class="hint" style="margin:0 0 4px"><b>Metas de cardio:</b> ${p.cardioDaily ? `${fmtMin(p.cardioDaily)} min por dia · ` : ''}${cardioWeekGoal(p) ? `${fmtMin(cardioWeekGoal(p))} min por semana` : 'sem meta semanal'} · <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button></p>
       <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => planLabel(x, p.id)).join(' + ') : 'descanso'}${cardioGoalOf(p, today()) ? ` · cardio ${fmtMin(cardioGoalOf(p, today()))} min` : ''}</p>
       ${division}
     </section></div>
@@ -5893,31 +5900,22 @@ $main.addEventListener('click', e => {
       confirmAsk('Apagar esta avaliação?', 'As medidas desta data serão apagadas.').then(ok => { if (!ok) return; p.body = (p.body || []).filter(e => e.id !== b.dataset.id); save(); render(); });
       return;
     }
-    case 'save-goal': {
-      ui.goalEdit = false;
-      const p = profile(ui.profile), v = parseNum(document.getElementById('goalDaily').value);
-      changeGoals(p, () => { if (v > 0) p.cardioDaily = Math.min(300, Math.round(v * 100) / 100); else delete p.cardioDaily; });
-      save(); render();
-      return toast(v > 0 ? `Meta de cardio de ${esc(firstName(p))}: <b>${fmtMin(p.cardioDaily)} min</b> por dia` : 'Meta de cardio removida');
-    }
     case 'cardio-save': {
       if (cardioLocked()) return toast(cardioLockMsg());
       const v = parseNum(document.getElementById('cardioDone').value);
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
       return setCardio(v);
     }
-    case 'wk-goal-edit': ui.wkEdit = b.dataset.pid; render(); { const i = document.getElementById('wkGoal'); if (i) { i.focus(); i.select(); } } return;
-    case 'wk-goal-save': {
-      if (ui.studentMode) return;
-      const p = profile(b.dataset.pid), raw = document.getElementById('wkGoal').value.trim(), v = parseNum(raw);
-      ui.wkEdit = null;
-      if (!p) return render();
-      if (raw === '') delete p.cardioWeek; else p.cardioWeek = Math.max(0, Math.min(3000, Math.round((v || 0) * 100) / 100));
+    case 'goal-montar': ui.profile = b.dataset.pid || ME; return go('montar');
+    case 'mg-save': {
+      const p = profile(b.dataset.pid); if (!p || ui.studentMode) return;
+      const d = parseNum(document.getElementById('mgDay').value), wr = document.getElementById('mgWeek').value.trim(), wv = parseNum(wr);
+      const nd = d > 0 ? Math.min(300, Math.round(d * 100) / 100) : 0;
+      if (nd !== (p.cardioDaily || 0)) changeGoals(p, () => { if (nd) p.cardioDaily = nd; else delete p.cardioDaily; });
+      if (wr === '') delete p.cardioWeek; else p.cardioWeek = Math.max(0, Math.min(3000, Math.round((wv || 0) * 100) / 100));
       save(); render();
-      const g = cardioWeekGoal(p);
-      return toast(g ? `Meta de cardio da semana${p.id === ME ? '' : ` de ${esc(firstName(p))}`}: <b>${fmtMin(g)} min</b>` : 'Meta de cardio da semana removida');
+      return toast(`Metas salvas${p.id === ME ? '' : ` para ${esc(firstName(p))}`}: <b>${p.cardioDaily ? fmtMin(p.cardioDaily) + ' min/dia · ' : ''}${cardioWeekGoal(p) ? fmtMin(cardioWeekGoal(p)) + ' min/semana' : 'sem meta semanal'}</b>`);
     }
-    case 'goal-edit': ui.goalEdit = true; render(); { const i = document.getElementById('goalDaily'); if (i) i.focus(); } return;
     case 'c-manual': ui.cManual = true; render(); { const i = document.getElementById('cardioDone'); if (i) i.focus(); } return;
     case 'ct-settings': return openSettings();
     case 'ct-dir': ui.ctDir = b.dataset.d; try { localStorage.setItem('planilha-cronometro-modo', ui.ctDir); } catch (e) {} return render();
@@ -7294,7 +7292,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-20:53';
+const APP_VERSION = '11/10-21:06';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
