@@ -152,6 +152,21 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .own-item.on b{background:var(--acc);color:var(--acc-ink)}.own-item.on{font-weight:700}
 .own-save{position:sticky;bottom:84px;margin-top:10px;z-index:5}.own-save .btn{width:100%;padding:15px;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .install-dlg h2{font-size:22px;line-height:1.25}
+/* QR code de apresentação (professor mostra o celular para quem quer conhecer o app) */
+dialog.qr-dlg,:root[data-skin="v2"] dialog.qr-dlg{width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;border-radius:0;padding:max(20px,env(safe-area-inset-top)) 22px max(20px,env(safe-area-inset-bottom));background:#fff;color:#0b1430;display:flex;flex-direction:column;align-items:center;text-align:center;overflow:auto}
+dialog.qr-dlg:not([open]){display:none}
+.qr-dlg .qr-brand{height:30px;margin:6px 0 14px}
+.qr-dlg h2{font-size:26px;line-height:1.15;margin:0 0 4px;color:#0b1430}
+.qr-dlg .qr-sub{margin:0 0 16px;color:#4a5578;font-size:15px}
+.qr-dlg .qr-box{width:min(78vw,46dvh,340px);aspect-ratio:1;padding:10px;border-radius:22px;border:2px solid #e3e7f2;background:#fff}
+.qr-dlg .qr-box svg{display:block;width:100%;height:100%}
+.qr-dlg .qr-url{margin:10px 0 16px;font-weight:700;font-size:16px;letter-spacing:.2px;color:#0b1430}
+.qr-dlg ul{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:9px;text-align:left;width:min(100%,360px)}
+.qr-dlg li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.35;color:#1d2747}
+.qr-dlg li svg{flex:none;width:20px;height:20px;margin-top:1px;fill:none;stroke:#3a5bff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.qr-dlg .qr-acts{display:flex;gap:10px;width:min(100%,360px);margin-top:auto}
+.qr-dlg .qr-acts .btn{flex:1;padding:13px;border-radius:99px;font-weight:700;font-size:15px;background:#eef1f8!important;color:#0b1430!important;border:0!important;box-shadow:none!important;outline:none}
+.qr-dlg .qr-acts .btn.primary{background:#0b1430!important;color:#fff!important}
 .ig-lead{font-size:17px;margin:0 0 12px}.ig-note{font-size:15px;color:var(--muted);margin:10px 0 0}
 .ig-step{display:flex;gap:12px;align-items:flex-start;margin:0 0 14px;font-size:17px;line-height:1.4}
 .ig-step>span{flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--acc-ink);display:grid;place-items:center;font-weight:800;font-size:18px}
@@ -1230,6 +1245,20 @@ body.desk .v2-navbrand{display:block}
     <button type="button" class="btn ig-big" data-act="install-done">Já coloquei</button>
     <button type="button" class="btn ig-big" data-act="install-later">Agora não</button>
   </div>
+</dialog>
+
+<dialog id="qrDlg" class="qr-dlg">
+  <img class="qr-brand" src="brand/logo-i.svg" alt="PassosFit">
+  <h2>Treine comigo pelo app</h2>
+  <p class="qr-sub">Aponte a câmera do celular para o código</p>
+  <div class="qr-box" id="qrBox" role="img" aria-label="QR code do app PassosFit"></div>
+  <p class="qr-url" id="qrUrl"></p>
+  <ul>
+    <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Seu treino do dia no celular, montado por mim para você</li>
+    <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Mostra os pesos da última vez e marca cada série</li>
+    <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Calendário, evolução e recados direto comigo</li>
+  </ul>
+  <div class="qr-acts"><button type="button" class="btn" data-act="qr-share">Enviar link</button><button type="button" class="btn primary" data-act="qr-close">Fechar</button></div>
 </dialog>
 
 <dialog id="shareDlg">
@@ -2949,7 +2978,8 @@ function renderPainelV2() {
     <button class="v2-feat" data-act="v2-mytreino">${v2Art(myEx ? v2Key(myEx) : 'remada', `<div class="v2-over"><span class="v2-chip">${esc(me.name)}</span></div><div class="v2-ph-title sm"><b>${esc(myPlan.map(g => wName(g, ME)).join(' + ') || (myW ? wName(myW, ME) : 'Meu treino'))}</b><small>Toque para começar · pesos da última vez</small></div><span class="arr">${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>`, 'v2-featph')}</button>
     <div class="v2-sec"><h3>Atalhos</h3></div>
     <div class="v2-tiles"><button class="v2-tile sur" data-act="add-student">${v2Ico('<path d="M12 5v14M5 12h14"/>')}<b class="md">Novo aluno</b></button>
-      <button class="v2-tile sur" data-act="v2-signup">${v2Ico('<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17.5 9a4 4 0 0 1 0 6"/>')}<b class="md">Link de cadastro</b></button></div>
+      <button class="v2-tile sur" data-act="v2-signup">${v2Ico('<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17.5 9a4 4 0 0 1 0 6"/>')}<b class="md">Link de cadastro</b></button>
+      <button class="v2-tile sur" data-act="show-qr" style="grid-column:1/-1">${v2Ico('<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2v2M18 14h2"/>')}<b class="md">QR code do app</b></button></div>
     </div></div>
     ${v2Sign()}`;
   PFA.start();
@@ -4680,8 +4710,29 @@ function signupLinkHtml() {
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Link de primeiro acesso</h3>
       <small>Para qualquer pessoa: ela abre o link, coloca o app na tela do celular e cria a conta. O pedido chega aqui para você aceitar.</small></div></div>
     <p class="note" style="word-break:break-all;margin-top:0">${esc(signupLink())}</p>
-    <button class="btn primary" style="width:100%;padding:13px" data-act="send-signup">Enviar link de primeiro acesso</button></section>`;
+    <div class="actions" style="margin:0"><button class="btn primary" style="flex:1;padding:13px" data-act="send-signup">Enviar link de primeiro acesso</button><button class="btn" style="flex:1;padding:13px" data-act="show-qr">Mostrar QR code</button></div></section>`;
 }
+// Professor: QR code em tela cheia para mostrar a quem quer conhecer o app (abre o link de primeiro acesso)
+async function showQr() {
+  const d = document.getElementById('qrDlg'), url = CLOUD ? signupLink() : appLink();
+  if (!window.qrcode) await loadScript('vendor/qrcode.js').catch(() => {});
+  if (!window.qrcode) return toast('Não deu para gerar o QR code. Abra com internet e tente de novo.');
+  const qr = qrcode(0, 'M'); qr.addData(url); qr.make();
+  const n = qr.getModuleCount(), m = 2;
+  let path = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) path += `M${c + m} ${r + m}h1v1h-1z`;
+  document.getElementById('qrBox').innerHTML = `<svg viewBox="0 0 ${n + 2 * m} ${n + 2 * m}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${path}" fill="#0b1430"/></svg>`;
+  document.getElementById('qrUrl').textContent = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  d.showModal();
+  try { if (navigator.wakeLock) d._wl = await navigator.wakeLock.request('screen'); } catch (e) {} // a tela não apaga enquanto mostra
+}
+document.getElementById('qrDlg').addEventListener('click', e => {
+  const a = e.target.closest('[data-act]'), d = document.getElementById('qrDlg'); if (!a) return;
+  e.stopPropagation();
+  if (a.dataset.act === 'qr-close') d.close();
+  if (a.dataset.act === 'qr-share') { d.close(); shareMsg('Link de primeiro acesso', CLOUD ? signupText() : appLink()); }
+});
+document.getElementById('qrDlg').addEventListener('close', e => { const d = e.target; if (d._wl) { d._wl.release().catch(() => {}); d._wl = null; } });
 // Professor: conta do aluno (tirar o acesso ao app ou excluir)
 function studentAccountHtml(p) {
   if (p.test) return '';
@@ -5796,6 +5847,7 @@ $main.addEventListener('click', e => {
     case 'v2-save': return v2SharePost(true);
     case 'v2-mytreino': ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.v2done = null; return go('treino');
     case 'v2-filter': ui.v2filter = b.dataset.f; return render();
+    case 'show-qr': return showQr();
     case 'v2-signup': copyText(signupLink()).then(ok => toast(ok ? '<i class="ic ic-link"></i> Link de cadastro copiado! Mande para quem quiser usar o app.' : signupLink())); return;
     case 'v2-cal': ui.histDay = b.dataset.d; return render();
     case 'v2-month': { const [yy, mm] = ui.month.split('-').map(Number), d0 = new Date(yy, mm - 1 + +b.dataset.d, 1); ui.month = isoDate(d0).slice(0, 7); ui.histDay = null; return render(); }
@@ -7292,7 +7344,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/10-21:06';
+const APP_VERSION = '12/10-13:56';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
