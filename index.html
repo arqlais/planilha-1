@@ -499,8 +499,19 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .ws[data-active=resumo] [data-tab=resumo],.ws[data-active=montar] [data-tab=montar],.ws[data-active=plano] [data-tab=plano],.ws[data-active=marcacoes] [data-tab=marcacoes],
 .ws[data-active=medidas] [data-tab=medidas],.ws[data-active=mensagens] [data-tab=mensagens],.ws[data-active=pagamento] [data-tab=pagamento]{display:block}
 /* Resumo em duas colunas que se encaixam (sem buracos entre os cartões) */
-body.desk .ws[data-active=resumo] [data-tab=resumo]{columns:2;column-gap:14px}
-body.desk .ws[data-active=resumo] [data-tab=resumo] > section{margin-top:0;margin-bottom:14px;break-inside:avoid;display:inline-block;width:100%}
+body.desk .ws[data-active=resumo] [data-tab=resumo]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
+body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:14px}
+/* cardio dia a dia (domingo a sábado) */
+.cd-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:16px;text-align:center}
+.cd-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.cd-day b{font-size:13px;line-height:1.1;white-space:nowrap}
+.cd-col{position:relative;width:100%;max-width:34px;height:84px;border-radius:10px;background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.cd-col i{position:absolute;left:0;right:0;bottom:0;border-radius:10px;background:var(--acc);transition:height .9s ease-out}
+.cd-col .cd-goal{position:absolute;left:3px;right:3px;border-top:2px dashed var(--muted);opacity:.7}
+.cd-day small{font-size:11.5px;color:var(--muted);text-transform:capitalize}
+.cd-day.today small{color:var(--text);font-weight:800}.cd-day.today .cd-col{box-shadow:inset 0 0 0 2px var(--acc)}
+.cd-day.fut{opacity:.45}
+.cd-day .ok{color:var(--up);font-size:12px;line-height:1}
 /* ---- montar treino ---- */
 .bt-wrap{overflow-x:auto;margin:0 -4px}
 table.bt{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;table-layout:fixed;min-width:760px}
@@ -3269,6 +3280,27 @@ function cardioWeekHtml(p, title) {
       <div class="goal-txt">${goalTxt}</div>
     </section>`;
 }
+// perfil do aluno (Resumo): o cardio feito em cada dia da semana junto com a meta semanal (a meta só muda em Montar)
+function cardioDaysHtml(p) {
+  const w = cardioWeekOf(p), t = today();
+  const days = [0, 1, 2, 3, 4, 5, 6].map(k => { const d = addDays(w.ws, k); return { d, min: Math.round(cardioBetween(d, d, p.id) * 100) / 100, goal: cardioGoalOf(p, d) }; });
+  const top = Math.max(1, ...days.map(x => Math.max(x.min, x.goal)));
+  const met = w.goal && w.done >= w.goal;
+  return `<section class="card wk-card ${met ? 'complete' : ''}">
+      <div class="card-h"><div class="grow"><h3>Cardio da semana</h3><small>${rangeLabel(w.ws, w.we)} · domingo a sábado</small></div>
+        ${met ? '<span class="pill up">✓ Meta cumprida</span>' : ''}</div>
+      ${w.goal ? `${cardioWeekBar(w)}
+      <div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos</span><span>${w.left ? `faltam <b>${fmtMin(w.left)} min</b>` : w.done > w.goal ? `<b>+${fmtMin(Math.round((w.done - w.goal) * 100) / 100)} min</b> além da meta` : 'meta batida'}</span></div>`
+      : `<div class="wk-txt"><span><b>${fmtMin(w.done)} min</b> feitos na semana</span></div>`}
+      <div class="cd-days">${days.map(x => `<div class="cd-day${x.d === t ? ' today' : ''}${x.d > t ? ' fut' : ''}" title="${weekday(x.d)} ${fmtDate(x.d)}: ${fmtMin(x.min)} min${x.goal ? ` de ${fmtMin(x.goal)}` : ''}">
+          <b>${x.min ? fmtMin(x.min) : x.d > t ? '' : '0'}</b>
+          <div class="cd-col"><i style="height:${x.min / top * 100}%"></i>${x.goal ? `<span class="cd-goal" style="bottom:${x.goal / top * 100}%"></span>` : ''}</div>
+          <span class="ok">${x.goal && x.min >= x.goal ? '✓' : '&nbsp;'}</span>
+          <small>${x.d === t ? 'hoje' : weekday(x.d).slice(0, 3)}</small></div>`).join('')}</div>
+      <div class="goal-txt" style="margin-top:10px"><span>Minutos por dia${days.some(x => x.goal) ? ' · tracejado = meta do dia' : ''}</span>
+        <span>Meta: <b>${w.goal ? fmtMin(w.goal) + ' min' : 'sem meta'}</b> <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button></span></div>
+    </section>`;
+}
 // Montar treinos: o único lugar onde o professor vê e troca as metas de cardio (por dia e por semana)
 function cardioGoalsMontarHtml(p) {
   const w = cardioWeekOf(p), past = [1, 2, 3].map(k => cardioWeekOf(p, addDays(w.ws, -7 * k)));
@@ -5393,7 +5425,7 @@ function perfilHtml(p, desk) {
       </div>
     </section>
     ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test ? '' : readyBtn(p)}</div>` : ''}
-    <div data-tab="resumo">${weekReportHtml(p)}${weekSetsHtml(p)}
+    <div data-tab="resumo"><div class="rs-col">${weekReportHtml(p)}${weekSetsHtml(p)}${cardioDaysHtml(p)}</div><div class="rs-col">
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
@@ -5412,7 +5444,7 @@ function perfilHtml(p, desk) {
     </section>
     ${inviteHtml(p)}
     ${studentAccountHtml(p)}
-    ${noHist ? '' : histImportHtml(p)}</div>
+    ${noHist ? '' : histImportHtml(p)}</div></div>
     <div data-tab="medidas">${bodySummaryHtml(p)}</div>
     <div data-tab="marcacoes">${marcacoesHtml(p)}</div>
     <div data-tab="plano">${plannerHtml(p)}
@@ -7389,7 +7421,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/10-19:03';
+const APP_VERSION = '12/10-19:18';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
