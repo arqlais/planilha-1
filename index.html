@@ -3026,7 +3026,7 @@ function renderAjustesV2() {
     <section class="card" style="margin-top:14px">
       <div class="card-h"><div class="grow"><h3>Backup</h3>
         <small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou importe um backup.' : 'Os dados ficam salvos neste aparelho. Exporte de vez em quando para não perder nada.'}</small></div></div>
-      <div class="actions"><button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button><label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
+      <div class="actions"><button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button><label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label><button class="btn" data-act="export-claude"><i class="ic ic-chat"></i> Enviar treinos para o Claude</button></div>${backupsHtml()}</section>
     ${trashHtml()}
     ${accountHtml()}
     ${v2Sign()}`;
@@ -4498,6 +4498,7 @@ function renderAlunos() {
       <div class="actions">
         <button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button>
         <label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label>
+        <button class="btn" data-act="export-claude"><i class="ic ic-chat"></i> Enviar treinos para o Claude</button>
       </div>${backupsHtml()}</section>
     ${trashHtml()}
     ${accountHtml()}`;
@@ -4989,7 +4990,7 @@ function renderAlunosDesk() {
           <div><b>${real.filter(p => profileSummary(p.id).weekDays > 0).length}</b><span>ativos na semana</span></div>
           <div><b>${real.filter(p => (payStatus(p, ym) || {}).k === 'late').length}</b><span>pagamentos atrasados</span></div></div></section>
       <section class="card"><div class="card-h"><div class="grow"><h3>Backup</h3><small>${CLOUD ? 'Tudo fica salvo na nuvem. Se quiser, guarde uma cópia ou restaure um backup.' : 'Exporte de vez em quando para não perder nada.'}</small></div></div>
-        <div class="actions"><button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button><label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label></div>${backupsHtml()}</section>
+        <div class="actions"><button class="btn" data-act="export"><i class="ic ic-down"></i> Exportar</button><label class="btn"><i class="ic ic-up"></i> Restaurar backup<input type="file" id="importFile" hidden></label><button class="btn" data-act="export-claude"><i class="ic ic-chat"></i> Enviar treinos para o Claude</button></div>${backupsHtml()}</section>
       ${trashHtml()}
       ${accountHtml()}`}
     </section></div>`;
@@ -5642,6 +5643,7 @@ $main.addEventListener('click', e => {
   switch (act) {
     case 'new': return openDialog(null);
     case 'export': return exportData();
+    case 'export-claude': return exportForClaude();
     case 'test-profile': return openTestProfile();
     case 'acc-p': ui.accP = +b.dataset.p; return render();
     case 'acc-reset': {
@@ -6172,6 +6174,49 @@ async function exportData() {
   a.download = filename;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+// Treinos de todos os alunos num arquivo só, para o professor mandar ao Claude.
+// Cada aluno vai no mesmo formato do "historico-aluno" (sem histórico de séries): o arquivo de um aluno volta para o app pelo Importar.
+function claudeFile() {
+  const DIAS = Object.fromEntries(WEEK.map(([k, n]) => [k, n]));
+  const alunos = db.profiles.filter(p => p.id !== ME && !p.test).map(p => {
+    const ws = workoutsOf(p.id), nm = id => id === CARDIO ? CARDIO : (ws.find(w => w.id === id) || {}).name;
+    const exs = [];
+    const workouts = ws.map(w => {
+      const list = letterExs(w.id, p.id);
+      exs.push(...list);
+      return { name: w.name, ...(w.hold ? { hold: true } : {}), exercises: list.map(e => e.name) };
+    });
+    const division = {};
+    Object.entries(p.division || {}).forEach(([d, ids]) => { const n = (ids || []).map(nm).filter(Boolean); if (n.length) division[d] = n; });
+    return {
+      kind: 'historico-aluno', aluno: p.name, ...(p.goal ? { objetivo: p.goal } : {}), ...(p.notes ? { observacoes: p.notes } : {}),
+      sessions: [], workouts, division,
+      divisao_por_dia: Object.fromEntries(WEEK.filter(([k]) => division[k]).map(([k]) => [DIAS[k], division[k]])),
+      cardio: { meta_diaria_min: p.cardioDaily || 0, meta_semana_min: p.cardioWeek ?? null, meta_por_dia_min: p.cardioGoal || {} },
+      exercises: exs.map(e => {
+        const last = exHistory(e.id).pop();
+        return { name: e.name, group: e.group, sets: (e.sets || []).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })),
+          ...(e.note ? { note: e.note } : {}), ...(e.noLoad ? { noLoad: true } : {}),
+          ...(last ? { ultimo_treino: { date: last.date, sets: last.sets.filter(x => x.done).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })) } } : {}) };
+      }),
+    };
+  });
+  return { kind: 'treinos-alunos', at: today(), alunos };
+}
+async function exportForClaude() {
+  if (CLOUD) { toast('Juntando os treinos dos alunos…'); await ensureFullAll(); }
+  const d = claudeFile();
+  if (!d.alunos.length) return toast('Ainda não há alunos para enviar.');
+  const name = `treinos-alunos-${today()}.json`, json = JSON.stringify(d, null, 1);
+  const f = new File([json], name, { type: 'application/json' });
+  // No celular abre o menu de compartilhar (dá para mandar direto para o Claude); senão baixa o arquivo
+  if (navigator.canShare && navigator.canShare({ files: [f] })) {
+    try { await navigator.share({ files: [f], title: 'Treinos dos alunos' }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  downloadText(name, json);
+  toast(`Arquivo <b>${name}</b> baixado com os treinos de ${d.alunos.length} aluno${d.alunos.length === 1 ? '' : 's'}. Mande ele na conversa com o Claude.`);
 }
 // Importar histórico de um aluno (arquivo preparado a partir da planilha antiga). Junta sem apagar nada.
 function importHistory(file) {
@@ -7344,7 +7389,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/10-13:59';
+const APP_VERSION = '12/10-19:03';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
