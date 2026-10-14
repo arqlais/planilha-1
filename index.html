@@ -6418,13 +6418,17 @@ const NEW_KEY = 'planilha-primeiro-acesso';
 const firstAccess = () => { try { return !!localStorage.getItem(NEW_KEY); } catch (e) { return false; } };
 function visitSrc(inv) {
   let tag = '', ref = ''; try { tag = localStorage.getItem(NEW_KEY) || ''; ref = localStorage.getItem(NEW_KEY + '-ref') || ''; } catch (e) {}
-  return SRC_TAG[tag] || (tag ? 'link de primeiro acesso' : inv ? 'convite' : ref || 'direto');
+  return SRC_TAG[tag] || (tag ? ref || 'link de primeiro acesso' : inv ? 'convite' : ref || 'direto');
 }
 // marca de onde a pessoa veio (qr, wa, ig): aparece para o professor em Acessos, em "veio por"
 const signupLink = tag => `${location.origin}${location.pathname}?cadastro${tag ? '=' + tag : ''}`;
 const SRC_TAG = { qr: 'QR code', wa: 'WhatsApp', ig: 'Instagram' };
 // sem marca no link: tenta pelo site de onde a pessoa clicou (só o nome do site, nada pessoal)
 function refSrc() {
+  // navegador de dentro do app (Instagram/Facebook): muitas vezes não diz o site de origem, mas se identifica
+  const ua = navigator.userAgent;
+  if (/Instagram/i.test(ua)) return 'Instagram';
+  if (/FBAN|FBAV|FB_IAB/.test(ua)) return 'Facebook';
   let h = ''; try { h = document.referrer ? new URL(document.referrer).hostname.replace(/^(www|m|l|lm)\./, '') : ''; } catch (e) {}
   if (!h || h === location.hostname) return '';
   const known = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['whatsapp', 'WhatsApp'], ['google', 'Google'], ['tiktok', 'TikTok'], ['youtube', 'YouTube']].find(([k]) => h.includes(k));
@@ -6443,7 +6447,7 @@ async function cloudBoot() {
   const inv = new URLSearchParams(location.search).get('convite');
   if (inv) { try { localStorage.setItem(INVITE_KEY, inv.trim()); } catch (e) {} history.replaceState(null, '', location.pathname); }
   if (new URLSearchParams(location.search).has('cadastro')) { const tag = new URLSearchParams(location.search).get('cadastro'); try { localStorage.setItem(NEW_KEY, SRC_TAG[tag] ? tag : '1'); } catch (e) {} history.replaceState(null, '', location.pathname); }
-  else { const de = new URLSearchParams(location.search).get('de'), rs = SRC_TAG[de] || refSrc(); if (rs) try { localStorage.setItem(NEW_KEY + '-ref', rs); } catch (e) {} if (de) history.replaceState(null, '', location.pathname); }
+  { const de = new URLSearchParams(location.search).get('de'), rs = SRC_TAG[de] || refSrc(); if (rs) try { localStorage.setItem(NEW_KEY + '-ref', rs); } catch (e) {} if (de) history.replaceState(null, '', location.pathname); }
   showAuth('loading');
   try { for (const f of ['app', 'auth', 'firestore']) await loadScript(`vendor/firebase/firebase-${f}-compat.js`); }
   catch (e) { return showAuth('login', 'Sem conexão para carregar o app. Tente de novo.'); }
@@ -7491,7 +7495,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-21:39';
+const APP_VERSION = '13/10-21:41';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
