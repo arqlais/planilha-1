@@ -1614,7 +1614,7 @@ const REST_DEFAULT = 120;
 const ME = 'me';
 const MY_NAME = 'Igor Pedro';
 const CARDIO = 'Cardio';
-const MODES = [['corrida', 'Corrida'], ['bicicleta', 'Bicicleta'], ['escada', 'Escada'], ['eliptico', 'Elíptico']];
+const MODES = [['corrida', 'Esteira'], ['bicicleta', 'Bicicleta'], ['escada', 'Escada'], ['eliptico', 'Elíptico']];
 const modeOf = id => MODES.find(m => m[0] === id) || [id, id];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -7682,7 +7682,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-22:46';
+const APP_VERSION = '13/10-23:36';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
