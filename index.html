@@ -517,6 +517,23 @@ body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:1
 .cd-day.fut{opacity:.45}
 .cd-day .ok{color:var(--up);font-size:12px;line-height:1}
 /* ---- montar treino ---- */
+.mm-h{margin:16px 0 8px;font-size:14px}
+.mmap{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--input)}
+.mm-figs{display:flex;gap:6px;flex:0 0 auto}
+.mm-figs figure{margin:0;text-align:center}
+.mm-figs svg{width:min(140px,38vw);height:auto;display:block}
+.mm-figs figcaption{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:2px}
+.mm-base{fill:var(--line)}
+.mm-m{fill:var(--axis);stroke:var(--card);stroke-width:.5;transition:fill .25s}
+.mm-m.mm-l1{fill:var(--acc);fill-opacity:.38}
+.mm-m.mm-l2{fill:var(--acc)}
+.mm-leg{flex:1 1 200px;min-width:0}
+.mm-k{margin:0 0 6px;font-size:12px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:6px}
+.mm-dot{width:10px;height:10px;border-radius:3px;background:var(--acc)}.mm-dot.l1{opacity:.38}
+.mm-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.mm-chips span{font-size:12.5px;padding:3px 9px;border-radius:999px;background:var(--acc-soft);color:var(--text)}
+.mm-chips span b{color:var(--acc);margin-left:2px}
+.mm-chips.soft span{background:transparent;border:1px solid var(--line);color:var(--muted)}
 .bt-wrap{overflow-x:auto;margin:0 -4px}
 table.bt{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;table-layout:fixed;min-width:760px}
 table.bt th{font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);text-align:left;padding:0 4px 6px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -5060,6 +5077,99 @@ function renderAlunosDesk() {
     </section></div>`;
 }
 
+// ---------- Mapa muscular (só no Montar treino do professor): o desenho do corpo acende os músculos que o treino trabalha ----------
+const MUSC = { peito: 'Peito', deltAnt: 'Ombro (frente)', deltLat: 'Ombro (lateral)', deltPost: 'Ombro (posterior)', trap: 'Trapézio', dorsal: 'Dorsal',
+  meio: 'Meio das costas', lombar: 'Lombar', biceps: 'Bíceps', triceps: 'Tríceps', antebraco: 'Antebraço', abdomen: 'Abdômen', obliquo: 'Oblíquos',
+  quad: 'Quadríceps', adutor: 'Adutores', posterior: 'Posteriores da coxa', gluteo: 'Glúteos', gluteoMed: 'Glúteo médio', pant: 'Panturrilha', tibial: 'Tibial' };
+// [regra pelo nome, principais, auxiliares]: vale a primeira que bater (as mais específicas vêm antes)
+const MUSC_RULES = [
+  [/tibial/, 'tibial', ''], [/panturrilha|gemeo|soleo/, 'pant', ''],
+  [/punho/, 'antebraco', ''],
+  [/obliquo|bicicleta|russo|lenhador|pallof|prancha lateral|flexao lateral/, 'obliquo', 'abdomen'],
+  [/perdigueiro|superman|lombar|hiperextensao/, 'lombar', 'gluteo posterior'],
+  [/abdominal|prancha|elevacao de (pernas|joelhos)|dead bug|escalador|roda abdominal|hollow/, 'abdomen', 'obliquo'],
+  [/supino fechado|jm press|mergulho na maquina|mergulho nas paralelas$|diamante|triceps banco/, 'triceps', 'peito deltAnt'],
+  [/tricep|frances|testa|coice(?!.*gluteo)/, 'triceps', ''],
+  [/mergulho/, 'peito triceps', 'deltAnt'],
+  [/martelo|rosca inversa|zottman/, 'biceps antebraco', ''], [/rosca|bicep|scott/, 'biceps', 'antebraco'],
+  [/crucifixo inverso|face pull|rotacao externa/, 'deltPost', 'meio trap'],
+  [/remada alta/, 'deltLat trap', 'biceps'],
+  [/encolhimento/, 'trap', 'antebraco'],
+  [/elevacao lateral/, 'deltLat', 'trap'], [/elevacao frontal|flexao pike/, 'deltAnt', 'deltLat peito'],
+  [/desenvolvimento/, 'deltAnt deltLat', 'triceps trap'],
+  [/pullover|pulldown com corda/, 'dorsal', 'peito triceps'],
+  [/crucifixo|crossover|peck|voador|svend|squeeze/, 'peito', 'deltAnt'],
+  [/supino|chest press|flexao (de braco|inclinada|declinada|com pegada)/, 'peito', 'deltAnt triceps'],
+  [/puxada|pulldown|barra fixa|graviton/, 'dorsal', 'biceps meio deltPost'],
+  [/remada/, 'dorsal meio', 'biceps deltPost trap'],
+  [/terra sumo/, 'gluteo posterior quad adutor', 'lombar'],
+  [/levantamento terra$|^terra$/, 'lombar gluteo posterior', 'quad trap antebraco'],
+  [/stiff|romeno|good morning|pull through|kettlebell|terra/, 'posterior gluteo', 'lombar'],
+  [/flexora|nordica/, 'posterior', 'pant'],
+  [/abdutora|abducao|lateral com elastico|ostra/, 'gluteoMed', 'gluteo'],
+  [/adutora|aducao/, 'adutor', ''],
+  [/sumo/, 'gluteo adutor quad', 'posterior'],
+  [/pelvica|ponte|frog|gluteo|coice/, 'gluteo', 'posterior'],
+  [/extensora|sissy/, 'quad', ''],
+  [/hack|leg press|belt/, 'quad gluteo', 'adutor posterior'],
+  [/afundo|bulgaro|passada|avanco|step up|subida no banco/, 'quad gluteo', 'adutor posterior'],
+  [/agachamento/, 'quad gluteo', 'adutor posterior lombar'],
+];
+// quando o nome não diz (exercício escrito à mão), vale o grupo escolhido
+const MUSC_GROUP = { Peito: ['peito', 'deltAnt triceps'], Costas: ['dorsal meio', 'biceps deltPost'], Ombros: ['deltAnt deltLat', 'trap'], 'Bíceps': ['biceps', 'antebraco'],
+  'Tríceps': ['triceps', ''], 'Abdômen': ['abdomen', 'obliquo'], 'Quadríceps': ['quad', 'gluteo'], Posteriores: ['posterior', 'gluteo'], 'Glúteos': ['gluteo', 'posterior'], Panturrilha: ['pant', ''] };
+const musclesOf = e => {
+  const n = normName(e.name), r = MUSC_RULES.find(x => x[0].test(n)), m = r ? [r[1], r[2]] : MUSC_GROUP[e.group] || ['', ''];
+  const sp = s => s.split(' ').filter(Boolean);
+  return { p: sp(m[0]), s: sp(m[1]).filter(x => !sp(m[0]).includes(x)) };
+};
+// formas do lado esquerdo do desenho (o direito é o espelho); [músculos que acendem a forma, desenho]
+const BODY_F = [
+  ['trap', 'M46 25 C43 29 39 31 35 32.5 L46.5 33 Z'],
+  ['deltAnt deltLat', '<ellipse cx="31.6" cy="40" rx="6.4" ry="8.6" transform="rotate(22 31.6 40)"/>'],
+  ['peito', 'M49.4 33.5 L39 33.5 C34.5 35 33.5 41 35 46.5 C39.5 50 45 50.5 49.4 48.5 Z'],
+  ['biceps', '<ellipse cx="27.5" cy="55.5" rx="4.1" ry="9" transform="rotate(14 27.5 55.5)"/>'],
+  ['antebraco', '<ellipse cx="22.6" cy="74" rx="3.6" ry="10" transform="rotate(16 22.6 74)"/>'],
+  ['obliquo', 'M43.6 51.5 C39.5 52 37 55 36.8 61 C36.6 69 37.6 77 40.6 83.5 L43.6 85.5 Z'],
+  ['abdomen', '<rect x="44.6" y="51.5" width="4.8" height="7.6" rx="1.6"/><rect x="44.6" y="60.2" width="4.8" height="7.6" rx="1.6"/><rect x="44.6" y="68.9" width="4.8" height="7.6" rx="1.6"/><path d="M44.6 77.6 L49.4 77.6 L49.4 90 C47.2 89 45.3 86.5 44.6 83 Z"/>'],
+  ['quad', 'M41.6 86.5 C38 89 35.8 94 35.4 102 C35 116 36.6 129 39.4 139 L45.8 139.5 C47 131 47.6 116 47.2 104 C46.8 96 44.8 90 41.6 86.5 Z'],
+  ['adutor', 'M45.6 90.5 C47.6 92.5 49 94.5 49.4 96 L49.4 101 C48.8 109 48.4 117 47.8 124 C48.2 114 47.8 102 45.6 90.5 Z'],
+  ['pant', '<path d="M38.6 146.5 C36 149 35.4 156 36.2 163 C36.8 167 37.8 169 38.8 169.5 C38.4 162 38.4 153 38.6 146.5 Z"/>'],
+  ['tibial', '<path d="M40 146.5 C42.6 146.5 44.6 148.5 44.6 152 C44.4 158 43.4 165 42.2 170 L40.2 170 C39.6 162 39.4 153 40 146.5 Z"/>'],
+];
+const BODY_B = [
+  ['deltPost deltLat', '<ellipse cx="31.6" cy="40" rx="6.4" ry="8.6" transform="rotate(22 31.6 40)"/>'],
+  ['dorsal', 'M42.5 40 C37.5 40.5 35 44 35.4 51 C36 60 39.5 68 46.5 75 L49.4 73 L49.4 61 L43.5 56 Z'],
+  ['meio', 'M49.4 37.5 L42.8 38.5 L44.4 53.5 L49.4 58 Z'],
+  ['trap', 'M50 22 L50 47 L45.5 37.5 L35.5 33 C40 31 44 28.5 46 24 Z'],
+  ['lombar', 'M46.6 76.5 L49.4 74.5 L49.4 87 L43.6 87 C43.4 83 44.4 79.5 46.6 76.5 Z'],
+  ['triceps', '<ellipse cx="27.5" cy="55.5" rx="4.1" ry="9" transform="rotate(14 27.5 55.5)"/>'],
+  ['antebraco', '<ellipse cx="22.6" cy="74" rx="3.6" ry="10" transform="rotate(16 22.6 74)"/>'],
+  ['gluteoMed', '<ellipse cx="40.4" cy="91.6" rx="3.6" ry="4.4" transform="rotate(-25 40.4 91.6)"/>'],
+  ['gluteo', 'M49.4 89.5 L42.5 89.5 C37.5 91.5 35.8 98 37.2 104 C41 108.5 46 108.8 49.4 106 Z'],
+  ['posterior', 'M47.6 109 C42.5 108 38 110.5 36.8 118 C36.4 127 38 134 40.8 139.5 L46 139.5 C47.8 131 48.4 119 47.6 109 Z'],
+  ['pant', '<path d="M41 146 C37.6 147 36 151.5 36.4 157.5 C36.8 162.5 38.4 167 40.6 170 L43.4 170 C44.8 164 45.6 158 45.2 152.5 C44.8 148.5 43.4 146 41 146 Z"/>'],
+];
+// cabeça, pescoço, mãos, joelhos e pés (não acendem)
+const BODY_BASE = '<ellipse cx="50" cy="13" rx="7.6" ry="9.4"/><path d="M45.6 20 L54.4 20 L55.4 28 L44.6 28 Z"/>'
+  + [0, 1].map(s => `<g${s ? ' transform="matrix(-1 0 0 1 100 0)"' : ''}><circle cx="19.6" cy="88.6" r="3.2"/><ellipse cx="42.4" cy="142.8" rx="4" ry="3.2"/><path d="M38 171 L44 171 L45 176 L35.6 176 Z"/></g>`).join('');
+function muscleMapHtml(exs) {
+  const lv = {}, sets = {}; // 2 = principal, 1 = ajuda
+  exs.forEach(e => { const m = musclesOf(e), n = e.sets.length || 1;
+    m.p.forEach(k => { lv[k] = 2; sets[k] = (sets[k] || 0) + n; }); m.s.forEach(k => { lv[k] = Math.max(lv[k] || 0, 1); }); });
+  const shape = d => d[0] === '<' ? d : `<path d="${d}"/>`;
+  const view = (list, title) => `<figure><svg viewBox="16 0 68 180" role="img" aria-label="${title}">
+    <g class="mm-base">${BODY_BASE}</g>
+    ${list.map(([ks, d]) => { const l = Math.max(0, ...ks.split(' ').map(k => lv[k] || 0));
+      return `<g class="mm-m mm-l${l}">${shape(d)}<g transform="matrix(-1 0 0 1 100 0)">${shape(d)}</g></g>`; }).join('')}
+  </svg><figcaption>${title}</figcaption></figure>`;
+  const main = Object.keys(MUSC).filter(k => lv[k] === 2).sort((a, b) => sets[b] - sets[a]), help = Object.keys(MUSC).filter(k => lv[k] === 1);
+  return `<div class="mmap"><div class="mm-figs">${view(BODY_F, 'Frente')}${view(BODY_B, 'Costas')}</div>
+    <div class="mm-leg">${exs.length ? `<p class="mm-k"><i class="mm-dot l2"></i>Trabalha mais</p><div class="mm-chips">${main.map(k => `<span>${MUSC[k]} <b>${sets[k]}</b></span>`).join('')}</div>
+      ${help.length ? `<p class="mm-k"><i class="mm-dot l1"></i>Ajuda</p><div class="mm-chips soft">${help.map(k => `<span>${MUSC[k]}</span>`).join('')}</div>` : ''}
+      <p class="hint" style="margin:8px 0 0">O número é a quantidade de séries para o músculo.</p>`
+      : '<p class="hint" style="margin:0">Adicione exercícios e o desenho mostra os músculos que o treino trabalha.</p>'}</div></div>`;
+}
 // ---------- Montar treino detalhado ----------
 const METHODS = ['Normal', 'Bi-set', 'Tri-set', 'Drop-set', 'Rest-pause', 'Pirâmide', 'Até a falha', 'Isometria', 'Cluster', 'Excêntrica lenta'];
 const allSame = (sets, f) => sets.length && sets.every(x => x[f] === sets[0][f]) ? sets[0][f] : (sets.length ? 'var' : null);
@@ -5101,6 +5211,7 @@ function builderHtml(pid) {
         <tbody>${rows}</tbody></table></div>
       ${exs.length ? '' : '<p class="empty">Nenhum exercício neste treino ainda.</p>'}
       <button class="add" style="margin-top:8px" data-act="b-add">＋ Adicionar exercício</button>
+      <h4 class="mm-h">Músculos que este treino trabalha</h4>${muscleMapHtml(exs)}
       ${exs.length ? `<button class="btn primary bsave" data-act="b-save">✓ Salvar ${/^treino/i.test(wName(L, pid)) ? '' : 'treino '}${esc(wName(L, pid))}${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}</button>
         ${ui.bSaved && ui.bSaved.pid === pid && ui.bSaved.L === L ? `<p class="bsaved">✓ Salvo às ${ui.bSaved.hora}. Se mudar algo, toque em Salvar de novo.</p>` : ''}` : ''}
       <p class="hint" style="margin:10px 0 0">Reps e Carga valem para todas as séries; para mudar série por série, use <b>▸ séries</b>. Descanso em segundos: o cronômetro do aluno usa esse tempo. O aluno vê a técnica, o descanso e a observação embaixo do nome do exercício.</p>`
@@ -5166,7 +5277,9 @@ function builderChange(t) {
     const nn = v.trim().slice(0, 60); if (!nn || nn === ex.name) return;
     const old = ex.name; ex.name = nn;
     if (!nearName(old, nn) && splitHistory(ex, old)) toast(`<b>${esc(nn)}</b> começa com histórico novo. O histórico de ${esc(old)} continua guardado.`);
-    return bRender(false);
+    bRender(false);
+    const mm = $main.querySelector('.mmap'); if (mm && ex.letter) mm.outerHTML = muscleMapHtml(letterExs(ex.letter, ex.profileId)); // o desenho acompanha o nome novo
+    return;
   }
   if (f === 'group') { ex.group = v; return bRender(true); }
   if (f === 'note') { ex.note = v.trim().slice(0, 200) || undefined; if (!ex.note) delete ex.note; return bRender(false); }
@@ -7495,7 +7608,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-21:41';
+const APP_VERSION = '13/10-21:52';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
