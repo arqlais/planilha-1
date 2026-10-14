@@ -7448,7 +7448,7 @@ function logVisit(extra) {
   if (!CLOUD || !cloud || !cloud.fs) return;
   const F = firebase.firestore.FieldValue, now = new Date().toISOString();
   let first = false; try { first = !localStorage.getItem(VISIT_KEY + '-1a'); localStorage.setItem(VISIT_KEY + '-1a', '1'); } catch (e) {}
-  const data = { last: now, dev: devKind(), ...(extra || { days: F.arrayUnion(today()), n: F.increment(1), ...(logVisit.src && logVisit.src !== 'direto' ? { src: logVisit.src } : {}), ...(first ? { first: now } : {}) }) };
+  const data = { last: now, dev: devKind(), ...(extra || { days: F.arrayUnion(isoDate(new Date()) + ' ' + new Date().toTimeString().slice(0, 5)), n: F.increment(1), ...(logVisit.src && logVisit.src !== 'direto' ? { src: logVisit.src } : {}), ...(first ? { first: now } : {}) }) };
   cloud.fs.doc('visits/' + visitorId()).set(data, { merge: true }).catch(() => {});
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') markSeen(); });
@@ -7467,6 +7467,13 @@ function appUsageHtml() {
 // ---------- Acessos (professor): quem entrou, quem treinou, quem só acessou, pedidos e visitantes ----------
 const whenTxt = iso => { if (!iso) return ''; const d = new Date(iso), day = isoDate(d), hm = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   return `${day === today() ? 'hoje' : day === addDays(today(), -1) ? 'ontem' : fmtDate(day)} ${hm}`; };
+// Visitante: horários das últimas visitas (as antigas só guardavam o dia)
+function visitTimes(v) {
+  const list = (Array.isArray(v.days) ? v.days : []).filter(x => typeof x === 'string' && x.length > 10).sort().reverse().slice(0, 6);
+  if (list.length < 2) return '';
+  const lbl = x => { const [d, hm] = x.split(' '); return `${d === today() ? 'hoje' : d === addDays(today(), -1) ? 'ontem' : fmtDate(d)} ${hm}`; };
+  return `<small style="display:block;color:var(--muted)">visitas: ${list.map(lbl).join(' · ')}</small>`;
+}
 function renderAcessos() {
   const P = ui.accP || 7, t = today(), from = addDays(t, -(P - 1));
   const inP = d => d && d >= from && d <= t;
@@ -7504,7 +7511,8 @@ function renderAcessos() {
       <small style="display:block;color:var(--muted)">${esc(q.email || '')}${q.at ? ' · pediu ' + whenTxt(q.at) : ''}</small></div></div>`))}
     ${cloud && cloud.visits === 'off' ? `<section class="card"><div class="card-h"><div class="grow"><h3>Visitantes sem conta</h3><small>Para ver quem só abriu o link sem criar conta, atualize as regras do Firebase (arquivo firestore.rules).</small></div></div></section>`
       : sec('Visitantes sem conta', 'Abriram o app pelo celular ou computador e não entraram com login', vis.map(v => `<div class="list-row"><div class="grow"><b>Visitante · ${esc(v.dev || 'aparelho')}</b>
-      <small style="display:block;color:var(--muted)">último acesso ${whenTxt(v.last)} · ${v.n || 1} ${(v.n || 1) === 1 ? 'vez' : 'vezes'} · veio por: ${esc(v.src || 'direto')}${v.first ? ' · primeira vez ' + whenTxt(v.first) : ''}</small></div></div>`))}`;
+      <small style="display:block;color:var(--muted)">${v.n || 1} ${(v.n || 1) === 1 ? 'vez' : 'vezes'} · veio por: ${esc(v.src || 'direto')}${v.first ? ' · primeira vez ' + whenTxt(v.first) : ''}</small>${visitTimes(v)}</div>
+      <b style="white-space:nowrap;align-self:flex-start">${whenTxt(v.last)}</b></div>`))}`;
 }
 // Sair sem querer obriga a digitar e-mail e senha de novo: pergunta antes
 function askLogout() { confirmAsk('Sair da conta?', 'Para entrar de novo, vai precisar digitar o e-mail e a senha.', 'Sair').then(ok => { if (ok) logout(); }); }
@@ -7662,7 +7670,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-22:20';
+const APP_VERSION = '13/10-22:22';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
