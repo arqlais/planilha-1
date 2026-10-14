@@ -3598,8 +3598,12 @@ function ctHtml(p, goal, done) {
     setTimeout(ctTick);
     return `<div class="ctimer run">
       <div class="ct-clock" id="ctClock">${mmss(Math.round(show))}</div>
-      <small class="ct-sub">${modeOf(t.mode)[1]} · ${fmtMin(t.dur / 60)} min${t.pausedAt ? ' · <b>pausado</b>' : ''}</small>
-      ${t.stopped ? `<button class="btn primary ct-save" data-act="ct-save">✓ Salvar ${fmtMin(Math.round(el / 60 * 100) / 100)} min feitos</button>
+      <small class="ct-sub">${modeOf(t.mode)[1]} · ${t.free ? (t.goal ? `meta ${fmtMin(t.goal)} min` : 'tempo livre') : `${fmtMin(t.dur / 60)} min`}${t.pausedAt ? ' · <b>pausado</b>' : ''}</small>
+      ${t.free ? `<div class="ct-row" style="justify-content:center">
+        ${t.pausedAt ? '<button class="btn" data-act="ct-resume">Continuar</button>' : '<button class="btn" data-act="ct-pause">Pausar</button>'}
+        <button class="btn primary" data-act="ct-save">✓ Finalizar cardio</button></div>
+      <button class="link ct-x" data-act="ct-cancel">cancelar</button>`
+      : t.stopped ? `<button class="btn primary ct-save" data-act="ct-save">✓ Salvar ${fmtMin(Math.round(el / 60 * 100) / 100)} min feitos</button>
         <div class="ct-row" style="justify-content:center"><button class="btn" data-act="ct-resume">Continuar</button></div>
         <button class="link ct-x" data-act="ct-cancel">descartar</button>`
       : `<div class="ct-row" style="justify-content:center">
@@ -3607,15 +3611,10 @@ function ctHtml(p, goal, done) {
         <button class="btn primary" data-act="ct-stop">Parar</button></div>
       <button class="link ct-x" data-act="ct-cancel">cancelar</button>`}</div>`;
   }
-  const left = goal ? Math.max(0, goal - done) : 0;
-  const min = ui.ctMin || (left >= 1 ? Math.round(left) : goal ? Math.round(goal) : 20), dir = ui.ctDir || ctPref();
+  // tempo livre: começa e finaliza quando quiser (dá para fazer mais que a meta)
   return `<div class="ctimer">
-      <p class="plan-g" style="margin:14px 0 6px">Cronômetro</p>
-      <div class="ct-row"><button class="ct-step" data-act="ct-min" data-d="-5" aria-label="Menos 5 minutos">−</button>
-        <span class="ct-in"><input id="ctMinIn" inputmode="numeric" value="${min}" aria-label="Minutos do cronômetro"> min</span>
-        <button class="ct-step" data-act="ct-min" data-d="5" aria-label="Mais 5 minutos">+</button>
-        <button class="btn primary ct-go" data-act="ct-start" data-min="${min}">▶ Iniciar</button></div>
-      <p class="hint ct-mode">Modo: <b>${dir === 'down' ? 'Regressivo ↓' : 'Progressivo ↑'}</b> <button class="link" data-act="ct-settings">trocar</button></p></div>`;
+      <button class="btn primary ct-go" style="width:100%;padding:14px;font-size:16px;margin-top:14px" data-act="ct-start">▶ ${done ? 'Fazer mais cardio' : 'Começar cardio'}</button>
+      <p class="hint ct-mode" style="text-align:center">O tempo corre até você tocar em <b>Finalizar cardio</b>.${done ? ' Soma com o que já foi feito.' : ''}</p></div>`;
 }
 // atualiza o relógio e a barra sem redesenhar a tela
 function ctTick() {
@@ -6358,9 +6357,7 @@ $main.addEventListener('click', e => {
       if (cardioLocked()) return toast(cardioLockMsg());
       const p = profile(ui.profile), goal = cardioGoalOf(p, ui.date), had = profCardio().filter(c => c.date === ui.date).reduce((a, c) => a + c.min, 0);
       const today_ = profCardio().filter(c => c.date === ui.date), mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
-      const mi = parseNum((document.getElementById('ctMinIn') || {}).value);
-      if (!(mi > 0)) { const i = document.getElementById('ctMinIn'); if (i) i.focus(); return toast('Digite quantos minutos o cronômetro vai marcar.'); }
-      ct = { pid: p.id, date: ui.date, mode, dir: ui.ctDir || ctPref(), dur: Math.round(Math.min(180, mi) * 60), start: Date.now(), paused: 0, base: had, goal: goal || 0, ...stuMark() };
+      ct = { pid: p.id, date: ui.date, mode, dir: 'up', free: true, dur: 240 * 60, start: Date.now(), paused: 0, base: had, goal: goal || 0, ...stuMark() };
       ui.ctMin = null; ctSaveState(); ctWake(); markActivity(ui.date); render(); return;
     }
     case 'ct-pause': if (ct && !ct.pausedAt) { ct.pausedAt = Date.now(); ctSaveState(); } return render();
@@ -7813,7 +7810,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/10-14:08';
+const APP_VERSION = '14/10-14:11';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
