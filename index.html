@@ -76,6 +76,8 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ic-unlock{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%225%22 y=%2211%22 width=%2214%22 height=%2210%22 rx=%222%22/%3E%3Cpath d=%22M8 11V8a4 4 0 0 1 7.5-2%22/%3E%3C/svg%3E")}
 .ic-cam{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 8h3l2-3h6l2 3h3v11H4z%22/%3E%3Ccircle cx=%2212%22 cy=%2213%22 r=%223.5%22/%3E%3C/svg%3E")}
 .ic-img{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%225%22 width=%2218%22 height=%2214%22 rx=%222%22/%3E%3Ccircle cx=%229%22 cy=%2210%22 r=%221.8%22/%3E%3Cpath d=%22M21 16l-5-5-9 8%22/%3E%3C/svg%3E")}
+.ic-stairs{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 20h5v-5h5v-5h5V5h3%22/%3E%3C/svg%3E")}
+.ic-route{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222%22/%3E%3Cpath d=%22M8 19h8a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h8%22/%3E%3C/svg%3E")}
 .ic-eye{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3C/svg%3E")}
 .ic-nonet{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M2 8.5a15 15 0 0 1 5-3M10.5 4.6A15 15 0 0 1 22 8.5M5 12a10 10 0 0 1 3.5-2.2M15 10a10 10 0 0 1 4 2M8.5 15.5a5 5 0 0 1 7 0M3 3l18 18%22/%3E%3Ccircle cx=%2212%22 cy=%2219%22 r=%22.8%22/%3E%3C/svg%3E")}
 .ic-star{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z%22/%3E%3C/svg%3E")}
@@ -511,6 +513,10 @@ body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:1
 .cd-pick button{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:9px 0;font-weight:800;font-size:12.5px;min-width:0}
 .cd-pick button.on{background:var(--acc);color:var(--on-accent,#111);border-color:var(--acc)}
 .cd-hint{display:block;margin-top:8px;color:var(--muted);font-size:12.5px}
+.cx-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px}
+.cx-row label{font-weight:800;font-size:13px;flex:1 1 100%}
+.cx-row .time-in{width:110px}
+.cx-ro{margin:10px 0 0}
 .cd-day b{font-size:13px;line-height:1.1;white-space:nowrap}
 .cd-col{position:relative;width:100%;max-width:34px;height:84px;border-radius:10px;background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
 .cd-col i{position:absolute;left:0;right:0;bottom:0;border-radius:10px;background:var(--acc);transition:height .9s ease-out}
@@ -1633,6 +1639,15 @@ const stuMark = () => ui.studentMode && !meStu() ? { by: 'aluno' } : {};
 const CARDIO = 'Cardio';
 const MODES = [['corrida', 'Esteira'], ['bicicleta', 'Bicicleta'], ['escada', 'Escada'], ['eliptico', 'Elíptico']];
 const modeOf = id => MODES.find(m => m[0] === id) || [id, id];
+// além do tempo: km na esteira, degraus na escada (campo do registro, rótulo, unidade)
+const CARDIO_EXTRA = { corrida: ['km', 'Km andados', 'km'], escada: ['steps', 'Degraus subidos', 'degraus'] };
+const cardioExtraTxt = c => { const x = c && CARDIO_EXTRA[c.mode], v = x && c[x[0]]; return v ? `${fmtMin(v)} ${x[2]}` : ''; };
+// km e degraus do dia ficam no registro novo quando o tempo é marcado de novo (e o que foi digitado antes do tempo)
+function cardioExtraKeep(pid, date, prev) {
+  const out = {}; prev.forEach(c => { if (c.km) out.km = c.km; if (c.steps) out.steps = c.steps; });
+  const pe = ui.cExtra; if (pe && pe.key === pid + '|' + date) { pe.v ? out[pe.f] = pe.v : delete out[pe.f]; ui.cExtra = null; }
+  return out;
+}
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const newInviteCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random() * 32 | 0]).join('');
@@ -3424,6 +3439,16 @@ const cardioGoalOf = (p, date) => {
   if (cd) return cd.includes(toDate(date).getDay()) ? cardioShare(p) : 0;
   const b = goalBase(p, date); return (!o && b.wk[toDate(date).getDay()]) || b.daily || 0;
 };
+// campo de km (esteira) ou degraus (escada) no cartão do cardio
+function cardioExtraHtml(p, mode, recs, locked) {
+  const x = CARDIO_EXTRA[mode]; if (!x) return '';
+  const last = recs[recs.length - 1], pe = ui.cExtra && ui.cExtra.key === p.id + '|' + ui.date && ui.cExtra.f === x[0] ? ui.cExtra.v : null;
+  const v = last && last[x[0]] ? last[x[0]] : pe;
+  if (locked) return v ? `<p class="hint cx-ro"><i class="ic ic-${mode === 'escada' ? 'stairs' : 'route'}"></i> <b>${fmtMin(v)} ${x[2]}</b></p>` : '';
+  return `<div class="cx-row"><label for="cardioExtra">${x[1]}</label>
+      <input id="cardioExtra" class="time-in" inputmode="${mode === 'escada' ? 'numeric' : 'decimal'}" placeholder="${mode === 'escada' ? 'ex.: 300' : 'ex.: 2,5'}" value="${v ? fmtMin(v) : ''}"><span class="unit">${x[2]}</span>
+      <button class="btn sm" data-act="cardio-extra" data-f="${x[0]}">Salvar</button></div>`;
+}
 function cardioGoalHtml(p) {
   const goal = cardioGoalOf(p, ui.date);
   const today_ = profCardio().filter(c => c.date === ui.date);
@@ -3443,10 +3468,11 @@ function cardioGoalHtml(p) {
         <small>O tempo feito o aluno anota no app dele, ou você marca por ele aqui.</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       ${bar}
-      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados${today_.every(c => c.by === 'aluno') ? ' pelo aluno' : ''}` : 'Nenhum cardio marcado neste dia'}</span>
+      <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados${today_.every(c => c.by === 'aluno') ? ' pelo aluno' : ''}${cardioExtraTxt(today_[today_.length - 1]) ? ' · ' + cardioExtraTxt(today_[today_.length - 1]) : ''}` : 'Nenhum cardio marcado neste dia'}</span>
         <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b> <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button></span></div>
       <label class="plan-g" for="cardioDone" style="display:block;margin:12px 0 6px">Marcar o cardio por ${esc(firstName(p))} (${ui.date === today() ? 'hoje' : 'dia ' + fmtDate(ui.date)})</label>
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
+      ${cardioExtraHtml(p, mode, today_)}
       <div class="actions" style="margin-top:8px;align-items:center">
         <input id="cardioDone" class="time-in" inputmode="decimal" placeholder="ex.: 20" value="${done ? fmtMin(done) : ''}"><span class="unit">min</span>
         <button class="btn primary" data-act="cardio-save">${done ? 'Corrigir' : 'Marcar'}</button>
@@ -3454,20 +3480,22 @@ function cardioGoalHtml(p) {
       ${done && !cardioLocked() && today_.some(c => c.by !== 'aluno') ? '<div class="actions"><button class="btn danger" style="padding-left:0" data-act="cardio-set" data-min="0">Apagar tempo marcado por engano</button></div>' : ''}
     </section>`;
   if (cardioLocked() && (p.id === ME || ui.studentMode)) return `<section class="card cardio-card ${full ? 'complete' : ''}">
-      <div class="card-h"><div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Nenhum cardio anotado neste dia'}</small></div>
+      <div class="card-h"><div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min${cardioExtraTxt(today_[today_.length - 1]) ? ' · ' + cardioExtraTxt(today_[today_.length - 1]) : ''}` : 'Nenhum cardio anotado neste dia'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min realizados` : 'Nada realizado'}</span><span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b></span></div>
+      ${cardioExtraHtml(p, mode, today_, true)}
       <p class="lock-note"><i class="ic ic-lock"></i> ${dayLocked() ? 'Só consulta (dia passado)' : 'Treino enviado: cardio registrado'}</p>
     </section>`;
   return `<section class="card cardio-card ${full ? 'complete' : ''}">
       <div class="card-h">
-        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min` : 'Use o cronômetro para marcar o tempo'}</small></div>
+        <div class="grow"><h3>Cardio</h3><small>${done ? `${modeOf(mode)[1]} · ${fmtMin(done)} min${cardioExtraTxt(today_[today_.length - 1]) ? ' · ' + cardioExtraTxt(today_[today_.length - 1]) : ''}` : 'Use o cronômetro para marcar o tempo'}</small></div>
         ${full ? '<span class="pill up">✓ Concluído</span>' : ''}</div>
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min feitos${timing ? '' : ' <button class="link" data-act="cardio-zero">zerar</button>'}` : 'Nada feito ainda'}</span>
         <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b>${p.id === ME && !ui.studentMode ? ` <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button>` : ''}</span></div>
+      ${timing ? '' : cardioExtraHtml(p, mode, today_)}
       ${ctHtml(p, goal, done)}
     </section>`;
 }
@@ -3619,8 +3647,9 @@ function ctFinish(auto) {
   if (daySent(t.date, t.pid)) { render(); return toast('O treino deste dia já foi enviado: o tempo do cronômetro não foi somado.'); }
   const prev = db.cardio.filter(c => c.profileId === t.pid && c.date === t.date), had = prev.reduce((a, c) => a + c.min, 0);
   const total = Math.min(300, Math.round((had + min) * 100) / 100), g0 = cardioGoalOf(p, t.date);
+  const keep = cardioExtraKeep(t.pid, t.date, prev);
   db.cardio = db.cardio.filter(c => !(c.profileId === t.pid && c.date === t.date));
-  db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
+  db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, ...keep, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
   save(); render();
   toast(`${auto ? '<i class="ic ic-alarm"></i> Tempo! ' : ''}${modeOf(t.mode)[1]}: ${fmtMin(min)} min salvos${g0 && total >= g0 ? ' · meta de cardio concluída!' : ''}`);
 }
@@ -3640,8 +3669,9 @@ function setCardio(min) {
   if (ui.date === today()) markActivity(ui.date);
   const p = profile(ui.profile), mode = ui.mode, g0 = cardioGoalOf(p, ui.date);
   min = Math.min(300, Math.round((min || 0) * 100) / 100);
+  const keep = cardioExtraKeep(ui.profile, ui.date, db.cardio.filter(c => c.profileId === ui.profile && c.date === ui.date));
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
-  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...stuMark() });
+  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...keep, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...stuMark() });
   save(); render();
   const goal = cardioGoalOf(p, ui.date);
   if (min > 0 && goal && min >= goal) toast(`Cardio concluído! ${modeOf(mode)[1]} ${fmtMin(min)} min`);
@@ -4257,7 +4287,7 @@ function dayCard(d, list) {
       return `<tr><td>${esc(exById(s.exId).name)}${s.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
-    ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
+    ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}${cardioExtraTxt(c) ? `<small style="display:block;color:var(--muted)">${cardioExtraTxt(c)}</small>` : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}"><i class="ic ic-cam"></i> Check-in</button>` : ''}</div>
   </section>`;
 }
@@ -4882,7 +4912,7 @@ function marcacoesHtml(p) {
       const done = x.sets.filter(y => y.done);
       return `<div class="plan-row"><div class="grow"><b>${esc(exById(x.exId).name)}</b>
         <small>${done.length}/${x.sets.length} séries · ${done.map(y => `${fmt(y.carga)}×${y.reps ?? '–'}`).join('  ')}</small></div><b>${fmt(vol(x.sets))} kg</b></div>`;
-    }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b><small>cardio</small></div><b>${fmtMin(c.min)} min</b></div>`).join('');
+    }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b><small>cardio${cardioExtraTxt(c) ? ' · ' + cardioExtraTxt(c) : ''}</small></div><b>${fmtMin(c.min)} min</b></div>`).join('');
     const sent = ss.filter(x => x.date === d && x.fin).map(x => x.fin).sort().pop();
     return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}${sent ? ` · <span class="pill up">✓ treino enviado às ${new Date(sent).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}</p>${rows}`;
   }).join('');
@@ -5662,7 +5692,7 @@ function perfilHtml(p, desk) {
     const cmin = cc.reduce((a, c) => a + c.min, 0);
     const byStudent = [...ss, ...cc].some(x => x.by === 'aluno');
     return `<div class="list-row"><div class="grow"><b>${fmtDate(d)}</b> <small style="color:var(--muted)">${weekday(d)}</small>${byStudent ? '<span class="by">marcado pelo aluno</span>' : ''}
-      <small style="display:block;color:var(--muted)">${[...groups, cmin ? `cardio ${cmin} min` : ''].filter(Boolean).join(' · ')}</small></div>
+      <small style="display:block;color:var(--muted)">${[...groups, cmin ? `cardio ${fmtMin(cmin)} min${cc.map(cardioExtraTxt).filter(Boolean).map(t => ' · ' + t).join('')}` : ''].filter(Boolean).join(' · ')}</small></div>
       <b>${fmt(ss.reduce((a, x) => a + vol(x.sets), 0))} kg</b>
       <button class="icon" data-act="openday" data-d="${d}" data-g="${ss.length ? exById(ss[0].exId).letter || 'A' : CARDIO}" aria-label="Abrir treino">›</button></div>`;
   }).join('');
@@ -6287,7 +6317,19 @@ $main.addEventListener('click', e => {
       if (cardioLocked()) return toast(cardioLockMsg());
       const v = parseNum(document.getElementById('cardioDone').value);
       if (v == null || v < 0) { document.getElementById('cardioDone').focus(); return toast('Digite quantos minutos de cardio você fez.'); }
+      const xi = document.getElementById('cardioExtra'), xf = xi && (CARDIO_EXTRA[ui.mode] || [])[0];
+      if (xf) { const xv = parseNum(xi.value); ui.cExtra = { key: ui.profile + '|' + ui.date, f: xf, v: xv > 0 ? Math.min(99999, Math.round(xv * 100) / 100) : 0 }; }
       return setCardio(v);
+    }
+    case 'cardio-extra': {
+      if (cardioLocked()) return toast(cardioLockMsg());
+      const f = b.dataset.f, x = Object.values(CARDIO_EXTRA).find(e => e[0] === f), raw = parseNum(document.getElementById('cardioExtra').value);
+      if (!x || (raw != null && raw < 0)) return;
+      const v = raw > 0 ? Math.min(99999, Math.round(raw * 100) / 100) : 0;
+      const recs = db.cardio.filter(c => c.profileId === ui.profile && c.date === ui.date);
+      if (!recs.length) { ui.cExtra = { key: ui.profile + '|' + ui.date, f, v }; render(); return toast(v ? `${fmtMin(v)} ${x[2]} anotados: entram junto quando o tempo do cardio for salvo.` : 'Apagado.'); }
+      recs.forEach(c => { if (v) c[f] = v; else delete c[f]; }); save(); render();
+      return toast(v ? `<b>${fmtMin(v)} ${x[2]}</b> salvos no cardio do dia` : `${x[1]} apagados`);
     }
     case 'cd-day': {
       const p = profile(b.dataset.pid); if (!p) return;
@@ -7771,7 +7813,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/10-01:43';
+const APP_VERSION = '14/10-14:05';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
