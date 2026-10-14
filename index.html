@@ -1613,6 +1613,9 @@ const STEP = { carga: 2.5, reps: 1 };
 const REST_DEFAULT = 120;
 const ME = 'me';
 const MY_NAME = 'Igor Pedro';
+// Perfil de aluno do professor: as mesmas telas dos alunos, com os treinos dele (vale de verdade, não é prévia)
+const meStu = () => !!ui.studentMode && ui.profile === ME;
+const stuMark = () => ui.studentMode && !meStu() ? { by: 'aluno' } : {};
 const CARDIO = 'Cardio';
 const MODES = [['corrida', 'Esteira'], ['bicicleta', 'Bicicleta'], ['escada', 'Escada'], ['eliptico', 'Elíptico']];
 const modeOf = id => MODES.find(m => m[0] === id) || [id, id];
@@ -1735,7 +1738,6 @@ try {
   if (db.profiles.some(p => p.id === u.profile)) ui.profile = u.profile;
   if (u.restSec) ui.rest = u.restSec;
 } catch (e) {}
-if (ui.profile === ME) ui.studentMode = false;
 if (!['treino', 'historico', 'evolucao', 'alunos', 'perfil', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(ui.view) || ui.studentMode && !['treino', 'historico', 'config', 'recados', 'medidas'].includes(ui.view)) ui.view = 'treino';
 const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode, color: ui.color })); } catch (e) {} };
 
@@ -1800,7 +1802,7 @@ function ensureSession(ex, date) {
   let s = sessionOn(ex.id, date);
   if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); db.sessions.push(s); }
   if (date === today() && !s.t0 && !s.fin) s.t0 = new Date().toISOString(); // começou agora: dá a duração do treino no check-in
-  if (ui.studentMode) s.by = 'aluno'; // marcação feita pelo aluno
+  if (ui.studentMode && !meStu()) s.by = 'aluno'; // marcação feita pelo aluno
   return s;
 }
 
@@ -1892,7 +1894,8 @@ function renderHero() {
   if (ui.view === 'alunos' && !(isDesk() && ui.profile !== ME) || ui.view === 'pagamentos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
   document.getElementById('stats').hidden = ['pagamentos', 'montar', 'acessos'].includes(ui.view);
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
-  if (ui.studentMode) document.getElementById('studentBarName').textContent = p.name;
+  if (ui.studentMode) document.getElementById('studentBar').innerHTML = meStu() ? '<i class="ic ic-eye"></i> Seu perfil de aluno <button data-act-global="exit-student">Voltar ao painel</button>'
+    : `<i class="ic ic-eye"></i> Vendo como <b>${esc(p.name)}</b> vê o app <button data-act-global="exit-student">Sair</button>`;
   const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações', acessos: 'Acessos' };
   if (ui.studentMode) titles.historico = 'Calendário';
   if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
@@ -2134,7 +2137,7 @@ function renderStudentTreino(p, greet, isToday) {
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${blocks}
       ${sendHtml()}`
-    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
+    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   markLocked();
 }
 // ===== App novo (desenho Passos Fit 2.0): bonequinhos animados dos exercícios =====
@@ -2568,7 +2571,7 @@ function v2HomeHtml(p, d, isToday) {
       ${started ? `<div class="v2-progt"><span>${d.exDone} de ${d.exs.length} exercícios feitos</span><b>${Math.round(d.prog * 100)}%</b></div><div class="v2-bar"><i style="width:${d.prog * 100}%"></i></div>` : ''}
       <button class="v2-go" data-act="v2-start"><span class="ball">${V2I.play}</span>${d.prog >= 1 ? 'Ver treino feito' : started ? 'Continuar treino' : 'Começar treino'}<span class="chev"><span>›</span><span>›</span><span>›</span></span></button>
     </section>` : `<section class="v2-hero"><div class="v2-eyebrow">${isToday ? 'Hoje' : fmtDate(ui.date)}</div><h1 class="v2-rest">Dia de descanso</h1>
-      <p class="v2-muted">Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}. O corpo também cresce no descanso.</p>
+      <p class="v2-muted">${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}. O corpo também cresce no descanso.</p>
       ${d.goal ? `<button class="v2-go" data-act="v2-start"><span class="ball">${V2I.run}</span>Cardio de hoje: ${fmtMin(d.goal)} min<span class="chev"><span>›</span><span>›</span><span>›</span></span></button>` : ''}</section>`}
     ${cardioWeekHtml(p, 'Sua meta de cardio da semana')}
     ${lastMsg ? `<div class="v2-sec"><h3>Recado do professor</h3><button data-view="recados">Ver todos</button></div>
@@ -2598,7 +2601,7 @@ function v2RunHtml(p, d, isToday) {
     ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0"><i class="ic ic-unlock"></i> Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
     ${d.groups.length || d.plan.includes(CARDIO) ? `<div class="v2-wbar"><b>${d.exs.length} exercício${d.exs.length === 1 ? '' : 's'}${d.cardio ? ' + cardio' : ''}</b></div>
       ${blocks}${d.cardio ? cardioGoalHtml(p) : ''}${sendHtml()}`
-      : `${d.goal ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>Seu professor não passou treino para ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
+      : `${d.goal ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
     </div></div>`;
 }
 function v2GaugeInner(d) {
@@ -3133,6 +3136,7 @@ function renderPainelV2() {
     ${me ? cardioDaysHtml(me, 'Seu cardio da semana') : ''}
     <div class="v2-sec"><h3>Seu treino de hoje</h3><button data-act="v2-mytreino">Abrir</button></div>
     <button class="v2-feat" data-act="v2-mytreino">${v2Art(myEx ? v2Key(myEx) : 'remada', `<div class="v2-over"><span class="v2-chip">${esc(me.name)}</span></div><div class="v2-ph-title sm"><b>${esc(myPlan.map(g => wName(g, ME)).join(' + ') || (myW ? wName(myW, ME) : 'Meu treino'))}</b><small>Toque para começar · pesos da última vez</small></div><span class="arr">${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>`, 'v2-featph')}</button>
+    <button class="v2-btn line full" style="margin-top:10px" data-act="my-student">${v2Ico('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>')}Meu perfil de aluno</button>
     <div class="v2-sec"><h3>Atalhos</h3></div>
     <div class="v2-tiles"><button class="v2-tile sur" data-act="add-student">${v2Ico('<path d="M12 5v14M5 12h14"/>')}<b class="md">Novo aluno</b></button>
       <button class="v2-tile sur" data-act="v2-signup">${v2Ico('<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17.5 9a4 4 0 0 1 0 6"/>')}<b class="md">Link de cadastro</b></button>
@@ -3195,7 +3199,7 @@ function v2ProfTop() {
     montar: 'Montar treinos', pagamentos: 'Pagamentos', acessos: 'Acessos', medidas: 'Medidas', recados: 'Recados', alunos: 'Alunos' }[ui.view] || '';
   if (!t) return '';
   const back = other && ['treino', 'historico', 'evolucao', 'medidas'].includes(ui.view) ? `<button class="v2-icbtn" data-act="open-profile" data-pid="${p.id}" data-v="perfil" aria-label="Voltar">${V2I.back}</button>` : ui.view === 'acessos' ? `<button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button>` : '';
-  const extra = ui.view === 'treino' ? `<button class="v2-icbtn" data-view="historico" aria-label="Histórico">${v2Ico(V2PNAV.historico)}</button><button class="v2-icbtn" data-view="evolucao" aria-label="Evolução">${v2Ico(V2PNAV.evolucao)}</button>` : '';
+  const extra = ui.view === 'treino' ? `${other ? '' : `<button class="v2-icbtn" data-act="my-student" aria-label="Meu perfil de aluno">${v2Ico('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>')}</button>`}<button class="v2-icbtn" data-view="historico" aria-label="Histórico">${v2Ico(V2PNAV.historico)}</button><button class="v2-icbtn" data-view="evolucao" aria-label="Evolução">${v2Ico(V2PNAV.evolucao)}</button>` : '';
   return `<div class="v2-top">${back}<div class="grow"><small>${esc(other ? p.name : profile(ME).name)}</small><h2>${esc(t)}</h2></div>${extra}</div>`;
 }
 // ---------- Aluno monta o próprio treino ----------
@@ -3576,7 +3580,7 @@ function setCardio(min) {
   const p = profile(ui.profile), mode = ui.mode, g0 = cardioGoalOf(p, ui.date);
   min = Math.min(300, Math.round((min || 0) * 100) / 100);
   db.cardio = db.cardio.filter(c => !(c.profileId === ui.profile && c.date === ui.date));
-  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  if (min > 0) db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...stuMark() });
   save(); render();
   const goal = cardioGoalOf(p, ui.date);
   if (min > 0 && goal && min >= goal) toast(`Cardio concluído! ${modeOf(mode)[1]} ${fmtMin(min)} min`);
@@ -3759,7 +3763,7 @@ function sendStatusHtml(exs) {
 }
 function sendHtml() {
   if ((ui.date !== today() && !dayUnlocked(ui.date)) || (ui.profile !== ME && !ui.studentMode)) return '';
-  if (ui.studentMode && CLOUD && cloud && cloud.role === 'admin' && !(profile(ui.profile) || {}).test) return `<p class="hint" style="text-align:center;margin:14px 0">No app do aluno aparece aqui o botão <b>✓ Enviar treino</b>. Na pré-visualização ele fica desligado.</p>`;
+  if (ui.studentMode && !meStu() && CLOUD && cloud && cloud.role === 'admin' && !(profile(ui.profile) || {}).test) return `<p class="hint" style="text-align:center;margin:14px 0">No app do aluno aparece aqui o botão <b>✓ Enviar treino</b>. Na pré-visualização ele fica desligado.</p>`;
   const exs = sendableExs(); if (!exs.length) return '';
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
@@ -3773,7 +3777,7 @@ function sendHtml() {
 // Aluno confirmou a última série do treino do dia: o app já pergunta se quer enviar
 const askedSend = new Set();
 function maybeAskSend() {
-  const mine = !ui.studentMode && ui.profile === ME, student = ui.studentMode && (!(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test);
+  const mine = !ui.studentMode && ui.profile === ME, student = ui.studentMode && (meStu() || !(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test);
   if ((!mine && !student) || (ui.date !== today() && !dayUnlocked(ui.date))) return;
   const exs = sendableExs(), key = ui.profile + today();
   if (!exs.length || askedSend.has(key) || exs.every(e => sentAt(e.id)) || !exs.filter(e => !sentAt(e.id)).every(e => isComplete(e.id))) return;
@@ -3785,9 +3789,9 @@ async function sendWorkout(auto) {
   if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
   if (ct && ct.pid === ui.profile && ct.date === ui.date && !auto) ctFinish(false); // cronômetro ligado: o tempo feito vai junto
   const pp = profile(ui.profile), noCardio = (dayPlan(pp, ui.date).includes(CARDIO) || cardioGoalOf(pp, ui.date)) && !profCardio().some(c => c.date === ui.date);
-  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? 'Atenção: o cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
+  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? 'Atenção: o cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode && !meStu() ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
   const at = new Date().toISOString();
-  exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode) s.by = 'aluno'; });
+  exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode && !meStu()) s.by = 'aluno'; });
   if (dayUnlocked(ui.date) && !(CLOUD && cloud && cloud.role === 'student')) delete profile(ui.profile).unlocks[ui.date]; // enviado: o dia trava de novo
   save(); render();
   if (CLOUD && cloud && cloud.ready) { const s = syncNow(); if (navigator.onLine) await Promise.race([s, new Promise(r => setTimeout(r, 4000))]); }
@@ -3798,7 +3802,7 @@ async function sendWorkout(auto) {
 }
 // ---------- Check-in: arte do treino feito para postar (estilo Strava / Gympass) ----------
 // quem está usando o próprio app (aluno, ou o professor no treino dele / no perfil de teste)
-const canCheckin = () => (ui.studentMode && (!(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test)) || (!ui.studentMode && ui.profile === ME);
+const canCheckin = () => (ui.studentMode && (meStu() || !(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test)) || (!ui.studentMode && ui.profile === ME);
 function dayStats(pid, d) {
   const ids = new Set(profExs(pid).map(e => e.id)), ss = db.sessions.filter(x => ids.has(x.exId) && x.date === d && x.sets.some(y => y.done));
   const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0], t1 = ss.map(x => x.fin).filter(Boolean).sort().pop();
@@ -4158,7 +4162,7 @@ function addCardio(mode, min) {
   min = Math.round(min);
   if (!(min > 0)) return toast('Informe os minutos.');
   const g0 = cardioGoalOf(profile(ui.profile), ui.date);
-  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(g0 > 0 ? { goal: g0 } : {}), ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(g0 > 0 ? { goal: g0 } : {}), ...stuMark() });
   save(); render();
   toast(`<b>${modeOf(mode)[1]}</b>: ${min} min registrados`);
 }
@@ -4666,6 +4670,7 @@ function myProfileHtml() {
     <p class="hint" style="margin:0 0 10px">Traga os treinos que você anotou antes do app (arquivo <b>historico-….json</b>). Junta com o que já existe, sem apagar nada.</p>
     <div class="actions">
       <label class="btn primary"><i class="ic ic-up"></i> Importar meu histórico<input type="file" id="histFileMe" hidden></label>
+      <button class="btn" data-act="my-student">Meu perfil de aluno</button>
       <button class="btn" data-act="open-medidas" data-pid="${ME}">Minhas medidas</button>
       <button class="btn" data-act="open-profile" data-pid="${ME}" data-v="historico">Meu histórico</button>
     </div>
@@ -4884,7 +4889,7 @@ function saveBody() {
   if (!any) return toast('Preencha pelo menos uma medida.');
   const old = (p.body || []).find(e => e.date === date);
   p.body = (p.body || []).filter(e => e.date !== date);
-  p.body.push({ id: (old && old.id) || uid(), ...entry, ...(ui.studentMode ? { by: 'aluno' } : {}) });
+  p.body.push({ id: (old && old.id) || uid(), ...entry, ...stuMark() });
   ui.bodyDate = null; save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('Avaliação salva ✓');
 }
@@ -4972,11 +4977,12 @@ function renderConfig() {
 }
 function setStudentMode(on) {
   ui.studentMode = on; stopDemo(); ui.demo = false;
-  ui.view = on ? 'treino' : 'perfil'; ui.date = today(); ui.month = ui.date.slice(0, 7);
+  ui.view = on ? 'treino' : ui.profile === ME ? (skinOn() ? 'painel' : 'treino') : 'perfil'; ui.date = today(); ui.month = ui.date.slice(0, 7);
   if (on && !isLetter(ui.group) && ui.group !== CARDIO) ui.group = firstWorkout();
   saveUi(); render(); window.scrollTo({ top: 0 });
-  if (on) toast(`Agora você vê o app como <b>${esc(firstName(profile(ui.profile)))}</b>. O que marcar aqui fica como marcação do aluno.`);
+  if (on) toast(meStu() ? 'Seu perfil de aluno: treino do dia, metas, cardio, resumo da semana e medidas, como os alunos veem.' : `Agora você vê o app como <b>${esc(firstName(profile(ui.profile)))}</b>. O que marcar aqui fica como marcação do aluno.`);
 }
+function openMyStudent() { ui.profile = ME; ui.histDay = null; setStudentMode(true); }
 document.getElementById('studentBar').addEventListener('click', e => { if (e.target.closest('[data-act-global="exit-student"]')) setStudentMode(false); });
 
 const $dayDlg = document.getElementById('dayDlg'), $dayForm = document.getElementById('dayForm');
@@ -5946,6 +5952,7 @@ $main.addEventListener('click', e => {
     case 'student-menu': return openStudent(profile(b.dataset.pid));
     case 'student-edit': return openStudent(profile(ui.profile));
     case 'student-mode': return setStudentMode(true);
+    case 'my-student': return openMyStudent();
     case 'logout': return askLogout();
     case 'copy-invite': {
       const t = inviteLink(profile(ui.profile));
@@ -6233,7 +6240,7 @@ $main.addEventListener('click', e => {
       const today_ = profCardio().filter(c => c.date === ui.date), mode = today_.length ? today_[today_.length - 1].mode : ui.mode;
       const mi = parseNum((document.getElementById('ctMinIn') || {}).value);
       if (!(mi > 0)) { const i = document.getElementById('ctMinIn'); if (i) i.focus(); return toast('Digite quantos minutos o cronômetro vai marcar.'); }
-      ct = { pid: p.id, date: ui.date, mode, dir: ui.ctDir || ctPref(), dur: Math.round(Math.min(180, mi) * 60), start: Date.now(), paused: 0, base: had, goal: goal || 0, ...(ui.studentMode ? { by: 'aluno' } : {}) };
+      ct = { pid: p.id, date: ui.date, mode, dir: ui.ctDir || ctPref(), dur: Math.round(Math.min(180, mi) * 60), start: Date.now(), paused: 0, base: had, goal: goal || 0, ...stuMark() };
       ui.ctMin = null; ctSaveState(); ctWake(); markActivity(ui.date); render(); return;
     }
     case 'ct-pause': if (ct && !ct.pausedAt) { ct.pausedAt = Date.now(); ctSaveState(); } return render();
@@ -7682,7 +7689,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-23:36';
+const APP_VERSION = '13/10-23:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
