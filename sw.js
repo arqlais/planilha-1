@@ -1,7 +1,7 @@
 // PassosFit: guarda o app no aparelho para abrir e anotar o treino sem internet.
 // Página e configuração: busca na internet primeiro (para pegar a versão nova) e, sem internet, usa a cópia guardada.
 // Arquivos que não mudam (Firebase, ícones): usa a cópia guardada.
-const CACHE = 'passosfit-v3'; // nome novo: apaga a cópia antiga (ícone novo do visual 2.0)
+const CACHE = 'passosfit-v4'; // nome novo: apaga a cópia antiga (página sempre da internet, sem cópia velha do navegador)
 const FILES = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'icon-v2-192.png', 'icon-v2-512.png', 'apple-touch-icon-v2.png', 'fonts/archivo.woff2', 'fonts/manrope.woff2', 'fonts/outfit.woff2', 'fonts/unbounded.woff2', 'fonts/spacemono-400.woff2', 'fonts/spacemono-700.woff2', 'brand/logo-i.svg', 'brand/logo-i-escuro.svg', 'vendor/qrcode.js',
   'vendor/firebase/firebase-app-compat.js', 'vendor/firebase/firebase-auth-compat.js', 'vendor/firebase/firebase-firestore-compat.js'];
 
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
   if (url.pathname.endsWith('version.json')) return; // sempre da internet
   const isPage = req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname) || url.pathname.endsWith('config.js');
   if (isPage) { // só a página principal fica guardada como o app (novo.html não substitui)
-    e.respondWith(fetch(req).then(res => {
+    e.respondWith(fetch(req.url, { cache: 'no-store', credentials: 'same-origin' }).then(res => { // sem a cópia de 10 min do navegador: celular pega a versão nova na hora
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(/\/(index\.html)?$/.test(url.pathname) ? './' : req, copy)); }
       return res;
     }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./'))));

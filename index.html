@@ -5966,7 +5966,7 @@ $main.addEventListener('click', e => {
       box.querySelector('.mm-name').innerHTML = ui.mmSel != null ? `<b>${m[1]}</b>` : 'Toque em um músculo do desenho para ver o nome.'; return;
     }
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
-    case 'new': return openDialog(null);
+    case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
     case 'export': return exportData();
     case 'export-claude': return exportForClaude();
     case 'test-profile': return openTestProfile();
@@ -6038,7 +6038,7 @@ $main.addEventListener('click', e => {
     }
     case 'edit-day': return openDay(+b.dataset.d);
     case 'edit-ex': return openDialog(exById(b.dataset.id));
-    case 'new-in': return openDialog(null, b.dataset.g);
+    case 'new-in': return isLetter(b.dataset.g) ? openExLib(ui.profile, b.dataset.g) : openDialog(null, b.dataset.g);
     case 'hide-tip': { try { localStorage.setItem('planilha-dica-app', '1'); } catch (e) {} return b.closest('.install-tip').remove(); }
     case 'clear-loose': {
       const pid = ui.profile, loose = profExs(pid).filter(e => !isLetter(e.letter) && !exHistory(e.id).length);
@@ -7771,7 +7771,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/10-01:42';
+const APP_VERSION = '14/10-01:43';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
@@ -7779,8 +7779,10 @@ async function checkUpdate() {
     const { v } = await r.json();
     if (!v || v === APP_VERSION) return;
     let tried = ''; try { tried = sessionStorage.getItem('planilha-atualizou') || ''; } catch (e) {}
-    if (tried === v) return; // já tentou esta versão nesta sessão: evita recarregar sem parar
-    try { sessionStorage.setItem('planilha-atualizou', v); } catch (e) {}
+    const [tv, tt] = tried.split('|'); // já tentou esta versão há pouco: evita recarregar sem parar (tenta de novo depois de 2 min)
+    if (tv === v && Date.now() - (+tt || 0) < 120e3) return;
+    try { sessionStorage.setItem('planilha-atualizou', v + '|' + Date.now()); } catch (e) {}
+    try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.update(); } catch (e) {} // guarda do aparelho também se atualiza
     if (typeof syncTimer !== 'undefined' && syncTimer) await syncNow(); // salva o que estiver pendente antes
     location.replace(location.pathname + '?v=' + encodeURIComponent(v)); // endereço novo = baixa a versão nova
   } catch (e) {}
