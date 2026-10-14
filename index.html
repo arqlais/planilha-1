@@ -523,13 +523,18 @@ body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:1
 .mm-figs{display:flex;gap:6px;flex:1 1 300px;max-width:380px;min-width:0}
 .mm-figs figure{margin:0;text-align:center;flex:1 1 0;min-width:0}
 .mm-figs svg{width:100%;max-width:180px;height:auto;display:block;margin:0 auto}
-.mm-fib{fill:none;stroke:rgba(0,0,0,.24);stroke-width:.7;stroke-linecap:round;pointer-events:none}
+.mm-fib{fill:none;stroke:rgba(0,0,0,.2);stroke-width:.6;stroke-linecap:round;pointer-events:none}
+.mm-sil{fill:var(--mm-seam);stroke:var(--mm-seam);stroke-width:5;stroke-linejoin:round}.mm-sil0{fill:var(--mm-seam)}
+.mm-shade{fill:url(#mmSh);stroke:var(--mm-seam);stroke-width:.45;stroke-opacity:.7;pointer-events:none}
 .mm-name{flex-basis:100%;margin:0!important;min-height:1.4em}.mm-name b{color:var(--acc)}
 .mm-figs figcaption{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:2px}
-.mm-base{fill:var(--line)}
-.mm-m{fill:var(--axis);stroke:var(--solid,var(--card));stroke-width:.9;stroke-linejoin:round;transition:fill .25s;cursor:pointer}
-.mm-m.mm-l1{fill:var(--acc);fill-opacity:.38}
-.mm-m.mm-l2{fill:var(--acc)}
+.mmap{--mm-off:#cdb5ad;--mm-skin:#e6d3c8;--mm-seam:#9d7b72}
+:root[data-skin="v2"] .mmap{--mm-off:#8a7891;--mm-skin:#a091a6;--mm-seam:#4a3d5c}
+@media (prefers-color-scheme:dark){:root:not([data-skin="v2"]) .mmap{--mm-off:#6e5d64;--mm-skin:#857579;--mm-seam:#3b2f33}}
+.mm-base{fill:var(--mm-skin)}
+.mm-m{--c:var(--mm-off);fill:var(--c);stroke:var(--c);stroke-width:2.4;stroke-linejoin:round;transition:fill .25s;cursor:pointer}
+.mm-m.mm-l1{--c:color-mix(in srgb,var(--acc) 45%,var(--mm-off))}
+.mm-m.mm-l2{--c:var(--acc)}
 .mm-leg{flex:1 1 200px;min-width:0}
 .mm-k{margin:0 0 6px;font-size:12px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:6px}
 .mm-dot{width:10px;height:10px;border-radius:3px;background:var(--acc)}.mm-dot.l1{opacity:.38}
@@ -1534,18 +1539,23 @@ const BODY_B = [
   ['pant', 'Sóleo', 'M76 319 C76 328 79 338 82 344 L88 344 C91 336 94 327 95 319 C91 325 81 325 76 319 Z'],
 ];
 // cabeça, pescoço, mãos, joelhos e pés (não acendem)
-const BODY_BASE = '<ellipse cx="100" cy="25" rx="14" ry="18"/><path d="M90 40 L110 40 L112 62 L88 62 Z"/>'
-  + [0, 1].map(s => `<g${s ? ' transform="matrix(-1 0 0 1 200 0)"' : ''}><ellipse cx="40" cy="209" rx="6" ry="11" transform="rotate(10 40 209)"/><ellipse cx="85" cy="272" rx="8.5" ry="6.5"/><path d="M82 346 L90 346 L95 358 C88 362 80 362 75 360 Z"/></g>`).join('');
+const BODY_BASE = '<path d="M92 36 C92 47 90 54 85 61 L115 61 C110 54 108 47 108 36 Z"/><path d="M100 5 C110 5 116 13 116 24 C116 32 113 38 108 42 C105 45 102 46 100 46 C98 46 95 45 92 42 C87 38 84 32 84 24 C84 13 90 5 100 5 Z"/>'
+  + [0, 1].map(s => `<g${s ? ' transform="matrix(-1 0 0 1 200 0)"' : ''}><ellipse cx="84.5" cy="26" rx="2.6" ry="5"/><path d="M46 196 C41 198 37 204 36 212 C35 219 37 226 41 228 C45 229 48 225 49 218 C50 211 49.5 203 48.5 198 Z"/><path d="M49 205 C51 207 52 210 51 213" fill="none"/><path d="M77 266 C79 262 91 262 93 266 C94 272 92 278 85 279 C78 278 76 272 77 266 Z"/><path d="M81 343 L89 343 C91 349 94 355 96 360 C90 363 80 363 74 361 C76 356 79 349 81 343 Z"/></g>`).join('');
+// contorno do corpo (metade esquerda): fica por baixo dos músculos e fecha os vãos entre eles
+const BODY_SIL = '<path d="M100 36 L92 36 C92 45 90 51 86 56 C80 59 71 60 65 62 C56 64 51 70 50 78 C49 88 50 96 51 104 C50 116 50 128 51 138 C47 146 44 156 42 168 C41 180 42 190 43 197 L48 198 C51 190 55 178 58 166 C61 156 62 148 63 140 C65 132 66 124 67 117 C68 124 69 132 70 140 C72 150 72 160 71 168 C69 176 68 186 68 196 C67 212 67 230 69 248 C71 258 75 266 77 272 C74 282 73 296 73 312 C74 326 77 336 80 344 L88 344 C88 334 88 322 89 310 C91 296 93 284 92 272 C94 262 96 250 97 236 C98 224 99.5 212 100 202 Z"/>';
 const BODY_NAMES = [...BODY_F, ...BODY_B];
 function muscleMapHtml(exs) {
   const lv = {}, sets = {}; // 2 = principal, 1 = ajuda
   exs.forEach(e => { const m = musclesOf(e), n = e.sets.length || 1;
     m.p.forEach(k => { lv[k] = 2; sets[k] = (sets[k] || 0) + n; }); m.s.forEach(k => { lv[k] = Math.max(lv[k] || 0, 1); if (HALF_MUSC.includes(k)) sets[k] = (sets[k] || 0) + n / 2; }); });
   const shape = d => d[0] === '<' ? d : `<path d="${d}"/>`;
+  const mir = h => `${h}<g transform="matrix(-1 0 0 1 200 0)">${h}</g>`;
   const view = (list, title, off) => `<figure><svg viewBox="30 0 140 366" role="img" aria-label="${title}">
-    <g class="mm-base">${BODY_BASE}</g>
+    <defs><radialGradient id="mmSh" cx=".42" cy=".36" r=".72"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".32"/></radialGradient></defs>
+    <g class="mm-sil">${mir(list.map(x => shape(x[2])).join(''))}</g><g class="mm-sil0">${mir(BODY_SIL)}</g>
+    <g class="mm-base">${BODY_BASE}</g><g class="mm-shade" style="stroke:none">${BODY_BASE.replace(/<path d="M92 36[^>]*>/, '')}</g>
     ${list.map(([ks, nm, d, fib], i) => { const l = Math.max(0, ...ks.split(' ').filter(Boolean).map(k => lv[k] || 0)), f = fib ? `<path class="mm-fib" d="${fib}"/>` : '';
-      return `<g class="mm-m mm-l${l}" data-act="mm-name" data-i="${off + i}"><title>${nm}</title>${shape(d)}${f}<g transform="matrix(-1 0 0 1 200 0)">${shape(d)}${f}</g></g>`; }).join('')}
+      return `<g class="mm-m mm-l${l}" data-act="mm-name" data-i="${off + i}"><title>${nm}</title>${mir(`${shape(d)}<g class="mm-shade">${shape(d)}</g>${f}`)}</g>`; }).join('')}
   </svg><figcaption>${title}</figcaption></figure>`;
   const main = Object.keys(MUSC).filter(k => lv[k] === 2).sort((a, b) => sets[b] - sets[a]), help = Object.keys(MUSC).filter(k => lv[k] === 1);
   return `<div class="mmap"><div class="mm-figs">${view(BODY_F, 'Vista anterior', 0)}${view(BODY_B, 'Vista posterior', BODY_F.length)}</div>
@@ -7652,7 +7662,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-22:15';
+const APP_VERSION = '13/10-22:20';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
