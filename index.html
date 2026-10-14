@@ -907,6 +907,18 @@ body.v2-full main{margin-top:0}
 .v2-fld input{width:100%;height:52px;border-radius:16px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);text-align:center;font-size:19px;font-weight:800;padding:0 4px 12px;font-variant-numeric:tabular-nums;outline:none}
 .v2-fld input:focus{border-color:var(--text)}
 .v2-fld small{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:10.5px;font-weight:700;color:var(--muted);pointer-events:none}
+.v2-fld.pm input{padding:0 24px 12px}
+.v2-pm{position:absolute;top:0;bottom:0;width:26px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;padding:0;opacity:.7;z-index:1}
+.v2-pm:first-child{left:0;border-radius:16px 0 0 16px}.v2-pm:last-of-type{right:0;border-radius:0 16px 16px 0}
+.v2-pm .v2i{width:14px;height:14px;stroke-width:2.6}
+.v2-pm:active{opacity:1;color:var(--text);background:rgba(255,255,255,.08)}
+.v2-set.done .v2-pm{opacity:.35}
+.v2-lay{border:0;background:rgba(255,255,255,.07);color:var(--muted);width:34px;height:30px;border-radius:10px;display:grid;place-items:center;padding:0;margin-left:auto}
+.v2-lay .v2i{width:17px;height:17px}
+.v2-sets-h > span:last-child{display:flex;justify-content:flex-end}
+.v2-grid-h{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 2px 8px}
+.v2-tiles{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.v2-tiles .chk .v2i{width:13px;height:13px;stroke-width:3}
 .v2-nl{color:var(--muted);font-size:12.5px;font-weight:700;text-align:center}
 .v2-chk{width:52px!important;height:52px!important;border-radius:50%;border:2px solid var(--line)!important;display:grid;place-items:center;color:var(--muted);background:transparent}
 .v2-chk .v2i{width:24px;height:24px;stroke-width:3}
@@ -1732,6 +1744,7 @@ try {
   if (!ui.studentMode && document.documentElement.dataset.skin === 'v2') ui.view = 'painel'; // visual novo: o professor abre no Painel
   ui.group = u.group || '';
   if (u.layout) ui.layout = u.layout;
+  if (u.v2grid) ui.v2grid = true;
   if (u.mode) ui.mode = u.mode;
   if (u.cardioMin) ui.cardioMin = u.cardioMin;
   if (u.color) ui.color = u.color;
@@ -1739,7 +1752,7 @@ try {
   if (u.restSec) ui.rest = u.restSec;
 } catch (e) {}
 if (!['treino', 'historico', 'evolucao', 'alunos', 'perfil', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(ui.view) || ui.studentMode && !['treino', 'historico', 'config', 'recados', 'medidas'].includes(ui.view)) ui.view = 'treino';
-const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode, color: ui.color })); } catch (e) {} };
+const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, v2grid: !!ui.v2grid, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode, color: ui.color })); } catch (e) {} };
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
 const vol = sets => sets.reduce((a, s) => a + setVol(s), 0);
@@ -2619,6 +2632,10 @@ function renderStudentTreinoV2(p, isToday) {
   markLocked(); PFA.start();
 }
 // Exercício em sanfona: fechado mostra nome e séries; aberto mostra as séries para anotar
+// Troca o jeito de anotar as séries: lista (com − e +) ou quadriculado (como no app anterior)
+const V2_LAYOUT_BTN = grid => `<button class="v2-lay" data-act="v2-grid" aria-label="${grid ? 'Ver em lista' : 'Ver em quadrados'}" title="${grid ? 'Ver em lista' : 'Ver em quadrados'}">${grid
+  ? '<svg viewBox="0 0 24 24" class="v2i"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
+  : '<svg viewBox="0 0 24 24" class="v2i"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>'}</button>`;
 function cardHtmlV2(ex) {
   const lock = lockReason(ex.id), tm = isTimed(ex), nl = ex.noLoad || tm;
   const s = sessionOn(ex.id, ui.date) || blankSession(ex, ui.date), hints = blankSession(ex, ui.date).sets, prev = prevSession(ex.id, ui.date);
@@ -2629,20 +2646,32 @@ function cardHtmlV2(ex) {
   const head = `<button class="v2-exh" data-act="v2-open" aria-expanded="${open}">${PFA.animHtml(v2Key(ex), 'v2-thumb')}<span class="grow"><b>${esc(ex.name)}</b><small>${noRec ? 'sem registro neste dia' : `${ex.group} · ${sub}`}</small></span>
     ${complete ? `<span class="v2-okb">${V2I.check}</span>` : `<span class="v2-cnt">${done}/${n}</span>`}${open || complete ? '' : `<span class="v2-chev">${V2I.chev}</span>`}</button>`;
   if (!open || noRec) return `<div class="v2ex ${complete ? 'done' : ''}">${head}<div class="compare" hidden></div></div>`;
+  const grid = ui.v2grid && !tm, pm = !lock;
+  const fld = (f, x, p, h, i) => {
+    const kg = f === 'carga', lab = `${kg ? 'carga' : 'repetições'} da série ${i + 1}`;
+    return `<div class="v2-fld${pm ? ' pm' : ''}">${pm ? `<button class="v2-pm" data-act="dec" data-f="${f}" aria-label="Diminuir ${lab}">${V2I.minus}</button>` : ''}<input data-f="${f}" inputmode="${kg ? 'decimal' : 'numeric'}" value="${numVal(x[f])}" placeholder="${h[f] != null ? numVal(h[f]) : '–'}" aria-label="${lab}">${pm ? `<button class="v2-pm" data-act="inc" data-f="${f}" aria-label="Aumentar ${lab}">${V2I.plus}</button>` : ''}<small>${p && p.done && p[f] != null ? `antes ${kg ? fmt(p[f]) : p[f]}` : kg ? 'kg' : 'reps'}</small></div>`;
+  };
   const rows = s.sets.map((x, i) => {
     const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
     if (tm) return plankRowHtml(ex, x, p, h, i);
+    if (grid) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
+      <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>
+      ${nl ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
+      <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
+      <div class="ant">${p && p.done ? (nl ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
+    </div>`;
     return `<div class="v2-set ${rowClass(x, p)}" data-i="${i}" data-base="v2-set">
       <span class="v2-sn">${i + 1}</span>
-      ${nl ? '<span class="v2-nl">sem carga</span>' : `<label class="v2-fld"><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : '–'}" aria-label="carga da série ${i + 1}"><small>${p && p.done && p.carga != null ? `antes ${fmt(p.carga)}` : 'kg'}</small></label>`}
-      <label class="v2-fld"><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : '–'}" aria-label="repetições da série ${i + 1}"><small>${p && p.done && p.reps != null ? `antes ${p.reps}` : 'reps'}</small></label>
+      ${nl ? '<span class="v2-nl">sem carga</span>' : fld('carga', x, p, h, i)}
+      ${fld('reps', x, p, h, i)}
       <button class="chk v2-chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>`;
   }).join('');
   return `<div class="v2ex open ${complete ? 'done' : ''}">${head}<div class="v2-exb">
     ${v2HowHtml(ex, lock)}
     ${exDetailHtml(ex)}
-    ${tm ? '' : `<div class="v2-sets-h"><span>#</span><span>${nl ? '' : 'Peso (kg)'}</span><span>Reps</span><span></span></div>`}
-    ${rows}
+    ${tm ? '' : grid ? `<div class="v2-grid-h"><span>${nl ? 'reps' : 'peso · reps'} · antes</span>${V2_LAYOUT_BTN(true)}</div><div class="tiles v2-tiles">${rows}</div>`
+      : `<div class="v2-sets-h"><span>#</span><span>${nl ? '' : 'Peso (kg)'}</span><span>Reps</span><span>${V2_LAYOUT_BTN(false)}</span></div>${rows}`}
+    ${tm ? rows : ''}
     ${lock ? `<p class="lock-note"><i class="ic ic-lock"></i> ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em Editar'}</p>` : `<div class="v2-acts">
       <button data-act="addset">${V2I.plus}<span>Série</span></button><button data-act="rmset">${V2I.minus}<span>Série</span></button>
       <button data-act="alldone">${V2I.check}<span>${done === n ? 'Desmarcar' : 'Todas'}</span></button>${ui.studentMode ? '' : `<button data-act="edit">${V2I.edit}<span>Editar</span></button>`}</div>`}
@@ -6171,6 +6200,7 @@ $main.addEventListener('click', e => {
     }
     case 'openday': if (b.dataset.pid && profile(b.dataset.pid)) ui.profile = b.dataset.pid; ui.date = b.dataset.d; ui.group = b.dataset.g; return go('treino');
     case 'layout': ui.layout = b.dataset.l; saveUi(); return render();
+    case 'v2-grid': ui.v2grid = !ui.v2grid; saveUi(); $main.querySelectorAll('[data-ex]').forEach(c => refreshCard(c.dataset.ex)); markLocked(); return;
     case 'mode': {
       ui.mode = b.dataset.m; saveUi();
       // no cartão do aluno, trocar o tipo também corrige o cardio já marcado no dia
@@ -6301,9 +6331,13 @@ $main.addEventListener('click', e => {
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(ex.rest); }
   } else if (act === 'inc' || act === 'dec') {
     const i = +b.closest('[data-i]').dataset.i, x = s.sets[i], f = b.dataset.f;
-    if (x[f] == null) { // campo vazio: o primeiro toque já coloca o valor de antes (ou o planejado)
-      const pv = prevSession(ex.id, ui.date), base = (pv && pv.sets[i] && pv.sets[i][f]) ?? ((blankSession(ex, ui.date).sets[i] || {}).hint || {})[f];
+    if (x[f] == null) { // campo vazio: o primeiro toque já coloca o peso e as reps de antes (ou o planejado); depois é só ajustar
+      const pv = prevSession(ex.id, ui.date), ps = pv && pv.sets[i], hint = (blankSession(ex, ui.date).sets[i] || {}).hint || {}, before = s.sets[i - 1];
+      const from = k => (ps && ps[k]) ?? (before && before[k]) ?? hint[k];
+      const base = from(f);
       x[f] = base != null ? base : act === 'inc' ? STEP[f] : 0;
+      const o = f === 'carga' ? 'reps' : 'carga';
+      if (x[o] == null && !(o === 'carga' && (ex.noLoad || isTimed(ex)))) { const ob = from(o); if (ob != null) x[o] = ob; }
     } else {
       const v = x[f] + STEP[f] * (act === 'inc' ? 1 : -1);
       x[f] = Math.max(0, Math.round(v * 10) / 10);
@@ -7689,7 +7723,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-23:42';
+const APP_VERSION = '13/10-23:47';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
