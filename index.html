@@ -655,8 +655,8 @@ body.offline #offBar{display:block}
 .cal button:disabled{opacity:.35}
 .cal.compact{gap:3px}.cal.compact button{aspect-ratio:auto;height:34px;font-size:13px;border-radius:8px}
 .cal button small{position:absolute;left:0;right:0;bottom:2px;font-size:9px;opacity:.9}
-.month-sum{display:flex;gap:8px;margin-top:12px}
-.month-sum div{flex:1;min-width:0;background:var(--acc-soft);border-radius:12px;padding:8px}
+.month-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,120px),1fr));gap:8px;margin-top:12px}
+.month-sum div{min-width:0;background:var(--acc-soft);border-radius:12px;padding:8px}
 .month-sum b{display:block;font-size:17px;color:var(--acc)}
 .month-sum span{font-size:12px;color:var(--muted)}
 .day-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -917,8 +917,8 @@ body.v2-full main{margin-top:0}
 .v2-lay .v2i{width:17px;height:17px}
 .v2-sets-h > span:last-child{display:flex;justify-content:flex-end}
 .v2-grid-h{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 2px 8px}
-.v2-tiles{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
-.v2-tiles .chk .v2i{width:13px;height:13px;stroke-width:3}
+.v2-sqs{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.v2-sqs .chk .v2i{width:13px;height:13px;stroke-width:3}
 .v2-nl{color:var(--muted);font-size:12.5px;font-weight:700;text-align:center}
 .v2-chk{width:52px!important;height:52px!important;border-radius:50%;border:2px solid var(--line)!important;display:grid;place-items:center;color:var(--muted);background:transparent}
 .v2-chk .v2i{width:24px;height:24px;stroke-width:3}
@@ -2669,7 +2669,7 @@ function cardHtmlV2(ex) {
   return `<div class="v2ex open ${complete ? 'done' : ''}">${head}<div class="v2-exb">
     ${v2HowHtml(ex, lock)}
     ${exDetailHtml(ex)}
-    ${tm ? '' : grid ? `<div class="v2-grid-h"><span>${nl ? 'reps' : 'peso · reps'} · antes</span>${V2_LAYOUT_BTN(true)}</div><div class="tiles v2-tiles">${rows}</div>`
+    ${tm ? '' : grid ? `<div class="v2-grid-h"><span>${nl ? 'reps' : 'peso · reps'} · antes</span>${V2_LAYOUT_BTN(true)}</div><div class="tiles v2-sqs">${rows}</div>`
       : `<div class="v2-sets-h"><span>#</span><span>${nl ? '' : 'Peso (kg)'}</span><span>Reps</span><span>${V2_LAYOUT_BTN(false)}</span></div>${rows}`}
     ${tm ? rows : ''}
     ${lock ? `<p class="lock-note"><i class="ic ic-lock"></i> ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em Editar'}</p>` : `<div class="v2-acts">
@@ -7737,7 +7737,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-23:53';
+const APP_VERSION = '14/10-00:06';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
