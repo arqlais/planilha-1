@@ -146,6 +146,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .own-top{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}.own-top b{font-size:17px}.own-top span{width:70px}
 .ready-card{display:flex;align-items:center;gap:10px}.ready-card h3{margin:0 0 4px}.ready-card small{color:var(--muted)}
 .own-sel{display:flex;flex-wrap:wrap;gap:6px}.own-sel button{border:1px solid var(--acc);background:var(--acc-soft);color:var(--text);border-radius:999px;padding:6px 10px;font-weight:700;font-size:13px}
+.exlib-dlg{width:min(560px,calc(100vw - 24px))}.exlib-list{max-height:min(52vh,460px);overflow:auto;border:1px solid var(--line);border-radius:14px;margin-top:4px}
 .own-groups{margin:8px 0}.own-groups small{opacity:.65;font-size:11px;margin-left:2px}.own-eq{padding-top:0}.own-eq button{padding:6px 12px;font-size:13px}.own-list{padding:4px 8px}
 .own-item{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:13px 6px;font:inherit;font-size:15px;text-align:left}
 .own-item:last-child{border-bottom:0}.own-item small{color:var(--muted);font-size:12px}.own-item b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--acc-soft);color:var(--acc)}
@@ -1335,10 +1336,17 @@ body.desk .v2-navbrand{display:block}
   </form>
 </dialog>
 
+<dialog id="exLibDlg" class="exlib-dlg">
+  <h2>Escolher exercício</h2>
+  <input class="search" id="exLibSearch" placeholder="Buscar exercício" autocomplete="off">
+  <div id="exLibBody"></div>
+  <div class="dlg-actions"><span class="grow" id="exLibInfo"></span><button class="btn primary" id="exLibClose" type="button">Pronto</button></div>
+</dialog>
+<datalist id="exNames"></datalist>
 <dialog id="exDialog">
   <form method="dialog" id="exForm">
     <h2 id="exTitle">Novo exercício</h2>
-    <label class="f">Nome do exercício<input name="name" required placeholder="Ex.: Supino inclinado" autocomplete="off"></label>
+    <label class="f">Nome do exercício<input name="name" required placeholder="Ex.: Supino inclinado" autocomplete="off" list="exNames"></label>
     <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Treino<div id="letterPick" style="margin-top:6px"></div></div>
     <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px">Grupo muscular<div id="groupPick" style="margin-top:6px"></div></div>
     <div class="grid3">
@@ -1589,6 +1597,14 @@ const equipOf = name => { const n = normName(name);
 const isTimed = ex => !!ex && /prancha/.test(normName(ex.name));
 const fmtSec = v => { if (v == null) return '–'; const t = Math.round(v), m = Math.floor(t / 60), r = t % 60; return m ? `${m} min${r ? ` ${String(r).padStart(2, '0')} s` : ''}` : `${r} s`; };
 const catGroup = name => { const n = (name || '').toLowerCase(); for (const [g, l] of Object.entries(CATALOG)) if (l.some(x => x.toLowerCase() === n)) return g; return null; };
+// Exercícios do catálogo: com busca (sem acento, várias palavras), ou do grupo escolhido; filtro de equipamento
+function catList(q, g, eqF) {
+  const words = q.split(' ').filter(Boolean), hit = n => { const t = normName(n); return words.every(w => t.includes(w)); };
+  return (q ? Object.entries(CATALOG).flatMap(([gr, l]) => l.filter(hit).map(n => [gr, n])) : (CATALOG[g] || []).map(n => [g, n]))
+    .filter(([, n]) => !eqF || equipOf(n) === eqF);
+}
+// Nome do catálogo com a grafia certa (para os nomes ficarem iguais e as comparações funcionarem)
+const catName = name => { const n = normName(name); for (const l of Object.values(CATALOG)) { const x = l.find(y => normName(y) === n); if (x) return x; } return null; };
 // Treinos prontos: o aluno escolhe um e já começa
 const READY = [
   { name: 'Corpo todo (iniciante)', ex: ['Agachamento livre', 'Supino reto', 'Puxada frontal', 'Desenvolvimento com halteres', 'Cadeira flexora', 'Abdominal livre'] },
@@ -3290,10 +3306,7 @@ function ownBuildHtml(p) {
     ${READY.map((r, i) => `<section class="card ready-card"><div class="grow"><h3>${esc(r.name)}</h3><small>${r.ex.map(esc).join(' · ')}</small></div>
       <button class="btn primary" data-act="own-ready" data-i="${i}">Usar este</button></section>`).join('')}`;
   // escolher exercícios
-  const q = normName(b.q), g = b.g || GROUPS[0], eqF = b.eq || '';
-  const words = q.split(' ').filter(Boolean), hit = n => { const t = normName(n); return words.every(w => t.includes(w)); };
-  const list = (q ? Object.entries(CATALOG).flatMap(([gr, l]) => l.filter(hit).map(n => [gr, n])) : (CATALOG[g] || []).map(n => [g, n]))
-    .filter(([, n]) => !eqF || equipOf(n) === eqF);
+  const q = normName(b.q), g = b.g || GROUPS[0], eqF = b.eq || '', list = catList(q, g, eqF);
   const isSel = n => b.sel.some(x => x.name.toLowerCase() === n.toLowerCase());
   return `${top}
     <section class="card">
@@ -5235,7 +5248,7 @@ function builderHtml(pid) {
     const r = allSame(e.sets, 'reps'), c = allSame(e.sets, 'carga');
     return `<tr data-id="${e.id}" class="b1">
       <td class="num">${i + 1}</td>
-      <td><input data-bf="name" data-id="${e.id}" value="${esc(e.name)}" aria-label="Exercício"></td>
+      <td><input data-bf="name" data-id="${e.id}" value="${esc(e.name)}" aria-label="Exercício" list="exNames"></td>
       <td><select data-bf="group" data-id="${e.id}" aria-label="Grupo">${GROUPS.map(g => `<option ${g === e.group ? 'selected' : ''}>${g}</option>`).join('')}</select></td>
       <td><input class="n" data-bf="n" data-id="${e.id}" inputmode="numeric" value="${e.sets.length}" aria-label="Séries"></td>
       <td><input class="n" data-bf="reps" data-id="${e.id}" inputmode="numeric" value="${r === 'var' ? '' : numVal(r)}" placeholder="${r === 'var' ? 'var.' : '–'}" aria-label="Repetições"></td>
@@ -5327,8 +5340,9 @@ function builderChange(t) {
   }
   const f = t.dataset.bf, v = t.value;
   if (f === 'name') {
-    const nn = v.trim().slice(0, 60); if (!nn || nn === ex.name) return;
-    const old = ex.name; ex.name = nn;
+    const cn = catName(v), nn = cn || v.trim().slice(0, 60); if (!nn || nn === ex.name) { t.value = ex.name; return; }
+    const old = ex.name; ex.name = nn; t.value = nn;
+    if (cn) { const g = catGroup(cn); if (g && g !== ex.group) { ex.group = g; const sg = $main.querySelector(`[data-bf="group"][data-id="${ex.id}"]`); if (sg) sg.value = g; } if (NOLOAD_RX.test(normName(cn)) && !ex.noLoad) { ex.noLoad = true; bRender(true); } }
     if (!nearName(old, nn) && splitHistory(ex, old)) toast(`<b>${esc(nn)}</b> começa com histórico novo. O histórico de ${esc(old)} continua guardado.`);
     bRender(false);
     const mm = $main.querySelector('.mmap'); if (mm && ex.letter) mm.outerHTML = muscleMapHtml(letterExs(ex.letter, ex.profileId)); // o desenho acompanha o nome novo
@@ -5405,6 +5419,48 @@ async function saveWorkoutNow(pid, L, b) {
     toast(e === 'offline' ? 'Sem internet: o treino ficou guardado neste aparelho e sobe sozinho quando a internet voltar. Não feche o app até aparecer "Tudo salvo".' : 'Não foi possível confirmar o salvamento. Confira a internet e toque em Salvar de novo.');
   }
 }
+// Biblioteca de exercícios do Montar: o professor toca nos exercícios e eles entram no treino com o nome certo
+const $exLib = document.getElementById('exLibDlg');
+function openExLib(pid, L) {
+  const last = letterExs(L, pid).slice(-1)[0];
+  ui.lib = { pid, L, q: '', g: last && GROUPS.includes(last.group) ? last.group : GROUPS[0], eq: '', n: 0 };
+  document.getElementById('exLibSearch').value = ''; exLibRender(); $exLib.showModal();
+}
+function exLibRender() {
+  const B = ui.lib; if (!B) return;
+  const q = normName(B.q), list = catList(q, B.g, B.eq), have = letterExs(B.L, B.pid);
+  const isIn = n => have.some(e => sameName(e.name, n));
+  document.getElementById('exLibBody').innerHTML = `${q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === B.g ? 'on' : ''}" data-lib="g" data-v="${x}">${x} <small>${CATALOG[x].length}</small></button>`).join('')}</div>`}
+    <div class="chips own-groups own-eq">${EQUIPS.map(([v, l]) => `<button class="${v === B.eq ? 'on' : ''}" data-lib="eq" data-v="${v}">${l}</button>`).join('')}</div>
+    <div class="exlib-list own-list">${list.map(([gr, n]) => `<button class="own-item ${isIn(n) ? 'on' : ''}" data-lib="pick" data-g="${gr}" data-n="${esc(n)}"><span class="grow">${esc(n)}${q ? ` <small>${gr}</small>` : ''}</span><b>${isIn(n) ? '✓' : '＋'}</b></button>`).join('')
+      || '<p class="hint" style="margin:8px 0">Nenhum exercício com esse nome na lista.</p>'}
+      ${q && !list.some(([, n]) => normName(n) === q) ? `<button class="own-item" data-lib="custom"><span class="grow">Usar “${esc(B.q.trim())}” mesmo assim <small>nome fora da lista</small></span><b>＋</b></button>` : ''}</div>`;
+  document.getElementById('exLibInfo').textContent = B.n ? `${B.n} adicionado${B.n === 1 ? '' : 's'}` : '';
+}
+function exLibAdd(name, group) {
+  const B = ui.lib, list = letterExs(B.L, B.pid), prev = list.slice(-1)[0];
+  if (list.some(e => sameName(e.name, name))) return toast(`<b>${esc(name)}</b> já está neste treino.`);
+  const reps = prev ? allSame(prev.sets, 'reps') : 10, n = prev ? prev.sets.length : 3;
+  const ex = { id: uid(), profileId: B.pid, group, letter: B.L, name, sets: Array.from({ length: n }, () => ({ carga: null, reps: typeof reps === 'number' ? reps : 10 })), order: list.length + 1, planDate: today(),
+    ...(NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
+  list.forEach((e, k) => { e.order = k + 1; });
+  db.exercises.push(ex); B.n++; save();
+  const box = document.querySelector('#exLibBody .exlib-list'), y = box ? box.scrollTop : 0;
+  exLibRender(); const nb = document.querySelector('#exLibBody .exlib-list'); if (nb) nb.scrollTop = y;
+}
+$exLib.addEventListener('click', e => {
+  const t = e.target.closest('[data-lib]'), B = ui.lib; if (!B) return;
+  if (e.target.id === 'exLibClose' || e.target === $exLib) { $exLib.close(); return; }
+  if (!t) return;
+  const k = t.dataset.lib;
+  if (k === 'g') { B.g = t.dataset.v; return exLibRender(); }
+  if (k === 'eq') { B.eq = t.dataset.v; return exLibRender(); }
+  if (k === 'pick') return exLibAdd(t.dataset.n, t.dataset.g);
+  if (k === 'custom') { const n = B.q.trim().slice(0, 60).replace(/^./, c => c.toUpperCase()); B.q = ''; document.getElementById('exLibSearch').value = ''; return exLibAdd(n, B.g); }
+});
+document.getElementById('exLibSearch').addEventListener('input', e => { if (ui.lib) { ui.lib.q = e.target.value; exLibRender(); } });
+$exLib.addEventListener('close', () => { if (ui.lib && ui.lib.n) render(); ui.lib = null; });
+document.getElementById('exNames').innerHTML = Object.values(CATALOG).flat().map(n => `<option value="${esc(n)}">`).join('');
 async function builderAct(act, b) {
   const pid = ui.profile, p = profile(pid), L = ui.bGroup;
   if (act === 'b-w') { ui.bGroup = b.dataset.id; return render(); }
@@ -5428,15 +5484,7 @@ async function builderAct(act, b) {
     document.getElementById('copyTo').innerHTML = others.map(x => `<option value="${x.id}">${x.id === ME ? 'Meu treino' : esc(x.name)}</option>`).join('');
     return $copy.showModal();
   }
-  if (act === 'b-add') {
-    if (!L) return;
-    const n = letterExs(L, pid).length;
-    const ex = { id: uid(), profileId: pid, group: (letterExs(L, pid).slice(-1)[0] || {}).group || GROUPS[0], letter: L, name: 'Novo exercício', sets: [{ carga: null, reps: 10 }, { carga: null, reps: 10 }, { carga: null, reps: 10 }], order: n + 1, planDate: today() };
-    letterExs(L, pid).forEach((e, k) => { e.order = k + 1; });
-    db.exercises.push(ex); save(); render();
-    const el = $main.querySelector(`[data-bf="name"][data-id="${ex.id}"]`); if (el) { el.focus(); el.select(); }
-    return;
-  }
+  if (act === 'b-add') { if (L) openExLib(pid, L); return; }
   const ex = exById(b.dataset.id); if (!ex) return;
   if (act === 'b-sets') { ui.bOpen.has(ex.id) ? ui.bOpen.delete(ex.id) : ui.bOpen.add(ex.id); return render(); }
   if (act === 'b-up' || act === 'b-down') return reorder(pid, L, ex.id, act === 'b-up' ? -1 : 1);
@@ -6341,7 +6389,7 @@ function openDialog(ex, letter) {
   if (!ex) $form.name.focus();
 }
 $form.addEventListener('submit', e => {
-  const name = $form.name.value.trim();
+  const name = catName($form.name.value) || $form.name.value.trim();
   if (!name) return;
   if (!$form.group.value) { e.preventDefault(); return toast('Escolha o grupo muscular do exercício.'); }
   if (!(parseInt($form.sets.value) > 0)) { e.preventDefault(); $form.sets.focus(); return toast('Informe o número de séries.'); }
@@ -7670,7 +7718,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-22:22';
+const APP_VERSION = '13/10-22:26';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
