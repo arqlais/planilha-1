@@ -3441,11 +3441,11 @@ const cardioGoalOf = (p, date) => {
 };
 // campo de km (esteira) ou degraus (escada) no cartão do cardio
 function cardioExtraHtml(p, mode, recs, locked) {
-  const x = CARDIO_EXTRA[mode]; if (!x) return '';
+  const x = CARDIO_EXTRA[mode]; if (!x || !recs.some(c => c.min > 0)) return ''; // só depois de salvar o tempo do cardio
   const last = recs[recs.length - 1], pe = ui.cExtra && ui.cExtra.key === p.id + '|' + ui.date && ui.cExtra.f === x[0] ? ui.cExtra.v : null;
   const v = last && last[x[0]] ? last[x[0]] : pe;
   if (locked) return v ? `<p class="hint cx-ro"><i class="ic ic-${mode === 'escada' ? 'stairs' : 'route'}"></i> <b>${fmtMin(v)} ${x[2]}</b></p>` : '';
-  return `<div class="cx-row"><label for="cardioExtra">${x[1]}</label>
+  return `<div class="cx-row"><label for="cardioExtra">${x[1]} <small>(cardio finalizado: anote aqui)</small></label>
       <input id="cardioExtra" class="time-in" inputmode="${mode === 'escada' ? 'numeric' : 'decimal'}" placeholder="${mode === 'escada' ? 'ex.: 300' : 'ex.: 2,5'}" value="${v ? fmtMin(v) : ''}"><span class="unit">${x[2]}</span>
       <button class="btn sm" data-act="cardio-extra" data-f="${x[0]}">Salvar</button></div>`;
 }
@@ -7813,7 +7813,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/10-14:05';
+const APP_VERSION = '14/10-14:08';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
