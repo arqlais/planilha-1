@@ -1739,7 +1739,7 @@ let db = load();
 let ui = { view: 'treino', group: '', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(u.view)) ui.view = u.view;
+  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'eu', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(u.view)) ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
   if (!ui.studentMode && document.documentElement.dataset.skin === 'v2') ui.view = 'painel'; // visual novo: o professor abre no Painel
   ui.group = u.group || '';
@@ -1751,7 +1751,7 @@ try {
   if (db.profiles.some(p => p.id === u.profile)) ui.profile = u.profile;
   if (u.restSec) ui.rest = u.restSec;
 } catch (e) {}
-if (!['treino', 'historico', 'evolucao', 'alunos', 'perfil', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(ui.view) || ui.studentMode && !['treino', 'historico', 'config', 'recados', 'medidas'].includes(ui.view)) ui.view = 'treino';
+if (!['treino', 'historico', 'evolucao', 'alunos', 'perfil', 'eu', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(ui.view) || ui.studentMode && !['treino', 'historico', 'config', 'recados', 'medidas'].includes(ui.view)) ui.view = 'treino';
 const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: ui.view, group: ui.group, profile: ui.profile, restSec: ui.rest, layout: ui.layout, v2grid: !!ui.v2grid, mode: ui.mode, cardioMin: ui.cardioMin, studentMode: !!ui.studentMode, color: ui.color })); } catch (e) {} };
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
@@ -1907,9 +1907,9 @@ function renderHero() {
   if (ui.view === 'alunos' && !(isDesk() && ui.profile !== ME) || ui.view === 'pagamentos') { $who.innerHTML = '<span>Alunos</span> ▾'; $who.style.paddingLeft = '12px'; } else $who.style.paddingLeft = '';
   document.getElementById('stats').hidden = ['pagamentos', 'montar', 'acessos'].includes(ui.view);
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student');
-  if (ui.studentMode) document.getElementById('studentBar').innerHTML = meStu() ? '<i class="ic ic-eye"></i> Seu perfil de aluno <button data-act-global="exit-student">Voltar ao painel</button>'
+  if (ui.studentMode) document.getElementById('studentBar').innerHTML = meStu() ? '<i class="ic ic-eye"></i> Seu perfil de aluno <button data-act-global="exit-student">Voltar</button>'
     : `<i class="ic ic-eye"></i> Vendo como <b>${esc(p.name)}</b> vê o app <button data-act-global="exit-student">Sair</button>`;
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações', acessos: 'Acessos' };
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', eu: 'Meu perfil', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações', acessos: 'Acessos' };
   if (ui.studentMode) titles.historico = 'Calendário';
   if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
   document.getElementById('heroTitle').textContent = titles[ui.view];
@@ -2037,7 +2037,7 @@ function renderStats() {
 function renderNav() {
   const v2 = skinOn(), sub = v2 && ui.studentMode ? ['medidas'] : STUDENT_SUB;
   $nav.innerHTML = views().map(([id, label]) => { const svg = `<svg viewBox="0 0 24 24" aria-hidden="true">${(v2 && ui.studentMode && V2NAV[id]) || (v2 && !ui.studentMode && V2PNAV[id]) || SVG[id]}</svg>`;
-    return `${v2 && isDesk() && id === views()[0][0] ? `<div class="v2-navbrand">${v2BrandHtml()}</div>` : ''}<button class="${id === ui.view || id === 'alunos' && ui.view === 'perfil' || v2 && !ui.studentMode && id === 'treino' && ui.profile === ME && ['historico', 'evolucao'].includes(ui.view) && !isDesk() || v2 && !ui.studentMode && id === 'painel' && ['ajustes', 'acessos'].includes(ui.view) && !isDesk() || id === 'config' && sub.includes(ui.view) ? 'on' : ''}" data-view="${id}">${v2 ? `<span class="nb">${svg}</span>` : svg}${label}</button>`; }).join('');
+    return `${v2 && isDesk() && id === views()[0][0] ? `<div class="v2-navbrand">${v2BrandHtml()}</div>` : ''}<button class="${id === ui.view || id === 'alunos' && (ui.view === 'perfil' || v2 && !ui.studentMode && ui.profile !== ME && MY_VIEWS.includes(ui.view)) || v2 && !ui.studentMode && id === 'eu' && ui.profile === ME && MY_VIEWS.includes(ui.view) || v2 && !ui.studentMode && id === 'painel' && ['ajustes', 'acessos'].includes(ui.view) && !isDesk() || id === 'config' && sub.includes(ui.view) ? 'on' : ''}" data-view="${id}">${v2 ? `<span class="nb">${svg}</span>` : svg}${label}</button>`; }).join('');
 }
 function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
@@ -2050,13 +2050,13 @@ function render() {
   document.body.classList.toggle('v2-stu', skinOn()); document.body.classList.remove('v2-done');
   if (ui.wkPost) return renderWeekPost();
   if (v2Prof()) {
-    const R = { painel: renderPainelV2, ajustes: renderAjustesV2, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
+    const R = { painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
     if (R) return R();
   }
   if (ui.v2done && skinOn() && ui.view === 'treino') return renderDoneV2();
   if (v2Stu() && { historico: 1, recados: 1, config: 1 }[ui.view]) return ({ historico: renderAgendaV2, recados: renderRecadosV2, config: renderEuV2 })[ui.view]();
   if (v2Stu() && ui.view === 'medidas') { renderMedidas(); return $main.insertAdjacentHTML('afterbegin', v2TopHtml()); }
-  ({ painel: renderPainelV2, ajustes: renderAjustesV2, treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, acessos: renderAcessos, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
+  ({ painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, acessos: renderAcessos, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
   if (v2Prof()) { const t = v2ProfTop(); if (t) $main.insertAdjacentHTML('afterbegin', t); }
 }
 deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
@@ -3113,6 +3113,7 @@ async function v2SharePost(save) {
 const V2PNAV = {
   painel: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
   alunos: '<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 19.5c.9-3.3 3.4-5 6.5-5s5.6 1.7 6.5 5M16 5a3.5 3.5 0 0 1 0 7M18 14.5c1.9.6 3 2.2 3.5 5"/>',
+  eu: '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
   montar: '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',
   pagamentos: '<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10.5h18M7 15h4"/>',
   treino: '<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
@@ -3120,8 +3121,10 @@ const V2PNAV = {
   evolucao: '<path d="M4 19.5h16M5.5 15l4-4.5 3.5 3 6-7"/>',
   ajustes: '<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l3 3"/>',
 };
-const V2_PROF_VIEWS = [['painel', 'Painel'], ['alunos', 'Alunos'], ['montar', 'Montar'], ['pagamentos', 'Pagamentos'], ['treino', 'Meu treino']];
-const V2_PROF_DESK = [...V2_PROF_VIEWS, ['historico', 'Histórico'], ['evolucao', 'Evolução'], ['ajustes', 'Ajustes e backup']];
+// Tudo que é do professor (treino, histórico, evolução, montar) fica numa aba só: Meu perfil
+const V2_PROF_VIEWS = [['painel', 'Painel'], ['alunos', 'Alunos'], ['pagamentos', 'Pagamentos'], ['eu', 'Meu perfil']];
+const V2_PROF_DESK = [...V2_PROF_VIEWS, ['ajustes', 'Ajustes e backup']];
+const MY_VIEWS = ['eu', 'treino', 'historico', 'evolucao', 'medidas', 'montar'];
 const v2Prof = () => skinOn() && !ui.studentMode;
 const v2Ico = d => `<svg viewBox="0 0 24 24" class="v2i">${d}</svg>`;
 const v2Students = () => db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -3203,6 +3206,16 @@ function renderPerfilV2() {
   $main.innerHTML = `<div class="v2-top"><button class="v2-icbtn" data-view="alunos" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>Perfil do aluno</small><h2>${esc(firstName(p))}</h2></div><button class="v2-icbtn" data-act="student-edit" aria-label="Editar dados do aluno">${V2I.edit}</button></div>
     <div class="v2-pf"><div class="v2-pf-a">${v2ProfHead(p)}${cardioWeekHtml(p)}</div><div class="v2-pf-b">${perfilHtml(p, true)}</div></div>`;
 }
+// Meu perfil (professor): as mesmas abas do perfil do aluno, com o treino, histórico, evolução e montar dele
+function renderMeuPerfilV2() {
+  ui.profile = ME; const p = profile(ME), s = profileSummary(ME), pc = s.before ? Math.round((s.now - s.before) / s.before * 100) : null;
+  $main.innerHTML = `<div class="v2-top"><div class="grow"><small>${esc(p.name)}</small><h2>Meu perfil</h2></div><button class="v2-icbtn" data-act="my-student" aria-label="Meu perfil de aluno">${v2Ico(V2PNAV.eu)}</button></div>
+    <div class="v2-pf"><div class="v2-pf-a"><section class="v2-hero v2-pfh"><div class="v2-rowx"><span class="av lg">${avIn(p)}</span><div class="grow"><b>${esc(p.name)}</b><small>${esc(s.lastTxt)}</small></div></div>
+      <div class="v2-grid3"><div><b>${s.weekDays}</b><small>treinos/sem</small></div><div><b>${pc == null ? '–' : `${pc > 0 ? '+' : ''}${pc}%`}</b><small>peso total</small></div><div><b>${fmtMin(cardioWeekOf(p).done)}</b><small>min cardio</small></div></div>
+      <div class="v2-rowx" style="gap:8px;margin-top:14px"><button class="v2-btn sm pri" style="flex:1;margin:0" data-act="v2-mytreino">${v2Ico(V2PNAV.treino)}Treino de hoje</button><button class="v2-btn sm" style="flex:1;margin:0;background:rgba(255,255,255,.12)" data-act="my-student">${v2Ico(V2PNAV.eu)}Perfil de aluno</button></div>
+      <div class="v2-pfacts"><button data-act="open-profile" data-pid="${ME}" data-v="historico">Histórico</button><button data-act="open-profile" data-pid="${ME}" data-v="evolucao">Evolução</button><button data-act="go-montar">Montar detalhado</button></div></section>
+      ${cardioWeekHtml(p)}</div><div class="v2-pf-b">${perfilHtml(p, true)}</div></div>`;
+}
 function renderAjustesV2() {
   $main.innerHTML = `<div class="v2-top"><button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>Professor</small><h2>Ajustes e backup</h2></div></div>
     <section class="card"><div class="v2-row" style="border:0;padding:0"><button class="v2-phbtn" data-act="photo-edit" data-pid="${ME}" aria-label="Mudar sua foto"><span class="av">${avIn(profile(ME))}</span><span class="v2-phcam"><i class="ic ic-cam"></i></span></button>
@@ -3227,7 +3240,8 @@ function v2ProfTop() {
   const t = { treino: other ? `Treino de ${firstName(p)}` : 'Meu treino', historico: other ? `Histórico · ${firstName(p)}` : 'Seu histórico', evolucao: other ? `Evolução · ${firstName(p)}` : 'Sua evolução',
     montar: 'Montar treinos', pagamentos: 'Pagamentos', acessos: 'Acessos', medidas: 'Medidas', recados: 'Recados', alunos: 'Alunos' }[ui.view] || '';
   if (!t) return '';
-  const back = other && ['treino', 'historico', 'evolucao', 'medidas'].includes(ui.view) ? `<button class="v2-icbtn" data-act="open-profile" data-pid="${p.id}" data-v="perfil" aria-label="Voltar">${V2I.back}</button>` : ui.view === 'acessos' ? `<button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button>` : '';
+  const back = other && ['treino', 'historico', 'evolucao', 'medidas', 'montar'].includes(ui.view) ? `<button class="v2-icbtn" data-act="open-profile" data-pid="${p.id}" data-v="perfil" aria-label="Voltar">${V2I.back}</button>`
+    : !other && MY_VIEWS.includes(ui.view) ? `<button class="v2-icbtn" data-view="eu" aria-label="Voltar para Meu perfil">${V2I.back}</button>` : ui.view === 'acessos' ? `<button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button>` : '';
   const extra = ui.view === 'treino' ? `${other ? '' : `<button class="v2-icbtn" data-act="my-student" aria-label="Meu perfil de aluno">${v2Ico('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>')}</button>`}<button class="v2-icbtn" data-view="historico" aria-label="Histórico">${v2Ico(V2PNAV.historico)}</button><button class="v2-icbtn" data-view="evolucao" aria-label="Evolução">${v2Ico(V2PNAV.evolucao)}</button>` : '';
   return `<div class="v2-top">${back}<div class="grow"><small>${esc(other ? p.name : profile(ME).name)}</small><h2>${esc(t)}</h2></div>${extra}</div>`;
 }
@@ -4334,7 +4348,7 @@ function renderHistorico() {
   for (let d = 1; d <= nDays; d++) {
     const iso = `${ui.month}-${pad(d)}`, has = days[iso];
     // Professor no calendário de um aluno: dias futuros abrem o planejamento daquela data
-    const planner = !ui.studentMode && ui.profile !== ME, fut = iso > today();
+    const planner = !ui.studentMode, fut = iso > today();
     const planned = planner && fut && dayPlan(profile(ui.profile), iso).some(x => x !== CARDIO);
     const missed = !has && missedDay(profile(ui.profile), iso);
     const cls = [has ? 'has' : '', iso === today() ? 'today' : '', iso === sel ? 'sel' : '', planned ? 'planned' : '', missed ? 'missed' : ''].join(' ');
@@ -4365,7 +4379,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : ui.profile !== ME ? 'Toque em um dia para ver o treino. Riscados em vermelho: tinha treino e o aluno não fez (não contam nas séries da semana). Dias futuros: toque para planejar o treino daquela data (marcados = treino planejado).' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
+      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : !ui.studentMode ? 'Toque em um dia para ver o treino. Riscados em vermelho: tinha treino e não foi feito (não contam nas séries da semana). Dias futuros: toque para planejar o treino daquela data (marcados = treino planejado).' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
         <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(Math.round(monthVol))}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
@@ -4843,7 +4857,7 @@ function updateWaLink() {
 }
 // O que o aluno marcou (no modo aluno): séries feitas e cardio, dia a dia
 function marcacoesHtml(p) {
-  const ss = profSessions(p.id).filter(x => x.by === 'aluno'), cc = profCardio(p.id).filter(c => c.by === 'aluno');
+  const mine = p.id === ME, ss = profSessions(p.id).filter(x => mine || x.by === 'aluno'), cc = profCardio(p.id).filter(c => mine || c.by === 'aluno');
   const days = [...new Set([...ss.map(x => x.date), ...cc.map(c => c.date)])].sort().reverse().slice(0, 5);
   const body = days.map(d => {
     const rows = ss.filter(x => x.date === d).map(x => {
@@ -4854,9 +4868,9 @@ function marcacoesHtml(p) {
     const sent = ss.filter(x => x.date === d && x.fin).map(x => x.fin).sort().pop();
     return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}${sent ? ` · <span class="pill up">✓ treino enviado às ${new Date(sent).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}</p>${rows}`;
   }).join('');
-  return `<section class="card"><div class="card-h"><div class="grow"><h3>Marcações do aluno</h3>
-      <small>Séries e cardio que ${esc(firstName(p))} marcou no app</small></div></div>
-    ${body || `<p class="empty" style="padding:8px 0">Nenhuma marcação ainda. Use <b>Ver como o aluno</b> para ver o app como ${esc(firstName(p))} e marcar um treino.</p>`}</section>`;
+  return `<section class="card"><div class="card-h"><div class="grow"><h3>${mine ? 'Suas marcações' : 'Marcações do aluno'}</h3>
+      <small>${mine ? 'Séries e cardio que você marcou' : `Séries e cardio que ${esc(firstName(p))} marcou no app`}</small></div></div>
+    ${body || mine && '<p class="empty" style="padding:8px 0">Nenhuma marcação ainda.</p>' || `<p class="empty" style="padding:8px 0">Nenhuma marcação ainda. Use <b>Ver como o aluno</b> para ver o app como ${esc(firstName(p))} e marcar um treino.</p>`}</section>`;
 }
 // ---------- Medidas do corpo (aluno e professor) ----------
 const BODY_FIELDS = [['peso', 'Peso', 'kg'], ['altura', 'Altura', 'cm'], ['idade', 'Idade', 'anos'],
@@ -5006,7 +5020,7 @@ function renderConfig() {
 }
 function setStudentMode(on) {
   ui.studentMode = on; stopDemo(); ui.demo = false;
-  ui.view = on ? 'treino' : ui.profile === ME ? (skinOn() ? 'painel' : 'treino') : 'perfil'; ui.date = today(); ui.month = ui.date.slice(0, 7);
+  ui.view = on ? 'treino' : ui.profile === ME ? (skinOn() ? 'eu' : 'treino') : 'perfil'; ui.date = today(); ui.month = ui.date.slice(0, 7);
   if (on && !isLetter(ui.group) && ui.group !== CARDIO) ui.group = firstWorkout();
   saveUi(); render(); window.scrollTo({ top: 0 });
   if (on) toast(meStu() ? 'Seu perfil de aluno: treino do dia, metas, cardio, resumo da semana e medidas, como os alunos veem.' : `Agora você vê o app como <b>${esc(firstName(profile(ui.profile)))}</b>. O que marcar aqui fica como marcação do aluno.`);
@@ -5640,8 +5654,9 @@ function perfilHtml(p, desk) {
       <button class="icon" data-act="edit-day" data-d="${d}" aria-label="Editar ${name}">✎</button></div>`;
   }).join('');
 
-  const log = (p.messages || []).slice().reverse().slice(0, 10);
-  const tab = ST_TABS.some(t => t[0] === ui.stTab) ? ui.stTab : 'resumo';
+  const log = (p.messages || []).slice().reverse().slice(0, 10), mine = p.id === ME;
+  const tabs = mine ? ST_TABS.filter(t => !['mensagens', 'pagamento'].includes(t[0])) : ST_TABS;
+  const tab = tabs.some(t => t[0] === ui.stTab) ? ui.stTab : 'resumo';
   return `<div class="ws" data-active="${desk ? tab : 'all'}">
     <section class="card">
       <div class="prof-h"><span class="av">${avIn(p)}</span>
@@ -5663,7 +5678,7 @@ function perfilHtml(p, desk) {
         ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${p.test ? '' : readyBtn(p)}`}
       </div>
     </section>
-    ${desk ? `<div class="tabs">${ST_TABS.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test ? '' : readyBtn(p)}</div>` : ''}
+    ${desk ? `<div class="tabs">${tabs.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test || mine ? '' : readyBtn(p)}</div>` : ''}
     <div data-tab="resumo"><div class="rs-col">${weekReportHtml(p)}${weekSetsHtml(p)}${cardioDaysHtml(p)}</div><div class="rs-col">
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
@@ -5681,15 +5696,14 @@ function perfilHtml(p, desk) {
       <div class="card-h"><div class="grow"><h3>Últimos treinos</h3></div></div>
       ${recent || '<p class="empty">Ainda não treinou.</p>'}
     </section>
-    ${inviteHtml(p)}
-    ${studentAccountHtml(p)}
+    ${mine ? '' : inviteHtml(p) + studentAccountHtml(p)}
     ${noHist ? '' : histImportHtml(p)}</div></div>
     <div data-tab="medidas">${bodySummaryHtml(p)}</div>
     <div data-tab="marcacoes">${marcacoesHtml(p)}</div>
     <div data-tab="plano">${plannerHtml(p)}
     <section class="card">
       <div class="card-h"><div class="grow"><h3><i class="ic ic-cal"></i> Divisão da semana</h3>
-        <small>Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.</small></div></div>
+        <small>${mine ? 'Escolha o que você treina em cada dia.' : `Você escolhe o que ${esc(firstName(p))} treina em cada dia. O aluno vê só o treino do dia, sem escolher.`}</small></div></div>
       <p class="hint" style="margin:0 0 4px"><b>Metas de cardio:</b> ${p.cardioDaily ? `${fmtMin(p.cardioDaily)} min por dia · ` : ''}${cardioWeekGoal(p) ? `${fmtMin(cardioWeekGoal(p))} min por semana` : 'sem meta semanal'} · <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button></p>
       <p class="hint" style="margin:0 0 4px"><b>Hoje:</b> ${todayPlan.length ? todayPlan.map(x => planLabel(x, p.id)).join(' + ') : 'descanso'}${cardioGoalOf(p, today()) ? ` · cardio ${fmtMin(cardioGoalOf(p, today()))} min` : ''}</p>
       ${division}
@@ -5812,7 +5826,7 @@ document.addEventListener('click', e => {
   const v = e.target.closest('[data-view]');
   if (!v) return;
   // Professor: Treino, Histórico e Evolução da barra de baixo são sempre os dele (o do aluno abre pelo perfil)
-  if (v.closest('#nav') && !ui.studentMode && ui.profile !== ME && ['treino', 'historico', 'evolucao'].includes(v.dataset.view)) {
+  if (v.closest('#nav') && !ui.studentMode && ui.profile !== ME && ['treino', 'historico', 'evolucao', 'eu'].includes(v.dataset.view)) {
     ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
   }
   // A aba Treino da barra de baixo sempre abre no treino de hoje
@@ -7723,7 +7737,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-23:47';
+const APP_VERSION = '13/10-23:53';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
