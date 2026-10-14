@@ -516,6 +516,7 @@ body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:1
 .cd-day.today small{color:var(--text);font-weight:800}.cd-day.today .cd-col{box-shadow:inset 0 0 0 2px var(--acc)}
 .cd-day.fut{opacity:.45}
 .cd-day .ok{color:var(--up);font-size:12px;line-height:1}
+.ws-when{font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:var(--up-bg);color:var(--up)}.ws-when.fut{background:var(--acc-soft);color:var(--text)}
 /* ---- montar treino ---- */
 .mm-h{margin:16px 0 8px;font-size:14px}
 .mmap{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--input)}
@@ -5085,7 +5086,7 @@ function weekSetsHtml(p) {
         return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b><small>${xs.map(x => `${esc(x.name)} (${x.half ? `${x.half} × ½` : x.n})`).join(' · ')}</small></div><b>${fmt(xs.reduce((a, x) => a + x.n, 0))}</b></div>`; }).join('')}</div>`
     : ui.wsOpen && why[ui.wsOpen] ? `<div class="ws-why"><p class="plan-g" style="margin:12px 2px 6px">De onde vêm as ${fmt(plan[ui.wsOpen])} séries de ${ui.wsOpen}</p>
       ${[...new Set(why[ui.wsOpen].map(x => x.d))].map(d => { const xs = why[ui.wsOpen].filter(x => x.d === d);
-        return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b> · ${[...new Set(xs.map(x => esc(wName(x.w, p.id))))].join(' + ')}${datePlan(p, d) ? ' <small>(planejado só para a data)</small>' : ''}
+        return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b> <span class="ws-when ${d > t ? 'fut' : ''}">${d < t ? 'feito' : d === t ? 'hoje' : 'ainda vai treinar'}</span> · ${[...new Set(xs.map(x => esc(wName(x.w, p.id))))].join(' + ')}${datePlan(p, d) ? ' <small>(planejado só para a data)</small>' : ''}
           <small>${xs.map(x => `${esc(x.name)} (${x.half ? `${x.half} × ½` : x.n})`).join(' · ')}</small></div><b>${fmt(xs.reduce((a, x) => a + x.n, 0))}</b></div>`; }).join('')}
       <p class="hint" style="margin:8px 2px 0">Exercício que só ajuda o grupo conta meia série (× ½). Se algum dia não deveria estar aqui, ajuste na <b>Divisão da semana</b> ou no <b>Planejamento</b> (dia que passou sem treino: toque nele para apagar).</p></div>` : ''}
   </section>`;
@@ -7622,7 +7623,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-22:02';
+const APP_VERSION = '13/10-22:08';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
