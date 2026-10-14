@@ -244,6 +244,7 @@ body.locked > header, body.locked > main, body.locked > nav, body.locked > #stud
 .auth-links .link{font-size:14px}
 
 /* ---- modo aluno ---- */
+body.no-figs .v2-ph-art,body.no-figs .v2-thumbs,body.no-figs .v2-thumb,body.no-figs .v2-th,body.no-figs .v2-howto-anim{display:none!important}
 dialog.prof-dlg{border:1px solid var(--line);border-radius:22px;background:var(--card,#141a3a);color:inherit;padding:18px 16px;width:min(92vw,420px)}dialog.prof-dlg::backdrop{background:rgba(0,0,0,.55)}dialog.prof-dlg h3{margin:0 0 8px}dialog.prof-dlg .v2-row{width:100%;background:none;border:0;border-bottom:1px solid var(--line);color:inherit;text-align:left;gap:12px;display:flex;align-items:center;padding:12px 2px;font:inherit}dialog.prof-dlg .v2-row small{display:block;color:var(--muted)}
 #studentBar{position:sticky;top:0;z-index:12;display:flex;align-items:center;justify-content:center;gap:8px;background:#c0892a;color:#fff;font-size:13px;padding:6px 12px;text-align:center}
 #studentBar button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;font-size:13px}
@@ -2053,7 +2054,8 @@ function render() {
   if (desk && ui.view === 'perfil') ui.view = 'alunos'; // no computador o perfil abre dentro da área de alunos
   renderHero();
   renderNav();
-  document.body.classList.toggle('v2-stu', skinOn()); document.body.classList.remove('v2-done');
+  document.body.classList.toggle('v2-stu', skinOn());
+  document.body.classList.toggle('no-figs', skinOn() && ui.profile === ME); // treino do professor: sem os bonequinhos fazendo o exercício document.body.classList.remove('v2-done');
   if (ui.wkPost) return renderWeekPost();
   if (v2Prof()) {
     const R = { painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
@@ -7762,7 +7764,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/10-00:07';
+const APP_VERSION = '14/10-00:17';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
