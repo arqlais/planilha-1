@@ -2551,9 +2551,14 @@ function v2Gauge(p, label) {
   return `<div class="v2-gauge"><svg viewBox="0 0 220 116" aria-hidden="true">${t}<circle cx="${dx.toFixed(1)}" cy="${dy.toFixed(1)}" r="5" fill="var(--good)"/></svg><div class="v2-gv"><b>${Math.round(p * 100)}%</b><small>${label}</small></div></div>`;
 }
 // O que o aluno tem no dia: treinos (letras), exercícios, séries e cardio
+// Exercícios do dia no app do aluno: os do planejamento + os que foram feitos naquele dia (mesmo fora do plano)
+function dayExsOf(p, date) {
+  const plan = dayPlan(p, date), exs = liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g, p.id));
+  const extra = profSessions(p.id).filter(s => s.date === date && hasDone(s) && !exs.some(e => e.id === s.exId)).map(s => exById(s.exId)).filter(Boolean);
+  return [...exs, ...extra.filter((e, i) => extra.indexOf(e) === i)];
+}
 function v2Day(p) {
-  const plan = dayPlan(p, ui.date), groups = liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g));
-  const exs = groups.flatMap(g => letterExs(g));
+  const plan = dayPlan(p, ui.date), exs = dayExsOf(p, ui.date), groups = [...new Set(exs.map(e => e.letter).filter(Boolean))];
   const sets = exs.map(e => (sessionOn(e.id, ui.date) || blankSession(e, ui.date)).sets);
   const total = sets.reduce((a, l) => a + l.length, 0), done = sets.reduce((a, l) => a + l.filter(x => x.done).length, 0);
   const goal = cardioGoalOf(p, ui.date), cmin = cardioBetween(ui.date, ui.date, p.id);
@@ -2577,7 +2582,7 @@ function v2Art(key, inner, cls) {
 const v2Names = d => d.groups.map(g => wName(g)).join(' + ') || CARDIO;
 function v2HomeHtml(p, d, isToday) {
   const lastMsg = (p.messages || []).slice(-1)[0], first = d.exs.find(e => !isComplete(e.id)) || d.exs[0];
-  const started = d.done > 0 || d.cmin > 0, show = d.groups.length || d.plan.includes(CARDIO);
+  const started = d.done > 0 || d.cmin > 0, show = d.exs.length || d.plan.includes(CARDIO);
   const ws = weekStart(today()), wk = new Set([...trainedDates(p.id), ...profCardio(p.id).filter(c => c.min > 0).map(c => c.date)].filter(x => x >= ws && x <= today())).size;
   const planned = Array.from({ length: 7 }, (_, i) => addDays(ws, i)).filter(x => dayPlan(p, x).some(w => w !== CARDIO)).length;
   return `<h1 class="v2-greet">Oi, ${esc(firstName(p))},<br><b>${isToday ? 'bora treinar?' : `treino de ${fmtDate(ui.date)}`}</b></h1>
@@ -2604,9 +2609,11 @@ function v2HomeHtml(p, d, isToday) {
 function v2RunHtml(p, d, isToday) {
   const cur = d.exs.find(e => e.id === ui.v2open) || d.exs.find(e => !isComplete(e.id)) || d.exs[0];
   const el = d.t0 && isToday ? Math.max(0, Math.floor((Date.now() - new Date(d.t0)) / 6e4)) : null;
-  const blocks = d.groups.map(g => { const exs = letterExs(g);
+  const loose = d.exs.filter(e => !d.groups.includes(e.letter));
+  const blocks = d.groups.map(g => { const exs = d.exs.filter(e => e.letter === g);
     return (d.groups.length > 1 ? `<h3 class="v2-gtitle">${esc(wName(g))}</h3>` : '')
-      + (exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>'); }).join('');
+      + (exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>'); }).join('')
+    + loose.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('');
   return `<div class="v2-tw"><div class="v2-tw-a">
     ${v2Art(cur ? v2Key(cur) : 'esteira', `<div class="v2-over">${isToday ? `<button class="v2-icb" data-act="v2-home" aria-label="Voltar ao início">${V2I.back}</button>` : ''}<span class="grow"></span>${el != null ? `<span class="v2-chip">${V2I.clock}${el} min</span>` : ''}</div>
       <div class="v2-wtitle"><small>${esc(d.groups.map(g => letterDesc(g)).filter(Boolean).join(' · ') || (isToday ? 'Treino de hoje' : 'Treino do dia'))}</small><h1>${esc(v2Names(d))}</h1></div>`, 'v2-whead')}
@@ -2620,7 +2627,7 @@ function v2RunHtml(p, d, isToday) {
     ${Object.keys(p.unlocks || {}).filter(x => x < today() && x !== ui.date && !daySent(x, p.id)).sort().map(x => `<section class="card unlock-note"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Seu professor liberou o treino de ${fmtDate(x)}</b> para você completar o que faltou e enviar.</p>
       <button class="btn primary" data-act="goto-day" data-d="${x}">Abrir treino de ${fmtDate(x)}</button></section>`).join('')}
     ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0"><i class="ic ic-unlock"></i> Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
-    ${d.groups.length || d.plan.includes(CARDIO) ? `<div class="v2-wbar"><b>${d.exs.length} exercício${d.exs.length === 1 ? '' : 's'}${d.cardio ? ' + cardio' : ''}</b></div>
+    ${d.exs.length || d.plan.includes(CARDIO) ? `<div class="v2-wbar"><b>${d.exs.length} exercício${d.exs.length === 1 ? '' : 's'}${d.cardio ? ' + cardio' : ''}</b></div>
       ${blocks}${d.cardio ? cardioGoalHtml(p) : ''}${sendHtml()}`
       : `${d.goal ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
     </div></div>`;
@@ -3793,7 +3800,7 @@ const cardioLockMsg = () => dayLocked() ? LOCK_MSG.past : 'O treino de hoje já 
 // Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
 function sendableExs() {
   if (ui.studentMode && selfTab() === 'own') return ui.ownW ? letterExs(ui.ownW) : [];
-  if (ui.studentMode) { const p = profile(ui.profile), plan = dayPlan(p, ui.date); return liveWorkouts(p.id).map(w => w.id).filter(g => plan.includes(g)).flatMap(g => letterExs(g)); }
+  if (ui.studentMode) return dayExsOf(profile(ui.profile), ui.date);
   return isLetter(ui.group) ? letterExs(ui.group) : [];
 }
 // Professor vendo o treino de um aluno: mostra se o aluno já enviou (bloqueado) ou ainda não
@@ -7764,7 +7771,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/10-00:17';
+const APP_VERSION = '14/10-01:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
