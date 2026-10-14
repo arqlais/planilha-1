@@ -146,7 +146,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .own-top{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}.own-top b{font-size:17px}.own-top span{width:70px}
 .ready-card{display:flex;align-items:center;gap:10px}.ready-card h3{margin:0 0 4px}.ready-card small{color:var(--muted)}
 .own-sel{display:flex;flex-wrap:wrap;gap:6px}.own-sel button{border:1px solid var(--acc);background:var(--acc-soft);color:var(--text);border-radius:999px;padding:6px 10px;font-weight:700;font-size:13px}
-.own-groups{margin:8px 0}.own-list{padding:4px 8px}
+.own-groups{margin:8px 0}.own-groups small{opacity:.65;font-size:11px;margin-left:2px}.own-eq{padding-top:0}.own-eq button{padding:6px 12px;font-size:13px}.own-list{padding:4px 8px}
 .own-item{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:13px 6px;font:inherit;font-size:15px;text-align:left}
 .own-item:last-child{border-bottom:0}.own-item small{color:var(--muted);font-size:12px}.own-item b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--acc-soft);color:var(--acc)}
 .own-item.on b{background:var(--acc);color:var(--acc-ink)}.own-item.on{font-weight:700}
@@ -1405,18 +1405,24 @@ function groupOf(e) {
 }
 // ---------- Catálogo de exercícios (o aluno que monta o próprio treino escolhe daqui) ----------
 const CATALOG = {
-  Peito: ['Supino reto', 'Supino inclinado', 'Supino declinado', 'Supino com halteres', 'Crucifixo', 'Crossover', 'Peck deck', 'Flexão de braço'],
-  Costas: ['Puxada frontal', 'Puxada triângulo', 'Remada baixa', 'Remada curvada', 'Remada unilateral (serrote)', 'Remada cavalinho', 'Pulldown', 'Barra fixa'],
-  Ombros: ['Desenvolvimento com halteres', 'Desenvolvimento máquina', 'Elevação lateral', 'Elevação frontal', 'Crucifixo inverso', 'Encolhimento'],
-  'Bíceps': ['Rosca direta', 'Rosca alternada', 'Rosca martelo', 'Rosca Scott', 'Rosca na polia', 'Rosca concentrada'],
-  'Tríceps': ['Tríceps polia', 'Tríceps corda', 'Tríceps testa', 'Tríceps francês', 'Tríceps banco', 'Tríceps coice'],
-  'Abdômen': ['Abdominal livre', 'Abdominal infra', 'Abdominal prancha', 'Abdominal na máquina', 'Elevação de pernas', 'Abdominal oblíquo'],
-  'Quadríceps': ['Agachamento livre', 'Agachamento no Smith', 'Leg press', 'Cadeira extensora', 'Afundo', 'Agachamento búlgaro', 'Hack'],
-  Posteriores: ['Cadeira flexora', 'Mesa flexora', 'Stiff', 'Levantamento terra romeno', 'Flexora em pé'],
-  'Glúteos': ['Elevação pélvica', 'Cadeira abdutora', 'Glúteo na polia', 'Agachamento sumô', 'Passada', 'Cadeira adutora'],
-  Panturrilha: ['Panturrilha em pé', 'Panturrilha sentado', 'Panturrilha no leg press'],
+  Peito: ['Supino reto', 'Supino inclinado', 'Supino declinado', 'Supino com halteres', 'Supino inclinado com halteres', 'Supino declinado com halteres', 'Supino reto no Smith', 'Supino inclinado no Smith', 'Supino máquina', 'Supino inclinado máquina', 'Supino com halteres pegada neutra', 'Chest press', 'Crucifixo', 'Crucifixo inclinado', 'Crucifixo declinado', 'Crucifixo na polia', 'Crossover', 'Crossover polia baixa', 'Crossover polia média', 'Crossover unilateral', 'Peck deck', 'Voador', 'Pullover com halter', 'Pullover na polia', 'Flexão de braço', 'Flexão de braço com joelhos no chão', 'Flexão inclinada (mãos no banco)', 'Flexão declinada (pés no banco)', 'Flexão com pegada aberta', 'Flexão diamante', 'Mergulho nas paralelas (peito)', 'Svend press', 'Squeeze press com halteres'],
+  Costas: ['Puxada frontal', 'Puxada frontal pegada aberta', 'Puxada frontal pegada fechada', 'Puxada supinada', 'Puxada triângulo', 'Puxada unilateral na polia', 'Puxada atrás da nuca', 'Puxada no graviton', 'Pulldown', 'Pulldown com corda', 'Barra fixa', 'Barra fixa supinada', 'Barra fixa com elástico', 'Remada baixa', 'Remada baixa pegada aberta', 'Remada baixa unilateral', 'Remada curvada', 'Remada curvada supinada', 'Remada curvada com halteres', 'Remada unilateral (serrote)', 'Remada cavalinho', 'Remada cavalinho na máquina', 'Remada máquina', 'Remada articulada', 'Remada com peito apoiado', 'Remada alta na polia', 'Remada no Smith', 'Remada invertida', 'Remada Pendlay', 'Remada na polia com corda', 'Levantamento terra', 'Hiperextensão lombar', 'Banco lombar', 'Superman', 'Good morning'],
+  Ombros: ['Desenvolvimento com halteres', 'Desenvolvimento com barra', 'Desenvolvimento militar em pé', 'Desenvolvimento máquina', 'Desenvolvimento no Smith', 'Desenvolvimento Arnold', 'Desenvolvimento unilateral com halter', 'Elevação lateral', 'Elevação lateral sentado', 'Elevação lateral na polia', 'Elevação lateral unilateral na polia', 'Elevação lateral na máquina', 'Elevação lateral inclinado', 'Elevação frontal', 'Elevação frontal com barra', 'Elevação frontal com anilha', 'Elevação frontal na polia', 'Elevação frontal alternada', 'Crucifixo inverso', 'Crucifixo inverso na máquina', 'Crucifixo inverso na polia', 'Face pull', 'Remada alta', 'Remada alta com halteres', 'Encolhimento', 'Encolhimento com halteres', 'Encolhimento no Smith', 'Encolhimento na máquina', 'Rotação externa na polia', 'Rotação externa com halter', 'Flexão pike'],
+  'Bíceps': ['Rosca direta', 'Rosca direta com barra W', 'Rosca alternada', 'Rosca simultânea com halteres', 'Rosca alternada sentado', 'Rosca martelo', 'Rosca martelo alternada', 'Rosca martelo na polia com corda', 'Rosca Scott', 'Rosca Scott com halter', 'Rosca Scott na máquina', 'Rosca na polia', 'Rosca unilateral na polia', 'Rosca concentrada', 'Rosca inclinada', 'Rosca spider', 'Rosca 21', 'Rosca inversa', 'Rosca na máquina', 'Rosca bayesiana na polia', 'Rosca Zottman', 'Rosca de punho', 'Rosca de punho inversa', 'Rolo de punho'],
+  'Tríceps': ['Tríceps polia', 'Tríceps corda', 'Tríceps polia barra V', 'Tríceps polia pegada inversa', 'Tríceps unilateral na polia', 'Tríceps testa', 'Tríceps testa com halteres', 'Tríceps testa na polia', 'Tríceps francês', 'Tríceps francês unilateral', 'Tríceps francês na polia', 'Tríceps banco', 'Tríceps coice', 'Tríceps coice na polia', 'Tríceps na máquina', 'Mergulho nas paralelas', 'Mergulho na máquina', 'Supino fechado', 'Tríceps overhead com corda', 'Tríceps cruzado na polia', 'JM press'],
+  'Abdômen': ['Abdominal livre', 'Abdominal infra', 'Abdominal prancha', 'Prancha lateral', 'Abdominal na máquina', 'Abdominal na polia (ajoelhado)', 'Elevação de pernas', 'Elevação de pernas na barra', 'Elevação de joelhos na paralela', 'Abdominal oblíquo', 'Abdominal bicicleta', 'Abdominal canivete', 'Abdominal remador', 'Abdominal com bola', 'Abdominal declinado', 'Abdominal tesoura', 'Abdominal russo (giro)', 'Abdominal V', 'Dead bug', 'Perdigueiro', 'Escalador (mountain climber)', 'Roda abdominal', 'Pallof press', 'Lenhador na polia', 'Prancha com toque no ombro', 'Hollow hold', 'Flexão lateral com halter'],
+  'Quadríceps': ['Agachamento livre', 'Agachamento no Smith', 'Agachamento com halteres', 'Agachamento goblet', 'Agachamento frontal', 'Agachamento com peso do corpo', 'Agachamento na parede (isometria)', 'Agachamento pistola', 'Agachamento no banco', 'Agachamento na máquina', 'Agachamento pêndulo', 'Agachamento com salto', 'Leg press', 'Leg press 45', 'Leg press horizontal', 'Leg press unilateral', 'Cadeira extensora', 'Cadeira extensora unilateral', 'Afundo', 'Afundo com halteres', 'Afundo no Smith', 'Afundo reverso', 'Agachamento búlgaro', 'Agachamento búlgaro no Smith', 'Hack', 'Hack invertido', 'Sissy squat', 'Subida no banco (step up)', 'Avanço caminhando', 'Belt squat'],
+  Posteriores: ['Cadeira flexora', 'Cadeira flexora unilateral', 'Mesa flexora', 'Mesa flexora unilateral', 'Flexora em pé', 'Stiff', 'Stiff com halteres', 'Stiff unilateral', 'Stiff no Smith', 'Levantamento terra romeno', 'Terra romeno com halteres', 'Levantamento terra sumô', 'Flexão nórdica', 'Flexora com bola', 'Good morning no Smith', 'Pull through na polia', 'Terra com kettlebell', 'Kettlebell swing'],
+  'Glúteos': ['Elevação pélvica', 'Elevação pélvica na máquina', 'Elevação pélvica no Smith', 'Elevação pélvica unilateral', 'Ponte de glúteo', 'Ponte de glúteo unilateral', 'Cadeira abdutora', 'Cadeira abdutora inclinada', 'Glúteo na polia', 'Glúteo na máquina', 'Glúteo 4 apoios', 'Glúteo 4 apoios com caneleira', 'Abdução de quadril na polia', 'Abdução deitado com caneleira', 'Agachamento sumô', 'Agachamento sumô com halter', 'Passada', 'Passada lateral com elástico', 'Caminhada lateral com elástico', 'Cadeira adutora', 'Adução na polia', 'Ostra com elástico', 'Coice de glúteo com caneleira', 'Frog pump'],
+  Panturrilha: ['Panturrilha em pé', 'Panturrilha sentado', 'Panturrilha no leg press', 'Panturrilha no Smith', 'Panturrilha unilateral com halter', 'Panturrilha no degrau', 'Panturrilha na máquina em pé', 'Panturrilha burrinho', 'Panturrilha no hack', 'Tibial anterior'],
 };
-const NOLOAD_RX = /abdominal livre|abdominal infra|abdominal obliquo|prancha|elevacao de pernas|flexao de braco|barra fixa/;
+const NOLOAD_RX = /abdominal (livre|infra|obliquo|bicicleta|canivete|remador|tesoura|v$)|prancha|elevacao de (pernas|joelhos)|flexao (de braco|inclinada|declinada|com pegada|diamante|pike|nordica)|barra fixa|peso do corpo|pistola|mergulho nas paralelas|dead bug|perdigueiro|escalador|superman|hollow|remada invertida|agachamento na parede|agachamento com salto|sissy|ostra|frog pump/;
+// Tipo de equipamento de cada exercício do catálogo (filtro na hora de montar o treino)
+const EQUIPS = [['', 'Todos'], ['livre', 'Halter e barra'], ['maq', 'Máquina'], ['polia', 'Polia'], ['corpo', 'Peso do corpo']];
+const equipOf = name => { const n = normName(name);
+  return NOLOAD_RX.test(n) || /elastico|com bola|4 apoios$/.test(n) && !/polia/.test(n) ? 'corpo'
+    : /polia|triceps corda|cross|pulldown|puxada(?!.*graviton)|face pull|pull through|remada baixa|lenhador|pallof/.test(n) ? 'polia'
+    : /maquina|leg press|cadeira|mesa flexora|flexora|peck|voador|chest press|smith|hack|graviton|articulad|pendulo|belt|banco lombar|panturrilha (sentado|no leg|no hack)|abdominal na maquina/.test(n) ? 'maq' : 'livre'; };
 // Prancha: em vez de repetições, cada série guarda os SEGUNDOS que o aluno aguentou (cronômetro na série)
 const isTimed = ex => !!ex && /prancha/.test(normName(ex.name));
 const fmtSec = v => { if (v == null) return '–'; const t = Math.round(v), m = Math.floor(t / 60), r = t % 60; return m ? `${m} min${r ? ` ${String(r).padStart(2, '0')} s` : ''}` : `${r} s`; };
@@ -3122,8 +3128,10 @@ function ownBuildHtml(p) {
     ${READY.map((r, i) => `<section class="card ready-card"><div class="grow"><h3>${esc(r.name)}</h3><small>${r.ex.map(esc).join(' · ')}</small></div>
       <button class="btn primary" data-act="own-ready" data-i="${i}">Usar este</button></section>`).join('')}`;
   // escolher exercícios
-  const q = (b.q || '').trim().toLowerCase(), g = b.g || GROUPS[0];
-  const list = q ? Object.entries(CATALOG).flatMap(([gr, l]) => l.filter(n => n.toLowerCase().includes(q)).map(n => [gr, n])) : (CATALOG[g] || []).map(n => [g, n]);
+  const q = normName(b.q), g = b.g || GROUPS[0], eqF = b.eq || '';
+  const words = q.split(' ').filter(Boolean), hit = n => { const t = normName(n); return words.every(w => t.includes(w)); };
+  const list = (q ? Object.entries(CATALOG).flatMap(([gr, l]) => l.filter(hit).map(n => [gr, n])) : (CATALOG[g] || []).map(n => [g, n]))
+    .filter(([, n]) => !eqF || equipOf(n) === eqF);
   const isSel = n => b.sel.some(x => x.name.toLowerCase() === n.toLowerCase());
   return `${top}
     <section class="card">
@@ -3131,10 +3139,12 @@ function ownBuildHtml(p) {
       ${b.sel.length ? `<p class="plan-g" style="margin:0 0 6px">No treino (${b.sel.length})</p><div class="own-sel">${b.sel.map((x, i) => `<button data-act="own-unsel" data-i="${i}">${esc(x.name)} ✕</button>`).join('')}</div>` : '<p class="hint" style="margin:0">Escolha os exercícios abaixo.</p>'}
     </section>
     <input class="search" id="ownSearch" placeholder="Buscar exercício" value="${esc(b.q || '')}" autocomplete="off">
-    ${q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === g ? 'on' : ''}" data-act="own-g" data-g="${x}">${x}</button>`).join('')}</div>`}
+    ${q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === g ? 'on' : ''}" data-act="own-g" data-g="${x}">${x} <small>${CATALOG[x].length}</small></button>`).join('')}</div>`}
+    <div class="chips own-groups own-eq">${EQUIPS.map(([v, l]) => `<button class="${v === eqF ? 'on' : ''}" data-act="own-eq" data-v="${v}">${l}</button>`).join('')}</div>
+    <p class="hint" style="margin:0 4px 8px">${list.length} exercício${list.length === 1 ? '' : 's'}${q ? ' encontrados' : ` de ${g}`}</p>
     <section class="card own-list">${list.map(([gr, n]) => `<button class="own-item ${isSel(n) ? 'on' : ''}" data-act="own-pick" data-g="${gr}" data-n="${esc(n)}"><span class="grow">${esc(n)}${q ? ` <small>${gr}</small>` : ''}</span><b>${isSel(n) ? '✓' : '＋'}</b></button>`).join('')
       || `<p class="hint" style="margin:0">Nenhum exercício com esse nome.</p>`}
-      ${q && !list.some(([, n]) => n.toLowerCase() === q) ? `<button class="own-item" data-act="own-custom"><span class="grow">Adicionar “${esc(b.q.trim())}” <small>${g}</small></span><b>＋</b></button>` : ''}</section>
+      ${q && !list.some(([, n]) => normName(n) === q) ? `<button class="own-item" data-act="own-custom"><span class="grow">Adicionar “${esc(b.q.trim())}” <small>${g}</small></span><b>＋</b></button>` : ''}</section>
     ${b.wid ? '<button class="btn danger" style="margin:4px 0 0" data-act="own-del">Excluir este treino</button>' : ''}
     <div class="own-save"><button class="btn primary" data-act="own-save" ${b.sel.length ? '' : 'disabled'}>Salvar treino${b.sel.length ? ` (${b.sel.length} exercício${b.sel.length === 1 ? '' : 's'})` : ''}</button></div>`;
 }
@@ -3170,6 +3180,7 @@ function ownAct(act, b) {
     }
     case 'own-ready': { const r = READY[+b.dataset.i]; return saveOwnWorkout(p, r.name, r.ex.map(n => ({ name: n, group: catGroup(n) || GROUPS[0] }))); }
     case 'own-g': keep(); B.g = b.dataset.g; return render();
+    case 'own-eq': keep(); B.eq = b.dataset.v; return render();
     case 'own-pick': {
       keep(); const n = b.dataset.n, i = B.sel.findIndex(x => sameName(x.name, n));
       if (i >= 0) B.sel.splice(i, 1); else B.sel.push({ name: n, group: b.dataset.g });
@@ -5723,7 +5734,7 @@ $main.addEventListener('click', e => {
       const r = simulateWeek(p); save(); render();
       return toast(r.n ? `Semana simulada: ${r.workouts} treino${r.workouts === 1 ? '' : 's'}, um por dia a partir de segunda, com todas as séries feitas.` : 'Nada novo para simular (os treinos desta semana já estão feitos).');
     }
-    case 'self-tab': case 'own-w': case 'own-new': case 'own-step': case 'own-cancel': case 'own-edit': case 'own-ready': case 'own-g':
+    case 'self-tab': case 'own-w': case 'own-new': case 'own-step': case 'own-cancel': case 'own-edit': case 'own-ready': case 'own-g': case 'own-eq':
     case 'own-pick': case 'own-unsel': case 'own-custom': case 'own-save': case 'own-del': return ownAct(act, b);
     case 'consult-toggle': {
       const p = profile(ui.profile), on = !isConsult(p);
@@ -7480,7 +7491,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/10-20:25';
+const APP_VERSION = '13/10-21:39';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
