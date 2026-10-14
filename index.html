@@ -520,12 +520,14 @@ body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:1
 /* ---- montar treino ---- */
 .mm-h{margin:16px 0 8px;font-size:14px}
 .mmap{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--input)}
-.mm-figs{display:flex;gap:6px;flex:0 0 auto}
-.mm-figs figure{margin:0;text-align:center}
-.mm-figs svg{width:min(140px,38vw);height:auto;display:block}
+.mm-figs{display:flex;gap:6px;flex:1 1 300px;max-width:380px;min-width:0}
+.mm-figs figure{margin:0;text-align:center;flex:1 1 0;min-width:0}
+.mm-figs svg{width:100%;max-width:180px;height:auto;display:block;margin:0 auto}
+.mm-fib{fill:none;stroke:rgba(0,0,0,.24);stroke-width:.7;stroke-linecap:round;pointer-events:none}
+.mm-name{flex-basis:100%;margin:0!important;min-height:1.4em}.mm-name b{color:var(--acc)}
 .mm-figs figcaption{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:2px}
 .mm-base{fill:var(--line)}
-.mm-m{fill:var(--axis);stroke:var(--card);stroke-width:.5;transition:fill .25s}
+.mm-m{fill:var(--axis);stroke:var(--solid,var(--card));stroke-width:.9;stroke-linejoin:round;transition:fill .25s;cursor:pointer}
 .mm-m.mm-l1{fill:var(--acc);fill-opacity:.38}
 .mm-m.mm-l2{fill:var(--acc)}
 .mm-leg{flex:1 1 200px;min-width:0}
@@ -1422,9 +1424,10 @@ function groupOf(e) {
   return e.group;
 }
 // ---------- Mapa muscular (só no Montar treino do professor): o desenho do corpo acende os músculos que o treino trabalha ----------
-const MUSC = { peito: 'Peito', deltAnt: 'Ombro (frente)', deltLat: 'Ombro (lateral)', deltPost: 'Ombro (posterior)', trap: 'Trapézio', dorsal: 'Dorsal',
-  meio: 'Meio das costas', lombar: 'Lombar', biceps: 'Bíceps', triceps: 'Tríceps', antebraco: 'Antebraço', abdomen: 'Abdômen', obliquo: 'Oblíquos',
-  quad: 'Quadríceps', adutor: 'Adutores', posterior: 'Posteriores da coxa', gluteo: 'Glúteos', gluteoMed: 'Glúteo médio', pant: 'Panturrilha', tibial: 'Tibial' };
+const MUSC = { peito: 'Peitoral maior', deltAnt: 'Deltoide anterior', deltLat: 'Deltoide lateral', deltPost: 'Deltoide posterior', manguito: 'Infraespinhal (manguito rotador)',
+  trap: 'Trapézio', dorsal: 'Latíssimo do dorso', meio: 'Romboides', lombar: 'Eretores da espinha', serratil: 'Serrátil anterior', biceps: 'Bíceps braquial',
+  triceps: 'Tríceps braquial', antebraco: 'Antebraço (braquiorradial)', abdomen: 'Reto do abdome', obliquo: 'Oblíquos do abdome', quad: 'Quadríceps femoral',
+  adutor: 'Adutores da coxa', posterior: 'Isquiotibiais', gluteo: 'Glúteo máximo', gluteoMed: 'Glúteo médio', pant: 'Gastrocnêmio e sóleo', tibial: 'Tibial anterior' };
 // [regra pelo nome, principais, auxiliares]: vale a primeira que bater (as mais específicas vêm antes)
 const MUSC_RULES = [
   [/tibial/, 'tibial', ''], [/panturrilha|gemeo|soleo/, 'pant', ''],
@@ -1436,12 +1439,12 @@ const MUSC_RULES = [
   [/tricep|frances|testa|coice(?!.*gluteo)/, 'triceps', ''],
   [/mergulho/, 'peito triceps', 'deltAnt'],
   [/martelo|rosca inversa|zottman/, 'biceps antebraco', ''], [/rosca|bicep|scott/, 'biceps', 'antebraco'],
-  [/crucifixo inverso|face pull|rotacao externa/, 'deltPost', 'meio trap'],
+  [/rotacao externa/, 'manguito', 'deltPost'], [/face pull/, 'deltPost', 'manguito meio trap'], [/crucifixo inverso/, 'deltPost', 'meio trap manguito'],
   [/remada alta/, 'deltLat trap', 'biceps'],
   [/encolhimento/, 'trap', 'antebraco'],
   [/elevacao lateral/, 'deltLat', 'trap'], [/elevacao frontal|flexao pike/, 'deltAnt', 'deltLat'],
   [/desenvolvimento/, 'deltAnt deltLat', 'triceps trap'],
-  [/pullover|pulldown com corda/, 'dorsal', 'peito triceps'],
+  [/pullover|pulldown com corda/, 'dorsal', 'peito triceps serratil'],
   [/crucifixo|crossover|peck|voador|svend|squeeze/, 'peito', 'deltAnt'],
   [/supino|chest press|flexao (de braco|inclinada|declinada|com pegada)/, 'peito', 'deltAnt triceps'],
   [/puxada|pulldown|barra fixa|graviton/, 'dorsal', 'biceps meio deltPost'],
@@ -1472,7 +1475,7 @@ const musclesOf = e => {
 // Estabilizadores (lombar, antebraço, trapézio, abdômen, adutores, panturrilha) não entram como meia série.
 const MUSC_TO_GROUP = { peito: 'Peito', deltAnt: 'Ombros', deltLat: 'Ombros', deltPost: 'Ombros', trap: 'Ombros', dorsal: 'Costas', meio: 'Costas', lombar: 'Costas',
   biceps: 'Bíceps', antebraco: 'Bíceps', triceps: 'Tríceps', abdomen: 'Abdômen', obliquo: 'Abdômen', quad: 'Quadríceps', adutor: 'Glúteos', posterior: 'Posteriores',
-  gluteo: 'Glúteos', gluteoMed: 'Glúteos', pant: 'Panturrilha', tibial: 'Panturrilha' };
+  gluteo: 'Glúteos', gluteoMed: 'Glúteos', pant: 'Panturrilha', tibial: 'Panturrilha', manguito: 'Ombros', serratil: 'Peito' };
 const HALF_MUSC = ['peito', 'deltAnt', 'deltLat', 'deltPost', 'dorsal', 'meio', 'biceps', 'triceps', 'quad', 'posterior', 'gluteo'];
 function groupWeights(e) {
   const g = groupOf(e), w = { [g]: 1 }, m = musclesOf(e);
@@ -1480,48 +1483,73 @@ function groupWeights(e) {
   m.s.filter(k => HALF_MUSC.includes(k)).forEach(k => { const x = MUSC_TO_GROUP[k]; if (!w[x]) w[x] = .5; });
   return w;
 }
-// formas do lado esquerdo do desenho (o direito é o espelho); [músculos que acendem a forma, desenho]
+// Desenho anatômico: só o lado esquerdo da figura (o direito é o espelho). [músculos que acendem, nome anatômico, forma, linhas das fibras]
 const BODY_F = [
-  ['trap', 'M46 25 C43 29 39 31 35 32.5 L46.5 33 Z'],
-  ['deltAnt deltLat', '<ellipse cx="31.6" cy="40" rx="6.4" ry="8.6" transform="rotate(22 31.6 40)"/>'],
-  ['peito', 'M49.4 33.5 L39 33.5 C34.5 35 33.5 41 35 46.5 C39.5 50 45 50.5 49.4 48.5 Z'],
-  ['biceps', '<ellipse cx="27.5" cy="55.5" rx="4.1" ry="9" transform="rotate(14 27.5 55.5)"/>'],
-  ['antebraco', '<ellipse cx="22.6" cy="74" rx="3.6" ry="10" transform="rotate(16 22.6 74)"/>'],
-  ['obliquo', 'M43.6 51.5 C39.5 52 37 55 36.8 61 C36.6 69 37.6 77 40.6 83.5 L43.6 85.5 Z'],
-  ['abdomen', '<rect x="44.6" y="51.5" width="4.8" height="7.6" rx="1.6"/><rect x="44.6" y="60.2" width="4.8" height="7.6" rx="1.6"/><rect x="44.6" y="68.9" width="4.8" height="7.6" rx="1.6"/><path d="M44.6 77.6 L49.4 77.6 L49.4 90 C47.2 89 45.3 86.5 44.6 83 Z"/>'],
-  ['quad', 'M41.6 86.5 C38 89 35.8 94 35.4 102 C35 116 36.6 129 39.4 139 L45.8 139.5 C47 131 47.6 116 47.2 104 C46.8 96 44.8 90 41.6 86.5 Z'],
-  ['adutor', 'M45.6 90.5 C47.6 92.5 49 94.5 49.4 96 L49.4 101 C48.8 109 48.4 117 47.8 124 C48.2 114 47.8 102 45.6 90.5 Z'],
-  ['pant', '<path d="M38.6 146.5 C36 149 35.4 156 36.2 163 C36.8 167 37.8 169 38.8 169.5 C38.4 162 38.4 153 38.6 146.5 Z"/>'],
-  ['tibial', '<path d="M40 146.5 C42.6 146.5 44.6 148.5 44.6 152 C44.4 158 43.4 165 42.2 170 L40.2 170 C39.6 162 39.4 153 40 146.5 Z"/>'],
+  ['', 'Esternocleidomastoideo', 'M96 44 L92 46 L86 61 L91 62 Z'],
+  ['trap', 'Trapézio (parte superior)', 'M90 50 C84 57 76 60 66 62 L88 64 Z', 'M86 54 L74 61'],
+  ['deltLat', 'Deltoide lateral', 'M68 61 C57 60 49 67 48 78 C48 86 50 92 54 97 L60 88 C64 80 70 72 72 64 Z', 'M58 66 C53 72 51 80 52 90'],
+  ['deltAnt', 'Deltoide anterior', 'M73 63 C66 64 61 69 59 77 C58 83 58 88 60 92 C64 85 69 77 75 70 Z', 'M68 67 C63 73 61 80 61 87'],
+  ['peito', 'Peitoral maior (parte clavicular)', 'M98 66 L77 64 C73 66 71 70 71 75 L98 79 Z', 'M95 70 L76 69 M95 75 L74 73'],
+  ['peito', 'Peitoral maior (parte esternal)', 'M98 81 L71 77 C66 84 66 95 70 104 C78 111 90 113 98 110 Z', 'M95 86 L73 82 M95 94 L71 90 M95 102 L72 98 M94 108 L76 104'],
+  ['serratil', 'Serrátil anterior', 'M70 106 L79 110 L72 114 Z M69 115 L79 118 L71 122 Z M70 123 L79 125 L72 129 Z'],
+  ['abdomen', 'Reto do abdome', '<rect x="88" y="114" width="11" height="14" rx="3"/><rect x="88" y="130" width="11" height="14" rx="3"/><rect x="88" y="146" width="11" height="14" rx="3"/><path d="M88 162 L99 162 L99 194 C94 192 90 184 88 174 Z"/>'],
+  ['obliquo', 'Oblíquo externo do abdome', 'M86 113 L80 113 C77 122 76 134 76 148 C76 160 78 170 82 178 L87 184 Z', 'M84 120 L79 130 M85 132 L78 144 M85 146 L78 158 M86 160 L80 170'],
+  ['biceps', 'Braquial', 'M53 100 C49 106 48 118 50 130 L56 136 C53 126 52 112 55 100 Z'],
+  ['biceps', 'Bíceps braquial', 'M61 94 C56 98 54 108 55 120 C56 128 58 134 62 137 C66 130 67 118 66 106 C65 100 63 96 61 94 Z', 'M60 100 C58 110 58 122 61 132'],
+  ['triceps', 'Tríceps braquial (cabeça medial)', 'M65 98 C69 106 70 118 67 130 C69 120 69 108 65 98 Z'],
+  ['antebraco', 'Braquiorradial', 'M50 136 C45 142 42 152 41 164 C41 172 42 178 44 182 C46 172 49 160 54 148 C56 143 55 138 50 136 Z'],
+  ['antebraco', 'Flexores do antebraço', 'M57 140 C59 150 56 166 51 180 C48 188 45 194 43 197 L47 199 C53 187 59 171 61 157 C62 149 61 143 57 140 Z', 'M58 148 C56 162 52 176 46 190'],
+  ['gluteoMed', 'Tensor da fáscia lata', 'M73 176 C69 182 68 190 69 198 L75 196 C75 188 75 182 73 176 Z'],
+  ['quad', 'Vasto lateral (quadríceps)', 'M75 194 C69 206 67 224 69 244 C70 254 74 261 79 265 L82 262 C78 252 76 238 77 220 C77 206 79 199 81 194 Z', 'M75 204 C71 222 71 240 76 258'],
+  ['quad', 'Reto femoral (quadríceps)', 'M84 190 C78 200 76 220 78 240 C79 250 82 258 86 262 C88 254 89 240 88 222 C88 208 87 198 84 190 Z', 'M83 196 L83 256 M80 214 L83 222 L86 214 M80 234 L83 242 L86 234'],
+  ['quad', 'Vasto medial (quadríceps)', 'M90 238 C94 245 96 255 93 265 C89 267 86 263 87 258 C89 252 90 245 90 238 Z'],
+  ['adutor', 'Adutores da coxa', 'M88 197 C94 199 98 202 99 207 L99 216 C97 228 94 238 91 244 C90 228 89 212 88 197 Z', 'M93 204 L91 232 M97 210 L94 230'],
+  ['pant', 'Gastrocnêmio (cabeça lateral)', 'M77 281 C73 290 72 304 74 318 L78 324 C77 308 78 293 81 281 Z'],
+  ['tibial', 'Tibial anterior', 'M82 279 C79 290 79 306 81 322 C82 332 83 340 84 344 L87 344 C87 330 88 312 88 296 C88 288 86 281 82 279 Z', 'M84 286 L85 336'],
+  ['pant', 'Gastrocnêmio (cabeça medial)', 'M91 279 C96 287 97 301 95 316 C94 322 92 326 90 328 C89 314 89 296 91 279 Z'],
+  ['pant', 'Sóleo', 'M90 330 C92 336 91 342 89 346 L88 346 C88 340 88 334 90 330 Z'],
 ];
 const BODY_B = [
-  ['deltPost deltLat', '<ellipse cx="31.6" cy="40" rx="6.4" ry="8.6" transform="rotate(22 31.6 40)"/>'],
-  ['dorsal', 'M42.5 40 C37.5 40.5 35 44 35.4 51 C36 60 39.5 68 46.5 75 L49.4 73 L49.4 61 L43.5 56 Z'],
-  ['meio', 'M49.4 37.5 L42.8 38.5 L44.4 53.5 L49.4 58 Z'],
-  ['trap', 'M50 22 L50 47 L45.5 37.5 L35.5 33 C40 31 44 28.5 46 24 Z'],
-  ['lombar', 'M46.6 76.5 L49.4 74.5 L49.4 87 L43.6 87 C43.4 83 44.4 79.5 46.6 76.5 Z'],
-  ['triceps', '<ellipse cx="27.5" cy="55.5" rx="4.1" ry="9" transform="rotate(14 27.5 55.5)"/>'],
-  ['antebraco', '<ellipse cx="22.6" cy="74" rx="3.6" ry="10" transform="rotate(16 22.6 74)"/>'],
-  ['gluteoMed', '<ellipse cx="40.4" cy="91.6" rx="3.6" ry="4.4" transform="rotate(-25 40.4 91.6)"/>'],
-  ['gluteo', 'M49.4 89.5 L42.5 89.5 C37.5 91.5 35.8 98 37.2 104 C41 108.5 46 108.8 49.4 106 Z'],
-  ['posterior', 'M47.6 109 C42.5 108 38 110.5 36.8 118 C36.4 127 38 134 40.8 139.5 L46 139.5 C47.8 131 48.4 119 47.6 109 Z'],
-  ['pant', '<path d="M41 146 C37.6 147 36 151.5 36.4 157.5 C36.8 162.5 38.4 167 40.6 170 L43.4 170 C44.8 164 45.6 158 45.2 152.5 C44.8 148.5 43.4 146 41 146 Z"/>'],
+  ['trap', 'Trapézio', 'M100 40 C97 46 94 50 90 53 C84 58 76 61 66 63 C74 67 80 72 86 76 C90 82 92 88 93 96 C95 106 98 118 100 128 Z', 'M98 48 L72 63 M98 64 L84 72 M98 84 L91 86 M99 104 L94 96'],
+  ['deltLat', 'Deltoide lateral', 'M64 61 C55 61 49 68 48 78 C48 86 50 92 54 97 L58 90 C60 80 62 70 66 63 Z'],
+  ['deltPost', 'Deltoide posterior', 'M68 64 C61 66 57 72 56 80 C55 86 56 91 58 94 C62 88 67 82 74 78 C75 72 72 66 68 64 Z', 'M66 68 C61 74 59 82 59 90'],
+  ['meio', 'Romboides', 'M86 78 C88 84 90 92 92 101 L86 101 C84 94 83 86 86 78 Z'],
+  ['manguito', 'Infraespinhal (manguito rotador)', 'M84 82 C78 80 72 83 71 89 C71 95 75 100 81 101 C85 97 86 90 84 82 Z', 'M82 86 L74 92 M82 94 L76 98'],
+  ['dorsal', 'Redondo maior', 'M71 101 C69 105 69 109 72 112 C77 111 81 107 82 103 Z'],
+  ['dorsal', 'Latíssimo do dorso', 'M81 105 C73 108 70 116 70 124 C70 136 74 150 80 162 C84 170 88 176 92 180 L93 128 C92 118 92 111 91 105 Z', 'M88 112 L74 122 M90 124 L74 138 M91 138 L78 152 M92 152 L84 166'],
+  ['lombar', 'Eretores da espinha', 'M94 128 L100 130 L100 188 C97 186 95 182 94 176 C93 162 93 145 94 128 Z', 'M97 136 L97 182'],
+  ['obliquo', 'Oblíquo externo do abdome', 'M72 150 C70 158 70 168 74 176 L88 180 C82 172 76 162 72 150 Z'],
+  ['triceps', 'Tríceps braquial (cabeça lateral)', 'M52 96 C48 104 47 116 49 128 C50 134 53 138 57 140 C58 128 58 112 56 100 Z', 'M52 104 C51 116 52 126 55 134'],
+  ['triceps', 'Tríceps braquial (cabeça longa)', 'M58 96 C64 104 66 116 64 128 C63 134 60 138 57 140 C57 126 57 110 58 96 Z', 'M61 104 C62 116 61 126 58 134'],
+  ['antebraco', 'Extensores do antebraço', 'M50 140 C45 148 42 160 41 172 C41 180 42 188 44 196 L48 196 C48 182 52 166 56 152 C57 146 55 141 50 140 Z', 'M50 146 C47 160 45 176 45 190'],
+  ['antebraco', 'Flexor ulnar do carpo', 'M57 142 C60 152 58 168 53 182 L48 196 C52 186 59 170 61 156 C62 148 60 143 57 142 Z'],
+  ['gluteoMed', 'Glúteo médio', 'M72 172 C68 178 67 186 70 193 C76 189 84 185 92 183 C86 178 78 174 72 172 Z', 'M74 178 L84 184'],
+  ['gluteo', 'Glúteo máximo', 'M92 185 C82 187 74 191 70 199 C68 209 70 220 76 226 C84 230 94 230 100 226 L100 191 C98 188 95 186 92 185 Z', 'M94 192 L74 206 M98 202 L74 218 M99 214 L82 226'],
+  ['quad', 'Vasto lateral (quadríceps)', 'M72 229 C69 239 69 251 71 263 L74 265 C72 253 73 241 75 231 Z'],
+  ['posterior', 'Bíceps femoral (isquiotibiais)', 'M77 230 C73 240 72 254 74 266 L81 270 C81 258 83 244 87 232 Z', 'M80 236 C77 248 77 258 79 266'],
+  ['posterior', 'Semitendinoso e semimembranoso (isquiotibiais)', 'M89 232 C87 246 85 258 83 270 L91 270 C94 258 96 244 95 232 Z', 'M92 238 C90 250 88 260 87 268'],
+  ['adutor', 'Adutor magno', 'M96 230 C98 232 99 236 99 240 C98 248 97 254 95 258 C96 248 97 240 96 230 Z'],
+  ['pant', 'Gastrocnêmio (cabeça lateral)', 'M77 280 C73 290 73 304 77 316 C80 320 83 320 85 316 C85 304 84 292 83 280 Z', 'M80 286 C78 296 78 306 81 314'],
+  ['pant', 'Gastrocnêmio (cabeça medial)', 'M87 280 C86 292 86 304 87 316 C89 322 93 322 95 316 C97 304 96 290 91 280 Z', 'M90 286 C92 296 92 306 90 316'],
+  ['pant', 'Sóleo', 'M76 319 C76 328 79 338 82 344 L88 344 C91 336 94 327 95 319 C91 325 81 325 76 319 Z'],
 ];
 // cabeça, pescoço, mãos, joelhos e pés (não acendem)
-const BODY_BASE = '<ellipse cx="50" cy="13" rx="7.6" ry="9.4"/><path d="M45.6 20 L54.4 20 L55.4 28 L44.6 28 Z"/>'
-  + [0, 1].map(s => `<g${s ? ' transform="matrix(-1 0 0 1 100 0)"' : ''}><circle cx="19.6" cy="88.6" r="3.2"/><ellipse cx="42.4" cy="142.8" rx="4" ry="3.2"/><path d="M38 171 L44 171 L45 176 L35.6 176 Z"/></g>`).join('');
+const BODY_BASE = '<ellipse cx="100" cy="25" rx="14" ry="18"/><path d="M90 40 L110 40 L112 62 L88 62 Z"/>'
+  + [0, 1].map(s => `<g${s ? ' transform="matrix(-1 0 0 1 200 0)"' : ''}><ellipse cx="40" cy="209" rx="6" ry="11" transform="rotate(10 40 209)"/><ellipse cx="85" cy="272" rx="8.5" ry="6.5"/><path d="M82 346 L90 346 L95 358 C88 362 80 362 75 360 Z"/></g>`).join('');
+const BODY_NAMES = [...BODY_F, ...BODY_B];
 function muscleMapHtml(exs) {
   const lv = {}, sets = {}; // 2 = principal, 1 = ajuda
   exs.forEach(e => { const m = musclesOf(e), n = e.sets.length || 1;
     m.p.forEach(k => { lv[k] = 2; sets[k] = (sets[k] || 0) + n; }); m.s.forEach(k => { lv[k] = Math.max(lv[k] || 0, 1); if (HALF_MUSC.includes(k)) sets[k] = (sets[k] || 0) + n / 2; }); });
   const shape = d => d[0] === '<' ? d : `<path d="${d}"/>`;
-  const view = (list, title) => `<figure><svg viewBox="16 0 68 180" role="img" aria-label="${title}">
+  const view = (list, title, off) => `<figure><svg viewBox="30 0 140 366" role="img" aria-label="${title}">
     <g class="mm-base">${BODY_BASE}</g>
-    ${list.map(([ks, d]) => { const l = Math.max(0, ...ks.split(' ').map(k => lv[k] || 0));
-      return `<g class="mm-m mm-l${l}">${shape(d)}<g transform="matrix(-1 0 0 1 100 0)">${shape(d)}</g></g>`; }).join('')}
+    ${list.map(([ks, nm, d, fib], i) => { const l = Math.max(0, ...ks.split(' ').filter(Boolean).map(k => lv[k] || 0)), f = fib ? `<path class="mm-fib" d="${fib}"/>` : '';
+      return `<g class="mm-m mm-l${l}" data-act="mm-name" data-i="${off + i}"><title>${nm}</title>${shape(d)}${f}<g transform="matrix(-1 0 0 1 200 0)">${shape(d)}${f}</g></g>`; }).join('')}
   </svg><figcaption>${title}</figcaption></figure>`;
   const main = Object.keys(MUSC).filter(k => lv[k] === 2).sort((a, b) => sets[b] - sets[a]), help = Object.keys(MUSC).filter(k => lv[k] === 1);
-  return `<div class="mmap"><div class="mm-figs">${view(BODY_F, 'Frente')}${view(BODY_B, 'Costas')}</div>
+  return `<div class="mmap"><div class="mm-figs">${view(BODY_F, 'Vista anterior', 0)}${view(BODY_B, 'Vista posterior', BODY_F.length)}</div>
+    <p class="mm-name hint">Toque em um músculo do desenho para ver o nome.</p>
     <div class="mm-leg">${exs.length ? `<p class="mm-k"><i class="mm-dot l2"></i>Trabalha mais</p><div class="mm-chips">${main.map(k => `<span>${MUSC[k]} <b>${fmt(sets[k])}</b></span>`).join('')}</div>
       ${help.length ? `<p class="mm-k"><i class="mm-dot l1"></i>Ajuda</p><div class="mm-chips soft">${help.map(k => `<span>${MUSC[k]}${sets[k] ? ` <b>${fmt(sets[k])}</b>` : ''}</span>`).join('')}</div>` : ''}
       <p class="hint" style="margin:8px 0 0">O número é a quantidade de séries para o músculo. Quando o músculo só ajuda, conta meia série (os que só dão firmeza, como lombar e panturrilha, não contam).</p>`
@@ -5833,6 +5861,7 @@ $main.addEventListener('click', e => {
   if (!b) return;
   const act = b.dataset.act;
   switch (act) {
+    case 'mm-name': { const m = BODY_NAMES[+b.dataset.i], el = b.closest('.mmap').querySelector('.mm-name'); if (m && el) el.innerHTML = `<b>${m[1]}</b>`; return; }
     case 'new': return openDialog(null);
     case 'export': return exportData();
     case 'export-claude': return exportForClaude();
@@ -7623,7 +7652,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/10-22:08';
+const APP_VERSION = '13/10-22:15';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
