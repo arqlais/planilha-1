@@ -1465,12 +1465,13 @@ const MUSC = { peito: 'Peitoral maior', deltAnt: 'Deltoide anterior', deltLat: '
   trap: 'Trapézio', dorsal: 'Latíssimo do dorso', meio: 'Romboides', lombar: 'Eretores da espinha', serratil: 'Serrátil anterior', biceps: 'Bíceps braquial',
   triceps: 'Tríceps braquial', antebraco: 'Antebraço (braquiorradial)', abdomen: 'Reto do abdome', obliquo: 'Oblíquos do abdome', quad: 'Quadríceps femoral',
   adutor: 'Adutores da coxa', posterior: 'Isquiotibiais', gluteo: 'Glúteo máximo', gluteoMed: 'Glúteo médio', pant: 'Gastrocnêmio e sóleo', tibial: 'Tibial anterior' };
-// [regra pelo nome, principais, auxiliares]: vale a primeira que bater (as mais específicas vêm antes)
+// [regra pelo nome, principais, auxiliares]: vale a primeira que bater (as mais específicas vêm antes).
+// Agachamento, leg press e afundo não somam posteriores: eles só estabilizam ali (quase não mudam de tamanho no movimento).
 const MUSC_RULES = [
   [/tibial/, 'tibial', ''], [/panturrilha|gemeo|soleo/, 'pant', ''],
   [/punho/, 'antebraco', ''],
   [/obliquo|bicicleta|russo|lenhador|pallof|prancha lateral|flexao lateral/, 'obliquo', 'abdomen'],
-  [/perdigueiro|superman|lombar|hiperextensao/, 'lombar', 'gluteo posterior'],
+  [/perdigueiro/, 'lombar', 'gluteo abdomen'], [/superman|lombar|hiperextensao/, 'lombar', 'gluteo posterior'],
   [/abdominal|prancha|elevacao de (pernas|joelhos)|dead bug|escalador|roda abdominal|hollow/, 'abdomen', 'obliquo'],
   [/supino fechado|jm press|mergulho na maquina|mergulho nas paralelas$|diamante|triceps banco/, 'triceps', 'peito deltAnt'],
   [/tricep|frances|testa|coice(?!.*gluteo)/, 'triceps', ''],
@@ -1479,9 +1480,9 @@ const MUSC_RULES = [
   [/rotacao externa/, 'manguito', 'deltPost'], [/face pull/, 'deltPost', 'manguito meio trap'], [/crucifixo inverso/, 'deltPost', 'meio trap manguito'],
   [/remada alta/, 'deltLat trap', 'biceps'],
   [/encolhimento/, 'trap', 'antebraco'],
-  [/elevacao lateral/, 'deltLat', 'trap'], [/elevacao frontal|flexao pike/, 'deltAnt', 'deltLat'],
+  [/elevacao lateral/, 'deltLat', 'trap'], [/elevacao frontal/, 'deltAnt', 'deltLat'], [/flexao pike/, 'deltAnt', 'triceps deltLat'],
   [/desenvolvimento/, 'deltAnt deltLat', 'triceps trap'],
-  [/pullover|pulldown com corda/, 'dorsal', 'peito triceps serratil'],
+  [/pullover com halter/, 'peito dorsal', 'triceps serratil'], [/pullover|pulldown com corda/, 'dorsal', 'triceps serratil'],
   [/crucifixo|crossover|peck|voador|svend|squeeze/, 'peito', 'deltAnt'],
   [/supino|chest press|flexao (de braco|inclinada|declinada|com pegada)/, 'peito', 'deltAnt triceps'],
   [/puxada|pulldown|barra fixa|graviton/, 'dorsal', 'biceps meio deltPost'],
@@ -1492,12 +1493,12 @@ const MUSC_RULES = [
   [/flexora|nordica/, 'posterior', 'pant'],
   [/abdutora|abducao|lateral com elastico|ostra/, 'gluteoMed', 'gluteo'],
   [/adutora|aducao/, 'adutor', ''],
-  [/sumo/, 'gluteo adutor quad', 'posterior'],
+  [/sumo/, 'gluteo adutor quad', ''],
   [/pelvica|ponte|frog|gluteo|coice/, 'gluteo', 'posterior'],
   [/extensora|sissy/, 'quad', ''],
-  [/hack|leg press|belt/, 'quad gluteo', 'adutor posterior'],
-  [/afundo|bulgaro|passada|avanco|step up|subida no banco/, 'quad gluteo', 'adutor posterior'],
-  [/agachamento/, 'quad gluteo', 'adutor posterior lombar'],
+  [/hack|leg press|belt/, 'quad gluteo', 'adutor'],
+  [/afundo|bulgaro|passada|avanco|step up|subida no banco/, 'quad gluteo', 'adutor'],
+  [/agachamento/, 'quad gluteo', 'adutor lombar'],
 ];
 // quando o nome não diz (exercício escrito à mão), vale o grupo escolhido
 const MUSC_GROUP = { Peito: ['peito', 'deltAnt triceps'], Costas: ['dorsal meio', 'biceps deltPost'], Ombros: ['deltAnt deltLat', 'trap'], 'Bíceps': ['biceps', 'antebraco'],
@@ -7810,7 +7811,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/10-14:11';
+const APP_VERSION = '15/10-13:36';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
