@@ -7061,6 +7061,21 @@ async function fixOnce() {
     mark('academias-evoque-sky');
   }
   if (profile(ME).fixes && profile(ME).fixes.length !== done.size) { save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow(); }
+  // 1i) Professor (16/10): o Crucifixo de 22/06 ficou gravado com 1/4 da carga (11,75 no lugar de 47...).
+  //     Volta para a carga certa, para o "antes" e a comparação mostrarem o peso de verdade.
+  if (!done.has('crucifixo-2206-x4')) {
+    await ensureFull(ME);
+    const ids = new Set(db.exercises.filter(e => e.profileId === ME && normName(e.name) === 'crucifixo').map(e => e.id));
+    const low = [11.75, 13.5, 15.25, 16.4, 17], real = [47, 54, 61, 65.6, 68], near = (a, b) => a != null && Math.abs(a - b) < 0.06;
+    let n = 0;
+    db.sessions.forEach(s => {
+      if (!ids.has(s.exId) || s.date !== '2026-06-22' || !(s.sets.length === 5 && low.every((v, i) => near(s.sets[i].carga, v)))) return;
+      s.sets.forEach((x, i) => { if (real[i] != null) x.carga = real[i]; }); n++;
+    });
+    db.exercises.forEach(e => { if (ids.has(e.id) && e.sets.length === 5 && low.every((v, i) => near(e.sets[i].carga, v))) e.sets.forEach((x, i) => { if (real[i] != null) x.carga = real[i]; }); });
+    mark('crucifixo-2206-x4');
+    if (n) { save(); msgs.push('Crucifixo: as cargas de 22/06 voltaram ao peso certo.'); }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -7811,7 +7826,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '15/10-13:36';
+const APP_VERSION = '16/10-10:27';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
