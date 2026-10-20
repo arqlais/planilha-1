@@ -566,10 +566,10 @@ table.bt tr.b1 td:last-child{border-right:1px solid var(--line);border-top-right
 table.bt tr.b2 td{border-bottom:1px solid var(--line);padding-bottom:8px}
 table.bt tr.b2 td.num2{border-left:1px solid var(--line);border-bottom-left-radius:12px}
 table.bt tr.b2 td:last-child{border-right:1px solid var(--line);border-bottom-right-radius:12px}
-table.bt tr.b2 + tr.b1 td, table.bt tr.bsets + tr.b1 td{box-shadow:0 -8px 0 var(--card)}
+table.bt tr.bgap td{height:8px;padding:0;background:transparent;border:0}
 table.bt input,table.bt select{width:100%;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 6px;color:var(--text);font-size:14px!important}
 table.bt input.n{text-align:center}
-table.bt .num{text-align:center;font-weight:800;color:var(--muted)}
+table.bt td.num{display:table-cell;width:auto;height:auto;border-radius:0;background:var(--input);text-align:center;font-weight:800;color:var(--muted)}
 table.bt .acts{white-space:nowrap;text-align:right}
 table.bt .acts .qhelp{width:22px;height:22px;font-size:12px;margin:0 4px 0 0;border:2px solid var(--acc);color:var(--acc);background:var(--acc-soft)}
 table.bt .acts button{border:0;background:transparent;color:var(--muted);font-size:15px;padding:4px 4px;border-radius:6px;font-weight:700}
@@ -5333,7 +5333,7 @@ function builderHtml(pid) {
   const open = ui.bOpen || (ui.bOpen = new Set());
   const rows = exs.map((e, i) => {
     const r = allSame(e.sets, 'reps'), c = allSame(e.sets, 'carga');
-    return `<tr data-id="${e.id}" class="b1">
+    return `${i ? '<tr class="bgap"><td colspan="9"></td></tr>' : ''}<tr data-id="${e.id}" class="b1">
       <td class="num">${i + 1}</td>
       <td><input data-bf="name" data-id="${e.id}" value="${esc(e.name)}" aria-label="Exercício" list="exNames"></td>
       <td><select data-bf="group" data-id="${e.id}" aria-label="Grupo">${GROUPS.map(g => `<option ${g === e.group ? 'selected' : ''}>${g}</option>`).join('')}</select></td>
@@ -7864,7 +7864,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-20:54';
+const APP_VERSION = '20/10-20:56';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
