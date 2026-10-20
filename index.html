@@ -1659,7 +1659,7 @@ const ADMIN_EMAIL = String(CFG.adminEmail || '').trim().toLowerCase();
 const pad = n => String(n).padStart(2, '0');
 const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 // O dia vira à meia-noite. Exceção: quem estava no meio do treino quando deu meia-noite (anotou algo há menos
-// de 1h30) continua no treino do dia anterior até as 3h da manhã — assim o treino não trava no meio.
+// de 1h30 e ainda não enviou) continua no treino do dia anterior até as 3h da manhã — assim o treino não trava no meio.
 const DAY_TURN_H = 3, ACT_KEY = 'planilha-ultimo-treino';
 let lastAct = null; try { lastAct = JSON.parse(localStorage.getItem(ACT_KEY)) || null; } catch (e) {}
 const today = () => {
@@ -1670,6 +1670,7 @@ const today = () => {
   }
   return isoDate(now);
 };
+const clearActivity = () => { lastAct = null; try { localStorage.removeItem(ACT_KEY); } catch (e) {} };
 const markActivity = date => { lastAct = { t: Date.now(), d: date }; try { localStorage.setItem(ACT_KEY, JSON.stringify(lastAct)); } catch (e) {} };
 const toDate = s => new Date(s + 'T12:00:00');
 const parseNum = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null; };
@@ -2174,7 +2175,7 @@ function renderStudentTreino(p, greet, isToday) {
         <button class="${ui.layout === 'list' ? 'on' : ''}" data-act="layout" data-l="list">☰ Lista</button></div>` : ''}
       ${blocks}
       ${sendHtml()}`
-    : `${cardioGoalOf(p, ui.date) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
+    : `${cardioGoalOf(p, ui.date) || isToday || cardioBetween(ui.date, ui.date, p.id) ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}`;
   markLocked();
 }
 // ===== App novo (desenho Passos Fit 2.0): bonequinhos animados dos exercícios =====
@@ -2582,7 +2583,7 @@ function v2Day(p) {
   const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0];
   const exDone = exs.filter(e => isComplete(e.id)).length;
   const frac = total ? done / total : 0, cfrac = goal ? Math.min(1, cmin / goal) : 0;
-  const prog = goal ? (total ? frac * .8 + cfrac * .2 : cfrac) : frac;
+  const prog = goal ? (total ? frac * .8 + cfrac * .2 : cfrac) : total ? frac : cmin > 0 ? 1 : 0; // dia sem meta: cardio feito = dia feito
   return { plan, groups, exs, total, done, goal, cmin, t0, exDone, prog, cardio: plan.includes(CARDIO) || goal > 0 };
 }
 function v2WeekHtml(p) {
@@ -2614,7 +2615,7 @@ function v2HomeHtml(p, d, isToday) {
       <button class="v2-go" data-act="v2-start"><span class="ball">${V2I.play}</span>${d.prog >= 1 ? 'Ver treino feito' : started ? 'Continuar treino' : 'Começar treino'}<span class="chev"><span>›</span><span>›</span><span>›</span></span></button>
     </section>` : `<section class="v2-hero"><div class="v2-eyebrow">${isToday ? 'Hoje' : fmtDate(ui.date)}</div><h1 class="v2-rest">Dia de descanso</h1>
       <p class="v2-muted">${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}. O corpo também cresce no descanso.</p>
-      ${d.goal ? `<button class="v2-go" data-act="v2-start"><span class="ball">${V2I.run}</span>Cardio de hoje: ${fmtMin(d.goal)} min<span class="chev"><span>›</span><span>›</span><span>›</span></span></button>` : ''}</section>`}
+      ${d.goal || isToday ? `<button class="v2-go" data-act="v2-start"><span class="ball">${V2I.run}</span>Cardio de hoje${d.goal ? `: ${fmtMin(d.goal)} min` : ''}<span class="chev"><span>›</span><span>›</span><span>›</span></span></button>` : ''}</section>`}
     ${cardioWeekHtml(p, 'Sua meta de cardio da semana')}
     ${lastMsg ? `<div class="v2-sec"><h3>Recado do professor</h3><button data-view="recados">Ver todos</button></div>
       <section class="card v2-note"><span class="av">${avIn(v2CoachP())}</span><div class="v2-bub">${esc(lastMsg.text)}<small>${fmtDate(lastMsg.date)}</small></div></section>` : ''}
@@ -2644,8 +2645,8 @@ function v2RunHtml(p, d, isToday) {
       <button class="btn primary" data-act="goto-day" data-d="${x}">Abrir treino de ${fmtDate(x)}</button></section>`).join('')}
     ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0"><i class="ic ic-unlock"></i> Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
     ${d.exs.length || d.plan.includes(CARDIO) ? `<div class="v2-wbar"><b>${d.exs.length} exercício${d.exs.length === 1 ? '' : 's'}${d.cardio ? ' + cardio' : ''}</b></div>
-      ${blocks}${d.cardio ? cardioGoalHtml(p) : ''}${sendHtml()}`
-      : `${d.goal ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
+      ${blocks}${d.cardio || isToday || d.cmin ? cardioGoalHtml(p) : ''}${sendHtml()}`
+      : `${d.goal || isToday || d.cmin ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
     </div></div>`;
 }
 function v2GaugeInner(d) {
@@ -3495,7 +3496,7 @@ function cardioGoalHtml(p) {
       <div class="modes sm">${MODES.map(([id, label]) => `<button class="${mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
       ${bar}
       <div class="goal-txt"><span>${done ? `<b>${fmtMin(done)}</b> min feitos${timing ? '' : ' <button class="link" data-act="cardio-zero">zerar</button>'}` : 'Nada feito ainda'}</span>
-        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : '—'}</b>${p.id === ME && !ui.studentMode ? ` <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button>` : ''}</span></div>
+        <span>Meta: <b>${goal ? fmtMin(goal) + ' min' : 'livre'}</b>${p.id === ME && !ui.studentMode ? ` <button class="link" data-act="goal-montar" data-pid="${p.id}">mudar em Montar</button>` : ''}</span></div>
       ${timing ? '' : cardioExtraHtml(p, mode, today_)}
       ${ctHtml(p, goal, done)}
     </section>`;
@@ -3884,6 +3885,7 @@ async function sendWorkout(auto) {
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode && !meStu()) s.by = 'aluno'; });
   if (dayUnlocked(ui.date) && !(CLOUD && cloud && cloud.role === 'student')) delete profile(ui.profile).unlocks[ui.date]; // enviado: o dia trava de novo
+  if (lastAct && lastAct.d === ui.date) clearActivity(); // treino enviado: à meia-noite já entra o treino do dia seguinte
   save(); render();
   if (CLOUD && cloud && cloud.ready) { const s = syncNow(); if (navigator.onLine) await Promise.race([s, new Promise(r => setTimeout(r, 4000))]); }
   toast(!navigator.onLine ? '✓ Treino enviado! Está salvo no aparelho e vai para a nuvem quando a internet voltar.'
@@ -7826,7 +7828,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '16/10-10:27';
+const APP_VERSION = '20/10-17:42';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
