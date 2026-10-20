@@ -2169,9 +2169,7 @@ function renderStudentTreino(p, greet, isToday) {
     </div>
     ${installTipHtml()}
     ${cardioWeekHtml(p, 'Sua meta de cardio da semana')}
-    ${Object.keys(p.unlocks || {}).filter(d => d < today() && d !== ui.date && !daySent(d, p.id)).sort().map(d => `<section class="card unlock-note"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Seu professor liberou o treino de ${fmtDate(d)}</b> para você completar o que faltou e enviar.</p>
-      <button class="btn primary" data-act="goto-day" data-d="${d}">Abrir treino de ${fmtDate(d)}</button></section>`).join('')}
-    ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0"><i class="ic ic-unlock"></i> Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
+    ${unlockNotesHtml(p)}
     ${showPlan ? `<div class="banner"><div class="grow"><h2>Treino do dia</h2><small>${esc(label)} · passado pelo seu professor</small></div></div>
       ${cardioGoalHtml(p)}
       ${groups.length ? `<div class="layout">Séries em:
@@ -2645,9 +2643,7 @@ function v2RunHtml(p, d, isToday) {
         ${isToday ? `<small>${weekday(ui.date).replace(/^./, c => c.toUpperCase())}, ${fmtDate(ui.date)}</small>` : `<small>${fmtDate(ui.date)} · <button class="link" data-act="today">voltar para hoje</button></small>`}</div>
       <button class="icon" data-act="shiftday" data-d="1" aria-label="Próximo dia" ${isToday ? 'disabled' : ''}>›</button>
     </div></div><div class="v2-tw-b">
-    ${Object.keys(p.unlocks || {}).filter(x => x < today() && x !== ui.date && !daySent(x, p.id)).sort().map(x => `<section class="card unlock-note"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Seu professor liberou o treino de ${fmtDate(x)}</b> para você completar o que faltou e enviar.</p>
-      <button class="btn primary" data-act="goto-day" data-d="${x}">Abrir treino de ${fmtDate(x)}</button></section>`).join('')}
-    ${ui.date !== today() && dayUnlocked(ui.date) && !daySent(ui.date, p.id) ? `<p class="hint" style="text-align:center;margin:10px 0"><i class="ic ic-unlock"></i> Dia liberado pelo seu professor: complete o que faltou e toque em <b>Enviar treino</b>.</p>` : ''}
+    ${unlockNotesHtml(p)}
     ${d.exs.length || d.plan.includes(CARDIO) ? `<div class="v2-wbar"><b>${d.exs.length} exercício${d.exs.length === 1 ? '' : 's'}${d.cardio ? ' + cardio' : ''}</b></div>
       ${blocks}${d.cardio || isToday || d.cmin ? cardioGoalHtml(p) : ''}${sendHtml()}`
       : `${d.goal || isToday || d.cmin ? cardioGoalHtml(p) : ''}<section class="card"><p class="empty"><i class="ic ic-moon"></i> Dia de descanso.<br>${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}.</p></section>`}
@@ -3822,7 +3818,20 @@ function groupPicker(type, name, checked, withCardio) {
 const sentAt = (exId, date = ui.date) => { const s = sessionOn(exId, date); return s && s.fin; };
 // Dia passado que o professor destravou para corrigir (ex.: aluno esqueceu de anotar a última série)
 // (vale até o treino daquele dia ser enviado de novo)
-const dayUnlocked = (date = ui.date, pid = ui.profile) => { const p = profile(pid); return !!(p && p.unlocks && p.unlocks[date]) && !profExs(pid).some(e => { const x = sessionOn(e.id, date); return x && x.fin; }); };
+// O destrave vale por 3 dias depois que o professor destravou (antes era só "true": vale se o dia for da última semana).
+// Sem isso, um dia destravado e esquecido ficava aparecendo para o aluno semanas depois e ele anotava o treino de hoje lá.
+const unlockLive = (v, date) => v === true ? date >= addDays(today(), -7) : typeof v === 'number' && Date.now() - v < 3 * 864e5;
+const dayUnlocked = (date = ui.date, pid = ui.profile) => { const p = profile(pid); return !!(p && p.unlocks && unlockLive(p.unlocks[date], date)) && !profExs(pid).some(e => { const x = sessionOn(e.id, date); return x && x.fin; }); };
+// Aluno: aviso dos dias passados liberados pelo professor, e alerta forte quando ele está anotando num dia que não é hoje
+function unlockNotesHtml(p) {
+  const dayTxt = d => `${weekday(d).replace('-feira', '')}, ${fmtDate(d)}`;
+  const list = Object.keys(p.unlocks || {}).filter(d => d < today() && d !== ui.date && dayUnlocked(d, p.id)).sort();
+  const here = ui.date !== today() && dayUnlocked(ui.date, p.id)
+    ? `<section class="card unlock-note past-warn"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Atenção: você está no treino de ${dayTxt(ui.date)}, não no de hoje.</b><br><small>Seu professor liberou este dia para você completar o que faltou. Se você está treinando agora, volte para o treino de hoje.</small></p>
+      <button class="btn primary" data-act="today">Ir para o treino de hoje</button></section>` : '';
+  return here + list.map(d => `<section class="card unlock-note"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Seu professor liberou o treino de ${dayTxt(d)}</b> (dia que já passou) para você completar o que faltou.<br><small>O treino de hoje continua aqui embaixo.</small></p>
+      <button class="btn" data-act="goto-day" data-d="${d}">Completar o dia ${fmtDate(d)}</button></section>`).join('');
+}
 const lockReason = (exId, date = ui.date) => date !== today() && !dayUnlocked(date) ? 'past' : sentAt(exId, date) ? 'sent' : '';
 const LOCK_MSG = { past: 'Dias passados ficam só para consulta: só dá para alterar o treino de hoje.', sent: 'Este treino já foi enviado: as cargas e repetições não podem mais ser alteradas.' };
 const dayLocked = (date = ui.date) => date !== today() && !dayUnlocked(date);
@@ -3843,7 +3852,7 @@ function sendStatusHtml(exs) {
   if (!ui.studentMode && ui.date < today() && exs.length) { // dia passado: o professor pode destravar para corrigir
     const p = profile(ui.profile), who = ui.profile === ME ? 'você' : firstName(p);
     return dayUnlocked(ui.date)
-      ? `<section class="card"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Dia ${fmtDate(ui.date)} destravado.</b><br><small style="color:var(--muted)">${ui.profile === ME ? 'Preencha o que faltou e envie o treino.' : `${esc(firstName(p))} pode preencher o que faltou e enviar (no app dela aparece o aviso). Você também pode preencher por aqui.`} Depois de enviado, trava de novo.</small></p>
+      ? `<section class="card"><p style="margin:0 0 10px"><b><i class="ic ic-unlock"></i> Dia ${fmtDate(ui.date)} destravado.</b><br><small style="color:var(--muted)">${ui.profile === ME ? 'Preencha o que faltou e envie o treino.' : `${esc(firstName(p))} pode preencher o que faltou e enviar (no app dela aparece o aviso). Você também pode preencher por aqui.`} Fica liberado por 3 dias; depois de enviado, trava de novo.</small></p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">${ui.profile !== ME && exs.some(e => { const s = sessionOn(e.id, ui.date); return s && !s.fin && s.sets.some(x => x.done); }) ? '<button class="btn primary" data-act="lock-student">✓ Salvar treino feito</button>' : ''}<button class="btn" data-act="day-relock"><i class="ic ic-lock"></i> Travar de novo</button></div></section>`
       : `<section class="card"><p style="margin:0 0 10px"><small style="color:var(--muted)">Dia que já passou: só consulta. Se ${esc(who)} esqueceu de anotar alguma série, destrave este dia para preencher.</small></p>
         <button class="btn" data-act="day-unlock"><i class="ic ic-unlock"></i> Destravar este dia para corrigir</button></section>`;
@@ -3885,7 +3894,7 @@ async function sendWorkout(auto) {
   if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
   if (ct && ct.pid === ui.profile && ct.date === ui.date && !auto) ctFinish(false); // cronômetro ligado: o tempo feito vai junto
   const pp = profile(ui.profile), noCardio = (dayPlan(pp, ui.date).includes(CARDIO) || cardioGoalOf(pp, ui.date)) && !profCardio().some(c => c.date === ui.date);
-  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${noCardio ? 'Atenção: o cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode && !meStu() ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
+  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${ui.date !== today() ? `Este treino fica no dia ${fmtDate(ui.date)} (${weekday(ui.date)}), não hoje. ` : ''}${noCardio ? 'Atenção: o cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode && !meStu() ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode && !meStu()) s.by = 'aluno'; });
   if (dayUnlocked(ui.date) && !(CLOUD && cloud && cloud.role === 'student')) delete profile(ui.profile).unlocks[ui.date]; // enviado: o dia trava de novo
@@ -6224,7 +6233,7 @@ $main.addEventListener('click', e => {
     case 'goto-day': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'day-unlock': {
       const p = profile(ui.profile), d = ui.date;
-      p.unlocks = { ...(p.unlocks || {}), [d]: true };
+      p.unlocks = { ...(p.unlocks || {}), [d]: Date.now() };
       profExs(p.id).forEach(e => { const x = sessionOn(e.id, d); if (x) { delete x.fin; delete x.finBy; } }); // pode completar e enviar de novo
       for (const k of Object.keys(p.unlocks)) if (k < addDays(today(), -30)) delete p.unlocks[k];
       save(); render();
@@ -7832,7 +7841,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-18:35';
+const APP_VERSION = '20/10-19:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
