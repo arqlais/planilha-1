@@ -139,6 +139,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ct-mode{margin:6px 0 0;font-size:12.5px}
 #setTimer button{font-size:14.5px;padding:12px 6px;min-height:46px;touch-action:manipulation}
 .noload{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12.5px;font-weight:700}
+.bseg{display:block;color:var(--muted);font-size:11px;text-align:center;margin-top:2px}
 .chk-line{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin:0 0 10px}.chk-line input{width:20px;height:20px}
 .consult-list{margin:0 0 6px;padding-left:20px;line-height:1.5}.consult-list li{margin:0 0 6px}
 .self-tabs{display:flex;gap:4px;background:var(--card);border-radius:14px;padding:4px;margin:0 0 10px;box-shadow:var(--shadow)}
@@ -1573,7 +1574,10 @@ const equipOf = name => { const n = normName(name);
     : /polia|triceps corda|cross|pulldown|puxada(?!.*graviton)|face pull|pull through|remada baixa|lenhador|pallof/.test(n) ? 'polia'
     : /maquina|leg press|cadeira|mesa flexora|flexora|peck|voador|chest press|smith|hack|graviton|articulad|pendulo|belt|banco lombar|panturrilha (sentado|no leg|no hack)|abdominal na maquina/.test(n) ? 'maq' : 'livre'; };
 // Prancha: em vez de repetições, cada série guarda os SEGUNDOS que o aluno aguentou (cronômetro na série)
-const isTimed = ex => !!ex && /prancha/.test(normName(ex.name));
+const isTimed = ex => !!ex && /prancha|hollow/.test(normName(ex.name));
+// Sem carga, só repetições: marcado no exercício ou sempre (prancha e abdominais no chão), mesmo nos treinos antigos
+const NOLOAD_ALWAYS = /abdominal (livre|supra|infra|obliquo|bicicleta|canivete|remador|tesoura|v$)/;
+const noLoadOf = ex => !!ex && (!!ex.noLoad || isTimed(ex) || NOLOAD_ALWAYS.test(normName(ex.name)));
 const fmtSec = v => { if (v == null) return '–'; const t = Math.round(v), m = Math.floor(t / 60), r = t % 60; return m ? `${m} min${r ? ` ${String(r).padStart(2, '0')} s` : ''}` : `${r} s`; };
 const catGroup = name => { const n = (name || '').toLowerCase(); for (const [g, l] of Object.entries(CATALOG)) if (l.some(x => x.toLowerCase() === n)) return g; return null; };
 // Exercícios do catálogo: com busca (sem acento, várias palavras), ou do grupo escolhido; filtro de equipamento
@@ -2669,7 +2673,7 @@ const V2_LAYOUT_BTN = grid => `<button class="v2-lay" data-act="v2-grid" aria-la
   ? '<svg viewBox="0 0 24 24" class="v2i"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
   : '<svg viewBox="0 0 24 24" class="v2i"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>'}</button>`;
 function cardHtmlV2(ex) {
-  const lock = lockReason(ex.id), tm = isTimed(ex), nl = ex.noLoad || tm;
+  const lock = lockReason(ex.id), tm = isTimed(ex), nl = noLoadOf(ex) || tm;
   const s = sessionOn(ex.id, ui.date) || blankSession(ex, ui.date), hints = blankSession(ex, ui.date).sets, prev = prevSession(ex.id, ui.date);
   const n = s.sets.length, done = s.sets.filter(x => x.done).length, complete = n > 0 && done === n, open = ui.v2open === ex.id;
   const p0 = (prev && prev.sets[0]) || (hints[0] && hints[0].hint) || {};
@@ -4077,16 +4081,16 @@ function cardHtml(ex) {
     if (tm) return plankRowHtml(ex, x, p, h, i);
     if (tiles) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></div>
-      ${ex.noLoad ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
+      ${noLoadOf(ex) ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
       <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
-      <div class="ant">${p && p.done ? (ex.noLoad ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
+      <div class="ant">${p && p.done ? (noLoadOf(ex) ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
     </div>`;
     return `<div class="set ${rowClass(x, p)}" data-i="${i}" data-base="set">
       <span class="num">${i + 1}</span>
-      ${ex.noLoad ? '<span class="noload">sem carga</span>' : stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
+      ${noLoadOf(ex) ? '<span class="noload">sem carga</span>' : stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
       ${stepper('reps', x.reps, `repetições da série ${i + 1}`, h.reps)}
       <button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button>
-      <div class="meta"><span>${p && p.done ? (ex.noLoad ? `antes: ${p.reps ?? '–'} repetições` : `antes: ${fmt(p.carga)} kg × ${p.reps ?? '–'}`) : 'sem registro anterior'}</span><span class="tot">${setTotal(x)}</span></div>
+      <div class="meta"><span>${p && p.done ? (noLoadOf(ex) ? `antes: ${p.reps ?? '–'} repetições` : `antes: ${fmt(p.carga)} kg × ${p.reps ?? '–'}`) : 'sem registro anterior'}</span><span class="tot">${setTotal(x)}</span></div>
     </div>`;
   }).join('');
   return `
@@ -4097,7 +4101,7 @@ function cardHtml(ex) {
         ${exDetailHtml(ex)}</div>
       ${ui.studentMode ? '' : '<button class="icon" data-act="del-ex" aria-label="Tirar do treino"><i class="ic ic-trash"></i></button><button class="icon" data-act="edit" aria-label="Editar exercício">⋯</button>'}
     </div>
-    ${tm ? `<div class="tile-key">Em cada série: toque em <b><i class="ic ic-timer"></i> Começar</b>, fique na prancha e toque em <b>Parar</b> quando não aguentar mais. O tempo fica anotado.</div><div class="plank-rows">${rows}</div>` : tiles ? `<div class="tile-key">Em cada série: ${ex.noLoad ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
+    ${tm ? `<div class="tile-key">Em cada série: toque em <b><i class="ic ic-timer"></i> Começar</b>, fique na prancha e toque em <b>Parar</b> quando não aguentar mais. O tempo fica anotado.</div><div class="plank-rows">${rows}</div>` : tiles ? `<div class="tile-key">Em cada série: ${noLoadOf(ex) ? '<b>repetições</b> (sem carga)' : '<b>carga (kg)</b> · <b>repetições</b>'} · anterior</div><div class="tiles">${rows}</div>` : `<div class="set-h"><span></span><span>Carga (kg)</span><span>Reps</span><span>Feito</span></div>
     ${rows}`}
     ${lock ? `<p class="lock-note"><i class="ic ic-lock"></i> ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em ⋯'}</p>` : `<div class="actions">
       <button class="btn" data-act="addset">＋ série</button>
@@ -4201,7 +4205,7 @@ function rowClass(x, p) {
   return 'done' + (cv > pv ? ' up' : cv < pv ? ' down' : '');
 }
 function compareHtml(s, prev) {
-  const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && ex.noLoad) || tm, u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
+  const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && noLoadOf(ex)) || tm, u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
   const reps = sets => sets.reduce((a, x) => a + (x.done && x.reps != null ? x.reps : 0), 0);
   const total = nl ? reps(s.sets) : vol(s.sets), pt = prev ? (nl ? reps(prev.sets) : vol(prev.sets)) : 0, max = Math.max(total, pt, 1);
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
@@ -4717,7 +4721,7 @@ function simulateWeek(p) {
     const d = addDays(ws, k % 7);
     letterExs(w.id, p.id).forEach(e => {
       if (db.sessions.some(x => x.exId === e.id && x.date === d)) return;
-      const sets = (e.sets && e.sets.length ? e.sets : [{}, {}, {}]).map(x => ({ carga: e.noLoad ? null : (x.carga ?? 10), reps: x.reps ?? 12, done: true }));
+      const sets = (e.sets && e.sets.length ? e.sets : [{}, {}, {}]).map(x => ({ carga: noLoadOf(e) ? null : (x.carga ?? 10), reps: x.reps ?? 12, done: true }));
       db.sessions.push({ id: uid(), exId: e.id, date: d, sets, fin: at, by: 'aluno' }); n++;
     });
   });
@@ -5323,8 +5327,8 @@ function builderHtml(pid) {
       <td><input data-bf="name" data-id="${e.id}" value="${esc(e.name)}" aria-label="Exercício" list="exNames"></td>
       <td><select data-bf="group" data-id="${e.id}" aria-label="Grupo">${GROUPS.map(g => `<option ${g === e.group ? 'selected' : ''}>${g}</option>`).join('')}</select></td>
       <td><input class="n" data-bf="n" data-id="${e.id}" inputmode="numeric" value="${e.sets.length}" aria-label="Séries"></td>
-      <td><input class="n" data-bf="reps" data-id="${e.id}" inputmode="numeric" value="${r === 'var' ? '' : numVal(r)}" placeholder="${r === 'var' ? 'var.' : '–'}" aria-label="Repetições"></td>
-      <td>${e.noLoad ? '<span class="noload" title="Sem carga (só repetições)">sem</span>' : `<input class="n" data-bf="carga" data-id="${e.id}" inputmode="decimal" value="${c === 'var' ? '' : numVal(c)}" placeholder="${c === 'var' ? 'var.' : 'kg'}" aria-label="Carga">`}</td>
+      <td><input class="n" data-bf="reps" data-id="${e.id}" inputmode="numeric" value="${r === 'var' ? '' : numVal(r)}" placeholder="${r === 'var' ? 'var.' : isTimed(e) ? 'seg' : '–'}" aria-label="${isTimed(e) ? 'Tempo em segundos' : 'Repetições'}">${isTimed(e) ? '<small class="bseg">seg</small>' : ''}</td>
+      <td>${noLoadOf(e) ? `<span class="noload" title="${isTimed(e) ? 'Sem carga (anota o tempo)' : 'Sem carga (só repetições)'}">sem</span>` : `<input class="n" data-bf="carga" data-id="${e.id}" inputmode="decimal" value="${c === 'var' ? '' : numVal(c)}" placeholder="${c === 'var' ? 'var.' : 'kg'}" aria-label="Carga">`}</td>
       <td><input class="n" data-bf="rest" data-id="${e.id}" inputmode="numeric" value="${e.rest || ''}" placeholder="seg" aria-label="Descanso em segundos"></td>
       <td><select data-bf="method" data-id="${e.id}" aria-label="Técnica">${METHODS.map(m => `<option ${m === (e.method || 'Normal') ? 'selected' : ''}>${m}</option>`).join('')}</select></td>
       <td class="acts">${demoFor(e) ? `<button class="qhelp" data-act="demo-ex" data-id="${e.id}" title="Como fazer">?</button>` : ''}<button data-act="b-up" data-id="${e.id}" title="Subir" ${i ? '' : 'disabled'}>↑</button><button data-act="b-down" data-id="${e.id}" title="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
@@ -5332,8 +5336,8 @@ function builderHtml(pid) {
       <tr class="b2"><td class="num2"></td><td colspan="7"><input data-bf="note" data-id="${e.id}" value="${esc(e.note || '')}" placeholder="Observação para o aluno (ex.: pausa de 2s embaixo, pegada aberta…)" aria-label="Observação"></td>
         <td class="acts"><button data-act="b-sets" data-id="${e.id}" title="Série por série">${open.has(e.id) ? '▾' : '▸'} séries</button></td></tr>
       ${open.has(e.id) ? `<tr class="bsets"><td></td><td colspan="8"><div class="bsets-in">${e.sets.map((x, j) => `<div class="bset"><b>${j + 1}ª</b>
-        <input data-bs="carga" data-id="${e.id}" data-i="${j}" inputmode="decimal" value="${numVal(x.carga)}" placeholder="kg"> kg ×
-        <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="reps"></div>`).join('')}</div></td></tr>` : ''}`;
+        ${noLoadOf(e) ? '' : `<input data-bs="carga" data-id="${e.id}" data-i="${j}" inputmode="decimal" value="${numVal(x.carga)}" placeholder="kg"> kg ×`}
+        <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${isTimed(e) ? 'seg' : 'reps'}">${isTimed(e) ? ' seg' : noLoadOf(e) ? ' reps' : ''}</div>`).join('')}</div></td></tr>` : ''}`;
   }).join('');
   return `<section class="card">
     <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}${w.hold ? ' <small>(escondido)</small>' : ''}${w.own ? ' <small>(do aluno)</small>' : ''}</button>`).join('')}
@@ -5414,7 +5418,7 @@ function builderChange(t) {
   if (f === 'name') {
     const cn = catName(v), nn = cn || v.trim().slice(0, 60); if (!nn || nn === ex.name) { t.value = ex.name; return; }
     const old = ex.name; ex.name = nn; t.value = nn;
-    if (cn) { const g = catGroup(cn); if (g && g !== ex.group) { ex.group = g; const sg = $main.querySelector(`[data-bf="group"][data-id="${ex.id}"]`); if (sg) sg.value = g; } if (NOLOAD_RX.test(normName(cn)) && !ex.noLoad) { ex.noLoad = true; bRender(true); } }
+    if (cn) { const g = catGroup(cn); if (g && g !== ex.group) { ex.group = g; const sg = $main.querySelector(`[data-bf="group"][data-id="${ex.id}"]`); if (sg) sg.value = g; } if (NOLOAD_RX.test(normName(cn)) && !noLoadOf(ex)) { ex.noLoad = true; bRender(true); } }
     if (!nearName(old, nn) && splitHistory(ex, old)) toast(`<b>${esc(nn)}</b> começa com histórico novo. O histórico de ${esc(old)} continua guardado.`);
     bRender(false);
     const mm = $main.querySelector('.mmap'); if (mm && ex.letter) mm.outerHTML = muscleMapHtml(letterExs(ex.letter, ex.profileId), ex.profileId); // o desenho acompanha o nome novo
@@ -5512,9 +5516,9 @@ function exLibRender() {
 function exLibAdd(name, group) {
   const B = ui.lib, list = letterExs(B.L, B.pid), prev = list.slice(-1)[0];
   if (list.some(e => sameName(e.name, name))) return toast(`<b>${esc(name)}</b> já está neste treino.`);
-  const reps = prev ? allSame(prev.sets, 'reps') : 10, n = prev ? prev.sets.length : 3;
-  const ex = { id: uid(), profileId: B.pid, group, letter: B.L, name, sets: Array.from({ length: n }, () => ({ carga: null, reps: typeof reps === 'number' ? reps : 10 })), order: list.length + 1, planDate: today(),
-    ...(NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
+  const reps = prev && !isTimed(prev) ? allSame(prev.sets, 'reps') : 10, n = prev ? prev.sets.length : 3;
+  const ex = { id: uid(), profileId: B.pid, group, letter: B.L, name, sets: Array.from({ length: n }, () => ({ carga: null, reps: isTimed({ name }) ? 30 : typeof reps === 'number' ? reps : 10 })), order: list.length + 1, planDate: today(),
+    ...(noLoadOf({ name }) || NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
   list.forEach((e, k) => { e.order = k + 1; });
   db.exercises.push(ex); B.n++; save();
   const box = document.querySelector('#exLibBody .exlib-list'), y = box ? box.scrollTop : 0;
@@ -5956,7 +5960,7 @@ function autoCheck(inp) {
   const ex = exById(card.dataset.ex);
   if (lockReason(ex.id)) return;
   const s = ensureSession(ex, ui.date), i = +row.dataset.i, x = s.sets[i];
-  if (x.done || (x.carga == null && !ex.noLoad && !isTimed(ex)) || x.reps == null) return;
+  if (x.done || (x.carga == null && !noLoadOf(ex) && !isTimed(ex)) || x.reps == null) return;
   const wasComplete = s.sets.every(y => y.done);
   x.done = true; save();
   ui.autoAt = { ex: ex.id, i, t: Date.now() }; // o toque no ✓ logo em seguida não desmarca
@@ -6416,7 +6420,7 @@ $main.addEventListener('click', e => {
   } else if (act === 'done') {
     const x = s.sets[+b.closest('[data-i]').dataset.i], ai = +b.closest('[data-i]').dataset.i;
     if (x.done && ui.autoAt && ui.autoAt.ex === ex.id && ui.autoAt.i === ai && Date.now() - ui.autoAt.t < 800) { ui.autoAt = null; return; } // acabou de marcar sozinho ao sair do campo
-    if (!x.done && ((x.carga == null && !ex.noLoad && !isTimed(ex)) || x.reps == null)) return toast(isTimed(ex) ? 'Use o <b><i class="ic ic-timer"></i> Começar</b> ou anote os <b>segundos</b> para confirmar a série.' : ex.noLoad ? 'Anote as <b>repetições</b> para confirmar a série.' : 'Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
+    if (!x.done && ((x.carga == null && !noLoadOf(ex) && !isTimed(ex)) || x.reps == null)) return toast(isTimed(ex) ? 'Use o <b><i class="ic ic-timer"></i> Começar</b> ou anote os <b>segundos</b> para confirmar a série.' : noLoadOf(ex) ? 'Anote as <b>repetições</b> para confirmar a série.' : 'Anote a <b>carga</b> e as <b>repetições</b> para confirmar a série.');
     x.done = !x.done;
     if (x.done) { if (navigator.vibrate) navigator.vibrate(30); if (!s.sets.every(y => y.done)) startRest(ex.rest); }
   } else if (act === 'inc' || act === 'dec') {
@@ -6427,7 +6431,7 @@ $main.addEventListener('click', e => {
       const base = from(f);
       x[f] = base != null ? base : act === 'inc' ? STEP[f] : 0;
       const o = f === 'carga' ? 'reps' : 'carga';
-      if (x[o] == null && !(o === 'carga' && (ex.noLoad || isTimed(ex)))) { const ob = from(o); if (ob != null) x[o] = ob; }
+      if (x[o] == null && !(o === 'carga' && (noLoadOf(ex) || isTimed(ex)))) { const ob = from(o); if (ob != null) x[o] = ob; }
     } else {
       const v = x[f] + STEP[f] * (act === 'inc' ? 1 : -1);
       x[f] = Math.max(0, Math.round(v * 10) / 10);
@@ -6435,7 +6439,7 @@ $main.addEventListener('click', e => {
   } else if (act === 'alldone') {
     if (s.sets.every(x => x.done)) s.sets.forEach(x => x.done = false);
     else {
-      const ok = s.sets.filter(x => (x.carga != null || ex.noLoad || isTimed(ex)) && x.reps != null);
+      const ok = s.sets.filter(x => (x.carga != null || noLoadOf(ex) || isTimed(ex)) && x.reps != null);
       if (!ok.length) return toast('Anote a <b>carga</b> e as <b>repetições</b> para confirmar as séries.');
       ok.forEach(x => x.done = true);
       if (ok.length < s.sets.length) toast('Só foram confirmadas as séries com carga e repetições anotadas.');
@@ -6465,7 +6469,7 @@ function openDialog(ex, letter) {
   document.getElementById('letterPick').innerHTML = letterPicker('radio', 'letter', () => false, false, ui.profile, true);
   $form.letter.value = ex ? ex.letter || '' : letter || (isLetter(ui.group) ? ui.group : '');
   $form.group.value = ex ? ex.group : '';
-  $form.noload.checked = !!(ex && ex.noLoad);
+  $form.noload.checked = !!(ex && noLoadOf(ex));
   // ligar ao histórico de outro exercício do mesmo aluno
   const tf = document.getElementById('twinF');
   tf.hidden = !(ex && !ui.studentMode);
@@ -6581,7 +6585,7 @@ function claudeFile() {
       exercises: exs.map(e => {
         const last = exHistory(e.id).pop();
         return { name: e.name, group: e.group, sets: (e.sets || []).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })),
-          ...(e.note ? { note: e.note } : {}), ...(e.noLoad ? { noLoad: true } : {}),
+          ...(e.note ? { note: e.note } : {}), ...(noLoadOf(e) ? { noLoad: true } : {}),
           ...(last ? { ultimo_treino: { date: last.date, sets: last.sets.filter(x => x.done).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })) } } : {}) };
       }),
     };
@@ -6627,7 +6631,7 @@ function importHistory(file) {
       const ex = { id: uid(), profileId: p.id, name, group: GROUPS.includes(e.group) ? e.group : GROUPS[0], letter: letter || null,
         sets: (e.sets && e.sets.length ? e.sets : [{ carga: null, reps: null }]).map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })),
         ...(typeof e.note === 'string' && e.note.trim() ? { note: e.note.trim().slice(0, 200) } : {}),
-        ...(e.noLoad || NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
+        ...(noLoadOf(e) || NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
       db.exercises.push(ex); return ex;
     };
     let nW = 0, nE = 0, nS = 0, nB = 0;
@@ -7828,7 +7832,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-17:42';
+const APP_VERSION = '20/10-18:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
