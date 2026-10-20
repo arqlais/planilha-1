@@ -4303,7 +4303,7 @@ function dayCard(d, list) {
         <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
     ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}${cardioExtraTxt(c) ? `<small style="display:block;color:var(--muted)">${cardioExtraTxt(c)}</small>` : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
-    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}"><i class="ic ic-cam"></i> Check-in</button>` : ''}</div>
+    <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${!ui.studentMode && cloudRole() !== 'student' && d < today() ? `<button class="btn" data-act="move-day" data-d="${d}"><i class="ic ic-cal"></i> Passar para outro dia</button>` : ''}${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}"><i class="ic ic-cam"></i> Check-in</button>` : ''}</div>
   </section>`;
 }
 // Dia com treino planejado que já passou e o aluno não treinou (aparece no calendário como "não fez")
@@ -5815,13 +5815,14 @@ function perfilHtml(p, desk) {
 }
 // ---------- Janela de pergunta (substitui prompt/confirm, que o navegador pode bloquear) ----------
 const $ask = document.getElementById('askDlg'), $askForm = document.getElementById('askForm');
-function ask({ title, msg = '', field = null, value = '', ok = 'OK', extra = null, danger = false, noCancel = false }) {
+function ask({ title, msg = '', field = null, value = '', ok = 'OK', extra = null, danger = false, noCancel = false, type = 'text', max = '' }) {
   return new Promise(resolve => {
     document.getElementById('askTitle').textContent = title;
     document.getElementById('askMsg').textContent = msg;
     document.getElementById('askMsg').hidden = !msg;
     const $field = document.getElementById('askField'), $in = $askForm.val;
     $field.hidden = !field;
+    $in.type = type; $in.max = max;
     if (field) { $field.firstChild.textContent = field; $in.value = value; }
     const $ok = document.getElementById('askOk'), $extra = document.getElementById('askExtra');
     $ok.textContent = ok; $ok.className = 'btn ' + (danger ? 'primary danger-fill' : 'primary');
@@ -5834,7 +5835,7 @@ function ask({ title, msg = '', field = null, value = '', ok = 'OK', extra = nul
     $extra.onclick = () => done('extra');
     $ask.oncancel = e => { e.preventDefault(); done('cancel'); };
     $ask.showModal();
-    if (field) { $in.focus(); $in.select(); }
+    if (field) { $in.focus(); if (type === 'text') $in.select(); }
   });
 }
 const confirmAsk = async (title, msg, ok = 'Excluir') => (await ask({ title, msg, ok, danger: true })).action === 'ok';
@@ -6238,6 +6239,26 @@ $main.addEventListener('click', e => {
       for (const k of Object.keys(p.unlocks)) if (k < addDays(today(), -30)) delete p.unlocks[k];
       save(); render();
       return toast(`<i class="ic ic-unlock"></i> Dia ${fmtDate(d)} destravado${p.id === ME ? '' : `: ${esc(firstName(p))} já pode preencher e enviar`}.`);
+    }
+    case 'move-day': { // professor: treino anotado no dia errado (ex.: aluno abriu um dia passado destravado) vai para o dia certo
+      const p = profile(ui.profile), from = b.dataset.d;
+      ask({ title: `Passar o treino de ${fmtDate(from)} para outro dia`, msg: 'Escolha o dia em que o treino foi feito de verdade. As séries e o cardio deste dia vão para lá.', field: 'Dia certo', value: addDays(today(), -1), type: 'date', max: today(), ok: 'Passar' }).then(async r => {
+        const to = r.value;
+        if (r.action !== 'ok' || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to === from) return;
+        if (to > today()) return toast('Escolha um dia que já passou ou hoje.');
+        const ids = new Set(db.exercises.filter(e => e.profileId === p.id).map(e => e.id));
+        const busy = new Set(db.sessions.filter(x => ids.has(x.exId) && x.date === to && hasDone(x)).map(x => x.exId));
+        const ss = db.sessions.filter(x => ids.has(x.exId) && x.date === from && !busy.has(x.exId)), cc = db.cardio.filter(c => c.profileId === p.id && c.date === from);
+        if (!ss.length && !cc.length) return toast(`O dia ${fmtDate(to)} já tem esses exercícios anotados: nada foi passado.`);
+        const moving = new Set(ss.map(x => x.exId));
+        db.sessions = db.sessions.filter(x => !(moving.has(x.exId) && x.date === to)); // tira só as séries em branco do dia certo
+        ss.forEach(x => { x.date = to; delete x.t0; }); cc.forEach(c => { c.date = to; });
+        if (p.unlocks) delete p.unlocks[from];
+        ui.histDay = to; ui.month = to.slice(0, 7);
+        save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow();
+        toast(`✓ Treino passado de ${fmtDate(from)} para ${fmtDate(to)}${busy.size ? ` (${busy.size} exercício${busy.size === 1 ? '' : 's'} já estava${busy.size === 1 ? '' : 'm'} anotado${busy.size === 1 ? '' : 's'} em ${fmtDate(to)} e ficou${busy.size === 1 ? '' : 'aram'} em ${fmtDate(from)})` : ''}.`);
+      });
+      return;
     }
     case 'day-relock': {
       const p = profile(ui.profile), d = ui.date, at = new Date().toISOString();
@@ -7091,25 +7112,6 @@ async function fixOnce() {
     mark('crucifixo-2206-x4');
     if (n) { save(); msgs.push('Crucifixo: as cargas de 22/06 voltaram ao peso certo.'); }
   }
-  // 1j) (20/10) Aluno treinou em 19/10 mas anotou no dia 05/10, que estava destravado. Passa para 19/10 só o que
-  //     foi enviado/marcado em 19/10 (hora do envio e do cardio); não mexe se já houver anotação no dia 19/10.
-  if (!done.has('treino-0510-para-1910')) {
-    const FROM = '2026-10-05', TO = '2026-10-19', dayOf = t => t ? isoDate(new Date(t)) : null;
-    db.profiles.filter(p => p.id !== ME).forEach(p => {
-      const ids = new Set(db.exercises.filter(e => e.profileId === p.id).map(e => e.id));
-      const ss = db.sessions.filter(x => ids.has(x.exId) && x.date === FROM), cc = db.cardio.filter(c => c.profileId === p.id && c.date === FROM);
-      const stamps = [...ss.map(x => dayOf(x.fin)), ...cc.map(c => dayOf(c.at))].filter(Boolean);
-      if (!stamps.length || stamps.some(d => d !== TO)) return; // só quando tudo indica que foi feito em 19/10
-      const busy = new Set(db.sessions.filter(x => ids.has(x.exId) && x.date === TO && hasDone(x)).map(x => x.exId));
-      let n = 0;
-      ss.forEach(x => { if (busy.has(x.exId)) return; db.sessions = db.sessions.filter(y => !(y.exId === x.exId && y.date === TO)); x.date = TO; n++; });
-      cc.forEach(c => { c.date = TO; n++; });
-      if (p.unlocks) delete p.unlocks[FROM];
-      if (n) msgs.push(`${esc(firstName(p))}: o treino feito em 19/10 estava anotado no dia 05/10 e foi passado para 19/10.`);
-    });
-    mark('treino-0510-para-1910');
-    save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow();
-  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -7860,7 +7862,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-19:38';
+const APP_VERSION = '20/10-19:46';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
