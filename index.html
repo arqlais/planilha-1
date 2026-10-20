@@ -7091,6 +7091,25 @@ async function fixOnce() {
     mark('crucifixo-2206-x4');
     if (n) { save(); msgs.push('Crucifixo: as cargas de 22/06 voltaram ao peso certo.'); }
   }
+  // 1j) (20/10) Aluno treinou em 19/10 mas anotou no dia 05/10, que estava destravado. Passa para 19/10 só o que
+  //     foi enviado/marcado em 19/10 (hora do envio e do cardio); não mexe se já houver anotação no dia 19/10.
+  if (!done.has('treino-0510-para-1910')) {
+    const FROM = '2026-10-05', TO = '2026-10-19', dayOf = t => t ? isoDate(new Date(t)) : null;
+    db.profiles.filter(p => p.id !== ME).forEach(p => {
+      const ids = new Set(db.exercises.filter(e => e.profileId === p.id).map(e => e.id));
+      const ss = db.sessions.filter(x => ids.has(x.exId) && x.date === FROM), cc = db.cardio.filter(c => c.profileId === p.id && c.date === FROM);
+      const stamps = [...ss.map(x => dayOf(x.fin)), ...cc.map(c => dayOf(c.at))].filter(Boolean);
+      if (!stamps.length || stamps.some(d => d !== TO)) return; // só quando tudo indica que foi feito em 19/10
+      const busy = new Set(db.sessions.filter(x => ids.has(x.exId) && x.date === TO && hasDone(x)).map(x => x.exId));
+      let n = 0;
+      ss.forEach(x => { if (busy.has(x.exId)) return; db.sessions = db.sessions.filter(y => !(y.exId === x.exId && y.date === TO)); x.date = TO; n++; });
+      cc.forEach(c => { c.date = TO; n++; });
+      if (p.unlocks) delete p.unlocks[FROM];
+      if (n) msgs.push(`${esc(firstName(p))}: o treino feito em 19/10 estava anotado no dia 05/10 e foi passado para 19/10.`);
+    });
+    mark('treino-0510-para-1910');
+    save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow();
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -7841,7 +7860,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-19:35';
+const APP_VERSION = '20/10-19:38';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
