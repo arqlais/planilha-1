@@ -654,12 +654,14 @@ body.offline #offBar{display:block}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
 .cal .wd{font-size:11px;font-weight:700;color:var(--muted);padding-bottom:2px}
 .cal button{height:34px;border:0;border-radius:8px;background:transparent;font-weight:600;font-size:13px;color:var(--text);padding:0;position:relative}
-.cal button.has{background:var(--hero);color:#fff}
+.cal button.has{background:var(--up-bg);color:var(--up);font-weight:800;box-shadow:inset 0 0 0 1.5px var(--up)}
+.cal button.has::after{content:'';position:absolute;top:3px;right:4px;width:11px;height:11px;background:currentColor;-webkit-mask:var(--chk) center/contain no-repeat;mask:var(--chk) center/contain no-repeat}
+.cal{--chk:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%223.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4.5 12.5l5 5L19.5 7%22/%3E%3C/svg%3E")}
 .cal button.planned{box-shadow:inset 0 -3px 0 var(--acc);background:var(--acc-soft)}
 .cal button.missed{background:var(--down-bg);color:var(--down);position:relative}
 .cal button.missed::after{content:'';position:absolute;left:22%;right:22%;top:50%;height:2px;background:currentColor;opacity:.7;transform:rotate(-12deg)}
 .cal button.today{outline:2px solid var(--acc-2);outline-offset:-2px}
-.cal button.sel{box-shadow:0 0 0 3px var(--text) inset}
+.cal button.sel,.cal button.has.sel{box-shadow:0 0 0 3px var(--text) inset}
 .cal button:not(.has):not(:disabled):hover{background:var(--acc-soft)}
 .cal button:disabled{opacity:.35}
 .cal.compact{gap:3px}.cal.compact button{aspect-ratio:auto;height:34px;font-size:13px;border-radius:8px}
@@ -4431,7 +4433,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal compact">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">Dias destacados: dias treinados. Dias riscados em vermelho: tinha treino e não foi feito. Toque em um dia para ver o que foi marcado.</p>
+      <p class="hint" style="margin:10px 0 0">Verde com <i class="ic ic-okc"></i>: treinou. Riscados em vermelho: tinha treino e não foi feito. Toque em um dia para ver o que foi marcado.</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>${monthDays.length === 1 ? 'dia treinado' : 'dias treinados'}</span></div></div>
     </section>${selHtml}${weekReportHtml(profile(ui.profile))}`; // séries da semana: só o professor vê
     return;
@@ -4442,7 +4444,7 @@ function renderHistorico() {
       <div class="cal-h"><button class="icon" data-act="month" data-d="-1" aria-label="Mês anterior">‹</button><h3>${monthName}</h3>
         <button class="icon" data-act="month" data-d="1" aria-label="Próximo mês">›</button></div>
       <div class="cal">${cells}</div>
-      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : !ui.studentMode ? 'Toque em um dia para ver o treino. Riscados em vermelho: tinha treino e não foi feito (não contam nas séries da semana). Dias futuros: toque para planejar o treino daquela data (marcados = treino planejado).' : 'Toque em um dia para ver o treino. Dias destacados têm treino; dias passados ficam só para consulta.'}</p>
+      <p class="hint" style="margin:10px 0 0">${loadingOld ? 'Carregando meses anteriores…' : !ui.studentMode ? 'Toque em um dia para ver o treino. Verde com <i class="ic ic-okc"></i>: treinou. Riscados em vermelho: tinha treino e não foi feito (não contam nas séries da semana). Dias futuros: toque para planejar o treino daquela data (marcados = treino planejado).' : 'Toque em um dia para ver o treino. Verde com <i class="ic ic-okc"></i>: treinou; dias passados ficam só para consulta.'}</p>
       <div class="month-sum"><div><b>${monthDays.length}</b><span>treinos</span></div>
         <div><b>${monthSets}</b><span>séries</span></div><div><b>${fmt(Math.round(monthVol))}</b><span>kg</span></div><div><b>${monthCardio}</b><span>min cardio</span></div></div>
     </section>
@@ -7862,7 +7864,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-19:46';
+const APP_VERSION = '20/10-20:54';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
