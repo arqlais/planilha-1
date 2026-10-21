@@ -3651,11 +3651,28 @@ function ctTick() {
       const pct = ct.dir === 'down' ? (1 - el / ct.dur) * 100 : Math.min(100, (ct.base + el / 60) / (ct.goal || (ct.base + ct.dur / 60)) * 100);
       if (f) { f.style.transition = 'width .3s linear'; f.style.width = pct + '%'; }
     }
-    if (!ct.pausedAt && el >= ct.dur) ctFinish(true);
+    if (!ct.pausedAt && el >= ct.dur) return ctFinish(true);
+    ctKeep();
   };
   step(); ctTimer = setInterval(step, 250);
 }
-// grava os minutos do cronômetro no cardio do dia (somando com o que já tinha)
+// grava o cardio enquanto o cronômetro corre (a partir de 1 min, depois a cada 2 min):
+// o professor já vê que o aluno treinou hoje e nada se perde se ele esquecer de finalizar
+function ctPut(t, total) {
+  const p = profile(t.pid); if (!p || daySent(t.date, t.pid)) return false;
+  const prev = db.cardio.filter(c => c.profileId === t.pid && c.date === t.date), g0 = cardioGoalOf(p, t.date);
+  const keep = cardioExtraKeep(t.pid, t.date, prev);
+  db.cardio = db.cardio.filter(c => !(c.profileId === t.pid && c.date === t.date));
+  if (total > 0) db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, ...keep, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
+  save(); return true;
+}
+function ctKeep() {
+  if (!ct || ct.pausedAt) return;
+  const m = Math.floor(ctElapsed(ct) / 60);
+  if (m < 1 || (ct.savedM && m - ct.savedM < 2)) return;
+  if (ctPut(ct, Math.min(300, (ct.base || 0) + m))) { ct.savedM = m; ctSaveState(); }
+}
+// grava os minutos do cronômetro no cardio do dia (somando com o que já tinha antes de começar)
 function ctFinish(auto) {
   const t = ct; if (!t) return;
   const sec = ctElapsed(t); ct = null; ctSaveState(); clearInterval(ctTimer);
@@ -3665,12 +3682,8 @@ function ctFinish(auto) {
   if (!(min > 0)) { render(); return toast('Cronômetro cancelado: nenhum minuto contado.'); }
   const p = profile(t.pid); if (!p) return render();
   if (daySent(t.date, t.pid)) { render(); return toast('O treino deste dia já foi enviado: o tempo do cronômetro não foi somado.'); }
-  const prev = db.cardio.filter(c => c.profileId === t.pid && c.date === t.date), had = prev.reduce((a, c) => a + c.min, 0);
-  const total = Math.min(300, Math.round((had + min) * 100) / 100), g0 = cardioGoalOf(p, t.date);
-  const keep = cardioExtraKeep(t.pid, t.date, prev);
-  db.cardio = db.cardio.filter(c => !(c.profileId === t.pid && c.date === t.date));
-  db.cardio.push({ id: uid(), profileId: t.pid, date: t.date, mode: t.mode, min: total, ...keep, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...(t.by ? { by: t.by } : {}) });
-  save(); render();
+  const total = Math.min(300, Math.round(((t.base || 0) + min) * 100) / 100), g0 = cardioGoalOf(p, t.date);
+  ctPut(t, total); render();
   toast(`${auto ? '<i class="ic ic-alarm"></i> Tempo! ' : ''}${modeOf(t.mode)[1]}: ${fmtMin(min)} min salvos${g0 && total >= g0 ? ' · meta de cardio concluída!' : ''}`);
 }
 function beep() {
@@ -6433,7 +6446,7 @@ $main.addEventListener('click', e => {
     case 'ct-stop': if (ct) { if (!ct.pausedAt) ct.pausedAt = Date.now(); ct.stopped = true; ctSaveState(); } return render();
     case 'ct-save': return ctFinish(false);
     case 'cardio-zero': confirmAsk('Zerar o cardio de hoje?', 'O tempo anotado hoje volta para 0.', 'Zerar').then(ok => { if (ok) setCardio(0); }); return;
-    case 'ct-cancel': confirmAsk('Cancelar o cronômetro?', 'O tempo contado até agora não será salvo.', 'Cancelar cronômetro').then(ok => { if (!ok) return; ct = null; ctSaveState(); clearInterval(ctTimer); try { ctLock && ctLock.release(); } catch (e) {} render(); }); return;
+    case 'ct-cancel': confirmAsk('Cancelar o cronômetro?', 'O tempo contado até agora não será salvo.', 'Cancelar cronômetro').then(ok => { if (!ok) return; if (ct && ct.savedM) ctPut(ct, ct.base || 0); ct = null; ctSaveState(); clearInterval(ctTimer); try { ctLock && ctLock.release(); } catch (e) {} render(); }); return;
     case 'del-cardio': db.cardio = db.cardio.filter(c => c.id !== b.dataset.id); save(); return render();
     case 'watch-start': ui.watch = { start: Date.now(), mode: ui.mode }; clearInterval(watchTimer); watchTimer = setInterval(tickWatch, 500); return render();
     case 'watch-cancel': ui.watch = null; clearInterval(watchTimer); return render();
@@ -8044,7 +8057,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-21:44';
+const APP_VERSION = '20/10-22:55';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
