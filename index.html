@@ -624,6 +624,7 @@ table.pay td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align
 .wname{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 .wname .key{width:10px;height:10px;border-radius:50%;flex:none}
 .wnum{font-size:12px;color:var(--muted);font-weight:600;margin:2px 0 4px}.wnum b{font-size:22px;color:var(--text)}
+.whelp{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:1px}
 .wbar{height:5px;border-radius:5px;background:var(--line);overflow:hidden}.wbar i{display:block;height:100%;border-radius:5px}
 .wdone{display:block;font-size:10.5px;color:var(--muted);margin-top:4px}
 #offBar{display:none;position:sticky;top:0;z-index:30;background:#5b5f66;color:#fff;font-size:12.5px;font-weight:600;text-align:center;padding:6px 12px}
@@ -5198,7 +5199,7 @@ document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 
 // Séries por grupo muscular na semana: o que a divisão manda fazer (planejado) e o que o aluno já fez nesta semana
 function weekSetsHtml(p) {
-  let realPlan = 0, realDone = 0; const plan = {}, done = {}, why = {}, off = ui.wsOff || 0, t = today();
+  let realPlan = 0, realDone = 0; const plan = {}, help = {}, done = {}, why = {}, off = ui.wsOff || 0, t = today();
   const ws = addDays(weekStart(t), 7 * off), we = addDays(ws, 6);
   // o que estava planejado em cada dia (exercício por exercício)
   const items = [];
@@ -5224,7 +5225,7 @@ function weekSetsHtml(p) {
     else if (it.d < t) return; // dia que passou e o aluno não fez: não conta (se foi passado para outro dia, conta lá)
     else if (it.d <= t && e.planDate && e.planDate > it.d) { const pv = prevSession(e.id, e.planDate); if (pv) n = pv.sets.length; }
     realPlan += n;
-    Object.entries(groupWeights(e)).forEach(([g, k]) => { plan[g] = (plan[g] || 0) + n * k; (why[g] = why[g] || []).push({ d: it.d, w: it.w, name: e.name, n: n * k, half: k < 1 ? n : 0 }); });
+    Object.entries(groupWeights(e)).forEach(([g, k]) => { plan[g] = (plan[g] || 0) + n * k; if (k < 1) help[g] = (help[g] || 0) + n * k; (why[g] = why[g] || []).push({ d: it.d, w: it.w, name: e.name, n: n * k, half: k < 1 ? n : 0 }); });
   });
   profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => {
     const e = exById(x.exId); if (!e) return; const n = x.sets.filter(y => y.done).length; realDone += n;
@@ -5244,10 +5245,10 @@ function weekSetsHtml(p) {
     ${groups.length ? `<div class="wsets">${groups.map(g => {
       const pl = plan[g] || 0, dn = done[g] || 0, pct = pl ? Math.min(100, dn / pl * 100) : 100;
       return `<button class="wset ${ui.wsOpen === g ? 'on' : ''}" data-act="ws-why" data-g="${g}"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
-        <div class="wnum"><b>${fmt(pl || dn)}</b> séries${pl ? '' : ' feitas'}</div>
+        <div class="wnum"><b>${fmt(pl ? pl - (help[g] || 0) : dn)}</b> séries${pl ? '' : ' feitas'}${pl && help[g] ? `<span class="whelp">+${fmt(help[g])} de ajuda · total ${fmt(pl)}</span>` : ''}</div>
         <div class="wbar"><i style="width:${pct}%;background:${COLOR(g)}"></i></div>
         <small class="wdone">${!pl ? 'por conta própria' : dn ? `${fmt(dn)} de ${fmt(pl)} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></button>`;
-    }).join('')}</div>` : ''}
+    }).join('')}</div>${groups.some(g => plan[g] && help[g]) ? '<p class="hint" style="margin:8px 2px 0">Número grande: séries em que o grupo é o principal. "De ajuda": exercícios de outro grupo que também trabalham esse músculo (cada série conta meia).</p>' : ''}` : ''}
     ${ui.wsOpen && (ui.studentMode || !why[ui.wsOpen]) && doneBy[ui.wsOpen] ? `<div class="ws-why"><p class="plan-g" style="margin:12px 2px 6px">Séries de ${ui.wsOpen} feitas na semana</p>
       ${[...new Set(doneBy[ui.wsOpen].map(x => x.d))].sort().map(d => { const xs = doneBy[ui.wsOpen].filter(x => x.d === d);
         return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b><small>${xs.map(x => `${esc(x.name)} (${x.half ? `${x.half} × ½` : x.n})`).join(' · ')}</small></div><b>${fmt(xs.reduce((a, x) => a + x.n, 0))}</b></div>`; }).join('')}</div>`
@@ -5715,6 +5716,8 @@ const readyBtn = p => readyOk(p)
   : `<button class="btn ready-btn" data-act="plan-ready">Marcar planejamento pronto${p.planReady ? ` <small style="display:block;font-weight:500;opacity:.8">venceu em ${fmtDate(readyUntil(p))}: revise os treinos da semana</small>` : ''}</button>`;
 
 // Abas do aluno (computador)
+// a aba escolhida fica à vista na fileira de abas (no celular ela rola para o lado)
+const showStTab = () => { const t = document.querySelector('.ws .tabs button.on'); if (t) t.scrollIntoView({ block: 'nearest', inline: 'center' }); };
 const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
 function perfilHtml(p, desk) {
   const s = profileSummary(p.id), ws = weekStart(today()), noHist = !trainedDates(p.id).length;
@@ -5779,7 +5782,7 @@ function perfilHtml(p, desk) {
         <button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
-        <button class="btn" data-act="goto-msg">Mensagem</button>
+        ${mine ? '' : '<button class="btn" data-act="goto-msg">Mensagem</button>'}
         <button class="btn" data-act="student-mode">Ver como o aluno</button>
         <button class="btn ${isConsult(p) ? 'primary' : ''}" data-act="consult-toggle">Consultoria: ${isConsult(p) ? 'sim' : 'não (só o app)'}</button>
         ${p.test ? '<button class="btn" data-act="test-sim">Simular semana feita</button>' : ''}
@@ -6136,7 +6139,10 @@ $main.addEventListener('click', e => {
     case 'new-workout': return newWorkout();
     case 'rename-workout': return renameWorkout(b.dataset.id);
     case 'del-workout': return deleteWorkout(b.dataset.id);
-    case 'goto-msg': return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    case 'goto-msg': { // com abas (computador), a mensagem fica na aba Mensagens: abre a aba antes de rolar
+      if (!document.getElementById('msgCard').offsetParent) { ui.stTab = 'mensagens'; render(); showStTab(); }
+      return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     case 'tpl': {
       ui.msgDraft = msgTemplate(b.dataset.k, profile(ui.profile));
       document.getElementById('msgText').value = ui.msgDraft; return updateWaLink();
@@ -6183,7 +6189,7 @@ $main.addEventListener('click', e => {
       save(); return render();
     }
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
-    case 'st-tab': ui.stTab = b.dataset.t; return render();
+    case 'st-tab': ui.stTab = b.dataset.t; render(); return showStTab();
     case 'wk-post': ui.wkPost = { pid: b.dataset.pid, ws: b.dataset.ws }; render(); return window.scrollTo({ top: 0 });
     case 'wk-post-close': ui.wkPost = null; render(); return window.scrollTo({ top: 0 });
     case 'wk-rep': ui.wkRep = { pid: b.dataset.pid, ws: b.dataset.ws }; return render();
@@ -8051,7 +8057,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-21:35';
+const APP_VERSION = '20/10-22:55';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
