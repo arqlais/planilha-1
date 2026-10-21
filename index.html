@@ -1086,7 +1086,7 @@ body.v2-chatv.kb nav.bottom{display:none}
 .ia-wait i:nth-child(2){animation-delay:.15s}.ia-wait i:nth-child(3){animation-delay:.3s}
 @keyframes iaDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
 .ia-small{font-size:12px;margin:10px 0 0}
-.ia-setup{display:grid;gap:10px}.ia-setup h3{margin:0}.ia-setup p{margin:0}
+.ia-setup{display:grid;gap:10px;margin-bottom:12px}.ia-setup h3{margin:0}.ia-setup p{margin:0}
 .ia-steps{margin:0;padding-left:20px;display:grid;gap:6px;font-weight:600;line-height:1.4}.ia-steps a{color:var(--accent)}
 .ia-keyform{display:flex;gap:8px}.ia-keyform input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font-size:15px}
 .ia-keyrow{display:flex;gap:8px;flex-wrap:wrap}
@@ -6802,8 +6802,11 @@ function renderIa() {
   const top = `<div class="v2-top"><button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>IA do PassosFit</small><h2>Assistente</h2></div>
     ${key && c.shown.length ? `<button class="v2-btn sm line" data-act="ia-new">${v2Ico('<path d="M12 5v14M5 12h14"/>')}Nova conversa</button>` : ''}</div>`;
   if (!key || ui.iaSetup) {
-    $main.innerHTML = `${top}<section class="card ia-setup"><span class="ia-badge">${ico}</span><h3>Ligar o assistente</h3>
-      <p class="v2-muted">O assistente usa o Claude. Para ligar, cole aqui a sua chave do Claude (uma vez só, neste aparelho).</p>
+    $main.innerHTML = `${top}<section class="card ia-setup"><span class="ia-badge">${ico}</span><h3>Jeito grátis</h3>
+      <p class="v2-muted">Mande os treinos de todos os alunos para o Claude e pergunte lá, na sua conversa com ele.</p>
+      <button class="v2-btn pri" style="margin:0" data-act="export-claude">${v2Ico('<path d="M4 12l16-8-6 16-2.5-6.5z"/>')}Enviar treinos para o Claude</button></section>
+    <section class="card ia-setup"><h3>Ou: assistente aqui no app</h3>
+      <p class="v2-muted">Responde direto nesta tela, com os dados do app na hora. É pago por uso: cole aqui a sua chave do Claude (uma vez só, neste aparelho).</p>
       <ol class="ia-steps"><li>Entre em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> e crie a conta.</li><li>Em <b>Billing</b>, coloque créditos (a partir de US$ 5) e um limite por mês.</li><li>Em <b>API Keys</b>, toque em <b>Create Key</b> e copie.</li><li>Cole abaixo e toque em <b>Salvar</b>.</li></ol>
       <form id="iaKeyForm" class="ia-keyform"><input id="iaKeyIn" type="password" placeholder="sk-ant-..." autocomplete="off" aria-label="Chave do Claude"><button class="v2-btn pri" style="margin:0">Salvar</button></form>
       <p class="v2-muted ia-small">A chave fica só neste aparelho: não vai para a nuvem nem para os alunos. Os dados dos alunos vão para o Claude só na hora da pergunta.</p>
@@ -8053,7 +8056,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-21:07';
+const APP_VERSION = '20/10-21:10';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
