@@ -1075,6 +1075,21 @@ body.v2-chatv .v2-dock .v2-qr{margin-top:0}body.v2-chatv .v2-dock .v2-composer{m
 body.v2-chatv.kb .v2-dock{bottom:calc(var(--kb, 0px) + 8px)}
 body.v2-chatv.kb nav.bottom{display:none}
 .v2-composer input{flex:1;min-width:0;padding:13px 16px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font-weight:600;font-size:15px}
+.ia-cta{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 16px;padding:14px 16px;border-radius:22px;border:1.5px solid var(--line);background:var(--card);color:var(--text);text-align:left}
+.ia-cta .grow{display:grid;gap:2px}.ia-cta small{color:var(--muted);font-weight:600;font-size:12.5px}.ia-cta>.v2i{width:20px;height:20px;opacity:.6}
+.ia-badge{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);flex:none}.ia-badge .v2i{width:22px;height:22px}
+.ia-hello{display:grid;justify-items:center;gap:6px;text-align:center;margin:0}.ia-hello small{color:var(--muted);font-weight:600}
+.ia-sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ia-sugs button{padding:9px 14px;border-radius:99px;border:1.5px solid var(--line);background:transparent;color:var(--text);font-weight:700;font-size:13px}
+.v2-msg.ia-msg{max-width:92%}.v2-msg.ia-msg.err{border-color:var(--down)}
+.ia-wait{display:flex;gap:5px;padding:14px 16px}.ia-wait i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:iaDot 1s infinite ease-in-out}
+.ia-wait i:nth-child(2){animation-delay:.15s}.ia-wait i:nth-child(3){animation-delay:.3s}
+@keyframes iaDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.ia-small{font-size:12px;margin:10px 0 0}
+.ia-setup{display:grid;gap:10px}.ia-setup h3{margin:0}.ia-setup p{margin:0}
+.ia-steps{margin:0;padding-left:20px;display:grid;gap:6px;font-weight:600;line-height:1.4}.ia-steps a{color:var(--accent)}
+.ia-keyform{display:flex;gap:8px}.ia-keyform input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font-size:15px}
+.ia-keyrow{display:flex;gap:8px;flex-wrap:wrap}
 .v2-composer button{width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
 .v2-me{display:flex;align-items:center;gap:14px;padding:18px!important}
 .v2-me .av.lg{width:64px;height:64px;font-size:20px;background:var(--lilac);color:var(--lilac-ink)}
@@ -1764,7 +1779,7 @@ let db = load();
 let ui = { view: 'treino', group: '', profile: ME, date: today(), rest: REST_DEFAULT, month: today().slice(0, 7), q: '', weeks: 8, hidden: new Set(), demo: false, demoStep: 0, histDay: null, layout: 'tiles', mode: 'corrida', cardioMin: 20, watch: null, tplGroup: null };
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY)) || {};
-  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'eu', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos'].includes(u.view)) ui.view = u.view;
+  if (VIEWS.some(v => v[0] === u.view) || ['perfil', 'eu', 'recados', 'medidas', 'config', 'acessos', 'painel', 'ajustes', 'montar', 'pagamentos', 'ia'].includes(u.view)) ui.view = u.view;
   if (u.studentMode) ui.studentMode = true;
   if (!ui.studentMode && document.documentElement.dataset.skin === 'v2') ui.view = 'painel'; // visual novo: o professor abre no Painel
   ui.group = u.group || '';
@@ -1939,7 +1954,7 @@ function renderHero() {
   document.getElementById('studentBar').hidden = !ui.studentMode || !!(cloud && cloud.role === 'student') || (meStu() && skinOn());
   if (ui.studentMode) document.getElementById('studentBar').innerHTML = meStu() ? '<i class="ic ic-eye"></i> Seu perfil de aluno <button data-act-global="exit-student">Voltar</button>'
     : `<i class="ic ic-eye"></i> Vendo como <b>${esc(p.name)}</b> vê o app <button data-act-global="exit-student">Sair</button>`;
-  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', eu: 'Meu perfil', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações', acessos: 'Acessos' };
+  const titles = { treino: ui.date === today() ? 'Treino de hoje' : `Treino de ${fmtDate(ui.date)}`, historico: 'Histórico', evolucao: 'Evolução', alunos: 'Área do professor', perfil: 'Perfil do aluno', eu: 'Meu perfil', montar: 'Montar treinos', pagamentos: 'Pagamentos', recados: 'Recados do professor', medidas: 'Medidas do corpo', config: 'Configurações', acessos: 'Acessos', ia: 'Assistente' };
   if (ui.studentMode) titles.historico = 'Calendário';
   if (ui.view === 'historico' && ui.histDay) titles.historico += ` · ${ui.histDay === today() ? 'hoje' : fmtDate(ui.histDay)}`;
   document.getElementById('heroTitle').textContent = titles[ui.view];
@@ -2067,7 +2082,7 @@ function renderStats() {
 function renderNav() {
   const v2 = skinOn(), sub = v2 && ui.studentMode ? ['medidas'] : STUDENT_SUB;
   $nav.innerHTML = views().map(([id, label]) => { const svg = `<svg viewBox="0 0 24 24" aria-hidden="true">${(v2 && ui.studentMode && V2NAV[id]) || (v2 && !ui.studentMode && V2PNAV[id]) || SVG[id]}</svg>`;
-    return `${v2 && isDesk() && id === views()[0][0] ? `<div class="v2-navbrand">${v2BrandHtml()}</div>` : ''}<button class="${id === ui.view || id === 'alunos' && (ui.view === 'perfil' || v2 && !ui.studentMode && ui.profile !== ME && MY_VIEWS.includes(ui.view)) || v2 && !ui.studentMode && id === 'eu' && ui.profile === ME && MY_VIEWS.includes(ui.view) || v2 && !ui.studentMode && id === 'painel' && ['ajustes', 'acessos'].includes(ui.view) && !isDesk() || id === 'config' && sub.includes(ui.view) ? 'on' : ''}" data-view="${id}">${v2 ? `<span class="nb">${svg}</span>` : svg}${label}</button>`; }).join('');
+    return `${v2 && isDesk() && id === views()[0][0] ? `<div class="v2-navbrand">${v2BrandHtml()}</div>` : ''}<button class="${id === ui.view || id === 'alunos' && (ui.view === 'perfil' || v2 && !ui.studentMode && ui.profile !== ME && MY_VIEWS.includes(ui.view)) || v2 && !ui.studentMode && id === 'eu' && ui.profile === ME && MY_VIEWS.includes(ui.view) || v2 && !ui.studentMode && id === 'painel' && ['ajustes', 'acessos', 'ia'].includes(ui.view) && !isDesk() || id === 'config' && sub.includes(ui.view) ? 'on' : ''}" data-view="${id}">${v2 ? `<span class="nb">${svg}</span>` : svg}${label}</button>`; }).join('');
 }
 function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
@@ -2081,13 +2096,13 @@ function render() {
   document.body.classList.toggle('no-figs', skinOn() && ui.profile === ME); // treino do professor: sem os bonequinhos fazendo o exercício document.body.classList.remove('v2-done');
   if (ui.wkPost) return renderWeekPost();
   if (v2Prof()) {
-    const R = { painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
+    const R = { painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, ia: renderIa, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
     if (R) return R();
   }
   if (ui.v2done && skinOn() && ui.view === 'treino') return renderDoneV2();
   if (v2Stu() && { historico: 1, recados: 1, config: 1 }[ui.view]) return ({ historico: renderAgendaV2, recados: renderRecadosV2, config: renderEuV2 })[ui.view]();
   if (v2Stu() && ui.view === 'medidas') { renderMedidas(); return $main.insertAdjacentHTML('afterbegin', v2TopHtml()); }
-  ({ painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, acessos: renderAcessos, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
+  ({ painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, ia: renderIa, treino: renderTreino, historico: renderHistorico, evolucao: renderEvolution, alunos: desk ? renderAlunosDesk : renderAlunos, perfil: renderPerfil, recados: renderRecados, medidas: renderMedidas, config: renderConfig, acessos: renderAcessos, montar: renderMontar, pagamentos: renderPagamentos })[ui.view]();
   if (v2Prof()) { const t = v2ProfTop(); if (t) $main.insertAdjacentHTML('afterbegin', t); }
 }
 deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
@@ -3157,10 +3172,11 @@ const V2PNAV = {
   historico: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   evolucao: '<path d="M4 19.5h16M5.5 15l4-4.5 3.5 3 6-7"/>',
   ajustes: '<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l3 3"/>',
+  ia: '<path d="M11 3.5l1.9 4.8 4.8 1.9-4.8 1.9L11 17l-1.9-4.9-4.8-1.9 4.8-1.9z"/><path d="M18.5 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>',
 };
 // Tudo que é do professor (treino, histórico, evolução, montar) fica numa aba só: Meu perfil
 const V2_PROF_VIEWS = [['painel', 'Painel'], ['alunos', 'Alunos'], ['pagamentos', 'Pagamentos'], ['eu', 'Meu perfil']];
-const V2_PROF_DESK = [...V2_PROF_VIEWS, ['ajustes', 'Ajustes e backup']];
+const V2_PROF_DESK = [...V2_PROF_VIEWS, ['ia', 'Assistente'], ['ajustes', 'Ajustes e backup']];
 const MY_VIEWS = ['eu', 'treino', 'historico', 'evolucao', 'medidas', 'montar'];
 const v2Prof = () => skinOn() && !ui.studentMode;
 const v2Ico = d => `<svg viewBox="0 0 24 24" class="v2i">${d}</svg>`;
@@ -3184,11 +3200,13 @@ function renderPainelV2() {
   const myEx = myW ? letterExs(myW, ME)[0] : null;
   const reqs = CLOUD && cloud ? requestsHtml() : '';
   $main.innerHTML = `<div class="v2-top">${v2BrandHtml()}<span class="grow"></span>
+      <button class="v2-icbtn" data-view="ia" aria-label="Assistente">${v2Ico(V2PNAV.ia)}</button>
       <button class="v2-icbtn" data-view="acessos" aria-label="Acessos">${v2Ico('<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>')}${reqs ? '<span class="dot"></span>' : ''}</button>
       <button class="v2-avbtn" data-view="ajustes" aria-label="Ajustes e conta">${avIn(me)}</button></div>
     <h2 class="v2-hello">${v2Hello()}, ${esc(firstName(me))}</h2><p class="v2-muted" style="margin:0 0 16px">${v2DayLabel(today())}</p>
     <div class="v2-kpis"><button class="v2-tile dk" data-view="alunos">${v2Ico(V2PNAV.alunos)}<b class="xl">${sts.length}</b><span>alunos</span></button>
       <div class="v2-tile acc"><b>${todayL.length}</b><span>treinaram hoje</span></div><div class="v2-tile lil"><b>${week.length}</b><span>ativos na semana</span></div></div>
+    <button class="ia-cta" data-view="ia"><span class="ia-badge">${v2Ico(V2PNAV.ia)}</span><span class="grow"><b>Assistente</b><small>Pergunte qualquer coisa sobre seus alunos e o app</small></span>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>
     ${reqs}
     <div class="v2-d2"><div class="col">
     <div class="v2-sec"><h3>Precisa de atenção</h3><span class="v2-chipwarn">${att.length}</span></div>
@@ -6000,6 +6018,10 @@ $main.addEventListener('change', e => {
 });
 
 $main.addEventListener('submit', e => { if (e.target.id === 'v2MsgForm') { e.preventDefault(); v2SendReply(document.getElementById('v2MsgIn').value); } });
+$main.addEventListener('submit', e => {
+  if (e.target.id === 'iaForm') { e.preventDefault(); iaAsk(document.getElementById('iaIn').value); }
+  if (e.target.id === 'iaKeyForm') { e.preventDefault(); iaSaveKey(document.getElementById('iaKeyIn').value); }
+});
 $main.addEventListener('click', e => {
   const g = e.target.closest('[data-group]');
   if (g) { ui.group = g.dataset.group; saveUi(); return render(); }
@@ -6231,6 +6253,11 @@ $main.addEventListener('click', e => {
     case 'v2-month': { const [yy, mm] = ui.month.split('-').map(Number), d0 = new Date(yy, mm - 1 + +b.dataset.d, 1); ui.month = isoDate(d0).slice(0, 7); ui.histDay = null; return render(); }
     case 'v2-openday': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); ui.v2run = true; ui.view = 'treino'; saveUi(); render(); return window.scrollTo({ top: 0 });
     case 'v2-reply': return v2SendReply(b.dataset.t);
+    case 'ia-sug': return iaAsk(b.dataset.t);
+    case 'ia-new': if (iaChat().busy) return; ui.ia = null; return render();
+    case 'ia-key': ui.iaSetup = true; return render();
+    case 'ia-key-cancel': ui.iaSetup = false; return render();
+    case 'ia-key-del': return confirmAsk('Apagar a chave do Claude?', 'O assistente desliga neste aparelho. Dá para colar a chave de novo quando quiser.', 'Apagar').then(ok => { if (!ok) return; try { localStorage.removeItem(IA_KEY); } catch (er) {} ui.ia = null; ui.iaSetup = false; render(); });
     case 'v2-start': ui.v2run = true; render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'v2-home': ui.v2run = false; render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'goto-day': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -6637,6 +6664,168 @@ async function exportForClaude() {
   }
   downloadText(name, json);
   toast(`Arquivo <b>${name}</b> baixado com os treinos de ${d.alunos.length} aluno${d.alunos.length === 1 ? '' : 's'}. Mande ele na conversa com o Claude.`);
+}
+// ---------- Assistente (IA) do professor ----------
+// Conversa com o Claude sobre os alunos e o app. Só o professor vê.
+// A chave do Claude fica só neste aparelho (localStorage): não vai para o código nem para a nuvem.
+const IA_KEY = 'pf-ia-chave', IA_MODEL = 'claude-opus-5-5';
+// US$ por milhão de tokens (entrada, gravar no cache, ler do cache, saída) para mostrar o gasto da conversa
+const IA_PRICE = { in: 4, cw: 5, cr: 0.2, out: 20 };
+const iaKey = () => { try { return localStorage.getItem(IA_KEY) || ''; } catch (e) { return ''; } };
+const iaChat = () => ui.ia || (ui.ia = { msgs: [], shown: [], busy: false, cost: 0, sys: null });
+const iaNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+const iaSets = sets => (sets || []).filter(x => x.done !== false).map(x => x.carga != null && x.carga !== '' ? `${fmt(x.carga)}kg×${x.reps ?? '?'}` : `${x.reps ?? '?'} reps`).join(', ');
+// Resumo de todos os alunos (vai no começo da conversa)
+function iaOverview() {
+  const ws = weekStart(today()), pws = addDays(ws, -7), ym = today().slice(0, 7);
+  return v2Students().map(p => {
+    const d = [...v2Days(p.id)], cw = cardioWeekOf(p), pay = payStatus(p, ym);
+    return { aluno: p.name, ...(p.goal ? { objetivo: p.goal } : {}), situacao: v2Status(p)[1], consultoria: isConsult(p) ? 'sim' : 'não (só o app)',
+      dias_treinados_esta_semana: d.filter(x => x >= ws).length, dias_treinados_semana_passada: d.filter(x => x >= pws && x < ws).length,
+      ultimo_treino: d.sort().pop() || null, cardio_semana_min: { feito: cw.done, meta: cw.goal },
+      pagamento_do_mes: pay ? pay.label : 'sem cobrança', treinos: workoutsOf(p.id).map(w => w.name) };
+  });
+}
+// Tudo de um aluno (o assistente pede quando a pergunta é sobre ele)
+function iaStudent(p) {
+  const base = claudeFile().alunos.find(a => a.aluno === p.name) || {};
+  const from = addDays(today(), -120), cfrom = addDays(today(), -60);
+  const exs = profExs(p.id).filter(e => isLetter(e.letter, p.id));
+  const hist = {};
+  exs.forEach(e => { if (hist[e.name]) return; const h = exHistory(e.id).filter(s => s.date >= from).slice(-8); if (h.length) hist[e.name] = h.map(s => `${s.date}: ${iaSets(s.sets)}`); });
+  const cardio = {}; profCardio(p.id).filter(c => c.date >= cfrom && c.min > 0).forEach(c => { cardio[c.date] = Math.round(((cardio[c.date] || 0) + c.min) * 100) / 100; });
+  const plans = Object.entries(p.plans || {}).filter(([d]) => d >= today() && d <= addDays(today(), 14)).map(([d, o]) => ({ data: d, treinos: (o.w || []).map(id => id === CARDIO ? 'Cardio' : wName(id, p.id)) }));
+  const months = [0, 1, 2].map(n => { const d = new Date(); d.setMonth(d.getMonth() - n); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; });
+  return { ...base, kind: undefined, sessions: undefined, division: undefined, situacao: v2Status(p)[1], consultoria: isConsult(p) ? 'sim' : 'não (só o app)',
+    ...(p.since ? { aluno_desde: p.since } : {}), dias_treinados_60_dias: [...v2Days(p.id)].filter(x => x >= cfrom).sort(),
+    historico_cargas_120_dias: hist, cardio_60_dias_min: cardio, planejamento_proximos_14_dias: plans,
+    medidas: bodyOf(p).slice(-3), recados_do_professor: (p.messages || []).slice(-5).map(m => ({ data: m.date, texto: m.text })),
+    respostas_do_aluno: (p.replies || []).slice(-5).map(r => ({ data: r.date, texto: r.t })),
+    pagamentos: p.billing && p.billing.value > 0 ? { plano: p.billing.plan || '', valor: p.billing.value, meses: Object.fromEntries(months.map(m => [m, (payStatus(p, m) || {}).label || 'sem cobrança'])) } : 'sem cobrança' };
+}
+function iaFind(nome) {
+  const q = iaNorm(nome), me = profile(ME);
+  if (!q) return { erro: 'Informe o nome do aluno.' };
+  if (['professor', 'eu', 'meu', 'meu treino'].includes(q) || (me && iaNorm(me.name) === q)) return iaStudent(me);
+  const sts = v2Students(), hit = sts.filter(p => iaNorm(p.name) === q);
+  const list = hit.length ? hit : sts.filter(p => iaNorm(p.name).includes(q) || iaNorm(p.name).split(' ').some(w => w === q || q.split(' ').includes(w)));
+  if (list.length === 1) return iaStudent(list[0]);
+  if (list.length > 1) return { erro: 'Mais de um aluno com esse nome. Pergunte ao professor qual deles.', alunos: list.map(p => p.name) };
+  return { erro: 'Nenhum aluno com esse nome.', alunos: sts.map(p => p.name) };
+}
+const IA_GUIDE = `Como o app funciona (versão nova, celular):
+- Barra de baixo do professor: Painel, Alunos, Pagamentos, Meu perfil. No computador há menu lateral com as mesmas áreas e Ajustes e backup.
+- Painel: alunos que treinaram hoje, ativos na semana, "Precisa de atenção" (convite não aceito ou muitos dias sem treinar, com botão para lembrar pelo WhatsApp), cardio da semana, atalhos (Novo aluno, Link de cadastro, QR code do app). O sino abre Acessos (quem entrou, quem treinou, pedidos de conta). A foto abre Ajustes e backup.
+- Alunos: lista com busca e filtros (Todos, Hoje, Sumidos, Convite). Tocar no aluno abre o perfil: WhatsApp, Ver como aluno, Treino, Histórico, Gráficos, Montar detalhado, Consultoria sim/não, divisão da semana, planejamento das próximas semanas, meta de cardio, medidas, recados e conta do aluno.
+- Montar treino: no perfil do aluno, "Montar detalhado". Cada treino tem nome livre (ex.: Superiores). Adiciona exercícios da biblioteca, com séries, repetições, carga, descanso, técnica e observação. Treino novo fica escondido do aluno até tocar em "Liberar no app" ou colocar no planejamento. Dá para duplicar e copiar o treino para outro aluno.
+- Divisão da semana: escolhe o que o aluno faz em cada dia. Planejamento: treino só para uma data. Copiar para a semana seguinte repete a semana.
+- Cardio: meta por dia ou por semana no perfil do aluno; o aluno marca o tempo (corrida, bicicleta, escada, elíptico).
+- Novo aluno: Painel > Novo aluno (nome, WhatsApp, objetivo). Depois mandar o convite pelo WhatsApp para ele criar a senha. Ou mandar o Link de cadastro: a pessoa cria a conta e o pedido aparece para aceitar.
+- Pagamentos: plano, valor e vencimento de cada aluno; Marcar pago e Cobrar (mensagem pronta com Pix para o WhatsApp).
+- Enviar treino: quando todas as séries estão feitas, o aluno toca em Enviar treino; depois o dia trava. Para corrigir um dia que passou: no treino do aluno, ir ao dia e tocar em "Destravar este dia" (vale 3 dias).
+- Meu perfil: o treino do próprio professor, histórico, evolução, medidas.
+- Ajustes e backup: foto, Exportar backup, Restaurar backup, Enviar treinos para o Claude, cópias automáticas diárias (30 dias), lixeira.
+- Ver como aluno: mostra o app como o aluno vê. Perfil de teste: aluno de mentira para testar (Alunos > Criar perfil de teste).`;
+function iaSystem() {
+  const me = profile(ME) || { name: 'Professor' };
+  return `Você é o assistente do PassosFit, um app de treino de musculação. Quem conversa com você é ${me.name}, o professor que acompanha os alunos pelo app (ele não é programador).
+Hoje é ${weekday(today())}, ${today()}.
+
+Como responder:
+- Português do Brasil, simples, curto e direto. Vá ao ponto. Use listas curtas quando ajudar.
+- Nunca use emojis.
+- Use só os dados abaixo e os que a ferramenta ver_aluno trouxer. Não invente números. Se o dado não existe no app, diga isso.
+- Para perguntas sobre um aluno específico (cargas, evolução, cardio, medidas, recados, pagamento), chame ver_aluno antes de responder.
+- Cargas estão em kg; "20kg×12" quer dizer 20 kg por 12 repetições. Datas no formato AAAA-MM-DD: na resposta escreva dd/mm.
+- Pode sugerir progressão de carga, ajustes de treino e mensagens para mandar aos alunos. Em dor, lesão ou problema de saúde, recomende procurar um médico ou fisioterapeuta.
+- Você não muda nada no app: diga ao professor onde tocar para fazer.
+
+${IA_GUIDE}
+
+Resumo dos alunos hoje (JSON):
+${JSON.stringify(iaOverview())}`;
+}
+const IA_TOOLS = [{ name: 'ver_aluno', description: 'Traz tudo de um aluno: treinos montados, cargas atuais, histórico de cargas dos últimos 120 dias, dias treinados, cardio, planejamento, medidas, recados e pagamentos. Use "professor" para os dados do próprio professor.',
+  strict: true, input_schema: { type: 'object', properties: { nome: { type: 'string', description: 'Nome do aluno, como aparece no resumo' } }, required: ['nome'], additionalProperties: false } }];
+async function iaCall(c) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': iaKey(), 'anthropic-version': '2023-06-01', 'anthropic-beta': 'server-side-fallback-2026-07-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model: IA_MODEL, max_tokens: 16000, fallbacks: 'default', output_config: { effort: 'low' }, cache_control: { type: 'ephemeral' }, system: c.sys, tools: IA_TOOLS, messages: c.msgs }) });
+  const j = await res.json().catch(() => null);
+  if (!res.ok) {
+    const m = String((j && j.error && j.error.message) || '');
+    const err = new Error(res.status === 401 ? 'A chave do Claude não funcionou. Confira e cole de novo.'
+      : /credit|balance|billing/i.test(m) ? 'Acabaram os créditos da sua conta do Claude. Coloque mais créditos no site do Claude e tente de novo.'
+      : res.status === 429 ? 'Muitas perguntas seguidas. Espere um minuto e tente de novo.'
+      : res.status >= 500 ? 'O Claude está ocupado agora. Tente de novo em instantes.' : 'Não deu para perguntar agora. Tente de novo.');
+    err.key = res.status === 401; throw err;
+  }
+  const u = j.usage || {};
+  c.cost += ((u.input_tokens || 0) * IA_PRICE.in + (u.cache_creation_input_tokens || 0) * IA_PRICE.cw + (u.cache_read_input_tokens || 0) * IA_PRICE.cr + (u.output_tokens || 0) * IA_PRICE.out) / 1e6;
+  return j;
+}
+async function iaAsk(text) {
+  text = String(text || '').trim(); const c = iaChat();
+  if (!text || c.busy) return;
+  if (!iaKey()) return render();
+  if (!c.sys) c.sys = iaSystem(); // os dados ficam fixos durante a conversa (mais barato: o Claude reaproveita)
+  const start = c.msgs.length;
+  c.msgs.push({ role: 'user', content: text }); c.shown.push({ me: true, t: text }); c.busy = true; render();
+  try {
+    for (let i = 0; i < 6; i++) {
+      const r = await iaCall(c);
+      if (r.stop_reason === 'refusal') { c.msgs.length = start; c.shown.push({ t: 'Não consegui responder essa. Tente perguntar de outro jeito.' }); break; }
+      // Depois de uma troca de modelo no meio da resposta, só o texto antes dela volta para a conversa
+      const fb = r.content.map(b => b.type).lastIndexOf('fallback');
+      const content = r.content.filter((b, k) => !(k < fb && ['thinking', 'redacted_thinking', 'tool_use'].includes(b.type)));
+      c.msgs.push({ role: 'assistant', content });
+      const uses = content.filter(b => b.type === 'tool_use');
+      if (r.stop_reason !== 'tool_use' || !uses.length) {
+        const t = content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+        c.shown.push({ t: t || 'Não consegui responder agora. Tente de novo.' }); break;
+      }
+      c.msgs.push({ role: 'user', content: uses.map(b => { let out; try { out = b.name === 'ver_aluno' ? iaFind(b.input && b.input.nome) : { erro: 'Ferramenta desconhecida.' }; } catch (e) { out = { erro: 'Não deu para ler os dados desse aluno.' }; }
+        return { type: 'tool_result', tool_use_id: b.id, content: JSON.stringify(out) }; }) });
+    }
+  } catch (e) {
+    c.msgs.length = start; // a pergunta não foi respondida: sai da conversa para poder perguntar de novo
+    c.shown.push({ t: navigator.onLine === false ? 'Sem internet. O assistente precisa de internet para responder.' : e.message || 'Não deu para perguntar agora.', err: true, key: e.key });
+  }
+  c.busy = false; if (ui.view === 'ia') render();
+}
+// Texto do assistente: escapado, com **negrito** e listas simples
+const iaHtml = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm, '<b>$1</b>').replace(/^\s*[-*]\s+/gm, '• ');
+const IA_SUGS = ['Quem não treinou esta semana?', 'Resuma a semana dos alunos', 'Quem está com pagamento atrasado?', 'Como monto um treino novo?'];
+function renderIa() {
+  if (ui.studentMode) { ui.view = 'treino'; return render(); }
+  const c = iaChat(), key = iaKey(), ico = v2Ico(V2PNAV.ia);
+  const top = `<div class="v2-top"><button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>IA do PassosFit</small><h2>Assistente</h2></div>
+    ${key && c.shown.length ? `<button class="v2-btn sm line" data-act="ia-new">${v2Ico('<path d="M12 5v14M5 12h14"/>')}Nova conversa</button>` : ''}</div>`;
+  if (!key || ui.iaSetup) {
+    $main.innerHTML = `${top}<section class="card ia-setup"><span class="ia-badge">${ico}</span><h3>Ligar o assistente</h3>
+      <p class="v2-muted">O assistente usa o Claude. Para ligar, cole aqui a sua chave do Claude (uma vez só, neste aparelho).</p>
+      <ol class="ia-steps"><li>Entre em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> e crie a conta.</li><li>Em <b>Billing</b>, coloque créditos (a partir de US$ 5) e um limite por mês.</li><li>Em <b>API Keys</b>, toque em <b>Create Key</b> e copie.</li><li>Cole abaixo e toque em <b>Salvar</b>.</li></ol>
+      <form id="iaKeyForm" class="ia-keyform"><input id="iaKeyIn" type="password" placeholder="sk-ant-..." autocomplete="off" aria-label="Chave do Claude"><button class="v2-btn pri" style="margin:0">Salvar</button></form>
+      <p class="v2-muted ia-small">A chave fica só neste aparelho: não vai para a nuvem nem para os alunos. Os dados dos alunos vão para o Claude só na hora da pergunta.</p>
+      ${key ? `<div class="ia-keyrow"><button class="v2-btn sm line" data-act="ia-key-cancel">Voltar</button><button class="v2-btn sm line" style="color:var(--down)" data-act="ia-key-del">Apagar chave deste aparelho</button></div>` : ''}</section>`;
+    return;
+  }
+  const rows = c.shown.map(m => m.me ? `<div class="v2-msg me">${esc(m.t)}</div>`
+    : `<div class="v2-msg ia-msg${m.err ? ' err' : ''}">${iaHtml(m.t)}${m.key ? '<button class="v2-btn sm line" style="margin-top:8px" data-act="ia-key">Trocar a chave</button>' : ''}</div>`).join('');
+  $main.innerHTML = `${top}<div class="v2-chat">
+    ${c.shown.length ? '' : `<section class="card ia-hello"><span class="ia-badge">${ico}</span><b>Oi, ${esc(firstName(profile(ME)))}! Como posso ajudar?</b><small>Sei dos treinos, cargas, cardio, recados e pagamentos dos alunos, e explico como usar o app.</small></section>
+      <div class="ia-sugs">${IA_SUGS.map(s => `<button data-act="ia-sug" data-t="${esc(s)}">${esc(s)}</button>`).join('')}</div>`}
+    ${rows}${c.busy ? '<div class="v2-msg ia-msg ia-wait"><i></i><i></i><i></i></div>' : ''}</div>
+    <p class="v2-muted ia-small" style="text-align:center">${c.cost ? `Gasto desta conversa: cerca de US$ ${c.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · ` : ''}<button class="link" data-act="ia-key">Chave do Claude</button></p>
+    <div class="v2-dock"><form class="v2-composer" id="iaForm"><input id="iaIn" placeholder="Pergunte ao assistente" enterkeyhint="send" autocomplete="off" aria-label="Pergunta" ${c.busy ? 'disabled' : ''}><button aria-label="Enviar" ${c.busy ? 'disabled' : ''}><svg viewBox="0 0 24 24" class="v2i"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg></button></form></div>`;
+  document.body.classList.add('v2-chatv'); kbCheck();
+  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight }), 30);
+}
+function iaSaveKey(v) {
+  v = String(v || '').trim();
+  if (!/^sk-ant-[\w-]{20,}$/.test(v)) return toast('Essa chave não parece certa. Ela começa com <b>sk-ant-</b>.');
+  try { localStorage.setItem(IA_KEY, v); } catch (e) { return toast('Não deu para guardar a chave neste aparelho.'); }
+  ui.iaSetup = false; render(); toast('✓ Assistente ligado. Pode perguntar.');
 }
 // Importar histórico de um aluno (arquivo preparado a partir da planilha antiga). Junta sem apagar nada.
 function importHistory(file) {
@@ -7864,7 +8053,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-20:56';
+const APP_VERSION = '20/10-21:07';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
