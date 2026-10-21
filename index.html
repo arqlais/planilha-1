@@ -624,6 +624,7 @@ table.pay td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align
 .wname{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 .wname .key{width:10px;height:10px;border-radius:50%;flex:none}
 .wnum{font-size:12px;color:var(--muted);font-weight:600;margin:2px 0 4px}.wnum b{font-size:22px;color:var(--text)}
+.whelp{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:1px}
 .wbar{height:5px;border-radius:5px;background:var(--line);overflow:hidden}.wbar i{display:block;height:100%;border-radius:5px}
 .wdone{display:block;font-size:10.5px;color:var(--muted);margin-top:4px}
 #offBar{display:none;position:sticky;top:0;z-index:30;background:#5b5f66;color:#fff;font-size:12.5px;font-weight:600;text-align:center;padding:6px 12px}
@@ -5169,7 +5170,7 @@ document.getElementById('dayCancel').onclick = () => $dayDlg.close();
 
 // Séries por grupo muscular na semana: o que a divisão manda fazer (planejado) e o que o aluno já fez nesta semana
 function weekSetsHtml(p) {
-  let realPlan = 0, realDone = 0; const plan = {}, done = {}, why = {}, off = ui.wsOff || 0, t = today();
+  let realPlan = 0, realDone = 0; const plan = {}, help = {}, done = {}, why = {}, off = ui.wsOff || 0, t = today();
   const ws = addDays(weekStart(t), 7 * off), we = addDays(ws, 6);
   // o que estava planejado em cada dia (exercício por exercício)
   const items = [];
@@ -5195,7 +5196,7 @@ function weekSetsHtml(p) {
     else if (it.d < t) return; // dia que passou e o aluno não fez: não conta (se foi passado para outro dia, conta lá)
     else if (it.d <= t && e.planDate && e.planDate > it.d) { const pv = prevSession(e.id, e.planDate); if (pv) n = pv.sets.length; }
     realPlan += n;
-    Object.entries(groupWeights(e)).forEach(([g, k]) => { plan[g] = (plan[g] || 0) + n * k; (why[g] = why[g] || []).push({ d: it.d, w: it.w, name: e.name, n: n * k, half: k < 1 ? n : 0 }); });
+    Object.entries(groupWeights(e)).forEach(([g, k]) => { plan[g] = (plan[g] || 0) + n * k; if (k < 1) help[g] = (help[g] || 0) + n * k; (why[g] = why[g] || []).push({ d: it.d, w: it.w, name: e.name, n: n * k, half: k < 1 ? n : 0 }); });
   });
   profSessions(p.id).filter(x => x.date >= ws && x.date <= we).forEach(x => {
     const e = exById(x.exId); if (!e) return; const n = x.sets.filter(y => y.done).length; realDone += n;
@@ -5215,10 +5216,10 @@ function weekSetsHtml(p) {
     ${groups.length ? `<div class="wsets">${groups.map(g => {
       const pl = plan[g] || 0, dn = done[g] || 0, pct = pl ? Math.min(100, dn / pl * 100) : 100;
       return `<button class="wset ${ui.wsOpen === g ? 'on' : ''}" data-act="ws-why" data-g="${g}"><div class="wname"><span class="key" style="background:${COLOR(g)}"></span>${g}</div>
-        <div class="wnum"><b>${fmt(pl || dn)}</b> séries${pl ? '' : ' feitas'}</div>
+        <div class="wnum"><b>${fmt(pl ? pl - (help[g] || 0) : dn)}</b> séries${pl ? '' : ' feitas'}${pl && help[g] ? `<span class="whelp">+${fmt(help[g])} de ajuda · total ${fmt(pl)}</span>` : ''}</div>
         <div class="wbar"><i style="width:${pct}%;background:${COLOR(g)}"></i></div>
         <small class="wdone">${!pl ? 'por conta própria' : dn ? `${fmt(dn)} de ${fmt(pl)} feita${dn === 1 ? '' : 's'}` : 'nenhuma feita'}</small></button>`;
-    }).join('')}</div>` : ''}
+    }).join('')}</div>${groups.some(g => plan[g] && help[g]) ? '<p class="hint" style="margin:8px 2px 0">Número grande: séries em que o grupo é o principal. "De ajuda": exercícios de outro grupo que também trabalham esse músculo (cada série conta meia).</p>' : ''}` : ''}
     ${ui.wsOpen && (ui.studentMode || !why[ui.wsOpen]) && doneBy[ui.wsOpen] ? `<div class="ws-why"><p class="plan-g" style="margin:12px 2px 6px">Séries de ${ui.wsOpen} feitas na semana</p>
       ${[...new Set(doneBy[ui.wsOpen].map(x => x.d))].sort().map(d => { const xs = doneBy[ui.wsOpen].filter(x => x.d === d);
         return `<div class="plan-row"><div class="grow"><b>${weekday(d).replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b><small>${xs.map(x => `${esc(x.name)} (${x.half ? `${x.half} × ½` : x.n})`).join(' · ')}</small></div><b>${fmt(xs.reduce((a, x) => a + x.n, 0))}</b></div>`; }).join('')}</div>`
@@ -7864,7 +7865,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-20:56';
+const APP_VERSION = '20/10-21:30';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
