@@ -1088,8 +1088,6 @@ body.v2-chatv.kb nav.bottom{display:none}
 .ia-small{font-size:12px;margin:10px 0 0}
 .ia-setup{display:grid;gap:10px;margin-bottom:12px}.ia-setup h3{margin:0}.ia-setup p{margin:0}
 .ia-steps{margin:0;padding-left:20px;display:grid;gap:6px;font-weight:600;line-height:1.4}.ia-steps a{color:var(--accent)}
-.ia-keyform{display:flex;gap:8px}.ia-keyform input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font-size:15px}
-.ia-keyrow{display:flex;gap:8px;flex-wrap:wrap}
 .v2-composer button{width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
 .v2-me{display:flex;align-items:center;gap:14px;padding:18px!important}
 .v2-me .av.lg{width:64px;height:64px;font-size:20px;background:var(--lilac);color:var(--lilac-ink)}
@@ -6020,7 +6018,6 @@ $main.addEventListener('change', e => {
 $main.addEventListener('submit', e => { if (e.target.id === 'v2MsgForm') { e.preventDefault(); v2SendReply(document.getElementById('v2MsgIn').value); } });
 $main.addEventListener('submit', e => {
   if (e.target.id === 'iaForm') { e.preventDefault(); iaAsk(document.getElementById('iaIn').value); }
-  if (e.target.id === 'iaKeyForm') { e.preventDefault(); iaSaveKey(document.getElementById('iaKeyIn').value); }
 });
 $main.addEventListener('click', e => {
   const g = e.target.closest('[data-group]');
@@ -6255,9 +6252,7 @@ $main.addEventListener('click', e => {
     case 'v2-reply': return v2SendReply(b.dataset.t);
     case 'ia-sug': return iaAsk(b.dataset.t);
     case 'ia-new': if (iaChat().busy) return; ui.ia = null; return render();
-    case 'ia-key': ui.iaSetup = true; return render();
-    case 'ia-key-cancel': ui.iaSetup = false; return render();
-    case 'ia-key-del': return confirmAsk('Apagar a chave do Claude?', 'O assistente desliga neste aparelho. Dá para colar a chave de novo quando quiser.', 'Apagar').then(ok => { if (!ok) return; try { localStorage.removeItem(IA_KEY); } catch (er) {} ui.ia = null; ui.iaSetup = false; render(); });
+    case 'ia-retry': ui.iaOff = false; ui.iaModel = 0; return render();
     case 'v2-start': ui.v2run = true; render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'v2-home': ui.v2run = false; render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'goto-day': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -6666,13 +6661,13 @@ async function exportForClaude() {
   toast(`Arquivo <b>${name}</b> baixado com os treinos de ${d.alunos.length} aluno${d.alunos.length === 1 ? '' : 's'}. Mande ele na conversa com o Claude.`);
 }
 // ---------- Assistente (IA) do professor ----------
-// Conversa com o Claude sobre os alunos e o app. Só o professor vê.
-// A chave do Claude fica só neste aparelho (localStorage): não vai para o código nem para a nuvem.
-const IA_KEY = 'pf-ia-chave', IA_MODEL = 'claude-opus-5-5';
-// US$ por milhão de tokens (entrada, gravar no cache, ler do cache, saída) para mostrar o gasto da conversa
-const IA_PRICE = { in: 4, cw: 5, cr: 0.2, out: 20 };
-const iaKey = () => { try { return localStorage.getItem(IA_KEY) || ''; } catch (e) { return ''; } };
-const iaChat = () => ui.ia || (ui.ia = { msgs: [], shown: [], busy: false, cost: 0, sys: null });
+// Conversa com a IA grátis do Google (Gemini, pelo Firebase AI Logic do projeto) sobre os alunos e o app. Só o professor vê.
+// Sem chave paga: usa o mesmo projeto do Firebase. No plano grátis o Google pode usar o que é enviado para melhorar a IA,
+// por isso vai só o primeiro nome dos alunos e os detalhes de um aluno só quando a pergunta é sobre ele.
+const IA_MODELS = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const iaChat = () => ui.ia || (ui.ia = { msgs: [], shown: [], busy: false, sys: null });
+// Primeiro nome; se dois alunos têm o mesmo, junta a inicial do sobrenome
+const iaName = p => { const f = firstName(p), dup = v2Students().filter(x => firstName(x) === f).length > 1, w = String(p.name || '').trim().split(/\s+/); return dup && w[1] ? `${f} ${w[1][0]}.` : f; };
 const iaNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 const iaSets = sets => (sets || []).filter(x => x.done !== false).map(x => x.carga != null && x.carga !== '' ? `${fmt(x.carga)}kg×${x.reps ?? '?'}` : `${x.reps ?? '?'} reps`).join(', ');
 // Resumo de todos os alunos (vai no começo da conversa)
@@ -6680,7 +6675,7 @@ function iaOverview() {
   const ws = weekStart(today()), pws = addDays(ws, -7), ym = today().slice(0, 7);
   return v2Students().map(p => {
     const d = [...v2Days(p.id)], cw = cardioWeekOf(p), pay = payStatus(p, ym);
-    return { aluno: p.name, ...(p.goal ? { objetivo: p.goal } : {}), situacao: v2Status(p)[1], consultoria: isConsult(p) ? 'sim' : 'não (só o app)',
+    return { aluno: iaName(p), ...(p.goal ? { objetivo: p.goal } : {}), situacao: v2Status(p)[1], consultoria: isConsult(p) ? 'sim' : 'não (só o app)',
       dias_treinados_esta_semana: d.filter(x => x >= ws).length, dias_treinados_semana_passada: d.filter(x => x >= pws && x < ws).length,
       ultimo_treino: d.sort().pop() || null, cardio_semana_min: { feito: cw.done, meta: cw.goal },
       pagamento_do_mes: pay ? pay.label : 'sem cobrança', treinos: workoutsOf(p.id).map(w => w.name) };
@@ -6696,22 +6691,22 @@ function iaStudent(p) {
   const cardio = {}; profCardio(p.id).filter(c => c.date >= cfrom && c.min > 0).forEach(c => { cardio[c.date] = Math.round(((cardio[c.date] || 0) + c.min) * 100) / 100; });
   const plans = Object.entries(p.plans || {}).filter(([d]) => d >= today() && d <= addDays(today(), 14)).map(([d, o]) => ({ data: d, treinos: (o.w || []).map(id => id === CARDIO ? 'Cardio' : wName(id, p.id)) }));
   const months = [0, 1, 2].map(n => { const d = new Date(); d.setMonth(d.getMonth() - n); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; });
-  return { ...base, kind: undefined, sessions: undefined, division: undefined, situacao: v2Status(p)[1], consultoria: isConsult(p) ? 'sim' : 'não (só o app)',
+  return { ...base, aluno: p.id === ME ? 'professor' : iaName(p), kind: undefined, sessions: undefined, division: undefined, situacao: v2Status(p)[1], consultoria: isConsult(p) ? 'sim' : 'não (só o app)',
     ...(p.since ? { aluno_desde: p.since } : {}), dias_treinados_60_dias: [...v2Days(p.id)].filter(x => x >= cfrom).sort(),
     historico_cargas_120_dias: hist, cardio_60_dias_min: cardio, planejamento_proximos_14_dias: plans,
     medidas: bodyOf(p).slice(-3), recados_do_professor: (p.messages || []).slice(-5).map(m => ({ data: m.date, texto: m.text })),
     respostas_do_aluno: (p.replies || []).slice(-5).map(r => ({ data: r.date, texto: r.t })),
-    pagamentos: p.billing && p.billing.value > 0 ? { plano: p.billing.plan || '', valor: p.billing.value, meses: Object.fromEntries(months.map(m => [m, (payStatus(p, m) || {}).label || 'sem cobrança'])) } : 'sem cobrança' };
+    pagamentos: Object.fromEntries(months.map(m => [m, (payStatus(p, m) || {}).label || 'sem cobrança'])) };
 }
 function iaFind(nome) {
   const q = iaNorm(nome), me = profile(ME);
   if (!q) return { erro: 'Informe o nome do aluno.' };
   if (['professor', 'eu', 'meu', 'meu treino'].includes(q) || (me && iaNorm(me.name) === q)) return iaStudent(me);
-  const sts = v2Students(), hit = sts.filter(p => iaNorm(p.name) === q);
+  const sts = v2Students(), hit = sts.filter(p => iaNorm(p.name) === q || iaNorm(iaName(p)) === q);
   const list = hit.length ? hit : sts.filter(p => iaNorm(p.name).includes(q) || iaNorm(p.name).split(' ').some(w => w === q || q.split(' ').includes(w)));
   if (list.length === 1) return iaStudent(list[0]);
-  if (list.length > 1) return { erro: 'Mais de um aluno com esse nome. Pergunte ao professor qual deles.', alunos: list.map(p => p.name) };
-  return { erro: 'Nenhum aluno com esse nome.', alunos: sts.map(p => p.name) };
+  if (list.length > 1) return { erro: 'Mais de um aluno com esse nome. Pergunte ao professor qual deles.', alunos: list.map(iaName) };
+  return { erro: 'Nenhum aluno com esse nome.', alunos: sts.map(iaName) };
 }
 const IA_GUIDE = `Como o app funciona (versão nova, celular):
 - Barra de baixo do professor: Painel, Alunos, Pagamentos, Meu perfil. No computador há menu lateral com as mesmas áreas e Ajustes e backup.
@@ -6728,7 +6723,7 @@ const IA_GUIDE = `Como o app funciona (versão nova, celular):
 - Ver como aluno: mostra o app como o aluno vê. Perfil de teste: aluno de mentira para testar (Alunos > Criar perfil de teste).`;
 function iaSystem() {
   const me = profile(ME) || { name: 'Professor' };
-  return `Você é o assistente do PassosFit, um app de treino de musculação. Quem conversa com você é ${me.name}, o professor que acompanha os alunos pelo app (ele não é programador).
+  return `Você é o assistente do PassosFit, um app de treino de musculação. Quem conversa com você é ${firstName(me)}, o professor que acompanha os alunos pelo app (ele não é programador).
 Hoje é ${weekday(today())}, ${today()}.
 
 Como responder:
@@ -6745,51 +6740,49 @@ ${IA_GUIDE}
 Resumo dos alunos hoje (JSON):
 ${JSON.stringify(iaOverview())}`;
 }
-const IA_TOOLS = [{ name: 'ver_aluno', description: 'Traz tudo de um aluno: treinos montados, cargas atuais, histórico de cargas dos últimos 120 dias, dias treinados, cardio, planejamento, medidas, recados e pagamentos. Use "professor" para os dados do próprio professor.',
-  strict: true, input_schema: { type: 'object', properties: { nome: { type: 'string', description: 'Nome do aluno, como aparece no resumo' } }, required: ['nome'], additionalProperties: false } }];
+const IA_TOOLS = [{ functionDeclarations: [{ name: 'ver_aluno', description: 'Traz tudo de um aluno: treinos montados, cargas atuais, histórico de cargas dos últimos 120 dias, dias treinados, cardio, planejamento, medidas, recados e pagamentos. Use "professor" para os dados do próprio professor.',
+  parameters: { type: 'object', properties: { nome: { type: 'string', description: 'Nome do aluno, como aparece no resumo' } }, required: ['nome'] } }] }];
 async function iaCall(c) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': iaKey(), 'anthropic-version': '2023-06-01', 'anthropic-beta': 'server-side-fallback-2026-07-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model: IA_MODEL, max_tokens: 16000, fallbacks: 'default', output_config: { effort: 'low' }, cache_control: { type: 'ephemeral' }, system: c.sys, tools: IA_TOOLS, messages: c.msgs }) });
-  const j = await res.json().catch(() => null);
-  if (!res.ok) {
-    const m = String((j && j.error && j.error.message) || '');
-    const err = new Error(res.status === 401 ? 'A chave do Claude não funcionou. Confira e cole de novo.'
-      : /credit|balance|billing/i.test(m) ? 'Acabaram os créditos da sua conta do Claude. Coloque mais créditos no site do Claude e tente de novo.'
-      : res.status === 429 ? 'Muitas perguntas seguidas. Espere um minuto e tente de novo.'
-      : res.status >= 500 ? 'O Claude está ocupado agora. Tente de novo em instantes.' : 'Não deu para perguntar agora. Tente de novo.');
-    err.key = res.status === 401; throw err;
+  const fb = CFG.firebase || {};
+  for (let k = ui.iaModel || 0; k < IA_MODELS.length; k++) {
+    const res = await fetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${fb.projectId}/models/${IA_MODELS[k]}:generateContent`, { method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': fb.apiKey, 'X-Firebase-Appid': fb.appId },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: c.sys }] }, contents: c.msgs, tools: IA_TOOLS }) });
+    const j = await res.json().catch(() => null);
+    if (res.ok) { ui.iaModel = k; return j; }
+    const er = (j && j.error) || {}, det = JSON.stringify(er.details || []);
+    // Modelo que não existe mais ou cota grátis dele acabou: tenta o próximo
+    if ((res.status === 404 || res.status === 429) && k < IA_MODELS.length - 1) continue;
+    const err = new Error(res.status === 429 ? 'O limite grátis de perguntas acabou por agora. Tente de novo mais tarde.'
+      : res.status >= 500 ? 'A IA está ocupada agora. Tente de novo em instantes.' : 'Não deu para perguntar agora. Tente de novo.');
+    if (res.status === 403 && /SERVICE_DISABLED|ailogic|API_KEY_SERVICE_BLOCKED|not been used|disabled/i.test(det + er.message)) err.off = true;
+    throw err;
   }
-  const u = j.usage || {};
-  c.cost += ((u.input_tokens || 0) * IA_PRICE.in + (u.cache_creation_input_tokens || 0) * IA_PRICE.cw + (u.cache_read_input_tokens || 0) * IA_PRICE.cr + (u.output_tokens || 0) * IA_PRICE.out) / 1e6;
-  return j;
 }
 async function iaAsk(text) {
   text = String(text || '').trim(); const c = iaChat();
   if (!text || c.busy) return;
-  if (!iaKey()) return render();
-  if (!c.sys) c.sys = iaSystem(); // os dados ficam fixos durante a conversa (mais barato: o Claude reaproveita)
+  if (!c.sys) c.sys = iaSystem(); // os dados ficam fixos durante a conversa
   const start = c.msgs.length;
-  c.msgs.push({ role: 'user', content: text }); c.shown.push({ me: true, t: text }); c.busy = true; render();
+  c.msgs.push({ role: 'user', parts: [{ text }] }); c.shown.push({ me: true, t: text }); c.busy = true; render();
   try {
     for (let i = 0; i < 6; i++) {
-      const r = await iaCall(c);
-      if (r.stop_reason === 'refusal') { c.msgs.length = start; c.shown.push({ t: 'Não consegui responder essa. Tente perguntar de outro jeito.' }); break; }
-      // Depois de uma troca de modelo no meio da resposta, só o texto antes dela volta para a conversa
-      const fb = r.content.map(b => b.type).lastIndexOf('fallback');
-      const content = r.content.filter((b, k) => !(k < fb && ['thinking', 'redacted_thinking', 'tool_use'].includes(b.type)));
-      c.msgs.push({ role: 'assistant', content });
-      const uses = content.filter(b => b.type === 'tool_use');
-      if (r.stop_reason !== 'tool_use' || !uses.length) {
-        const t = content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+      const r = await iaCall(c), cand = (r.candidates || [])[0];
+      if (!cand || !cand.content || !(cand.content.parts || []).length) { c.msgs.length = start; c.shown.push({ t: 'Não consegui responder essa. Tente perguntar de outro jeito.' }); break; }
+      const parts = cand.content.parts;
+      c.msgs.push({ role: 'model', parts }); // volta inteiro (com as assinaturas do modelo)
+      const calls = parts.filter(x => x.functionCall);
+      if (!calls.length) {
+        const t = parts.filter(x => x.text && !x.thought).map(x => x.text).join('').trim();
         c.shown.push({ t: t || 'Não consegui responder agora. Tente de novo.' }); break;
       }
-      c.msgs.push({ role: 'user', content: uses.map(b => { let out; try { out = b.name === 'ver_aluno' ? iaFind(b.input && b.input.nome) : { erro: 'Ferramenta desconhecida.' }; } catch (e) { out = { erro: 'Não deu para ler os dados desse aluno.' }; }
-        return { type: 'tool_result', tool_use_id: b.id, content: JSON.stringify(out) }; }) });
+      c.msgs.push({ role: 'user', parts: calls.map(({ functionCall: f }) => { let out; try { out = f.name === 'ver_aluno' ? iaFind(f.args && f.args.nome) : { erro: 'Ferramenta desconhecida.' }; } catch (e) { out = { erro: 'Não deu para ler os dados desse aluno.' }; }
+        return { functionResponse: { name: f.name, ...(f.id ? { id: f.id } : {}), response: out } }; }) });
     }
   } catch (e) {
     c.msgs.length = start; // a pergunta não foi respondida: sai da conversa para poder perguntar de novo
-    c.shown.push({ t: navigator.onLine === false ? 'Sem internet. O assistente precisa de internet para responder.' : e.message || 'Não deu para perguntar agora.', err: true, key: e.key });
+    if (e.off) { ui.iaOff = true; c.shown.pop(); }
+    else c.shown.push({ t: navigator.onLine === false ? 'Sem internet. O assistente precisa de internet para responder.' : e.message || 'Não deu para perguntar agora.', err: true });
   }
   c.busy = false; if (ui.view === 'ia') render();
 }
@@ -6798,37 +6791,26 @@ const iaHtml = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,
 const IA_SUGS = ['Quem não treinou esta semana?', 'Resuma a semana dos alunos', 'Quem está com pagamento atrasado?', 'Como monto um treino novo?'];
 function renderIa() {
   if (ui.studentMode) { ui.view = 'treino'; return render(); }
-  const c = iaChat(), key = iaKey(), ico = v2Ico(V2PNAV.ia);
-  const top = `<div class="v2-top"><button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>IA do PassosFit</small><h2>Assistente</h2></div>
-    ${key && c.shown.length ? `<button class="v2-btn sm line" data-act="ia-new">${v2Ico('<path d="M12 5v14M5 12h14"/>')}Nova conversa</button>` : ''}</div>`;
-  if (!key || ui.iaSetup) {
-    $main.innerHTML = `${top}<section class="card ia-setup"><span class="ia-badge">${ico}</span><h3>Jeito grátis</h3>
-      <p class="v2-muted">Mande os treinos de todos os alunos para o Claude e pergunte lá, na sua conversa com ele.</p>
-      <button class="v2-btn pri" style="margin:0" data-act="export-claude">${v2Ico('<path d="M4 12l16-8-6 16-2.5-6.5z"/>')}Enviar treinos para o Claude</button></section>
-    <section class="card ia-setup"><h3>Ou: assistente aqui no app</h3>
-      <p class="v2-muted">Responde direto nesta tela, com os dados do app na hora. É pago por uso: cole aqui a sua chave do Claude (uma vez só, neste aparelho).</p>
-      <ol class="ia-steps"><li>Entre em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> e crie a conta.</li><li>Em <b>Billing</b>, coloque créditos (a partir de US$ 5) e um limite por mês.</li><li>Em <b>API Keys</b>, toque em <b>Create Key</b> e copie.</li><li>Cole abaixo e toque em <b>Salvar</b>.</li></ol>
-      <form id="iaKeyForm" class="ia-keyform"><input id="iaKeyIn" type="password" placeholder="sk-ant-..." autocomplete="off" aria-label="Chave do Claude"><button class="v2-btn pri" style="margin:0">Salvar</button></form>
-      <p class="v2-muted ia-small">A chave fica só neste aparelho: não vai para a nuvem nem para os alunos. Os dados dos alunos vão para o Claude só na hora da pergunta.</p>
-      ${key ? `<div class="ia-keyrow"><button class="v2-btn sm line" data-act="ia-key-cancel">Voltar</button><button class="v2-btn sm line" style="color:var(--down)" data-act="ia-key-del">Apagar chave deste aparelho</button></div>` : ''}</section>`;
+  const c = iaChat(), ico = v2Ico(V2PNAV.ia), fb = CFG.firebase || {};
+  const top = `<div class="v2-top"><button class="v2-icbtn" data-view="painel" aria-label="Voltar">${V2I.back}</button><div class="grow"><small>IA grátis do Google</small><h2>Assistente</h2></div>
+    ${c.shown.length ? `<button class="v2-btn sm line" data-act="ia-new">${v2Ico('<path d="M12 5v14M5 12h14"/>')}Nova conversa</button>` : ''}</div>`;
+  if (!CLOUD || ui.iaOff) {
+    $main.innerHTML = `${top}<section class="card ia-setup"><span class="ia-badge">${ico}</span><h3>Falta ligar a IA no Firebase</h3>
+      ${CLOUD ? `<p class="v2-muted">É de graça e só uma vez, no computador ou no celular:</p>
+      <ol class="ia-steps"><li>Abra o <a href="https://console.firebase.google.com/project/${esc(fb.projectId || '')}/ailogic/" target="_blank" rel="noopener">Firebase AI Logic</a> (entre com a conta do Google do app).</li><li>Toque em <b>Get started</b>.</li><li>Escolha <b>Gemini Developer API</b> (a grátis) e confirme.</li><li>Espere uns minutos e toque em <b>Tentar de novo</b>.</li></ol>
+      <button class="v2-btn pri" style="margin:0" data-act="ia-retry">Tentar de novo</button>` : '<p class="v2-muted">O assistente precisa do app ligado na nuvem (Firebase).</p>'}</section>`;
     return;
   }
   const rows = c.shown.map(m => m.me ? `<div class="v2-msg me">${esc(m.t)}</div>`
-    : `<div class="v2-msg ia-msg${m.err ? ' err' : ''}">${iaHtml(m.t)}${m.key ? '<button class="v2-btn sm line" style="margin-top:8px" data-act="ia-key">Trocar a chave</button>' : ''}</div>`).join('');
+    : `<div class="v2-msg ia-msg${m.err ? ' err' : ''}">${iaHtml(m.t)}</div>`).join('');
   $main.innerHTML = `${top}<div class="v2-chat">
     ${c.shown.length ? '' : `<section class="card ia-hello"><span class="ia-badge">${ico}</span><b>Oi, ${esc(firstName(profile(ME)))}! Como posso ajudar?</b><small>Sei dos treinos, cargas, cardio, recados e pagamentos dos alunos, e explico como usar o app.</small></section>
       <div class="ia-sugs">${IA_SUGS.map(s => `<button data-act="ia-sug" data-t="${esc(s)}">${esc(s)}</button>`).join('')}</div>`}
     ${rows}${c.busy ? '<div class="v2-msg ia-msg ia-wait"><i></i><i></i><i></i></div>' : ''}</div>
-    <p class="v2-muted ia-small" style="text-align:center">${c.cost ? `Gasto desta conversa: cerca de US$ ${c.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · ` : ''}<button class="link" data-act="ia-key">Chave do Claude</button></p>
+    <p class="v2-muted ia-small" style="text-align:center">Grátis, com limite de perguntas por dia. Confira os números importantes no app.</p>
     <div class="v2-dock"><form class="v2-composer" id="iaForm"><input id="iaIn" placeholder="Pergunte ao assistente" enterkeyhint="send" autocomplete="off" aria-label="Pergunta" ${c.busy ? 'disabled' : ''}><button aria-label="Enviar" ${c.busy ? 'disabled' : ''}><svg viewBox="0 0 24 24" class="v2i"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg></button></form></div>`;
   document.body.classList.add('v2-chatv'); kbCheck();
   setTimeout(() => window.scrollTo({ top: document.body.scrollHeight }), 30);
-}
-function iaSaveKey(v) {
-  v = String(v || '').trim();
-  if (!/^sk-ant-[\w-]{20,}$/.test(v)) return toast('Essa chave não parece certa. Ela começa com <b>sk-ant-</b>.');
-  try { localStorage.setItem(IA_KEY, v); } catch (e) { return toast('Não deu para guardar a chave neste aparelho.'); }
-  ui.iaSetup = false; render(); toast('✓ Assistente ligado. Pode perguntar.');
 }
 // Importar histórico de um aluno (arquivo preparado a partir da planilha antiga). Junta sem apagar nada.
 function importHistory(file) {
@@ -8056,7 +8038,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-21:10';
+const APP_VERSION = '20/10-21:15';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
