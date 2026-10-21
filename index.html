@@ -5703,6 +5703,8 @@ const readyBtn = p => readyOk(p)
   : `<button class="btn ready-btn" data-act="plan-ready">Marcar planejamento pronto${p.planReady ? ` <small style="display:block;font-weight:500;opacity:.8">venceu em ${fmtDate(readyUntil(p))}: revise os treinos da semana</small>` : ''}</button>`;
 
 // Abas do aluno (computador)
+// a aba escolhida fica à vista na fileira de abas (no celular ela rola para o lado)
+const showStTab = () => { const t = document.querySelector('.ws .tabs button.on'); if (t) t.scrollIntoView({ block: 'nearest', inline: 'center' }); };
 const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
 function perfilHtml(p, desk) {
   const s = profileSummary(p.id), ws = weekStart(today()), noHist = !trainedDates(p.id).length;
@@ -5767,7 +5769,7 @@ function perfilHtml(p, desk) {
         <button class="btn primary" data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button>
         <button class="btn" data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button>
-        <button class="btn" data-act="goto-msg">Mensagem</button>
+        ${mine ? '' : '<button class="btn" data-act="goto-msg">Mensagem</button>'}
         <button class="btn" data-act="student-mode">Ver como o aluno</button>
         <button class="btn ${isConsult(p) ? 'primary' : ''}" data-act="consult-toggle">Consultoria: ${isConsult(p) ? 'sim' : 'não (só o app)'}</button>
         ${p.test ? '<button class="btn" data-act="test-sim">Simular semana feita</button>' : ''}
@@ -6124,7 +6126,10 @@ $main.addEventListener('click', e => {
     case 'new-workout': return newWorkout();
     case 'rename-workout': return renameWorkout(b.dataset.id);
     case 'del-workout': return deleteWorkout(b.dataset.id);
-    case 'goto-msg': return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    case 'goto-msg': { // com abas (computador), a mensagem fica na aba Mensagens: abre a aba antes de rolar
+      if (!document.getElementById('msgCard').offsetParent) { ui.stTab = 'mensagens'; render(); showStTab(); }
+      return document.getElementById('msgCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     case 'tpl': {
       ui.msgDraft = msgTemplate(b.dataset.k, profile(ui.profile));
       document.getElementById('msgText').value = ui.msgDraft; return updateWaLink();
@@ -6171,7 +6176,7 @@ $main.addEventListener('click', e => {
       save(); return render();
     }
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
-    case 'st-tab': ui.stTab = b.dataset.t; return render();
+    case 'st-tab': ui.stTab = b.dataset.t; render(); return showStTab();
     case 'wk-post': ui.wkPost = { pid: b.dataset.pid, ws: b.dataset.ws }; render(); return window.scrollTo({ top: 0 });
     case 'wk-post-close': ui.wkPost = null; render(); return window.scrollTo({ top: 0 });
     case 'wk-rep': ui.wkRep = { pid: b.dataset.pid, ws: b.dataset.ws }; return render();
@@ -8039,7 +8044,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-21:33';
+const APP_VERSION = '20/10-21:44';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
