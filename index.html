@@ -5554,9 +5554,45 @@ function exLibRender() {
       ${q && !list.some(([, n]) => normName(n) === q) ? `<button class="own-item" data-lib="custom"><span class="grow">Usar “${esc(B.q.trim())}” mesmo assim <small>nome fora da lista</small></span><b>＋</b></button>` : ''}</div>`;
   document.getElementById('exLibInfo').textContent = B.n ? `${B.n} adicionado${B.n === 1 ? '' : 's'}` : '';
 }
+// Exercício tirado do treino há pouco (com séries anotadas nos últimos dias): ao colocar de volta, volta o mesmo,
+// com as cargas e repetições que já tinham sido anotadas
+function recentRemoved(pid, name) {
+  const from = addDays(today(), -3);
+  return db.exercises.find(e => e.profileId === pid && e.archived && !isLetter(e.letter, pid) && sameName(e.name, name)
+    && db.sessions.some(s => s.exId === e.id && s.date >= from));
+}
+// Já colocado de volta como exercício novo (antes desta correção): as séries anotadas no exercício tirado passam para ele
+function adoptRemoved() {
+  const from = addDays(today(), -3); let n = 0;
+  db.exercises.forEach(ex => {
+    if (ex.archived || !isLetter(ex.letter, ex.profileId)) return;
+    const old = db.exercises.filter(e => e !== ex && e.profileId === ex.profileId && e.archived && !isLetter(e.letter, e.profileId) && sameName(e.name, ex.name));
+    if (!old.length) return;
+    const ids = new Set(old.map(e => e.id));
+    db.sessions.forEach(s => {
+      const filled = x => x.sets.some(y => y.carga != null || y.done);
+      if (!ids.has(s.exId) || s.date < from || (ex.planDate && ex.planDate < s.date) || !filled(s)) return;
+      const cur = sessionOn(ex.id, s.date);
+      if (cur && filled(cur)) return; // o novo já foi anotado: não mexe
+      if (cur) db.sessions = db.sessions.filter(x => x !== cur);
+      s.exId = ex.id; n++;
+    });
+  });
+  if (n) save();
+  return n;
+}
 function exLibAdd(name, group) {
   const B = ui.lib, list = letterExs(B.L, B.pid), prev = list.slice(-1)[0];
   if (list.some(e => sameName(e.name, name))) return toast(`<b>${esc(name)}</b> já está neste treino.`);
+  const back = recentRemoved(B.pid, name);
+  if (back) {
+    back.letter = B.L; delete back.archived; back.order = list.length + 1;
+    list.forEach((e, k) => { e.order = k + 1; }); B.n++; save();
+    toast(`<b>${esc(back.name)}</b> voltou com as cargas já anotadas.`);
+    const box = document.querySelector('#exLibBody .exlib-list'), y = box ? box.scrollTop : 0;
+    exLibRender(); const nb = document.querySelector('#exLibBody .exlib-list'); if (nb) nb.scrollTop = y;
+    return;
+  }
   const reps = prev && !isTimed(prev) ? allSame(prev.sets, 'reps') : 10, n = prev ? prev.sets.length : 3;
   const ex = { id: uid(), profileId: B.pid, group, letter: B.L, name, sets: Array.from({ length: n }, () => ({ carga: null, reps: isTimed({ name }) ? 30 : typeof reps === 'number' ? reps : 10 })), order: list.length + 1, planDate: today(),
     ...(noLoadOf({ name }) || NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
@@ -6585,7 +6621,9 @@ $form.addEventListener('submit', e => {
       }
     }
   } else {
-    db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })), ...($form.noload.checked ? { noLoad: true } : {}) });
+    const back = letter && recentRemoved(ui.profile, name);
+    if (back) { back.letter = letter; back.group = group; delete back.archived; toast(`<b>${esc(back.name)}</b> voltou com as cargas já anotadas.`); }
+    else db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })), ...($form.noload.checked ? { noLoad: true } : {}) });
   }
   if (ui.view === 'treino' && letter) ui.group = letter;
   saveUi(); save(); render();
@@ -6606,9 +6644,11 @@ document.getElementById('exSplit').onclick = async () => {
 async function deleteEditing() {
   if (!editing) return;
   const hist = exHistory(editing.id).filter(x => x.exId === editing.id).length;
-  if (hist) {
+  // cargas/repetições anotadas hoje (mesmo sem marcar a série como feita) também não se perdem
+  const typed = db.sessions.some(s => s.exId === editing.id && s.sets.some(x => x.carga != null || x.done));
+  if (hist || typed) {
     // Já tem treinos registrados: sai do treino, mas o histórico continua guardado
-    if (!await confirmAsk(`Tirar "${editing.name}" do treino?`, `${hist === 1 ? 'O treino já registrado' : `Os ${hist} treinos já registrados`} deste exercício continua${hist === 1 ? '' : 'm'} guardado${hist === 1 ? '' : 's'} no histórico e na evolução.`, 'Tirar do treino')) return;
+    if (!await confirmAsk(`Tirar "${editing.name}" do treino?`, `${!hist ? 'As cargas já anotadas ficam guardadas: se colocar o exercício de volta, elas voltam junto.' : `${hist === 1 ? 'O treino já registrado' : `Os ${hist} treinos já registrados`} deste exercício continua${hist === 1 ? '' : 'm'} guardado${hist === 1 ? '' : 's'} no histórico e na evolução.`}`, 'Tirar do treino')) return;
     editing.letter = null; editing.archived = true;
   } else {
     if (!await confirmAsk(`Excluir "${editing.name}"?`, 'O exercício ainda não tem treinos registrados.')) return;
@@ -7515,6 +7555,7 @@ async function onRemote() {
 function runFixes() {
   if (!cloud || cloud.role !== 'admin' || !cloud.ready || !cloud.serverSeen || cloud.fixesRan) return;
   cloud.fixesRan = true;
+  if (adoptRemoved()) { render(); toast('As cargas do exercício que saiu e voltou ao treino foram recuperadas.'); }
   fixOnce().catch(e => console.warn('ajuste:', e));
 }
 // Primeira vez do professor: a nuvem está vazia. Oferece enviar os dados deste aparelho.
@@ -8057,7 +8098,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '20/10-22:55';
+const APP_VERSION = '22/10-13:56';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
