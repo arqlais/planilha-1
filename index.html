@@ -5561,12 +5561,23 @@ function recentRemoved(pid, name) {
   return db.exercises.find(e => e.profileId === pid && e.archived && !isLetter(e.letter, pid) && sameName(e.name, name)
     && db.sessions.some(s => s.exId === e.id && s.date >= from));
 }
+// Treino com histórico separado (ex.: academias Evoque e Sky): exercício novo nele compara só com o mesmo treino
+function letterTwin(pid, L, name) {
+  const pre = letterExs(L, pid).filter(e => (e.twin || '').includes('|')).map(e => e.twin.split('|')[0]);
+  if (pre.length < 2 || pre.some(x => x !== pre[0])) return null;
+  return `${pre[0]}|${twinKey({ name })}`;
+}
 // Já colocado de volta como exercício novo (antes desta correção): as séries anotadas no exercício tirado passam para ele
+// e ele volta a comparar com o mesmo histórico do que saiu
 function adoptRemoved() {
   const from = addDays(today(), -3); let n = 0;
   db.exercises.forEach(ex => {
     if (ex.archived || !isLetter(ex.letter, ex.profileId)) return;
     const old = db.exercises.filter(e => e !== ex && e.profileId === ex.profileId && e.archived && !isLetter(e.letter, e.profileId) && sameName(e.name, ex.name));
+    if (!ex.twin && ex.planDate >= from) {
+      const tw = (old.find(e => e.twin) || {}).twin || letterTwin(ex.profileId, ex.letter, ex.name);
+      if (tw) { ex.twin = tw; n++; }
+    }
     if (!old.length) return;
     const ids = new Set(old.map(e => e.id));
     db.sessions.forEach(s => {
@@ -5594,7 +5605,8 @@ function exLibAdd(name, group) {
     return;
   }
   const reps = prev && !isTimed(prev) ? allSame(prev.sets, 'reps') : 10, n = prev ? prev.sets.length : 3;
-  const ex = { id: uid(), profileId: B.pid, group, letter: B.L, name, sets: Array.from({ length: n }, () => ({ carga: null, reps: isTimed({ name }) ? 30 : typeof reps === 'number' ? reps : 10 })), order: list.length + 1, planDate: today(),
+  const tw = letterTwin(B.pid, B.L, name);
+  const ex = { id: uid(), profileId: B.pid, group, letter: B.L, name, ...(tw ? { twin: tw } : {}), sets: Array.from({ length: n }, () => ({ carga: null, reps: isTimed({ name }) ? 30 : typeof reps === 'number' ? reps : 10 })), order: list.length + 1, planDate: today(),
     ...(noLoadOf({ name }) || NOLOAD_RX.test(normName(name)) ? { noLoad: true } : {}) };
   list.forEach((e, k) => { e.order = k + 1; });
   db.exercises.push(ex); B.n++; save();
@@ -6623,7 +6635,7 @@ $form.addEventListener('submit', e => {
   } else {
     const back = letter && recentRemoved(ui.profile, name);
     if (back) { back.letter = letter; back.group = group; delete back.archived; toast(`<b>${esc(back.name)}</b> voltou com as cargas já anotadas.`); }
-    else db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, sets: Array.from({ length: n }, () => ({ carga, reps })), ...($form.noload.checked ? { noLoad: true } : {}) });
+    else db.exercises.push({ id: uid(), profileId: ui.profile, group, letter, name, ...(letter && letterTwin(ui.profile, letter, name) ? { twin: letterTwin(ui.profile, letter, name) } : {}), sets: Array.from({ length: n }, () => ({ carga, reps })), ...($form.noload.checked ? { noLoad: true } : {}) });
   }
   if (ui.view === 'treino' && letter) ui.group = letter;
   saveUi(); save(); render();
@@ -7555,7 +7567,7 @@ async function onRemote() {
 function runFixes() {
   if (!cloud || cloud.role !== 'admin' || !cloud.ready || !cloud.serverSeen || cloud.fixesRan) return;
   cloud.fixesRan = true;
-  if (adoptRemoved()) { render(); toast('As cargas do exercício que saiu e voltou ao treino foram recuperadas.'); }
+  if (adoptRemoved()) { render(); toast('O exercício que saiu e voltou ao treino recuperou as cargas e o histórico.'); }
   fixOnce().catch(e => console.warn('ajuste:', e));
 }
 // Primeira vez do professor: a nuvem está vazia. Oferece enviar os dados deste aparelho.
@@ -8098,7 +8110,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '22/10-13:56';
+const APP_VERSION = '22/10-13:59';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
