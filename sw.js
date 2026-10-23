@@ -15,6 +15,7 @@ self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return; // Firebase (nuvem) cuida de si mesmo
   if (url.pathname.endsWith('version.json')) return; // sempre da internet
+  if (url.pathname.startsWith(new URL('portal/', self.registration.scope).pathname)) return; // portal (apresentação): nunca guardado como o app
   const isPage = req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname) || url.pathname.endsWith('config.js');
   if (isPage) { // só a página principal fica guardada como o app (novo.html não substitui)
     e.respondWith(fetch(req.url, { cache: 'no-store', credentials: 'same-origin' }).then(res => { // sem a cópia de 10 min do navegador: celular pega a versão nova na hora
