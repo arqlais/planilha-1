@@ -9,7 +9,7 @@
   var q = new URLSearchParams(location.search);
   if (q.has('app')) { localStorage.setItem('pf-entrou', '1'); q.delete('app'); var r = q.toString(); history.replaceState(null, '', location.pathname + (r ? '?' + r : '') + location.hash); return; }
   if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || location.search || location.hash) return;
-  for (var i = 0; i < localStorage.length; i++) if (/^(planilha|pf-|firebase)/.test(localStorage.key(i))) return;
+  for (var i = 0; i < localStorage.length; i++) if (/^(planilha|pf-)/.test(localStorage.key(i))) return; // chaves do Primeiro Passo (primeiropasso:) não contam
   location.replace('portal/');
 } catch (e) {} })();
 </script>
@@ -8121,7 +8121,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '23/10-13:14';
+const APP_VERSION = '28/10-10:57';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
