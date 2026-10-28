@@ -2726,10 +2726,10 @@ function pMsgs(p,cs){
 function panelAdmin(tab){
   if(SESS.role!=="admin"){location.hash="#/entrar";return}
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
-  const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Personais",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"}];
-  const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Personais"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"]}[tab]||["",""];
+  const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Personais",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
+  const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Personais"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Exemplo com 15 alunos, para apresentar","Apresentação"]}[tab]||["",""];
   shell({role:"Empresa",tabs,tab,base:"#/admin",me:{name:"Administração",sub:"Primeiro Passo"},title:T[1],kick:T[0]});
-  ({geral:aGeral,clientes:aClientes,personais:aPersonais,financeiro:aFin,seguranca:aSeg,leads:aLeads,ajustes:aAjustes}[tab]||aGeral)(bl);
+  ({geral:aGeral,clientes:aClientes,personais:aPersonais,financeiro:aFin,seguranca:aSeg,leads:aLeads,ajustes:aAjustes,apresentacao:aApres}[tab]||aGeral)(bl);
   bindOpen("admin");icons();
 }
 function aGeral(bl){
@@ -2791,6 +2791,32 @@ function aPersonais(bl){
   document.querySelectorAll("[data-pfi]").forEach(b=>b.onclick=()=>openPFicha(b.dataset.pfi));
   document.querySelectorAll("[data-asp]").forEach(b=>b.onclick=()=>{setSess({role:"personal",pid:b.dataset.asp,back:"admin"});location.hash="#/personal"});
   $("#np").onsubmit=e=>{e.preventDefault();const name=$("#npn").value.trim();DB.personals.push({id:"p"+Date.now(),name,email:mailOf(name),cref:"CREF "+$("#npc").value.trim(),uf:$("#npu").value,area:$("#npa").value.trim()+" / "+$("#npu").value,bio:"",spec:[$("#nps").value.trim()||"Iniciantes"],status:"ativo",cap:15,rating:null,since:Date.now()});saveDB();toast(`${name.split(" ")[0]} cadastrada`);route(true)};
+}
+let AP=15;
+function aApres(){
+  const S={15:{lv:[3,4,5,3],np:2,mk:300,ct:250,nv:3},30:{lv:[6,8,10,6],np:4,mk:600,ct:250,nv:6},50:{lv:[10,13,17,10],np:6,mk:1000,ct:350,nv:10}}[AP],PR=[100,180,480,560];
+  const m2=v=>"R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const pay=S.lv.reduce((s,n,i)=>s+n*PR[i],0),rep=pay*.7,emp=pay*.3,fee=pay*.02,tax=emp*.06,inss=178.31,ot=S.nv*5+10;
+  const lucro=emp-fee-tax-inss-S.ct-S.mk-ot;
+  const OUT=[["Taxa de pagamento (2% do total)",fee],["Imposto (6% da parte da empresa)",tax],["INSS",inss],["Contador",S.ct],["Divulgação",S.mk],[`Verificação de identidade (${S.nv} novos)`,S.nv*5],["Domínio do site",10]];
+  const NM=["Ana C.","Bruno M.","Carla S.","Diego R.","Elisa P.","Fábio L.","Gabi T.","Hugo A.","Iara N.","João V.","Karen D.","Lucas F.","Marta B.","Nina G.","Otávio H."],LV15=[1,1,1,2,2,2,2,3,3,3,3,3,4,4,4],PN=["Personal A","Personal B"];
+  $("#pv").innerHTML=`<div class="info" style="margin-bottom:16px"><i data-lucide="presentation"></i><span><b style="color:var(--ink)">Modo apresentação:</b> tudo aqui é exemplo, com os mesmos números do trabalho. Seus clientes e valores reais não mudam.</span></div>
+  <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:520px;margin-bottom:16px" role="group" aria-label="Quantidade de alunos">${[15,30,50].map(n=>`<button aria-pressed="${AP===n}" data-ap="${n}"><i data-lucide="users"></i>${n} alunos</button>`).join("")}</div>
+  <div class="kpis">${kpi("users","Alunos ativos",AP,`${S.np} personais parceiras`)}${kpi("banknote","Alunos pagam no mês",money(pay),"soma das mensalidades")}${kpi("hand-coins","Vai para as personais",money(rep),"70% do total")}${kpi("building-2","Parte da empresa",money(emp),"30% do total")}${kpi("piggy-bank","Lucro do mês",m2(lucro),"depois de todos os custos")}${kpi("calendar-range","Movimento no ano",money(pay*12),"12 meses de mensalidades")}</div>
+  <div class="grid2">
+    <section class="card"><div class="card-h"><h3>Alunos por nível</h3><span class="pill mute">${AP} alunos</span></div>${hbars(LEVELS.map((l,i)=>({label:`${l.n} · ${l.t}`,v:S.lv[i]})))}<p class="week-note">Mensalidade por nível: R$ 100, R$ 180, R$ 480 e R$ 560.</p>
+      <div class="card-h" style="margin:18px 0 10px"><h3>Quanto cada nível traz</h3></div>${hbars(LEVELS.map((l,i)=>({label:`${l.n} · ${l.t}`,v:S.lv[i]*PR[i]})),money)}</section>
+    <section class="card"><div class="card-h"><h3>Para onde vai a parte da empresa</h3></div><div class="rows">
+      <div class="rw"><span class="pill info" style="padding:7px"><i data-lucide="building-2"></i></span><span><b>Parte da empresa (30%)</b></span><span class="end"><b style="font-variant-numeric:tabular-nums">${m2(emp)}</b></span></div>
+      ${OUT.map(([t,v])=>`<div class="rw"><span class="pill mute" style="padding:7px"><i data-lucide="minus"></i></span><span>${t}</span><span class="end" style="font-variant-numeric:tabular-nums">– ${m2(v)}</span></div>`).join("")}
+      <div class="rw"><span class="pill ok" style="padding:7px"><i data-lucide="piggy-bank"></i></span><span><b>Lucro do mês</b></span><span class="end"><b style="font-variant-numeric:tabular-nums;color:var(--green,#15803d)">${m2(lucro)}</b></span></div></div></section>
+  </div>
+  <div class="grid2">
+    <section class="card"><div class="card-h"><h3>Ponto de equilíbrio</h3><span class="pill ok">cerca de 9 alunos</span></div><p>Os custos fixos são cerca de <b>R$ 738 por mês</b> (INSS, contador, divulgação e domínio). Cada aluno deixa em média <b>cerca de R$ 88</b> para a empresa.</p><p class="week-note">R$ 738 ÷ R$ 88 ≈ 9 alunos. Do 10º aluno em diante, é lucro.</p>
+      <div class="card-h" style="margin:18px 0 10px"><h3>Personais parceiras</h3></div><div class="rows">${Array.from({length:S.np},(_,i)=>`<div class="rw"><span class="av">${String.fromCharCode(65+i)}</span><span><b>Personal ${String.fromCharCode(65+i)}</b><small>cerca de ${Math.round(AP/S.np)} alunos</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(rep/S.np)}</b></span></div>`).join("")}</div></section>
+    <section class="card"><div class="card-h"><h3>${AP===15?"Os 15 alunos do exemplo":`15 dos ${AP} alunos do exemplo`}</h3><span class="pill mute">fictícios</span></div><div class="rows clip">${NM.map((n,i)=>`<div class="rw"><span class="av">${n[0]}</span><span><b>${n}</b><small>Nível ${LV15[i]} · ${LEVELS[LV15[i]-1].t} · ${PN[i%2]}</small></span><span class="end" style="font-variant-numeric:tabular-nums">${money(PR[LV15[i]-1])}</span></div>`).join("")}</div></section>
+  </div>`;
+  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{AP=+b.dataset.ap;aApres();icons()});
 }
 let LF="novo";
 function aLeads(){
