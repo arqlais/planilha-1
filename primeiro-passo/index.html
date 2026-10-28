@@ -151,6 +151,62 @@ i[data-lucide],svg.lucide{width:20px;height:20px;stroke-width:1.9;flex:none}
 .cta{background:#1B3A5C;color:#fff;border-radius:28px;padding:48px;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center}
 .cta h2{color:#fff;font-size:clamp(28px,3.6vw,40px)}
 .cta p{color:#C9D8EA;margin-top:10px}
+/* ---------- página inicial com movimento (só dentro de .sitefx) ---------- */
+.sitefx .prog{position:fixed;left:0;right:0;top:0;height:3px;z-index:40;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,#1B3A5C,#2F5D8A,#E0A93B);pointer-events:none}
+.sitefx .topbar{transition:box-shadow .3s}
+.sitefx .topbar.sh{box-shadow:0 10px 30px -18px rgba(27,58,92,.45)}
+.sitefx .hero{position:relative;overflow:hidden}
+.sitefx .hero>.wrap{position:relative;z-index:1}
+.sitefx .aur{position:absolute;inset:-20% -10% auto;height:130%;pointer-events:none;filter:blur(70px);opacity:.5;-webkit-mask:linear-gradient(#000 55%,transparent 82%);mask:linear-gradient(#000 55%,transparent 82%)}
+.sitefx .aur i{position:absolute;border-radius:50%;width:40vmax;height:40vmax;animation:fxdrift 20s ease-in-out infinite alternate}
+.sitefx .aur i:nth-child(1){background:#9DB8D4;left:-12vmax;top:-14vmax}
+.sitefx .aur i:nth-child(2){background:#E0A93B;right:-12vmax;top:-6vmax;opacity:.55;animation-duration:24s;animation-delay:-8s}
+.sitefx .aur i:nth-child(3){background:#2F5D8A;left:35%;top:22vmax;opacity:.35;animation-duration:28s;animation-delay:-14s}
+[data-theme="dark"] .sitefx .aur{opacity:.28}
+@keyframes fxdrift{50%{transform:translate(6vmax,4vmax) scale(1.12)}100%{transform:translate(-4vmax,7vmax) scale(.94)}}
+.sitefx .hero h1 .w{display:inline-block;opacity:0;transform:translateY(.45em) rotate(3deg);filter:blur(6px);animation:fxword .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i)*75ms + 100ms)}
+@keyframes fxword{to{opacity:1;transform:none;filter:none}}
+.sitefx .hero h1 em .w{background:linear-gradient(90deg,#E0A93B,#F5C96A,#D9832B,#E0A93B);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:fxword .7s cubic-bezier(.2,.8,.2,1) forwards,fxshine 6s linear infinite;animation-delay:calc(var(--i)*75ms + 100ms),0s}
+@keyframes fxshine{to{background-position:300% 0}}
+.sitefx .btn-primary,.sitefx .btn-gold{position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.sitefx .btn-primary:hover,.sitefx .btn-gold:hover{transform:translateY(-2px)}
+.sitefx .hero .btn-primary,.sitefx .cta .btn-gold{animation:fxpulse 2.6s ease-out infinite}
+@keyframes fxpulse{0%{box-shadow:0 0 0 0 rgba(224,169,59,.55)}100%{box-shadow:0 0 0 16px rgba(224,169,59,0)}}
+.sitefx .hero .btn-primary::before,.sitefx .cta .btn-gold::before,.sitefx .tb-cta::before{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);animation:fxsweep 3.6s ease-in-out infinite}
+@keyframes fxsweep{0%,60%{left:-60%}100%{left:130%}}
+.sitefx .phone{animation:fxfloat 6s ease-in-out infinite;transition:transform .4s}
+@keyframes fxfloat{50%{translate:0 -12px}}
+.sitefx .phone-wrap{perspective:900px}
+.sitefx .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.sitefx .rv.in{opacity:1;transform:none}
+.sitefx .facts b{font-variant-numeric:tabular-nums}
+.sitefx .stp .bar{transform-origin:left;transform:scaleX(0);transition:transform 1s cubic-bezier(.2,.7,.2,1),box-shadow .3s;position:relative;overflow:hidden}
+.sitefx .steps.in .stp .bar{transform:scaleX(1)}
+.sitefx .steps.in .stp:nth-child(2) .bar{transition-delay:.15s}.sitefx .steps.in .stp:nth-child(3) .bar{transition-delay:.3s}.sitefx .steps.in .stp:nth-child(4) .bar{transition-delay:.45s}
+.sitefx .stp{transition:transform .4s}
+.sitefx .stp.now{transform:translateY(-4px)}
+.sitefx .stp.now .bar{box-shadow:0 0 0 3px rgba(224,169,59,.35),0 6px 18px -4px rgba(224,169,59,.8)}
+.sitefx .stp.now .bar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:fxbar 1.4s ease-out}
+@keyframes fxbar{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.sitefx .stp.now .n{display:inline-block;animation:fxhop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes fxhop{50%{transform:translateY(-5px)}}
+.sitefx .promises>div,.sitefx .safe>div,.sitefx .who>div{position:relative;border-radius:18px;transition:transform .35s cubic-bezier(.2,.7,.2,1),background .3s,box-shadow .35s,opacity .7s ease}
+.sitefx .promises>div:hover,.sitefx .safe>div:hover{transform:translateY(-5px);background:var(--surface);box-shadow:0 22px 40px -24px rgba(27,58,92,.5)}
+.sitefx .who>div{border-radius:0}
+.sitefx .who>div:hover{background:var(--gold-soft)}
+.sitefx .pi,.sitefx .who svg{transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+.sitefx .promises>div:hover .pi,.sitefx .safe>div:hover .pi,.sitefx .who>div:hover svg{transform:translateY(-3px) rotate(-8deg) scale(1.12)}
+.sitefx .mq{overflow:hidden;margin:34px 0 0;-webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.sitefx .mq>div{display:flex;align-items:center;gap:18px;width:max-content;animation:fxroll 36s linear infinite}
+.sitefx .mq span{font-family:var(--display);font-weight:800;font-size:clamp(18px,2.4vw,26px);white-space:nowrap;color:var(--navy)}
+.sitefx .mq i{width:9px;height:9px;border-radius:50%;background:var(--gold);flex:none}
+.sitefx .mq i:nth-of-type(even){background:var(--blue)}
+@keyframes fxroll{to{transform:translateX(-50%)}}
+.sitefx .cta{position:relative;overflow:hidden;isolation:isolate}
+.sitefx .cta::before{content:"";position:absolute;inset:-40%;z-index:-1;background:conic-gradient(from 0deg,transparent 0 60%,rgba(224,169,59,.35) 75%,transparent 90%);animation:fxspin 9s linear infinite}
+@keyframes fxspin{to{transform:rotate(360deg)}}
+.sitefx .coach .ph{animation:fxfloat 7s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.sitefx .rv,.sitefx .hero h1 .w,.sitefx .stp .bar{opacity:1!important;transform:none!important;filter:none!important}}
 .foot{padding:40px 0 56px;color:var(--muted);font-size:14px}
 .foot .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
 .care{display:flex;gap:10px;align-items:flex-start;max-width:520px}
@@ -1475,7 +1531,7 @@ addEventListener("hashchange",()=>route());
 /* ================== SITE ================== */
 function site(){
   const has=!!S.profile;
-  $("#root").innerHTML=`
+  $("#root").innerHTML=`<div class="sitefx"><div class="prog" aria-hidden="true"></div>
 <header class="topbar"><div class="wrap">
   <a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
   <nav class="topnav" aria-label="Seções"><a href="#como" data-scroll>Como funciona</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>A personal</a><a href="#planos" data-scroll>Planos</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="trabalho/">Trabalho</a></nav>
@@ -1630,7 +1686,7 @@ function site(){
 <footer class="foot"><div class="wrap">
   <div><b style="color:var(--navy)">Primeiro Passo</b><br>Acompanhamento físico humanizado.<div class="foot-links"><a href="${has?"#/app":"#/comecar"}">Área do cliente</a><a href="#/entrar">Área do personal</a><a href="#/entrar">Área da empresa</a><a href="trabalho/">Trabalho da faculdade</a></div></div>
   <p class="care"><i data-lucide="heart"></i><span>Se você estiver passando por um momento muito difícil, não precisa enfrentar sozinho. O CVV atende 24 horas pelo telefone 188 ou pelo site cvv.org.br.</span></p>
-</div></footer>`;
+</div></footer></div>`;
   const mn=$("#mnav"),mb=$("#menu");
   const setMenu=o=>{mn.hidden=!o;mb.setAttribute("aria-expanded",o);mb.innerHTML=`<i data-lucide="${o?"x":"menu"}"></i>`;icons()};
   mb.onclick=()=>setMenu(mn.hidden);
@@ -1638,11 +1694,11 @@ function site(){
   bindSiteForms();
   renderPlans();
   /* prévia interativa do app no topo */
-  {const ts=[...document.querySelectorAll("[data-pt]")],bar=$("#phB"),tt=$("#phT"),msgs=["“Como você se sentiu hoje?”","“Que orgulho de você! 💛”","“Amanhã a gente continua, no seu ritmo.”","“Lembra de beber água!”"];let mi=0;
-   const upd=()=>{const n=ts.filter(t=>t.classList.contains("done")).length,pct=Math.round(n/ts.length*100);bar.style.width=pct+"%";tt.textContent=pct===100?"Pronta para o nível 3! 🎉":"Nível 2 · Em casa"};
+  {const ts=[...document.querySelectorAll("[data-pt]")],bar=$("#phB"),tt=$("#phT"),msgs=["“Como você se sentiu hoje?”","“Que orgulho de você!”","“Amanhã a gente continua, no seu ritmo.”","“Lembra de beber água!”"];let mi=0;
+   const upd=()=>{const n=ts.filter(t=>t.classList.contains("done")).length,pct=Math.round(n/ts.length*100);bar.style.width=pct+"%";tt.textContent=pct===100?"Pronta para o nível 3!":"Nível 2 · Em casa"};
    ts.forEach(t=>t.onclick=()=>{const d=!t.classList.contains("done");t.classList.toggle("done",d);t.classList.remove("pop");void t.offsetWidth;t.classList.add("pop");
      t.querySelector(".ic").innerHTML=`<i data-lucide="${d?"check":"play"}"></i>`;const sm=t.querySelector("small");if(t!==ts[0])sm.textContent=d?"Feito agora · muito bem!":sm.textContent.replace("Feito agora · muito bem!","toque quando fizer");icons();upd();
-     if(d&&ts.every(x=>x.classList.contains("done"))){$("#phMt").textContent="“Você completou tudo! 🎉”";}});
+     if(d&&ts.every(x=>x.classList.contains("done"))){$("#phMt").textContent="“Você completou tudo!”";}});
    $("#phM").onclick=()=>{mi=(mi+1)%msgs.length;$("#phMt").textContent=msgs[mi];$("#phM").classList.remove("pop");void $("#phM").offsetWidth;$("#phM").classList.add("pop")};
    upd()}
   {const ab=$("#accb"),am=$("#accm"),setA=o=>{am.hidden=!o;ab.setAttribute("aria-expanded",o)};
@@ -1652,7 +1708,41 @@ function site(){
   document.querySelectorAll("[data-reveal]").forEach(b=>b.onclick=()=>{const f=$("#"+b.dataset.reveal);f.classList.remove("m-hide");b.remove();const i=f.querySelector("input");if(i)i.focus()});
   const fm=$("#faqmore");if(fm)fm.onclick=()=>{$(".faq").classList.remove("clip");fm.remove()};
   document.querySelectorAll("[data-scroll]").forEach(a=>a.onclick=e=>{e.preventDefault();setMenu(false);document.querySelector(a.getAttribute("href")).scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})});
+  siteFx();
   icons();
+}
+/* movimento da página inicial: fundo vivo, título que entra, blocos que aparecem ao rolar, números que contam */
+let FX={};
+function siteFx(){
+  const root=$(".sitefx");if(!root)return;
+  const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(FX.io)FX.io.disconnect();clearInterval(FX.lv);
+  const hero=$(".sitefx .hero");hero.insertAdjacentHTML("afterbegin",`<div class="aur" aria-hidden="true"><i></i><i></i><i></i></div>`);
+  /* título palavra por palavra */
+  const h=hero.querySelector("h1");let k=0;const wrap=n=>[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.append(t);return}const w=document.createElement("span");w.className="w";w.style.setProperty("--i",k++);w.textContent=t;f.append(w)});c.replaceWith(f)}else if(c.nodeType===1)wrap(c)});wrap(h);
+  /* faixa de frases depois dos números */
+  const L=["Sem pressa","Sem julgamento","No seu ritmo","Do sofá à academia","Primeira conversa grátis","Sem fidelidade","A mesma personal do começo ao fim"];
+  const facts=$(".sitefx .facts");if(facts)facts.insertAdjacentHTML("afterend",`<div class="mq" aria-hidden="true"><div>${L.concat(L).map(x=>`<span>${x}</span><i></i>`).join("")}</div></div>`);
+  /* números contam */
+  const nums=[...root.querySelectorAll(".facts b")].map(b=>{const m=b.textContent.match(/^(\d+)(.*)$/);return m?{b,n:+m[1],suf:m[2]}:null}).filter(Boolean);
+  const count=({b,n,suf})=>{if(calm||!n){b.textContent=n+suf;return}const t0=performance.now(),st=t=>{const q=Math.min(1,(t-t0)/1300);b.textContent=Math.round(n*(1-Math.pow(1-q,3)))+suf;if(q<1)requestAnimationFrame(st)};b.textContent="0"+suf;requestAnimationFrame(st)};
+  /* aparecer ao rolar, um depois do outro */
+  const RV=".sec-h,.facts>div,.stp,.promises>div,.safe>div,.who>div,.coach,.cta,.faq details,#plansBox,.split>form,.split>.btn";
+  const els=[...root.querySelectorAll(RV)].filter(e=>!e.closest(".hero"));
+  els.forEach(e=>{e.classList.add("rv");const sib=[...e.parentElement.children].filter(x=>x.matches(RV));e.style.transitionDelay=Math.min(sib.indexOf(e),5)*80+"ms"});
+  const steps=$(".sitefx .steps");
+  if(!("IntersectionObserver" in window)||calm){els.forEach(e=>e.classList.add("in"));if(steps)steps.classList.add("in");nums.forEach(count)}
+  else{FX.io=new IntersectionObserver(es=>es.forEach(en=>{if(!en.isIntersecting)return;const t=en.target;t.classList.add("in");if(t.matches(".facts>div")){const x=nums.find(o=>t.contains(o.b));if(x)count(x)}FX.io.unobserve(t)}),{threshold:.12,rootMargin:"0px 0px -6% 0px"});
+    els.forEach(e=>FX.io.observe(e));if(steps)FX.io.observe(steps)}
+  /* níveis acendem um de cada vez */
+  const st=[...root.querySelectorAll(".stp")];let j=0;if(!calm&&st.length)FX.lv=setInterval(()=>{if(!document.body.contains(st[0])){clearInterval(FX.lv);return}st.forEach((x,i)=>x.classList.toggle("now",i===j));j=(j+1)%st.length},1600);
+  /* celular do topo inclina seguindo o mouse */
+  const ph=$(".sitefx .phone");if(ph&&!calm&&matchMedia("(pointer:fine)").matches){const pw=ph.parentElement;pw.addEventListener("pointermove",e=>{const r=pw.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;ph.style.transform=`rotateY(${x*12}deg) rotateX(${-y*10}deg)`});pw.addEventListener("pointerleave",()=>ph.style.transform="")}
+  /* barra de leitura e sombra do topo */
+  const pg=$(".sitefx .prog"),tb=$(".sitefx .topbar");
+  if(FX.sc)removeEventListener("scroll",FX.sc);
+  FX.sc=()=>{if(!document.body.contains(pg)){removeEventListener("scroll",FX.sc);return}const H=document.documentElement.scrollHeight-innerHeight;pg.style.transform=`scaleX(${H>0?scrollY/H:0})`;tb.classList.toggle("sh",scrollY>8)};
+  addEventListener("scroll",FX.sc,{passive:true});FX.sc();
 }
 
 /* ================== ONBOARDING ================== */
