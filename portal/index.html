@@ -258,6 +258,10 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
   .compare td:nth-child(3)::before{content:"PassosFit";color:var(--pf-ink)}
 }
 /* monitores grandes: tudo um pouco maior, sem esticar as linhas de texto */
+/* telas bem estreitas ou com zoom forte: os dois botões do topo continuam cabendo */
+.top nav{min-width:0}
+@media (max-width:320px){.top .wrap{gap:6px}.top nav{gap:5px}.top nav a{font-size:12.5px;padding:7px 10px;text-align:center;display:inline-flex;align-items:center;justify-content:center}}
+@media (max-width:250px){.top .wrap{padding-left:8px;padding-right:8px}.top .home{display:none}.top nav{margin:0 auto;gap:4px}.top nav a{font-size:11px;padding:6px 8px}}
 @media (min-width:1700px){html{zoom:1.15}}
 @media (min-width:2200px){html{zoom:1.35}}
 @media (min-width:3000px){html{zoom:1.7}}
