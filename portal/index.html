@@ -302,7 +302,83 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .shotpair .phone{animation:float 7s ease-in-out infinite}
 .stat b{font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion:reduce){.top nav a,.top nav a::after,.aurora i,.grad,.marquee>div,.phone3,.shotpair .phone,.card .signup::before{animation:none!important}.js .rv,.js .lv.rv .bar{opacity:1!important;transform:none!important}}
+
+/* ---------- páginas de cada plataforma: fundo vivo, título que entra, cartões com luz, níveis que andam ---------- */
+.area{position:relative;overflow:hidden}
+.area>.wrap{position:relative;z-index:1}
+.area .aurora{inset:-10% -10% auto;height:900px;opacity:.55}
+#primeiro-passo .aurora i:nth-child(1){background:#2F5D8A;opacity:.45}
+#primeiro-passo .aurora i:nth-child(2){background:#E0A93B;opacity:.4}
+#primeiro-passo .aurora i:nth-child(3){background:#9DB8D4;opacity:.35}
+#passosfit .aurora{opacity:.8;mix-blend-mode:screen}
+#passosfit .aurora i:nth-child(1){background:#2E4BDB;opacity:.55}
+#passosfit .aurora i:nth-child(2){background:#7B5CF0;opacity:.45}
+#passosfit .aurora i:nth-child(3){background:#22D3EE;opacity:.22}
+.area h1 em .w{background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:shine 6s linear infinite}
+#primeiro-passo h1 em .w{background-image:linear-gradient(90deg,#E0A93B,#F5C96A,#D9832B,#E0A93B)}
+#passosfit h1 em .w{background-image:linear-gradient(90deg,#CBEF3C,#6FF0C2,#E9FF8A,#CBEF3C)}
+/* título entra palavra por palavra */
+.js .area h1 .w{display:inline-block;opacity:0;transform:translateY(.5em) rotate(3deg);filter:blur(6px)}
+.area.go h1 .w{animation:wordin .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i)*70ms + 80ms)}
+@keyframes wordin{to{opacity:1;transform:none;filter:none}}
+/* botão principal: pulsa e tem brilho passando */
+.area .btn.main{position:relative;overflow:hidden;transition:transform .2s}
+.area .btn.main:hover{transform:translateY(-2px) scale(1.03)}
+.area .btn.main::before{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:sweep 3.4s ease-in-out infinite}
+#primeiro-passo .btn.main{animation:pulsepp 2.6s ease-out infinite}
+#passosfit .btn.main{animation:pulsepf 2.6s ease-out infinite}
+@keyframes pulsepp{0%{box-shadow:0 0 0 0 rgba(224,169,59,.55)}100%{box-shadow:0 0 0 16px rgba(224,169,59,0)}}
+@keyframes pulsepf{0%{box-shadow:0 0 0 0 rgba(203,239,60,.55)}100%{box-shadow:0 0 0 16px rgba(203,239,60,0)}}
+/* cartões com luz que segue o dedo, sobem e o ícone pula */
+.area .f,.area .role,.area .stat{position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s,border-color .35s,opacity .7s ease}
+.area .f::after,.area .role::after,.area .stat::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .3s}
+#primeiro-passo .f::after,#primeiro-passo .role::after{background:radial-gradient(300px circle at var(--mx,50%) var(--my,0%),rgba(224,169,59,.22),transparent 60%)}
+#passosfit .f::after,#passosfit .role::after,#passosfit .stat::after{background:radial-gradient(300px circle at var(--mx,50%) var(--my,0%),rgba(203,239,60,.16),transparent 60%)}
+.area .f:hover::after,.area .role:hover::after,.area .stat:hover::after{opacity:1}
+.area .f.in:hover,.area .role.in:hover,.area .stat.in:hover{transform:translateY(-6px)}
+#primeiro-passo .f:hover{box-shadow:0 22px 40px -22px rgba(27,58,92,.55);border-color:#E0A93B}
+#passosfit .f:hover,#passosfit .stat:hover,#passosfit .role:hover{box-shadow:0 22px 50px -20px rgba(46,75,219,.8);border-color:rgba(203,239,60,.45)}
+.area .f .ic{transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+.area .f:hover .ic{transform:translateY(-3px) rotate(-8deg) scale(1.15)}
+#passosfit .f .ic{box-shadow:0 0 0 0 rgba(203,239,60,.4)}
+#passosfit .f:hover .ic{box-shadow:0 0 22px 2px rgba(203,239,60,.45)}
+/* números do PassosFit brilham */
+#passosfit .stat b{text-shadow:0 0 26px rgba(203,239,60,.45)}
+/* níveis do Primeiro Passo: um de cada vez acende, como passos */
+.lv{transition:transform .4s}
+.lv .bar{position:relative;overflow:hidden}
+.lv .bar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);transform:translateX(-100%)}
+.area .lv.now.in{transform:translateY(-4px)}
+.lv.now .bar{box-shadow:0 0 0 3px rgba(224,169,59,.35),0 6px 18px -4px rgba(224,169,59,.8)}
+.lv.now .bar::after{animation:barshine 1.4s ease-out}
+.lv.now small{animation:hop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes barshine{to{transform:translateX(100%)}}
+@keyframes hop{50%{transform:translateY(-5px)}}
+.lv small,.lv b{display:block;transition:color .3s}
+.lv.now b{color:var(--pp-acc)}
+/* faixa que corre em cada página */
+.area .marquee{margin:46px -20px 0}
+#primeiro-passo .marquee span{font-family:var(--pp-display);color:var(--pp)}
+#primeiro-passo .marquee i{background:var(--pp-acc)}
+#primeiro-passo .marquee i:nth-of-type(even){background:var(--pp-2)}
+#passosfit .marquee span{color:#fff}
+#passosfit .marquee i,#passosfit .marquee i:nth-of-type(even){background:var(--pf-lime);box-shadow:0 0 12px var(--pf-lime)}
+#passosfit .marquee>div{animation-direction:reverse}
+/* chamada para a outra plataforma: borda que gira */
+.area .cross{position:relative;isolation:isolate;border-color:transparent}
+.area .cross::before{content:"";position:absolute;inset:-1.5px;border-radius:inherit;z-index:-2;background:conic-gradient(from var(--a,0deg),#2E4BDB,#E0A93B,#CBEF3C,#7B5CF0,#2E4BDB);animation:spin 6s linear infinite}
+.area .cross::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;background:var(--surface)}
+#passosfit .cross::after{background:#0E1546}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes spin{to{--a:360deg}}
+/* barra de leitura no topo, na cor da plataforma */
+.prog{position:fixed;left:0;right:0;top:0;height:3px;z-index:11;transform-origin:left;transform:scaleX(0);pointer-events:none;background:linear-gradient(90deg,#2E4BDB,#E0A93B,#CBEF3C)}
+body[data-view="primeiro-passo"] .prog{background:linear-gradient(90deg,#1B3A5C,#E0A93B)}
+body[data-view="passosfit"] .prog{background:linear-gradient(90deg,#2E4BDB,#CBEF3C);box-shadow:0 0 10px #CBEF3C}
+/* fotos do Primeiro Passo entram com leve giro */
+.shotpair .site{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.shotpair:hover .site{transform:perspective(900px) rotateY(-6deg) rotateX(2deg) scale(1.02)}
+@media (prefers-reduced-motion:reduce){.area h1 em .w,.area .btn.main,.area .btn.main::before,.area .cross::before,.lv.now .bar::after,.lv.now small,.top nav a,.top nav a::after,.aurora i,.grad,.marquee>div,.phone3,.shotpair .phone,.card .signup::before{animation:none!important}.js .rv,.js .lv.rv .bar,.js .area h1 .w{opacity:1!important;transform:none!important;filter:none!important}}
 </style>
 </head>
 <body>
@@ -318,6 +394,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
   </nav>
 </div></header>
 
+<div class="prog" aria-hidden="true"></div>
 <main>
 <!-- ===================== ESCOLHA ===================== -->
 <section id="inicio" class="pick view"><div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div><div class="wrap">
@@ -371,7 +448,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 </div></section>
 
 <!-- ===================== PRIMEIRO PASSO ===================== -->
-<section id="primeiro-passo" class="area view" hidden><div class="wrap">
+<section id="primeiro-passo" class="area view" hidden><div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div><div class="wrap">
   <a class="back" href="#inicio" data-go="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Escolher outra plataforma</a>
   <div class="hero">
     <div>
@@ -388,6 +465,8 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
       <img class="phone" src="img/primeiro-passo-app.png" alt="App do aluno do Primeiro Passo no celular">
     </div>
   </div>
+
+  <div class="marquee" aria-hidden="true"><div><span>Sem pressa</span><i></i><span>Sem julgamento</span><i></i><span>No seu ritmo</span><i></i><span>Do sofá à academia</span><i></i><span>Primeira conversa grátis</span><i></i><span>Sem fidelidade</span><i></i><span>Com a mesma personal</span><i></i><span>Sem pressa</span><i></i><span>Sem julgamento</span><i></i><span>No seu ritmo</span><i></i><span>Do sofá à academia</span><i></i><span>Primeira conversa grátis</span><i></i><span>Sem fidelidade</span><i></i><span>Com a mesma personal</span><i></i></div></div>
 
   <div class="sec">
     <h2>Quatro níveis. Você só sobe quando se sentir pronto.</h2>
@@ -427,7 +506,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 </div></section>
 
 <!-- ===================== PASSOSFIT ===================== -->
-<section id="passosfit" class="area view" hidden><div class="wrap">
+<section id="passosfit" class="area view" hidden><div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div><div class="wrap">
   <a class="back" href="#inicio" data-go="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Escolher outra plataforma</a>
   <div class="hero">
     <div>
@@ -452,6 +531,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
       <div class="stat"><b data-n="0">0</b><span>lojas de app: instala direto pelo navegador</span></div>
     </div>
   </div>
+  <div class="marquee" aria-hidden="true"><div><span>Supino reto</span><i></i><span>Agachamento livre</span><i></i><span>Leg press 45°</span><i></i><span>Puxada frontal</span><i></i><span>Remada baixa</span><i></i><span>Rosca direta</span><i></i><span>Tríceps na corda</span><i></i><span>Elevação lateral</span><i></i><span>Stiff</span><i></i><span>Cadeira extensora</span><i></i><span>Panturrilha em pé</span><i></i><span>Abdominal</span><i></i><span>Supino reto</span><i></i><span>Agachamento livre</span><i></i><span>Leg press 45°</span><i></i><span>Puxada frontal</span><i></i><span>Remada baixa</span><i></i><span>Rosca direta</span><i></i><span>Tríceps na corda</span><i></i><span>Elevação lateral</span><i></i><span>Stiff</span><i></i><span>Cadeira extensora</span><i></i><span>Panturrilha em pé</span><i></i><span>Abdominal</span><i></i></div></div>
 
   <div class="sec">
     <h2>Tudo do treino em um lugar</h2>
@@ -509,6 +589,8 @@ function show(id,push){
   window.scrollTo(0,0);
   const t={inicio:"Primeiro Passo e PassosFit","primeiro-passo":"Primeiro Passo","passosfit":"PassosFit"}[id];
   document.title=t;
+  document.body.dataset.view=id;
+  replay(document.getElementById(id));
 }
 document.addEventListener("click",e=>{if(e.target.closest(".signup"))return;const a=e.target.closest("[data-go]");if(!a)return;e.preventDefault();show(a.dataset.go,true)});
 /* um endereço como #pf-professor abre a área que contém essa parte e rola até ela */
@@ -522,7 +604,7 @@ const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const RV=".card,.compare,.marquee,.sec>h2,.sec>p,.f,.lv,.stat,.role,.cross,.hero>div,.levels";
 document.querySelectorAll(RV).forEach(el=>{if(el.closest(".mock"))return;el.classList.add("rv");const sib=[...el.parentElement.children].filter(x=>x.matches(RV));el.style.transitionDelay=Math.min(sib.indexOf(el),5)*90+"ms"});
 const countUp=b=>{const n=+b.dataset.n;if(calm||!n){b.textContent=n;return}const t0=performance.now();const step=t=>{const k=Math.min(1,(t-t0)/1400);b.textContent=Math.round(n*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(step)};b.textContent="0";requestAnimationFrame(step)};
-const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add("in");e.target.querySelectorAll("[data-n]").forEach(countUp);io.unobserve(e.target)}),{threshold:.12,rootMargin:"0px 0px -6% 0px"}):null;
+const io=window.io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add("in");e.target.querySelectorAll("[data-n]").forEach(countUp);io.unobserve(e.target)}),{threshold:.12,rootMargin:"0px 0px -6% 0px"}):null;
 document.querySelectorAll(".rv").forEach(el=>io?io.observe(el):el.classList.add("in"));
 /* cartões de escolha: inclinam e brilham seguindo o dedo ou o mouse */
 if(!calm&&matchMedia("(pointer:fine)").matches)document.querySelectorAll(".card").forEach(c=>{
@@ -535,6 +617,18 @@ document.querySelectorAll(".phone3").forEach(ph=>{const im=[...ph.querySelectorA
   const loop=()=>{clearInterval(tm);if(!calm)tm=setInterval(()=>go(i+1),3200)};
   bt.forEach((b,j)=>b.addEventListener("click",()=>{go(j);loop()}));loop()});
 
+
+/* cada vez que abre uma página, ela entra de novo com movimento */
+function replay(v){if(!v||!window.io)return;v.classList.remove("go");void v.offsetWidth;v.classList.add("go");
+  v.querySelectorAll(".rv").forEach(el=>{el.classList.remove("in");io.observe(el)})}
+/* título dividido em palavras para entrar uma por uma */
+document.querySelectorAll(".area h1").forEach(h=>{let i=0;const wrap=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.append(t);return}const w=document.createElement("span");w.className="w";w.style.setProperty("--i",i++);w.textContent=t;f.append(w)});c.replaceWith(f)}else if(c.nodeType===1)wrap(c)})};wrap(h)});
+/* luz que segue o dedo nos cartões */
+document.querySelectorAll(".area .f,.area .role,.area .stat").forEach(c=>c.addEventListener("pointermove",e=>{const r=c.getBoundingClientRect();c.style.setProperty("--mx",e.clientX-r.left+"px");c.style.setProperty("--my",e.clientY-r.top+"px")}));
+/* níveis acendem um depois do outro */
+(()=>{const L=[...document.querySelectorAll(".lv")];if(calm||!L.length)return;let k=0;setInterval(()=>{if(L[0].closest(".view").hidden)return;L.forEach((x,j)=>x.classList.toggle("now",j===k));k=(k+1)%L.length},1500)})();
+/* barra de leitura */
+(()=>{const pg=document.querySelector(".prog");const f=()=>{const h=document.documentElement.scrollHeight-innerHeight;pg.style.transform="scaleX("+(h>0?scrollY/h:0)+")"};addEventListener("scroll",f,{passive:true});addEventListener("resize",f)})();
 document.querySelectorAll(".card[data-go]").forEach(c=>c.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target===c){e.preventDefault();show(c.dataset.go,true)}}));
 fromHash();
 </script>
