@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -252,6 +252,47 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 @media (min-width:2200px){html{zoom:1.35}}
 @media (min-width:3000px){html{zoom:1.7}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* ---------- movimento: fundo vivo, revelar ao rolar, cartões que inclinam, telas do app ---------- */
+.pick{position:relative;overflow:hidden}
+.pick>.wrap{position:relative;z-index:1}
+.aurora{position:absolute;inset:-20% -10% auto;height:120%;pointer-events:none;filter:blur(70px);opacity:.7}
+.aurora i{position:absolute;border-radius:50%;width:46vmax;height:46vmax;animation:drift 18s ease-in-out infinite alternate}
+.aurora i:nth-child(1){background:#2E4BDB;left:-12vmax;top:-18vmax;opacity:.6}
+.aurora i:nth-child(2){background:#E0A93B;right:-14vmax;top:-10vmax;opacity:.5;animation-duration:22s;animation-delay:-6s}
+.aurora i:nth-child(3){background:#CBEF3C;left:30%;top:20vmax;opacity:.38;animation-duration:26s;animation-delay:-12s}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(6vmax,4vmax) scale(1.12)}100%{transform:translate(-4vmax,7vmax) scale(.94)}}
+.grad{background:linear-gradient(90deg,#2E4BDB,#7B5CF0,#E0A93B,#2E4BDB);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 8s linear infinite}
+@keyframes shine{to{background-position:300% 0}}
+.card{transform-style:preserve-3d;will-change:transform}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.16),transparent 45%);opacity:0;transition:opacity .3s}
+.card:hover::after{opacity:1}
+.card .signup{position:relative;overflow:hidden}
+.card .signup::before{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:sweep 3.6s ease-in-out infinite}
+.card.pf .signup::before{animation-delay:1.8s}
+@keyframes sweep{0%,60%{left:-60%}100%{left:130%}}
+.marquee{margin:34px -20px 4px;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.marquee>div{display:flex;align-items:center;gap:18px;width:max-content;animation:roll 34s linear infinite}
+.marquee span{font-family:var(--pf-display);font-weight:700;font-size:clamp(18px,2.4vw,26px);letter-spacing:-.01em;white-space:nowrap;color:var(--ink)}
+.marquee i{width:9px;height:9px;border-radius:50%;background:var(--pp-acc);flex:none}
+.marquee i:nth-of-type(even){background:var(--pf-blue)}
+@keyframes roll{to{transform:translateX(-50%)}}
+.js .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.js .rv.in{opacity:1;transform:none}
+.lv .bar{transform-origin:left;transition:transform 1s cubic-bezier(.2,.7,.2,1)}
+.js .lv.rv .bar{transform:scaleX(0)}
+.js .lv.rv.in .bar{transform:scaleX(1)}
+.phone3{justify-self:center;width:min(100%,300px);display:grid;gap:14px;animation:float 6s ease-in-out infinite}
+.phone3 .ph{position:relative;aspect-ratio:390/844;border-radius:40px;overflow:hidden;background:#03050F;border:9px solid #03050F;box-shadow:0 40px 80px -26px rgba(5,8,30,.95),0 0 0 1px rgba(255,255,255,.1),0 0 90px -20px rgba(46,75,219,.7)}
+.phone3 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transform:scale(1.04);transition:opacity .8s ease,transform 1.2s ease}
+.phone3 img.on{opacity:1;transform:none}
+.phone3 .cap{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.phone3 .cap button{font:inherit;font-size:13px;font-weight:700;border:1px solid var(--pf-line);background:transparent;color:var(--pf-muted);border-radius:999px;padding:6px 12px;cursor:pointer;transition:background .3s,color .3s}
+.phone3 .cap button.on{background:var(--pf-lime);border-color:var(--pf-lime);color:#0B1233}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.shotpair .phone{animation:float 7s ease-in-out infinite}
+.stat b{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.aurora i,.grad,.marquee>div,.phone3,.shotpair .phone,.card .signup::before{animation:none!important}.js .rv,.js .lv.rv .bar{opacity:1!important;transform:none!important}}
 </style>
 </head>
 <body>
@@ -269,9 +310,9 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 
 <main>
 <!-- ===================== ESCOLHA ===================== -->
-<section id="inicio" class="pick view"><div class="wrap">
+<section id="inicio" class="pick view"><div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div><div class="wrap">
   <span class="eyebrow">Duas plataformas, um só lugar</span>
-  <h1>Onde você está na sua jornada?</h1>
+  <h1>Onde você está na sua <span class="grad">jornada?</span></h1>
   <p class="lead">Uma para dar o primeiro passo, outra para quem já treina e quer evoluir. Escolha a que combina com o seu momento.</p>
 
   <div class="cards">
@@ -304,6 +345,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
       </div>
     </div>
   </div>
+  <div class="marquee" aria-hidden="true"><div><span>Do zero à academia</span><i></i><span>Anote suas cargas</span><i></i><span>Bata suas metas</span><i></i><span>No seu tempo</span><i></i><span>Treino do dia no celular</span><i></i><span>Primeira conversa grátis</span><i></i><span>Veja a sua evolução</span><i></i><span>Sem fidelidade</span><i></i><span>Do zero à academia</span><i></i><span>Anote suas cargas</span><i></i><span>Bata suas metas</span><i></i><span>No seu tempo</span><i></i><span>Treino do dia no celular</span><i></i><span>Primeira conversa grátis</span><i></i><span>Veja a sua evolução</span><i></i><span>Sem fidelidade</span><i></i></div></div>
 
   <div class="compare" role="region" aria-label="Comparação entre as plataformas" tabindex="0">
     <table>
@@ -387,28 +429,17 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
         <a class="btn ghost" href="#pf-professor">Sou professor</a>
       </div>
     </div>
-    <div class="mock" aria-label="Exemplo da tela inicial do PassosFit" role="img">
-      <div class="scr">
-        <div class="hi"><small>Quarta, 21 de out · exemplo</small><b>Oi, Ana,<br>bora treinar?</b></div>
-        <div class="days"><span><small>S</small>19</span><span><small>T</small>20</span><span class="on"><small>Q</small>21</span><span><small>Q</small>22</span><span><small>S</small>23</span><span><small>S</small>24</span><span><small>D</small>25</span></div>
-        <div class="mc"><span class="k">HOJE</span><b class="t">Treino B · Costas</b>
-          <div class="row"><b>Puxada frontal</b><span>última: 40 kg</span></div>
-          <div class="sets"><div class="set done">42 kg<em>12 rep</em></div><div class="set done">42 kg<em>10 rep</em></div><div class="set done">45 kg<em>8 rep</em></div><div class="set">–<em>série 4</em></div></div>
-          <div class="cardio"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="m7 21 3-6 3 2v5M9 10l3-3 4 3 3 1M10 15l-2-5"/></svg></i>Cardio de hoje: 20 min<span>›››</span></div>
-        </div>
-        <div class="mc"><b style="font-size:13.5px">Sua meta de cardio da semana</b>
-          <div class="bar"><i></i></div>
-          <div class="meta"><span><b>102 min</b> feitos</span><span>faltam <b>48 min</b></span></div>
-        </div>
-      </div>
+    <div class="phone3" role="img" aria-label="Telas do app PassosFit com uma aluna de exemplo">
+      <div class="ph"><img class="on" src="img/pf-home.jpg" alt="" width="780" height="1688"><img src="img/pf-treino.jpg" alt="" width="780" height="1688" loading="lazy"><img src="img/pf-montar.jpg" alt="" width="780" height="1688" loading="lazy"></div>
+      <div class="cap"><button class="on" data-i="0">Treino do dia</button><button data-i="1">Anote cada série</button><button data-i="2">Monte o seu treino</button></div>
     </div>
   </div>
 
   <div class="sec">
     <div class="stat-row">
-      <div class="stat"><b>250</b><span>exercícios na biblioteca, com mapa muscular</span></div>
-      <div class="stat"><b>2</b><span>lados: aluno no celular e professor no painel</span></div>
-      <div class="stat"><b>0</b><span>lojas de app: instala direto pelo navegador</span></div>
+      <div class="stat"><b data-n="250">250</b><span>exercícios na biblioteca, com mapa muscular</span></div>
+      <div class="stat"><b data-n="2">2</b><span>lados: aluno no celular e professor no painel</span></div>
+      <div class="stat"><b data-n="0">0</b><span>lojas de app: instala direto pelo navegador</span></div>
     </div>
   </div>
 
@@ -475,6 +506,25 @@ function fromHash(){const h=(location.hash||"").slice(1);if(VIEWS.includes(h)||!
   const el=document.getElementById(h),v=el&&el.closest(".view");if(!v){show("inicio",false);return}
   if(v.hidden)show(v.id,false);el.scrollIntoView()}
 addEventListener("popstate",fromHash);
+/* ---------- movimento ---------- */
+const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* revela cada bloco ao rolar, um depois do outro */
+const RV=".card,.compare,.marquee,.sec>h2,.sec>p,.f,.lv,.stat,.role,.cross,.hero>div,.levels";
+document.querySelectorAll(RV).forEach(el=>{if(el.closest(".mock"))return;el.classList.add("rv");const sib=[...el.parentElement.children].filter(x=>x.matches(RV));el.style.transitionDelay=Math.min(sib.indexOf(el),5)*90+"ms"});
+const countUp=b=>{const n=+b.dataset.n;if(calm||!n){b.textContent=n;return}const t0=performance.now();const step=t=>{const k=Math.min(1,(t-t0)/1400);b.textContent=Math.round(n*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(step)};b.textContent="0";requestAnimationFrame(step)};
+const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add("in");e.target.querySelectorAll("[data-n]").forEach(countUp);io.unobserve(e.target)}),{threshold:.12,rootMargin:"0px 0px -6% 0px"}):null;
+document.querySelectorAll(".rv").forEach(el=>io?io.observe(el):el.classList.add("in"));
+/* cartões de escolha: inclinam e brilham seguindo o dedo ou o mouse */
+if(!calm&&matchMedia("(pointer:fine)").matches)document.querySelectorAll(".card").forEach(c=>{
+  c.addEventListener("pointermove",e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+    c.style.setProperty("--mx",x*100+"%");c.style.setProperty("--my",y*100+"%");c.style.transform=`perspective(900px) rotateX(${(.5-y)*6}deg) rotateY(${(x-.5)*8}deg) translateY(-4px)`});
+  c.addEventListener("pointerleave",()=>{c.style.transform=""})});
+/* telas do app trocando sozinhas */
+document.querySelectorAll(".phone3").forEach(ph=>{const im=[...ph.querySelectorAll("img")],bt=[...ph.querySelectorAll(".cap button")];let i=0,tm;
+  const go=k=>{i=(k+im.length)%im.length;im.forEach((x,j)=>x.classList.toggle("on",j===i));bt.forEach((x,j)=>x.classList.toggle("on",j===i))};
+  const loop=()=>{clearInterval(tm);if(!calm)tm=setInterval(()=>go(i+1),3200)};
+  bt.forEach((b,j)=>b.addEventListener("click",()=>{go(j);loop()}));loop()});
+
 document.querySelectorAll(".card[data-go]").forEach(c=>c.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target===c){e.preventDefault();show(c.dataset.go,true)}}));
 fromHash();
 </script>
