@@ -558,31 +558,64 @@ details .in{padding:0 16px 14px}
   </table></div>
   <p class="small muted">Taxas usadas no app: Pix 0,99%, boleto 1,99%, cartão 3,49%. Cada gateway cobra diferente.</p>
 
-  <h2>Simulação de um mês (após um ano de operação)</h2>
-  <p>Cenário: 10 alunos no nível 2, 12 no nível 3, 8 no nível 4 e 6 novos alunos pagando o nível 1 no mês.</p>
+  <h2>Exemplo principal: um mês com 15 alunos</h2>
+  <p>Um cenário realista para o começo do negócio, já com a empresa aberta (fase 2): <b>15 alunos</b>, sendo 3 novos no nível 1, 4 no nível 2, 5 no nível 3 e 3 no nível 4.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Nível</th><th class="n">Alunos</th><th class="n">Alunos pagam</th><th class="n">Personais (70%)</th><th class="n">Empresa (30%)</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Conhecer (R$ 100)</td><td class="n">3</td><td class="n">R$ 300</td><td class="n">R$ 210</td><td class="n">R$ 90</td></tr>
+      <tr><td>2 · Em casa (R$ 180)</td><td class="n">4</td><td class="n">R$ 720</td><td class="n">R$ 504</td><td class="n">R$ 216</td></tr>
+      <tr><td>3 · Ao ar livre (R$ 480)</td><td class="n">5</td><td class="n">R$ 2.400</td><td class="n">R$ 1.680</td><td class="n">R$ 720</td></tr>
+      <tr><td>4 · Academia (R$ 560)</td><td class="n">3</td><td class="n">R$ 1.680</td><td class="n">R$ 1.176</td><td class="n">R$ 504</td></tr>
+      <tr class="tot"><td>Total</td><td class="n">15</td><td class="n">R$ 5.100</td><td class="n">R$ 3.570</td><td class="n">R$ 1.530</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Para onde vai a parte da empresa</h3>
   <div class="tbl"><table>
     <thead><tr><th>Linha</th><th class="n">Valor</th></tr></thead>
     <tbody>
-      <tr><td>Faturamento total (tudo que os alunos pagam)</td><td class="n">R$ 12.640,00</td></tr>
-      <tr><td>Repasse às personais (70%)</td><td class="n">– R$ 8.848,00</td></tr>
-      <tr><td><b>Receita da empresa (30%)</b></td><td class="n"><b>R$ 3.792,00</b></td></tr>
-      <tr><td>Taxas de pagamento (média de 2%)</td><td class="n">– R$ 252,80</td></tr>
-      <tr><td>Imposto (Simples Nacional, 6% sobre a comissão)</td><td class="n">– R$ 227,52</td></tr>
+      <tr><td><b>Receita da empresa (30%)</b></td><td class="n"><b>R$ 1.530,00</b></td></tr>
+      <tr><td>Taxas de pagamento (média de 2% sobre R$ 5.100)</td><td class="n">– R$ 102,00</td></tr>
+      <tr><td>Imposto (Simples Nacional, 6% sobre a comissão)</td><td class="n">– R$ 91,80</td></tr>
       <tr><td>INSS do pró-labore (11% de 1 salário mínimo)</td><td class="n">– R$ 178,31</td></tr>
-      <tr><td>Contador</td><td class="n">– R$ 250,00</td></tr>
-      <tr><td>Marketing (anúncios e conteúdo)</td><td class="n">– R$ 800,00</td></tr>
-      <tr><td>Verificação de identidade (6 novos alunos)</td><td class="n">– R$ 30,00</td></tr>
+      <tr><td>Contador (contabilidade online)</td><td class="n">– R$ 250,00</td></tr>
+      <tr><td>Divulgação nas redes sociais</td><td class="n">– R$ 300,00</td></tr>
+      <tr><td>Verificação de identidade (3 alunos novos)</td><td class="n">– R$ 15,00</td></tr>
       <tr><td>Domínio e outros</td><td class="n">– R$ 10,00</td></tr>
-      <tr class="tot"><td>Resultado do mês (lucro)</td><td class="n">R$ 2.043,37</td></tr>
+      <tr class="tot"><td>Lucro do mês</td><td class="n">R$ 582,89</td></tr>
     </tbody>
   </table></div>
-  <div class="note warn"><svg><use href="#i-alert"/></svg><div><p><b>Ponto que impressiona a banca:</b> se o imposto fosse cobrado sobre o faturamento total (R$ 12.640) e não só sobre a comissão, o imposto subiria para R$ 758,40 e o lucro cairia para R$ 1.512,49. Por isso a forma de cobrar importa: a plataforma deve funcionar como <b>intermediadora</b>, com o pagamento dividido na hora (split), para que só os 30% sejam receita da empresa. Isso precisa ser confirmado com o contador.</p></div></div>
+  <div class="grid">
+    <div class="card"><span class="muted small">Alunos pagam no mês</span><div class="big">R$ 5.100</div><p class="small muted">R$ 61.200 por ano</p></div>
+    <div class="card"><span class="muted small">Vai para as personais</span><div class="big">R$ 3.570</div><p class="small muted">com 2 personais, cerca de R$ 1.785 para cada uma</p></div>
+    <div class="card"><span class="muted small">Lucro da empresa</span><div class="big">R$ 582,89</div><p class="small muted">depois de taxas, imposto, INSS e contador</p></div>
+  </div>
+  <div class="note"><svg><use href="#i-info"/></svg><div><p><b>Como falar isso na apresentação:</b> "Com só 15 alunos, a plataforma movimenta R$ 5.100 por mês, gera R$ 3.570 de renda para as personais e já fecha no azul, pagando imposto, contador e o INSS da dona."</p></div></div>
+  <div class="note warn"><svg><use href="#i-alert"/></svg><div><p><b>Ponto que impressiona a banca:</b> se o imposto fosse cobrado sobre o faturamento total (R$ 5.100) e não só sobre a comissão, ele subiria de R$ 91,80 para R$ 306,00 e o lucro cairia para R$ 368,69. Por isso a plataforma deve funcionar como <b>intermediadora</b>, com o pagamento dividido na hora (split), para que só os 30% sejam receita da empresa. Isso precisa ser confirmado com o contador.</p></div></div>
 
   <h2>Ponto de equilíbrio</h2>
-  <p>Custos fixos do mês: INSS do pró-labore + contador + marketing + domínio + outros = <b>cerca de R$ 1.270</b>.</p>
-  <p>Cada aluno no nível 3 deixa, depois de taxa e imposto, <b>cerca de R$ 130,61</b> por mês para a empresa.</p>
-  <p class="big">R$ 1.270 ÷ R$ 130,61 ≈ 10 alunos</p>
-  <p>Ou seja: com <b>10 alunos no nível 3</b> (ou uma mistura equivalente) a empresa já paga as contas. Sem o marketing pago, que dá para trocar por redes sociais, bastariam 4 alunos.</p>
+  <p>Custos fixos do mês: INSS do pró-labore (R$ 178,31) + contador (R$ 250) + divulgação (R$ 300) + domínio (R$ 10) = <b>cerca de R$ 738</b>.</p>
+  <p>Na mistura do exemplo, cada aluno deixa em média <b>cerca de R$ 88</b> por mês para a empresa, depois de taxa, imposto e verificação.</p>
+  <p class="big">R$ 738 ÷ R$ 88 ≈ 9 alunos</p>
+  <p>Ou seja: <b>com 9 alunos a empresa paga as contas; do 10º em diante é lucro</b>. Contando só alunos do nível 3 (R$ 130,61 cada), bastam 6.</p>
+
+  <h2>E se crescer? Os três cenários</h2>
+  <p>Mesma divisão entre os níveis, com mais alunos. A divulgação cresce junto, e com 50 alunos o contador fica mais caro.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th class="n">15 alunos</th><th class="n">30 alunos</th><th class="n">50 alunos</th></tr></thead>
+    <tbody>
+      <tr><td>Alunos pagam no mês</td><td class="n">R$ 5.100</td><td class="n">R$ 10.200</td><td class="n">R$ 17.100</td></tr>
+      <tr><td>Vai para as personais (70%)</td><td class="n">R$ 3.570</td><td class="n">R$ 7.140</td><td class="n">R$ 11.970</td></tr>
+      <tr><td>Receita da empresa (30%)</td><td class="n">R$ 1.530</td><td class="n">R$ 3.060</td><td class="n">R$ 5.130</td></tr>
+      <tr><td>Taxas + imposto</td><td class="n">– R$ 193,80</td><td class="n">– R$ 387,60</td><td class="n">– R$ 649,80</td></tr>
+      <tr><td>INSS + contador + divulgação + outros</td><td class="n">– R$ 753,31</td><td class="n">– R$ 1.068,31</td><td class="n">– R$ 1.588,31</td></tr>
+      <tr class="tot"><td>Lucro do mês</td><td class="n">R$ 582,89</td><td class="n">R$ 1.604,09</td><td class="n">R$ 2.891,89</td></tr>
+      <tr><td>Alunos pagam no ano</td><td class="n">R$ 61.200</td><td class="n">R$ 122.400</td><td class="n">R$ 205.200</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Cenários: 15 alunos = 3/4/5/3 por nível, divulgação R$ 300; 30 alunos = 6/8/10/6, divulgação R$ 600; 50 alunos = 10/13/17/10, divulgação R$ 1.000 e contador R$ 350. Verificação de R$ 5 por aluno novo incluída em "outros".</p>
+  <p>Repare: o lucro cresce mais rápido que o número de alunos, porque os custos fixos (INSS e contador) quase não mudam. É o ganho de escala de uma plataforma. E a partir de 30 alunos o faturamento anual já passa dos R$ 81 mil do MEI, mais um motivo para abrir como ME.</p>
 
   <h2>Quanto vale um aluno (LTV)</h2>
   <p>Se um aluno passa em média 2 meses no nível 2, 3 meses no nível 3 e 3 meses no nível 4, ele deixa para a empresa aproximadamente:</p>
@@ -684,7 +717,7 @@ details .in{padding:0 16px 14px}
   <ol>
     <li><b>A atividade não é permitida.</b> O que o Primeiro Passo faz é <b>intermediar serviços</b> por uma plataforma (CNAE 7490-1/04, "atividades de intermediação e agenciamento de serviços e negócios em geral"). Essa atividade <b>não está na lista do MEI</b>.</li>
     <li><b>Personal trainer também não pode ser MEI.</b> Educação física é profissão regulamentada (Lei 9.696/1998, exige CREF) e a ocupação de personal trainer foi retirada da lista do MEI a partir de 2018 (Resolução CGSN 137/2017).</li>
-    <li><b>O limite seria ultrapassado.</b> Na simulação, o faturamento total é R$ 151.680 por ano, quase o dobro do limite do MEI.</li>
+    <li><b>O limite seria ultrapassado.</b> Com 30 alunos, os alunos pagam R$ 122.400 por ano à plataforma, bem acima do limite do MEI.</li>
   </ol>
 
   <h3>Comparando os formatos (tabela do trabalho entregue)</h3>
@@ -817,7 +850,7 @@ details .in{padding:0 16px 14px}
 
   <h2>Perguntas que a banca pode fazer</h2>
   <details><summary>Qual é a diferença para um app de treino comum?</summary><div class="in"><p>Apps de treino entregam o exercício e deixam a pessoa sozinha. O Primeiro Passo entrega uma pessoa (a personal) e um caminho em níveis, para quem tem medo ou vergonha de começar. O foco é a mudança de comportamento, não o treino em si.</p></div></details>
-  <details><summary>Como vocês ganham dinheiro?</summary><div class="in"><p>Ficamos com 30% de cada mensalidade paga pela plataforma. A personal fica com 70%. A empresa paga as taxas, os impostos e os custos com a sua parte.</p></div></details>
+  <details><summary>Como vocês ganham dinheiro?</summary><div class="in"><p>Ficamos com 30% de cada mensalidade paga pela plataforma. A personal fica com 70%. A empresa paga as taxas, os impostos e os custos com a sua parte. Exemplo: com 15 alunos, eles pagam R$ 5.100 no mês, as personais recebem R$ 3.570 e a empresa lucra cerca de R$ 580. Com 9 alunos a empresa já paga as contas.</p></div></details>
   <details><summary>O que impede a personal de levar o aluno para fora da plataforma?</summary><div class="in"><p>Três coisas: o termo de parceria proíbe por 12 meses; o chat detecta e registra tentativas de combinar pagamento por fora; e a plataforma oferece o que a personal sozinha não tem: alunos novos, cobrança, segurança e agenda organizada.</p></div></details>
   <details><summary>Por que não abrir como MEI, que é mais barato?</summary><div class="in"><p>Porque não é permitido: intermediação de serviços e personal trainer não estão na lista do MEI, e o faturamento passaria dos R$ 81 mil por ano. O certo é uma SLU no Simples Nacional, que começa com 6% de imposto.</p></div></details>
   <details><summary>E se o aluno passar mal durante o treino?</summary><div class="in"><p>Antes de começar, todo aluno responde o PAR-Q. Se alguma resposta indicar risco, pedimos liberação médica. Os treinos dos primeiros níveis são leves e adaptados, e o app tem botão de emergência.</p></div></details>
@@ -904,7 +937,8 @@ details .in{padding:0 16px 14px}
     ["Quantos adultos não fazem atividade suficiente?","31% no mundo, cerca de 1,8 bilhão de pessoas (OMS, dados de 2022)."],
     ["Como a receita se divide?","70% para a personal e 30% para a empresa, que paga taxas, impostos e custos."],
     ["Quanto a empresa ganha com um aluno no nível 3 pagando por Pix?","R$ 139,25 por mês antes do imposto; cerca de R$ 130,61 depois do imposto."],
-    ["Qual é o ponto de equilíbrio?","Cerca de 10 alunos no nível 3 cobrem os custos fixos de cerca de R$ 1.270 por mês (com marketing pago)."],
+    ["Qual é o ponto de equilíbrio?","Cerca de 9 alunos cobrem os custos fixos de cerca de R$ 738 por mês. Do 10º em diante é lucro."],
+    ["Quanto dá um mês com 15 alunos?","Alunos pagam R$ 5.100, as personais recebem R$ 3.570 e a empresa lucra R$ 582,89 depois de taxas, imposto, INSS e contador."],
     ["Quanto custa abrir e operar a empresa em Santo André?","Abrir: cerca de R$ 420 (JUCESP R$ 218,99 + certificado digital). Operar: R$ 330 a R$ 530 por mês (INSS do pró-labore + contador), mais o imposto sobre as vendas."],
     ["Quais são os combinados que a plataforma nunca quebra?","Não pede foto de antes e depois, não cobra por dia perdido, não compara ninguém, não pressiona, não empurra de nível e não compartilha as respostas."],
     ["Quais são as três fases para começar com pouco?","1 Validar (quase R$ 0, só online), 2 Primeiras vendas (abre a SLU, cerca de R$ 420 + R$ 330 por mês), 3 Crescer (com a receita)."],
