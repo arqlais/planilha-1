@@ -1424,7 +1424,7 @@ const FBL=(()=>{
   const J=v=>JSON.stringify(v===undefined?null:v);
   const clean=o=>JSON.parse(JSON.stringify(o));
   const PUB=["name","cref","uf","area","bio","spec","status","cap","since"],PRIV=["email","split","safety","terms","payout","info"];
-  const CFG=["prices","split","disc","fees","methodsOn","payoutDay"];
+  const CFG=["prices","disc","fees","methodsOn","payoutDay"],CFGI=["split"]; /* CFGI: só empresa e personais leem (config/interno) */
   const COLS={leads:"contatos",ratings:"avaliacoes",incidents:"relatos",flags:"alertas"};
   const pick=(o,ks)=>{const r={};ks.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
   const warn=(what,e)=>console.warn("[firebase]",what,e&&e.code||e);
@@ -1432,7 +1432,7 @@ const FBL=(()=>{
   const F={booted:false,ready:false,busy:false,role:null,uid:null};
 
   /* ---------- carregar ---------- */
-  function reset(){subs.forEach(u=>{try{u()}catch(e){}});subs=[];SYNC={};DBS={personais:{},priv:{},pag:{},rep:{},chk:{},cfg:null};PAYPID={};
+  function reset(){subs.forEach(u=>{try{u()}catch(e){}});subs=[];SYNC={};DBS={personais:{},priv:{},pag:{},rep:{},chk:{},cfg:null,cfgi:null};PAYPID={};
     Object.values(COLS).forEach(c=>DBS[c]={});AL={};ME=null;S=fresh();DB=emptyDB();F.role=null;F.uid=null;F.ready=false}
   const docs=async(q,what)=>{try{return(await q.get()).docs}catch(e){warn(what,e);return[]}};
   const one=async(ref,what)=>{try{const d=await ref.get();return d.exists?d.data():null}catch(e){warn(what,e);return null}};
@@ -1453,6 +1453,7 @@ const FBL=(()=>{
     const isAdm=await one(db.collection("admins").doc(u.uid),"admins");
     const usr=isAdm?null:await one(db.collection("usuarios").doc(u.uid),"usuarios");
     F.role=isAdm?"admin":usr?usr.role:null;
+    if(F.role==="admin"||F.role==="personal"){const ci=await one(db.collection("config").doc("interno"),"config");if(ci)CFGI.forEach(k=>{if(ci[k]!==undefined)DB[k]=ci[k]});DBS.cfgi=J(pick(DB,CFGI))}
     const P=db.collection("personais"),PV=db.collection("personaisPriv"),AU=db.collection("alunos");
     if(F.role==="admin"){
       const [ps,pv]=await Promise.all([docs(P,"personais"),docs(PV,"personaisPriv")]);
@@ -1529,6 +1530,7 @@ const FBL=(()=>{
     Object.keys(DBS.rep).forEach(k=>{if(!(k in DB.payouts))del("repasses",k,DBS.rep)});
     Object.keys(DB.checkins).forEach(k=>{const c=DB.checkins[k],j=J(c);if(DBS.chk[k]!==j){const b=bookingsAll().find(x=>x.id===k)||{};put("checkins",k,{pid:b.pid||null,cid:b.cid||null,in:c.in||null,out:c.out||null},DBS.chk,j)}});
     const jc=J(pick(DB,CFG));if(DBS.cfg!==jc&&F.role==="admin"){DBS.cfg=jc;db.collection("config").doc("empresa").set(clean(pick(DB,CFG))).catch(e=>warn("salvar config",e))}
+    const ji=J(pick(DB,CFGI));if(DBS.cfgi!==ji&&F.role==="admin"){DBS.cfgi=ji;db.collection("config").doc("interno").set(clean(pick(DB,CFGI))).catch(e=>warn("salvar config",e))}
   }
 
   /* ---------- redesenhar quando chega novidade do banco ---------- */
