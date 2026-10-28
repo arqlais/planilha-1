@@ -1203,6 +1203,21 @@ body.desk .v2-pf-a{position:sticky;top:12px}
 
 :root[data-skin="v2"] body.desk nav.bottom::before{display:none}
 .v2-navbrand{display:none;padding:4px 8px 22px}
+/* trocar de app pelo logo (só o professor): PassosFit ou Primeiro Passo */
+.v2-sw{font:inherit;color:inherit;background:none;border:0;padding:4px 8px 4px 4px;margin:-4px 0 -4px -4px;border-radius:16px;cursor:pointer;text-align:left;transition:background .2s}
+.v2-sw:hover,.v2-sw[aria-expanded="true"]{background:var(--card)}
+.v2-sw .chev{width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex:none}
+.v2-sw[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.v2-swmenu{position:fixed;z-index:60;width:264px;padding:8px;border-radius:20px;background:var(--solid,#0E1A45);border:1px solid var(--line);box-shadow:0 24px 60px -20px rgba(0,0,0,.7);animation:swin .18s ease-out}
+@keyframes swin{from{opacity:0;transform:translateY(-6px) scale(.98)}}
+.v2-swmenu small.t{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 10px 8px}
+.v2-swmenu .it{display:flex;align-items:center;gap:11px;padding:10px;border-radius:14px;color:var(--text);text-decoration:none}
+.v2-swmenu a.it:hover,.v2-swmenu a.it:focus-visible{background:var(--card)}
+.v2-swmenu .it b{display:block;font-size:15px}
+.v2-swmenu .it small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.v2-swmenu .it .ok{margin-left:auto;width:18px;height:18px;fill:none;stroke:var(--acc);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.v2-swmenu .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+.v2-swmenu .ic svg{width:22px;height:22px}
 body.desk .v2-navbrand{display:block}
 
 </style>
@@ -3196,7 +3211,7 @@ const V2PNAV = {
 };
 // Tudo que é do professor (treino, histórico, evolução, montar) fica numa aba só: Meu perfil
 const V2_PROF_VIEWS = [['painel', 'Painel'], ['alunos', 'Alunos'], ['pagamentos', 'Pagamentos'], ['eu', 'Meu perfil']];
-const V2_PROF_DESK = [...V2_PROF_VIEWS, ['pp', 'Primeiro Passo'], ['ia', 'Assistente'], ['ajustes', 'Ajustes e backup']];
+const V2_PROF_DESK = [...V2_PROF_VIEWS, ['ia', 'Assistente'], ['ajustes', 'Ajustes e backup']];
 const MY_VIEWS = ['eu', 'treino', 'historico', 'evolucao', 'medidas', 'montar'];
 const v2Prof = () => skinOn() && !ui.studentMode;
 const v2Ico = d => `<svg viewBox="0 0 24 24" class="v2i">${d}</svg>`;
@@ -3211,7 +3226,29 @@ function v2Status(p) {
 }
 const v2WeekDots = pid => { const ws = weekStart(today()), d = v2Days(pid); return `<div class="v2-dots">${Array.from({ length: 7 }, (_, i) => `<i class="${d.has(addDays(ws, i)) ? 'on' : ''}"></i>`).join('')}</div>`; };
 const v2Hello = () => { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; };
-function v2BrandHtml() { return `<span class="v2-brand"><span class="v2-mk">${v2Mark()}</span><span><span class="v2-wm sm">passos<em>.fit</em></span><small>por ${esc(v2Coach())}</small></span></span>`; }
+function v2BrandHtml() {
+  const inner = `<span class="v2-mk">${v2Mark()}</span><span><span class="v2-wm sm">passos<em>.fit</em></span><small>por ${esc(v2Coach())}</small></span>`;
+  // Professor: tocar no logo abre a troca para o app do Primeiro Passo
+  return v2Prof() ? `<button class="v2-brand v2-sw" aria-haspopup="menu" aria-expanded="false" aria-label="Trocar de app">${inner}<svg class="chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>` : `<span class="v2-brand">${inner}</span>`;
+}
+function closeAppSwitch() { const m = document.querySelector('.v2-swmenu'); if (m) m.remove(); document.querySelectorAll('.v2-sw').forEach(b => b.setAttribute('aria-expanded', 'false')); }
+function openAppSwitch(btn) {
+  closeAppSwitch();
+  const r = btn.getBoundingClientRect(), m = document.createElement('div');
+  m.className = 'v2-swmenu'; m.setAttribute('role', 'menu');
+  m.innerHTML = `<small class="t">Seus apps</small>
+    <div class="it"><span class="ic" style="background:#111A4A"><svg viewBox="0 0 24 24" fill="none" stroke="#CBEF3C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg></span><span><b>PassosFit</b><small>Você está aqui</small></span><svg class="ok" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <a class="it" role="menuitem" href="primeiro-passo/#/admin"><span class="ic" style="background:#1B3A5C"><svg viewBox="0 0 24 24" fill="none" stroke="#E0A93B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 3 10.5 3 8c0-2.7 1.5-6 4.5-6C9.4 2 10 3.8 10 5.5c0 3.1-2 5.7-2 8.7V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.1 1-3.1 1-5.6 0-2.7-1.5-6-4.5-6C14.6 6 14 7.8 14 9.5c0 3.1 2 5.7 2 8.7V20a2 2 0 1 0 4 0Z"/></svg></span><span><b>Primeiro Passo</b><small>Trocar para o app</small></span></a>`;
+  m.style.top = Math.round(r.bottom + 8) + 'px'; m.style.left = Math.round(Math.max(8, Math.min(r.left, innerWidth - 272))) + 'px';
+  document.body.append(m); btn.setAttribute('aria-expanded', 'true'); m.querySelector('a').focus();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.v2-sw');
+  if (b) { e.stopPropagation(); b.getAttribute('aria-expanded') === 'true' ? closeAppSwitch() : openAppSwitch(b); return; }
+  if (!e.target.closest('.v2-swmenu')) closeAppSwitch();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAppSwitch(); });
+addEventListener('resize', closeAppSwitch);
 function renderPainelV2() {
   const sts = v2Students(), ws = weekStart(today());
   const todayL = sts.filter(p => v2Days(p.id).has(today())), week = sts.filter(p => [...v2Days(p.id)].some(d => d >= ws));
@@ -3227,7 +3264,6 @@ function renderPainelV2() {
     <div class="v2-kpis"><button class="v2-tile dk" data-view="alunos">${v2Ico(V2PNAV.alunos)}<b class="xl">${sts.length}</b><span>alunos</span></button>
       <div class="v2-tile acc"><b>${todayL.length}</b><span>treinaram hoje</span></div><div class="v2-tile lil"><b>${week.length}</b><span>ativos na semana</span></div></div>
     <button class="ia-cta" data-view="ia"><span class="ia-badge">${v2Ico(V2PNAV.ia)}</span><span class="grow"><b>Assistente</b><small>Pergunte qualquer coisa sobre seus alunos e o app</small></span>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>
-    <button class="ia-cta" data-view="pp"><span class="ia-badge">${v2Ico(V2PNAV.pp)}</span><span class="grow"><b>Primeiro Passo</b><small>Abrir o app do seu outro serviço</small></span>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>
     ${reqs}
     <div class="v2-d2"><div class="col">
     <div class="v2-sec"><h3>Precisa de atenção</h3><span class="v2-chipwarn">${att.length}</span></div>
@@ -6008,8 +6044,6 @@ function celebrate(ex, s) {
 document.addEventListener('click', e => {
   const v = e.target.closest('[data-view]');
   if (!v) return;
-  // Primeiro Passo: troca para o app dele inteiro (o painel de lá tem o botão para voltar)
-  if (v.dataset.view === 'pp') { location.href = 'primeiro-passo/#/admin'; return; }
   // Professor: Treino, Histórico e Evolução da barra de baixo são sempre os dele (o do aluno abre pelo perfil)
   if (v.closest('#nav') && !ui.studentMode && ui.profile !== ME && ['treino', 'historico', 'evolucao', 'eu'].includes(v.dataset.view)) {
     ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
@@ -8154,7 +8188,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '28/10-16:44';
+const APP_VERSION = '28/10-16:59';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
