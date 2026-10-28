@@ -2816,11 +2816,14 @@ function aPersonais(bl){
   document.querySelectorAll("[data-asp]").forEach(b=>b.onclick=()=>{setSess({role:"personal",pid:b.dataset.asp,back:"admin"});location.hash="#/personal"});
   $("#np").onsubmit=e=>{e.preventDefault();const name=$("#npn").value.trim();DB.personals.push({id:"p"+Date.now(),name,email:mailOf(name),cref:"CREF "+$("#npc").value.trim(),uf:$("#npu").value,area:$("#npa").value.trim()+" / "+$("#npu").value,bio:"",spec:[$("#nps").value.trim()||"Iniciantes"],status:"ativo",cap:15,rating:null,since:Date.now()});saveDB();toast(`${name.split(" ")[0]} cadastrada`);route(true)};
 }
-const AP_DOCS=[["primeiro-passo-trabalho.pdf","book-open-check","Material completo","Tudo do trabalho num PDF só: ideia, teoria, app, mercado, finanças, empresa e roteiro.",1],
- ["docs/Primeiro-Passo-Guia-Completo.pdf","book-open","Guia completo do sistema","Como tudo funciona: site, app do aluno, painéis, dinheiro, segurança e operação."],
- ["docs/Primeiro-Passo-Apresentacao.pdf","presentation","Texto da apresentação","O texto para falar na frente da turma."],
- ["docs/Primeiro-Passo-Roteiro-antigo.pdf","timer","Roteiro com tempos","Quem fala o quê e quanto tempo cada parte leva."],
- ["docs/Primeiro-Passo-FOFA-e-CNPJ.pdf","building-2","FOFA e abertura da empresa","Forças, fraquezas, oportunidades, ameaças e como abrir o CNPJ."]];
+const AP_DOCS=[["docs/Primeiro-Passo-Resumo-para-Estudar.pdf","sparkles","Resumo para estudar","O essencial em 7 páginas: ideia, teoria, app, FOFA, 15 alunos, empresa e perguntas da banca.",1],
+ ["docs/Primeiro-Passo-Apresentacao.pdf","presentation","Texto da apresentação","O texto para falar, com o tempo de cada parte (cerca de 6 minutos)."],
+ ["docs/Primeiro-Passo-FOFA-e-CNPJ.pdf","building-2","FOFA e abertura da empresa","FOFA, custos de abrir e operar e o exemplo de 15 alunos."],
+ ["docs/Primeiro-Passo-Guia-do-Sistema.pdf","book-open","Guia do sistema","Como o site, o app e os painéis funcionam hoje, em 6 páginas."],
+ ["primeiro-passo-trabalho.pdf","book-open-check","Material completo","Tudo do trabalho num PDF só, com teoria, glossário e detalhes."],
+ ["docs/entregue/Primeiro-Passo-FOFA-e-CNPJ.pdf","archive","Entregue: FOFA e CNPJ","A versão original entregue ao professor."],
+ ["docs/entregue/Primeiro-Passo-Apresentacao.pdf","archive","Entregue: texto da apresentação","A versão original entregue ao professor."],
+ ["docs/entregue/Primeiro-Passo-Roteiro-antigo.pdf","archive","Entregue: roteiro antigo","O roteiro com tempos da primeira versão."]];
 const AP_PARTS=[["resumo","star","Resumo","o negócio em 1 minuto"],["teoria","graduation-cap","Teoria","autores e referências"],["app","smartphone","O app","jornada e painéis"],["mercado","chart-no-axes-combined","Mercado","público, FOFA, canvas"],["financas","coins","Finanças","15 alunos e cenários"],["empresa","landmark","Abrir a empresa","MEI, SLU e custos"],["ideias","lightbulb","Ideias","crescer e riscos"],["apresentar","mic","Apresentar","roteiro e perguntas"],["glossario","list","Glossário","palavras do trabalho"]];
 function apView(url,title){
   document.querySelector(".apv")?.remove();
