@@ -13,7 +13,9 @@
   location.replace('portal/');
 } catch (e) {} })();
 </script>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>/* zoom com dois dedos liberado; no iPhone/iPad o maximum-scale só evita o pulo de zoom ao tocar num campo (o iOS deixa ampliar mesmo assim) */
+if (/iP(hone|ad|od)/.test(navigator.userAgent) || navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) document.querySelector('meta[name=viewport]').content += ',maximum-scale=1';</script>
 <meta name="theme-color" content="#0A1330">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>PassosFit</title>
@@ -54,7 +56,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;max-width:100%;overflow-x:hidden;overflow-x:clip;overscroll-behavior-x:none}
-html{touch-action:pan-y}
+html{touch-action:pan-y pinch-zoom}
 body{background:var(--bg);color:var(--text);word-spacing:.05em;font:500 15px/1.45 "Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
 input,select,button{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -1219,6 +1221,83 @@ body.desk .v2-pf-a{position:sticky;top:12px}
 .v2-swmenu .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
 .v2-swmenu .ic svg{width:22px;height:22px}
 body.desk .v2-navbrand{display:block}
+
+/* Qualquer tela e zoom: o app acompanha celulares pequenos, zoom do navegador (Ctrl +) e letra ampliada */
+input,select,textarea{min-width:0;max-width:100%}
+img,video,canvas{max-width:100%}
+.v2-sets-h,.v2-set{grid-template-columns:30px minmax(0,1fr) minmax(0,1fr) 52px}
+.wk-rt{flex-wrap:wrap}
+.modes{grid-template-columns:repeat(4,minmax(0,1fr))}
+.v2-week{grid-template-columns:repeat(7,minmax(0,1fr))}
+.cmp-row{grid-template-columns:78px minmax(0,1fr) auto}
+.cmp-row b,nav.bottom button{overflow-wrap:normal}
+.wsh .grow{min-width:min(240px,100%)}
+.card-h .grow{min-width:0}
+.v2-top{flex-wrap:wrap}
+.v2-top .v2-brand{min-width:0}
+.v2-howto{flex-wrap:wrap}.v2-howto .grow{min-width:0}
+.v2-badges{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:359px){
+  main{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+  body{overflow-wrap:anywhere}
+  .v2-top{gap:8px}
+  .v2-icbtn,.v2-avbtn,.v2-icb{width:40px;height:40px}
+  .v2-sets-h,.v2-set{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 44px;gap:5px}
+  .v2-chk{width:44px!important;height:44px!important}
+  .v2-fld input{font-size:17px;height:50px}
+  .v2-fld.pm input{padding:0 16px 12px}
+  .v2-pm{width:18px}
+  .v2-pm .v2i{width:12px;height:12px}
+  .v2-fld small{font-size:9.5px}
+  .v2-howto-anim{width:100%;height:96px}
+  .v2-eq{flex-wrap:wrap}
+  .v2-exh{gap:8px;padding:10px}
+  .v2-thumb{width:48px;height:48px}
+  .v2-tile{padding:12px;min-height:100px}
+  .v2-tile b{font-size:24px}
+  .v2-ph-title h1,.v2-rest{font-size:28px}
+  .v2-wtitle h1{font-size:26px}
+  .v2-whead{margin:0 -10px}
+  .pill,.wk-rt small{white-space:normal}
+  .wsnav{flex-wrap:wrap;margin-left:0}
+  :root[data-skin="v2"] nav.bottom{left:8px;right:8px}
+  :root[data-skin="v2"] nav.bottom button{min-width:0}
+}
+@media (max-width:259px){
+  .v2-tiles,.v2-kpis{grid-template-columns:minmax(0,1fr)!important}
+  .v2-kpis .v2-tile{grid-row:auto!important}
+  .v2-exh{flex-wrap:wrap}
+  .v2-exh .grow{flex-basis:100%;order:2}
+  .v2-sets-h{display:none}
+  .v2-set{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"n c" "a b"}
+  .v2-set>:nth-child(1){grid-area:n}.v2-set>:nth-child(2){grid-area:a}.v2-set>:nth-child(3){grid-area:b}.v2-set>:nth-child(4){grid-area:c;justify-self:end}
+  .v2-acts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .v2-grows{grid-template-columns:minmax(0,1fr)}
+  .v2-ph-title h1,.v2-rest,.v2-wtitle h1{font-size:23px}
+  .v2-hello{font-size:22px}
+  .v2-badges{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cmp-row{grid-template-columns:58px minmax(0,1fr) auto;gap:5px}
+  :root[data-skin="v2"] nav.bottom button{font-size:9px;overflow:hidden}
+  /* linhas com ícone + texto + botão: o texto desce para a linha de baixo em vez de virar uma coluna de letras */
+  :has(> .grow){flex-wrap:wrap}
+  .grow{flex-basis:100%!important}
+  /* fileiras de 7 dias: números e letras não quebram, só diminuem */
+  .v2-week,.cd-pick,.v2-cal{gap:2px}
+  .v2-week .d,.cd-pick button,.v2-cal button,.cd-day{overflow-wrap:normal;overflow:hidden;font-size:10.5px}
+  .v2-week .d span{font-size:12px}
+  .v2-week .d small,.cd-day small,.cd-day b{font-size:9.5px}
+  .v2-rowx,.v2-sec{flex-wrap:wrap}
+  .v2-rowx>.v2-btn{flex:1 1 100%!important}
+  .v2-grid3,.kv,.pay-kpis{grid-template-columns:minmax(0,1fr)!important}
+  .seg,.mm-sex{flex-wrap:wrap}
+  .seg>*,.mm-sex>button{flex:1 1 100%}
+  .v2-badge .md{width:48px;height:48px;border-radius:16px}
+  :root[data-skin="v2"] nav.bottom{left:6px;right:6px;padding:5px}
+  :root[data-skin="v2"] nav.bottom button{font-size:9.5px;min-width:0}
+  :root[data-skin="v2"] nav.bottom .nb{width:34px}
+  .wsnav span{min-width:0}
+}
 
 </style>
 </head>
@@ -8188,7 +8267,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '28/10-16:59';
+const APP_VERSION = '28/10-17:02';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
