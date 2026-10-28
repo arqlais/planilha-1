@@ -152,6 +152,7 @@ i[data-lucide],svg.lucide{width:20px;height:20px;stroke-width:1.9;flex:none}
 .cta h2{color:#fff;font-size:clamp(28px,3.6vw,40px)}
 .cta p{color:#C9D8EA;margin-top:10px}
 /* ---------- página inicial com movimento (só dentro de .sitefx) ---------- */
+.sitefx{overflow-x:clip}
 .sitefx .prog{position:fixed;left:0;right:0;top:0;height:3px;z-index:40;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,#1B3A5C,#2F5D8A,#E0A93B);pointer-events:none}
 .sitefx .topbar{transition:box-shadow .3s}
 .sitefx .topbar.sh{box-shadow:0 10px 30px -18px rgba(27,58,92,.45)}
@@ -586,7 +587,7 @@ body.ux .role:hover::after{opacity:1}
 .filters button[aria-pressed="true"]{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}
 .empty{border:1.5px dashed var(--line);border-radius:18px;padding:20px;color:var(--muted);text-align:center}
 .hist{border:1.5px solid var(--line);border-radius:18px;overflow:hidden}
-.hist div{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.hist div{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:15px}
 .hist div:last-child{border-bottom:0}
 .hist svg{color:var(--blue)}
 .hist small{margin-left:auto;color:var(--muted);font-size:13px;white-space:nowrap}
@@ -795,11 +796,27 @@ body.ux .role:hover::after{opacity:1}
 .lead p{font-size:15px}
 .lead small{color:var(--muted)}
 .info{display:flex;gap:10px;align-items:flex-start;background:var(--mist);border-radius:16px;padding:14px 16px;font-size:14.5px;color:var(--muted)}
-.ap-hero{display:grid;gap:14px;background:linear-gradient(135deg,#1B3A5C,#24508a);color:#fff;border-radius:22px;padding:clamp(18px,3vw,28px);margin-bottom:22px}
+.ap-hero{position:relative;overflow:hidden;isolation:isolate;display:grid;gap:14px;background:linear-gradient(135deg,#1B3A5C,#24508a 55%,#1B3A5C);background-size:220% 220%;animation:uxlv 10s ease-in-out infinite alternate;color:#fff;border-radius:22px;padding:clamp(18px,3vw,28px);margin-bottom:22px}
 .ap-hero h2{font-family:var(--display);font-size:clamp(22px,3vw,30px);line-height:1.15;color:#fff}
 .ap-hero p{color:#C9D8EA;max-width:640px}
 .ap-hero .acts{display:flex;flex-wrap:wrap;gap:10px}
+body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradient(90deg,#F0BE5A,#E0A93B);color:#1B3A5C;box-shadow:0 10px 24px -12px rgba(240,190,90,.9)}
 .ap-hero .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)}
+.ap-hero::before,.ap-hero::after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(40px);opacity:.55;pointer-events:none}
+.ap-hero::before{width:260px;height:260px;right:-60px;top:-90px;background:#F0BE5A;animation:apfloat 9s ease-in-out infinite alternate}
+.ap-hero::after{width:220px;height:220px;left:30%;bottom:-140px;background:#5A8BC8;animation:apfloat 11s ease-in-out infinite alternate-reverse}
+@keyframes apfloat{to{transform:translate(-40px,30px) scale(1.15)}}
+.ap-hero h2 em{font-style:normal;background:linear-gradient(90deg,#F0BE5A,#FFE3A3,#F0BE5A);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:apshine 4s linear infinite}
+@keyframes apshine{to{background-position:-200% 0}}
+.ap-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ap-chips span{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;font-size:13px;color:#E4EDF7}
+.ap-chips b{color:#F0BE5A;font-variant-numeric:tabular-nums}
+.ap-doc,.ap-parts button{transition:transform .2s,box-shadow .2s,border-color .2s}
+.ap-doc:hover,.ap-parts button:hover{transform:translateY(-3px);box-shadow:0 14px 28px -18px rgba(27,58,92,.6)}
+.ap-parts button:hover i,.ap-parts button:hover svg{transform:scale(1.15) rotate(-6deg);transition:transform .2s}
+#pv .hb.grow i{animation:apgrow .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes apgrow{from{width:0}}
+@media (prefers-reduced-motion:reduce){.ap-hero,.ap-hero::before,.ap-hero::after,.ap-hero h2 em,#pv .hb.grow i{animation:none}}
 .ap-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font-family:var(--display);font-size:clamp(19px,2.2vw,23px);color:var(--navy)}
 .ap-sec span{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--gold,#e0a526);color:#fff;font-size:15px;flex:none}
 .ap-docs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:14px}
@@ -1912,7 +1929,7 @@ function siteFx(){
 }
 /* acabamento das outras telas: entra com movimento a cada troca de tela, números contam, toque com onda */
 const UX={hash:null,raf:0};
-const UXSEL=".kpi,.card,.task,.wcard,.role,.lg-card,.opt,.booking,.hello,.pcard,.plist>*,.minis>*,.quick>*,.journey>*,.vsteps>*,.feel>*,.tips>*";
+const UXSEL=".ap-doc,.ap-parts>*,.ap-sec,.kpi,.card,.task,.wcard,.role,.lg-card,.opt,.booking,.hello,.pcard,.plist>*,.minis>*,.quick>*,.journey>*,.vsteps>*,.feel>*,.tips>*";
 function uxFx(){
   const site=!!$(".sitefx");document.body.classList.toggle("ux",!site);if(site)return;
   const calm=matchMedia("(prefers-reduced-motion: reduce)").matches,h=location.hash;
@@ -2828,10 +2845,11 @@ const AP_PARTS=[["resumo","star","Resumo","o negócio em 1 minuto"],["teoria","g
 function apView(url,title){
   document.querySelector(".apv")?.remove();
   const v=document.createElement("div");v.className="apv";v.setAttribute("role","dialog");v.setAttribute("aria-label",title);
-  v.innerHTML=`<div class="apv-bar"><button class="btn btn-sm" data-apx><i data-lucide="arrow-left"></i>Voltar ao painel</button><b>${esc(title)}</b><a class="btn btn-sm" href="${url}" target="_blank" rel="noopener" aria-label="Abrir em outra aba"><i data-lucide="external-link"></i></a></div><iframe src="${url}" title="${esc(title)}"></iframe>`;
+  v.innerHTML=`<div class="apv-bar"><button class="btn btn-sm" data-apx><i data-lucide="arrow-left"></i>Voltar ao painel</button><b>${esc(title)}</b>${document.fullscreenEnabled?`<button class="btn btn-sm" data-apf aria-label="Tela cheia"><i data-lucide="maximize"></i></button>`:""}<a class="btn btn-sm" href="${url}" target="_blank" rel="noopener" aria-label="Abrir em outra aba"><i data-lucide="external-link"></i></a></div><iframe src="${url}" title="${esc(title)}"></iframe>`;
   document.body.appendChild(v);icons();
   const close=e=>{if(e.type==="keydown"&&e.key!=="Escape")return;v.remove();removeEventListener("keydown",close);removeEventListener("hashchange",close)};
-  v.querySelector("[data-apx]").onclick=close;addEventListener("keydown",close);addEventListener("hashchange",close);
+  v.querySelector("[data-apf]")?.addEventListener("click",()=>document.fullscreenElement?document.exitFullscreen():v.requestFullscreen().catch(()=>{}));
+  v.querySelector("[data-apx]").onclick=e=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});close(e)};addEventListener("keydown",close);addEventListener("hashchange",close);
 }
 let AP=15;
 function aApres(){
@@ -2842,7 +2860,8 @@ function aApres(){
   const OUT=[["Taxa de pagamento (2% do total)",fee],["Imposto (6% da parte da empresa)",tax],["INSS",inss],["Contador",S.ct],["Divulgação",S.mk],[`Verificação de identidade (${S.nv} novos)`,S.nv*5],["Domínio do site",10]];
   const NM=["Ana C.","Bruno M.","Carla S.","Diego R.","Elisa P.","Fábio L.","Gabi T.","Hugo A.","Iara N.","João V.","Karen D.","Lucas F.","Marta B.","Nina G.","Otávio H."],LV15=[1,1,1,2,2,2,2,3,3,3,3,3,4,4,4],PN=["Personal A","Personal B"];
   const T="trabalho/";
-  $("#pv").innerHTML=`<div class="ap-hero"><h2>Tudo do trabalho da faculdade, em um lugar só</h2><p>Os documentos entregues, o conteúdo completo do trabalho e o painel montado com 15 alunos de exemplo. Abra cada parte e volte quando quiser.</p>
+  $("#pv").innerHTML=`<div class="ap-hero"><h2>Tudo do trabalho da faculdade, <em>em um lugar só</em></h2><p>Os documentos entregues, o conteúdo completo do trabalho e o painel montado com 15 alunos de exemplo. Abra cada parte e volte quando quiser.</p>
+    <div class="ap-chips"><span><i data-lucide="file-text"></i><b>${AP_DOCS.length}</b> documentos</span><span><i data-lucide="layers"></i><b>${AP_PARTS.length}</b> partes</span><span><i data-lucide="users"></i><b>15</b> alunos de exemplo</span><span><i data-lucide="piggy-bank"></i>lucro <b>R$ 582,89</b></span></div>
     <div class="acts"><button class="btn btn-primary" data-apo="${T}#resumo" data-apt="Trabalho completo"><i data-lucide="book-open-check"></i>Abrir o trabalho completo</button><a class="btn btn-ghost" href="#ap-painel" data-apj><i data-lucide="layout-dashboard"></i>Painel com 15 alunos</a><a class="btn btn-ghost" href="${T}primeiro-passo-trabalho.pdf" download><i data-lucide="download"></i>Baixar PDF</a></div></div>
   <h2 class="ap-sec"><span>1</span>Documentos</h2>
   <div class="ap-docs">${AP_DOCS.map(([f,ic,t,d,m])=>`<article class="ap-doc ${m?"main":""}"><span class="ic"><i data-lucide="${ic}"></i></span><h3>${t}</h3><p>${d}</p><div class="acts"><a class="btn ${m?"btn-primary":"btn-ghost"} btn-sm" href="${T}${f}" target="_blank" rel="noopener"><i data-lucide="eye"></i>Abrir</a><a class="btn btn-ghost btn-sm" href="${T}${f}" download><i data-lucide="download"></i>Baixar</a></div></article>`).join("")}</div>
@@ -2865,7 +2884,7 @@ function aApres(){
       <div class="card-h" style="margin:18px 0 10px"><h3>Personais parceiras</h3></div><div class="rows">${Array.from({length:S.np},(_,i)=>`<div class="rw"><span class="av">${String.fromCharCode(65+i)}</span><span><b>Personal ${String.fromCharCode(65+i)}</b><small>cerca de ${Math.round(AP/S.np)} alunos</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(rep/S.np)}</b></span></div>`).join("")}</div></section>
     <section class="card"><div class="card-h"><h3>${AP===15?"Os 15 alunos do exemplo":`15 dos ${AP} alunos do exemplo`}</h3><span class="pill mute">fictícios</span></div><div class="rows clip">${NM.map((n,i)=>`<div class="rw"><span class="av">${n[0]}</span><span><b>${n}</b><small>Nível ${LV15[i]} · ${LEVELS[LV15[i]-1].t} · ${PN[i%2]}</small></span><span class="end" style="font-variant-numeric:tabular-nums">${money(PR[LV15[i]-1])}</span></div>`).join("")}</div></section>
   </div>`;
-  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{const y=scrollY;AP=+b.dataset.ap;aApres();icons();scrollTo(0,y)});
+  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{const y=scrollY;AP=+b.dataset.ap;aApres();icons();scrollTo(0,y);document.querySelectorAll("#pv .hb").forEach(h=>h.classList.add("grow"))});
   document.querySelectorAll("[data-apo]").forEach(b=>b.onclick=()=>apView(b.dataset.apo,b.dataset.apt));
   document.querySelector("[data-apj]").onclick=e=>{e.preventDefault();$("#ap-painel").scrollIntoView({behavior:"smooth"})};
 }
