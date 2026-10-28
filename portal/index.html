@@ -56,8 +56,14 @@ img{max-width:100%;display:block}
 .top nav{margin-left:auto;display:flex;gap:4px}
 .top nav a{text-decoration:none;font-weight:600;font-size:14px;color:var(--muted);padding:8px 12px;border-radius:999px}
 .top nav a:hover,.top nav a[aria-current="page"]{background:var(--surface);color:var(--ink)}
-.top nav a.enter{background:var(--pf-navy);color:#fff;margin-left:4px}
-.top nav a.enter:hover{background:var(--pf-blue);color:#fff}
+.card{cursor:pointer}
+.card .acts{margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.card .acts .go{margin-top:0;padding-top:0}
+.card .signup{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:16px;padding:13px 22px;border-radius:999px;transition:transform .15s,filter .15s}
+.card .signup:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.card .signup svg{width:18px;height:18px}
+.card.pp .signup{background:#E0A93B;color:#1B3A5C}
+.card.pf .signup{background:#CBEF3C;color:#0B1233}
 
 /* escolha */
 .pick{padding-block:56px 64px}
@@ -258,7 +264,6 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
   <nav aria-label="Plataformas">
     <a href="#primeiro-passo" data-go="primeiro-passo">Primeiro Passo</a>
     <a href="#passosfit" data-go="passosfit">PassosFit</a>
-    <a class="enter" data-link="passosfit" href="../?app">Entrar</a>
   </nav>
 </div></header>
 
@@ -270,7 +275,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
   <p class="lead">Uma para dar o primeiro passo, outra para quem já treina e quer evoluir. Escolha a que combina com o seu momento.</p>
 
   <div class="cards">
-    <a class="card pp" href="#primeiro-passo" data-go="primeiro-passo">
+    <div class="card pp" data-go="primeiro-passo" role="link" tabindex="0" aria-label="Conhecer o Primeiro Passo">
       <span class="who">Para quem ainda não começou</span>
       <h2>Primeiro Passo</h2>
       <p>Do primeiro "oi", pela tela, até a academia, com a mesma personal e no seu tempo.</p>
@@ -279,9 +284,12 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sem câmera, se preferir, e sem fidelidade</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Primeira conversa grátis</li>
       </ul>
-      <span class="go">Conhecer o Primeiro Passo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-    </a>
-    <a class="card pf" href="#passosfit" data-go="passosfit">
+      <div class="acts">
+        <a class="signup" data-link="primeiroPasso" href="../primeiro-passo/#/comecar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Quero me cadastrar</a>
+        <span class="go">Conhecer o Primeiro Passo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+    <div class="card pf" data-go="passosfit" role="link" tabindex="0" aria-label="Conhecer o PassosFit">
       <span class="who">Para quem já treina na academia</span>
       <h2>PassosFit</h2>
       <p>O seu treino do dia no celular, com carga, repetições e a evolução de cada exercício.</p>
@@ -290,8 +298,11 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Veja quanto pegou da última vez e progrida</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Cardio, medidas e histórico em um lugar</li>
       </ul>
-      <span class="go">Conhecer o PassosFit <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-    </a>
+      <div class="acts">
+        <a class="signup" data-link="passosfitCadastro" href="../?cadastro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Quero me cadastrar</a>
+        <span class="go">Conhecer o PassosFit <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
   </div>
 
   <div class="compare" role="region" aria-label="Comparação entre as plataformas" tabindex="0">
@@ -442,6 +453,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 const LINKS={
   primeiroPasso:"../primeiro-passo/#/comecar",
   primeiroPassoEntrar:"../primeiro-passo/#/entrar",
+  passosfitCadastro:"../?cadastro", /* abre o app já na tela de criar conta */
   passosfit:"../?app" /* abre o app e lembra neste aparelho: da próxima vez passosfit.com.br já abre direto no app */
 };
 document.querySelectorAll("[data-link]").forEach(a=>{const u=LINKS[a.dataset.link];if(u)a.href=u});
@@ -457,12 +469,13 @@ function show(id,push){
   const t={inicio:"Primeiro Passo e PassosFit","primeiro-passo":"Primeiro Passo","passosfit":"PassosFit"}[id];
   document.title=t;
 }
-document.addEventListener("click",e=>{const a=e.target.closest("[data-go]");if(!a)return;e.preventDefault();show(a.dataset.go,true)});
+document.addEventListener("click",e=>{if(e.target.closest(".signup"))return;const a=e.target.closest("[data-go]");if(!a)return;e.preventDefault();show(a.dataset.go,true)});
 /* um endereço como #pf-professor abre a área que contém essa parte e rola até ela */
 function fromHash(){const h=(location.hash||"").slice(1);if(VIEWS.includes(h)||!h){show(h,false);return}
   const el=document.getElementById(h),v=el&&el.closest(".view");if(!v){show("inicio",false);return}
   if(v.hidden)show(v.id,false);el.scrollIntoView()}
 addEventListener("popstate",fromHash);
+document.querySelectorAll(".card[data-go]").forEach(c=>c.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target===c){e.preventDefault();show(c.dataset.go,true)}}));
 fromHash();
 </script>
 </body>
