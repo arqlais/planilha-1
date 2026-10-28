@@ -1426,7 +1426,7 @@ function site(){
   $("#root").innerHTML=`
 <header class="topbar"><div class="wrap">
   <a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
-  <nav class="topnav" aria-label="Seções"><a href="#como" data-scroll>Como funciona</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>A personal</a><a href="#planos" data-scroll>Planos</a><a href="#duvidas" data-scroll>Dúvidas</a></nav>
+  <nav class="topnav" aria-label="Seções"><a href="#como" data-scroll>Como funciona</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>A personal</a><a href="#planos" data-scroll>Planos</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="trabalho/">Trabalho</a></nav>
   <div class="acc">
     <button class="btn btn-ghost acc-btn" id="accb" aria-haspopup="true" aria-expanded="false" aria-controls="accm"><i data-lucide="circle-user-round"></i><span>Entrar</span><i data-lucide="chevron-down" class="acc-ch"></i></button>
     <div class="acc-menu" id="accm" hidden>
@@ -1438,7 +1438,7 @@ function site(){
   <a class="btn btn-primary tb-cta" href="${has&&!S.loggedOut?"#/app":"#/comecar"}">${has&&!S.loggedOut?"Meu app":"Começar"}</a>
   <button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button>
   <button class="rbtn menu-btn" id="menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="mnav"><i data-lucide="menu"></i></button>
-</div><nav class="mnav wrap" id="mnav" aria-label="Seções" hidden><a href="#como" data-scroll>Como funciona</a><a href="#combinados" data-scroll>Nossos combinados</a><a href="#pra-quem" data-scroll>Para quem</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>A personal</a><a href="#planos" data-scroll>Planos</a><a href="#parceiros" data-scroll>Seja parceiro</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="#contato" data-scroll>Contato</a><a href="#/entrar">Entrar (cliente, personal ou empresa)</a></nav></header>
+</div><nav class="mnav wrap" id="mnav" aria-label="Seções" hidden><a href="#como" data-scroll>Como funciona</a><a href="#combinados" data-scroll>Nossos combinados</a><a href="#pra-quem" data-scroll>Para quem</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>A personal</a><a href="#planos" data-scroll>Planos</a><a href="#parceiros" data-scroll>Seja parceiro</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="#contato" data-scroll>Contato</a><a href="trabalho/">Trabalho da faculdade</a><a href="#/entrar">Entrar (cliente, personal ou empresa)</a></nav></header>
 
 <section class="hero"><div class="wrap">
   <div>
@@ -1576,7 +1576,7 @@ function site(){
 </div></section>
 
 <footer class="foot"><div class="wrap">
-  <div><b style="color:var(--navy)">Primeiro Passo</b><br>Acompanhamento físico humanizado.<div class="foot-links"><a href="${has?"#/app":"#/comecar"}">Área do cliente</a><a href="#/entrar">Área do personal</a><a href="#/entrar">Área da empresa</a></div></div>
+  <div><b style="color:var(--navy)">Primeiro Passo</b><br>Acompanhamento físico humanizado.<div class="foot-links"><a href="${has?"#/app":"#/comecar"}">Área do cliente</a><a href="#/entrar">Área do personal</a><a href="#/entrar">Área da empresa</a><a href="trabalho/">Trabalho da faculdade</a></div></div>
   <p class="care"><i data-lucide="heart"></i><span>Se você estiver passando por um momento muito difícil, não precisa enfrentar sozinho. O CVV atende 24 horas pelo telefone 188 ou pelo site cvv.org.br.</span></p>
 </div></footer>`;
   const mn=$("#mnav"),mb=$("#menu");
