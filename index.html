@@ -2,6 +2,17 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<script>
+// Porteiro: quem nunca usou o app neste aparelho vê primeiro a página de apresentação (portal/).
+// Abre o app direto: ícone instalado, link com ?algo ou #algo (convite, cadastro, ?app do portal) ou quem já usou o app aqui.
+(function () { try {
+  var q = new URLSearchParams(location.search);
+  if (q.has('app')) { localStorage.setItem('pf-entrou', '1'); q.delete('app'); var r = q.toString(); history.replaceState(null, '', location.pathname + (r ? '?' + r : '') + location.hash); return; }
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || location.search || location.hash) return;
+  for (var i = 0; i < localStorage.length; i++) if (/^(planilha|pf-)/.test(localStorage.key(i))) return; // chaves do Primeiro Passo (primeiropasso:) não contam
+  location.replace('portal/');
+} catch (e) {} })();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0A1330">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -8139,7 +8150,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '28/10-11:12';
+const APP_VERSION = '28/10-11:40';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
