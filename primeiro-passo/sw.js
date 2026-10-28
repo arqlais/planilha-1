@@ -1,7 +1,7 @@
 /* Guarda o site no aparelho para abrir sem internet.
    Página: rede primeiro (sempre a versão mais nova), cópia salva se estiver offline.
    Fontes e biblioteca de ícones: cópia salva primeiro. */
-const CACHE = "primeiropasso-v5"; /* o PassosFit mora no mesmo site: só apaga cópias do Primeiro Passo */
+const CACHE = "primeiropasso-v6"; /* o PassosFit mora no mesmo site: só apaga cópias do Primeiro Passo */
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -15,10 +15,12 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   const external = /(fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/.test(url.hostname);
+  /* só a página principal é guardada como index.html; outras páginas (ex.: trabalho/) ficam com o próprio endereço */
+  const home = req.mode === "navigate" && new URL("./", self.registration.scope).pathname === url.pathname.replace(/index\.html$/, "");
   if (req.mode === "navigate" || url.origin === location.origin && !external) {
     e.respondWith(fetch(req).then(r => {
-      const copy = r.clone(); caches.open(CACHE).then(c => c.put(req.mode === "navigate" ? "./index.html" : req, copy)); return r;
-    }).catch(() => caches.match(req.mode === "navigate" ? "./index.html" : req).then(r => r || caches.match("./index.html"))));
+      const copy = r.clone(); caches.open(CACHE).then(c => c.put(home ? "./index.html" : req, copy)); return r;
+    }).catch(() => caches.match(home ? "./index.html" : req).then(r => r || caches.match("./index.html"))));
   } else if (external) {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
       const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return r;

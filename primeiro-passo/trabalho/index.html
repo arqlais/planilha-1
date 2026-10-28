@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1B3A5C">
+<title>Primeiro Passo · Trabalho da faculdade</title>
+<link rel="icon" href="../icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{if(localStorage.getItem("primeiropasso:tema")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script>
+<style>
+:root{
+  --navy:#1B3A5C;--blue:#2F5D8A;--sky:#DCE7F3;--mist:#F3F6FA;--gold:#E0A93B;--gold-soft:#FBF1DC;
+  --ink:#1E2733;--muted:#5F6B7A;--line:#DCE3EC;--bg:#FFFFFF;--surface:#FFFFFF;--on-navy:#FFFFFF;
+  --green:#3E8E5E;--green-soft:#E3F2E8;--red:#C44536;--red-soft:#FBE6E3;
+  --display:"Bricolage Grotesque","Figtree",system-ui,sans-serif;--body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{--navy:#9CC0E6;--blue:#7FA6CF;--sky:#1F3450;--mist:#16212E;--gold:#F0BE5A;--gold-soft:#3A2F17;
+  --ink:#E8EDF3;--muted:#9AA7B6;--line:#2A3746;--bg:#0F1720;--surface:#141E2A;--on-navy:#0F1720;--green-soft:#1B3325;--red-soft:#3A1F1C;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:130px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-wrap:break-word}
+h1,h2,h3,h4{font-family:var(--display);color:var(--navy);margin:0;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-left:22px}
+li{margin:4px 0}
+a{color:var(--blue)}
+svg{flex:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px}
+.wrap{max-width:900px;margin:0 auto;padding:0 18px}
+
+/* topo */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .bar{display:flex;align-items:center;gap:10px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--navy);text-decoration:none;font-family:var(--display);font-weight:800;font-size:18px;white-space:nowrap}
+.mk{width:34px;height:34px;border-radius:10px;background:var(--navy);color:var(--on-navy);display:grid;place-items:center}
+.brand small{display:block;font-family:var(--body);font-weight:600;font-size:12px;color:var(--muted);line-height:1}
+.top .sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:9px 16px;font-weight:700;font-size:15px;min-height:42px;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--navy);color:var(--on-navy)}
+.btn-ghost{border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn svg{width:18px;height:18px}
+@media (max-width:560px){.btn .lb{display:none}.btn{padding:9px 11px}}
+
+/* abas */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 12px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:14.5px;color:var(--muted);transition:background .2s,color .2s,border-color .2s}
+.tabs button svg{width:16px;height:16px}
+.tabs button.on{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
+.tabs button .n{font-size:12px;opacity:.7}
+
+/* seções */
+main{padding:26px 0 70px}
+section.tab{display:none;animation:in .35s ease}
+section.tab.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){section.tab{animation:none}}
+.kick{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--gold)}
+.kick svg{width:16px;height:16px}
+h1{font-size:clamp(28px,6vw,40px);margin:8px 0 12px}
+h2{font-size:clamp(22px,4.5vw,28px);margin:34px 0 12px}
+h3{font-size:19px;margin:22px 0 8px}
+.lead{font-size:18px;color:var(--muted);margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin:14px 0}
+.card h3:first-child{margin-top:0}
+.note{display:flex;gap:12px;align-items:flex-start;background:var(--mist);border-radius:16px;padding:14px 16px;margin:14px 0}
+.note svg{width:22px;height:22px;color:var(--blue);margin-top:2px}
+.note.warn{background:var(--gold-soft)}
+.note.warn svg{color:var(--gold)}
+.note.ok{background:var(--green-soft)}
+.note.ok svg{color:var(--green)}
+.note p:last-child,.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.grid .card{margin:0}
+.big{font-family:var(--display);font-weight:800;font-size:28px;color:var(--navy);line-height:1.1}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--sky);color:var(--navy);font-weight:700;font-size:13px}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding:4px 0 10px 46px;margin:0}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:2px;width:32px;height:32px;border-radius:50%;background:var(--navy);color:var(--on-navy);display:grid;place-items:center;font-weight:800;font-size:15px}
+.tbl{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:460px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:var(--mist);color:var(--navy);font-weight:700}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tr.tot td{font-weight:800;color:var(--navy)}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+.levels div{border-radius:14px;padding:12px;background:var(--mist);position:relative}
+.levels b{display:block;font-family:var(--display);color:var(--navy);font-size:17px}
+.levels .s{font-size:13px;color:var(--muted)}
+.levels div:nth-child(1){background:var(--sky)}
+.levels div:nth-child(4){background:var(--gold-soft)}
+@media (max-width:620px){.levels{grid-template-columns:1fr 1fr}}
+details{border:1px solid var(--line);border-radius:14px;margin:10px 0;background:var(--surface)}
+summary{cursor:pointer;padding:14px 16px;font-weight:700;color:var(--navy);list-style:none;display:flex;gap:10px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";margin-left:auto;font-size:22px;line-height:1;color:var(--muted)}
+details[open] summary::after{content:"–"}
+details .in{padding:0 16px 14px}
+.next{display:flex;justify-content:space-between;gap:10px;margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
+.next button{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--navy);padding:10px 4px}
+.next button svg{width:18px;height:18px}
+.next button[hidden]{visibility:hidden;display:flex}
+/* cartões de estudo */
+.fc{perspective:1000px;margin:14px 0}
+.fc-card{position:relative;min-height:190px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+.fc-card.flip{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.fc-front{background:var(--navy);color:var(--on-navy)}
+.fc-front b{font-family:var(--display);font-size:21px;line-height:1.25}
+.fc-back{background:var(--gold-soft);color:var(--ink);transform:rotateY(180deg)}
+.fc-tip{font-size:13px;opacity:.75}
+.fc-nav{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:10px}
+.fc-nav button{border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;background:var(--surface)}
+.fc-nav span{color:var(--muted);font-weight:600;min-width:60px;text-align:center}
+.timer{font-variant-numeric:tabular-nums}
+.slide{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.slide:last-child{border-bottom:0}
+.slide .t{font-family:var(--display);font-weight:800;color:var(--gold);font-size:15px}
+.slide .t small{display:block;color:var(--muted);font-family:var(--body);font-weight:600;font-size:12px}
+.slide p{margin:4px 0 0}
+.say{font-style:italic;color:var(--muted)}
+.print-only{display:none}
+
+/* PDF / impressão: tudo aberto, uma seção por página */
+@media print{
+  @page{size:A4;margin:16mm 14mm}
+  :root{--bg:#fff;--surface:#fff}
+  body{font-size:11.5pt}
+  .top,.next,.fc,.no-print{display:none!important}
+  section.tab{display:block!important;animation:none;break-before:page}
+  section.tab:first-of-type{break-before:auto}
+  details{break-inside:avoid}
+  details .in{display:block}
+  details:not([open]) .in{display:block}
+  .card,.note,.slide,tr,.levels,.grid{break-inside:avoid}
+  h2,h3{break-after:avoid}
+  .print-only{display:block}
+  main{padding:0}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-foot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5"/><path d="M12 6v2M12 16v2"/></symbol>
+    <symbol id="i-build" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  </defs>
+</svg>
+
+<header class="top"><div class="wrap">
+  <div class="bar">
+    <a class="brand" href="../"><span class="mk"><svg width="20" height="20"><use href="#i-foot"/></svg></span><span>Primeiro Passo<small>Trabalho da faculdade</small></span></a>
+    <span class="sp"></span>
+    <a class="btn btn-ghost" href="../" aria-label="Voltar ao site"><svg><use href="#i-back"/></svg><span class="lb">Voltar ao site</span></a>
+    <a class="btn btn-primary" href="primeiro-passo-trabalho.pdf" download aria-label="Baixar o PDF"><svg><use href="#i-down"/></svg><span class="lb">PDF</span></a>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="Partes do trabalho"></nav>
+</div></header>
+
+<main class="wrap">
+
+<div class="print-only">
+  <p class="kick">Trabalho da faculdade</p>
+  <h1>Primeiro Passo</h1>
+  <p class="lead">Plataforma de acompanhamento físico em quatro níveis para quem ainda não teve coragem de começar a treinar. Material completo: ideia, teoria, funcionamento, mercado, finanças, abertura da empresa e roteiro de apresentação.</p>
+</div>
+
+<!-- 1 ======================================================= -->
+<section class="tab" id="resumo" data-t="Resumo" data-i="i-star">
+  <span class="kick"><svg><use href="#i-star"/></svg>Parte 1 · Resumo</span>
+  <h1>O Primeiro Passo em 1 minuto</h1>
+  <p class="lead">Se você só tiver tempo de ler uma página antes de apresentar, leia esta. Lema: <b>"Seu primeiro passo, no seu tempo."</b></p>
+
+  <div class="card no-print">
+    <h3>Documentos entregues ao professor</h3>
+    <p class="small muted">Os arquivos originais da disciplina de Empreendedorismo e Inovação. Este material foi atualizado para ficar igual a eles.</p>
+    <div class="grid" style="margin:0">
+      <a class="btn btn-ghost" href="docs/Primeiro-Passo-FOFA-e-CNPJ.pdf" download><svg><use href="#i-down"/></svg>FOFA e abertura da empresa</a>
+      <a class="btn btn-ghost" href="docs/Primeiro-Passo-Apresentacao.pdf" download><svg><use href="#i-down"/></svg>Texto da apresentação</a>
+      <a class="btn btn-ghost" href="docs/Primeiro-Passo-Roteiro-antigo.pdf" download><svg><use href="#i-down"/></svg>Roteiro com tempos</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>A frase que resume tudo</h3>
+    <p><b>O Primeiro Passo é uma plataforma que leva quem nunca treinou do zero até a academia, em quatro níveis, no ritmo de cada um, com uma personal verificada do lado.</b></p>
+  </div>
+
+  <h2>O problema</h2>
+  <p>Muita gente sabe que precisa se exercitar, mas não começa. Não é preguiça: é <b>vergonha do corpo, medo de ser julgado, ansiedade, dor ou simplesmente não saber por onde começar</b>. A academia, que é a porta de entrada mais comum, é justamente o lugar que mais assusta quem está parado há muito tempo.</p>
+  <p>Segundo a Organização Mundial da Saúde, cerca de <b>1 em cada 3 adultos no mundo (31%)</b> não faz a atividade física mínima recomendada (dados de 2022, publicados em 2024).</p>
+
+  <h2>A solução</h2>
+  <p>Em vez de jogar a pessoa direto na academia, o Primeiro Passo cria uma <b>escada com quatro degraus</b>. Cada degrau só libera quando a pessoa está pronta para o próximo:</p>
+  <div class="levels">
+    <div><span class="pill">Nível 1</span><b>Conhecer</b><span class="s">Conversa online, sem precisar ligar a câmera</span></div>
+    <div><span class="pill">Nível 2</span><b>Em casa</b><span class="s">Treinos curtos em vídeo, sem ninguém olhando</span></div>
+    <div><span class="pill">Nível 3</span><b>Ao ar livre</b><span class="s">Encontros presenciais em casa ou numa praça</span></div>
+    <div><span class="pill">Nível 4</span><b>Academia</b><span class="s">A personal vai junto até a pessoa ganhar autonomia</span></div>
+  </div>
+
+  <h2>Como ganha dinheiro</h2>
+  <p>O aluno paga cada nível pela plataforma. A <b>personal parceira fica com 70%</b> de cada mensalidade e a <b>empresa fica com 30%</b>, de onde saem a taxa do pagamento, os impostos e os custos. É o mesmo modelo de aplicativos como os de transporte e de entrega: a empresa conecta as duas pontas e cuida da confiança entre elas.</p>
+
+  <h2>Por que é diferente</h2>
+  <ul>
+    <li><b>Público que ninguém atende direito:</b> academias e apps de treino falam com quem já treina. O Primeiro Passo fala com quem ainda não começou.</li>
+    <li><b>Progressão em níveis:</b> a pessoa vê o caminho inteiro e sabe exatamente o que falta para subir.</li>
+    <li><b>Segurança de verdade:</b> identidade verificada dos dois lados, personal com CREF checado, código de segurança em cada encontro presencial e botão de emergência.</li>
+    <li><b>Acolhimento:</b> linguagem gentil, opção de treino sentado, conversa sem câmera, respiração guiada para dias difíceis.</li>
+  </ul>
+
+  <div class="note ok"><svg><use href="#i-check"/></svg><div><p><b>O que já existe:</b> o protótipo funciona de verdade, com site, app do aluno, painel da personal e painel da empresa, login e banco de dados na nuvem. Dá para demonstrar ao vivo no celular.</p></div></div>
+</section>
+
+<!-- 2 ======================================================= -->
+<section class="tab" id="teoria" data-t="Teoria" data-i="i-book">
+  <span class="kick"><svg><use href="#i-book"/></svg>Parte 2 · Base teórica</span>
+  <h1>Por que a ideia funciona</h1>
+  <p class="lead">As teorias abaixo dão o embasamento acadêmico. Para cada uma: o que diz e onde ela aparece no app.</p>
+
+  <h2>1. Sedentarismo: o tamanho do problema</h2>
+  <p>A <b>OMS recomenda</b> que adultos façam de <b>150 a 300 minutos por semana</b> de atividade moderada (ou 75 a 150 minutos de atividade intensa), mais fortalecimento muscular 2 vezes por semana.</p>
+  <p>Em 2024 a OMS publicou que <b>31% dos adultos do mundo, cerca de 1,8 bilhão de pessoas</b>, não atingiam esse mínimo em 2022, e que esse número vem subindo. A inatividade aumenta o risco de doenças do coração, diabetes tipo 2, alguns tipos de câncer, ansiedade e depressão.</p>
+  <div class="note"><svg><use href="#i-info"/></svg><div><p><b>Como usar na apresentação:</b> "O problema não é falta de academia. Academia tem em todo bairro. O problema é que a porta de entrada assusta quem está parado."</p></div></div>
+
+  <h2>2. Modelo Transteórico de Mudança (Prochaska e DiClemente)</h2>
+  <p>Criado nos anos 1980 por James Prochaska e Carlo DiClemente, diz que <b>ninguém muda de comportamento de uma vez</b>. As pessoas passam por estágios:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Estágio</th><th>O que a pessoa sente</th><th>No Primeiro Passo</th></tr></thead>
+    <tbody>
+      <tr><td><b>Pré-contemplação</b></td><td>"Não é para mim"</td><td>Site acolhedor, linguagem sem julgamento</td></tr>
+      <tr><td><b>Contemplação</b></td><td>"Talvez eu devesse"</td><td>Questionário gratuito, sem compromisso</td></tr>
+      <tr><td><b>Preparação</b></td><td>"Vou tentar"</td><td>Nível 1: conversa e plano personalizado</td></tr>
+      <tr><td><b>Ação</b></td><td>"Estou fazendo"</td><td>Níveis 2 e 3: treinos em casa e ao ar livre</td></tr>
+      <tr><td><b>Manutenção</b></td><td>"Faz parte de mim"</td><td>Nível 4: autonomia na academia</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Esta é a teoria principal do trabalho.</b> Os quatro níveis do app são uma tradução prática dos estágios de mudança.</p>
+
+  <h2>3. Autoeficácia (Albert Bandura)</h2>
+  <p>Bandura (1977) mostrou que as pessoas só tentam aquilo que <b>acreditam ser capazes de fazer</b>. A forma mais forte de criar essa crença são as <b>pequenas vitórias</b>: conseguir algo fácil dá coragem para o próximo passo.</p>
+  <p><b>No app:</b> o primeiro treino tem 8 minutos e pode ser feito sentado. Cada etapa concluída vira uma conquista. A barra de progresso mostra quanto falta para subir de nível.</p>
+
+  <h2>4. Teoria da Autodeterminação (Deci e Ryan)</h2>
+  <p>Edward Deci e Richard Ryan mostraram que a motivação que dura vem de três necessidades:</p>
+  <ul>
+    <li><b>Autonomia</b> (eu escolho): o aluno escolhe dias, horário e se quer conversar por mensagem, áudio ou vídeo.</li>
+    <li><b>Competência</b> (eu consigo): níveis graduais e treinos adaptados.</li>
+    <li><b>Vínculo</b> (alguém se importa): a mesma personal acompanha a jornada inteira.</li>
+  </ul>
+
+  <h2>5. Formação de hábitos (Lally, 2010)</h2>
+  <p>Um estudo da University College London, de Phillippa Lally e colegas, acompanhou pessoas criando um hábito novo. Em média levou <b>66 dias</b> para o comportamento ficar automático, variando de 18 a 254 dias. Ou seja: o famoso "21 dias" é um mito.</p>
+  <p><b>No app:</b> o nível 2 pede 8 treinos e 3 por semana antes de subir. O foco é a <b>regularidade</b>, não a intensidade.</p>
+
+  <h2>6. Gymtimidation (intimidação da academia)</h2>
+  <p>Termo usado em pesquisas de mercado fitness para o medo de ir à academia: medo de ser observado, de não saber usar os aparelhos, de comparar o corpo. É a barreira que o nível 4 resolve, porque a personal vai junto e apresenta os aparelhos.</p>
+
+  <h2>7. Economia de plataforma (mercado de dois lados)</h2>
+  <p>Plataformas como as de transporte e hospedagem <b>não produzem o serviço</b>: elas conectam quem oferece com quem procura e ganham uma parte de cada transação. O valor está em três coisas: <b>encontrar</b> a pessoa certa, <b>garantir a confiança</b> e <b>cuidar do pagamento</b>.</p>
+  <p>O Primeiro Passo é uma plataforma de dois lados: de um lado alunos iniciantes, do outro personais parceiras. Quanto mais personais, mais regiões atendidas; quanto mais alunos, mais atrativo para as personais. Isso é chamado de <b>efeito de rede</b>.</p>
+
+  <h2>8. Gamificação</h2>
+  <p>Uso de elementos de jogo (níveis, conquistas, barra de progresso) fora dos jogos para manter o engajamento. No app: subir de nível, conquistas, contagem de treinos e confete ao concluir etapas.</p>
+
+  <h2>Referências para citar</h2>
+  <div class="card small">
+    <ul>
+      <li>ORGANIZAÇÃO MUNDIAL DA SAÚDE. <i>Diretrizes da OMS para atividade física e comportamento sedentário</i>. Genebra: OMS, 2020.</li>
+      <li>STRAIN, T. et al. National, regional, and global trends in insufficient physical activity among adults from 2000 to 2022. <i>The Lancet Global Health</i>, 2024.</li>
+      <li>PROCHASKA, J. O.; DICLEMENTE, C. C. Stages and processes of self-change of smoking. <i>Journal of Consulting and Clinical Psychology</i>, v. 51, 1983.</li>
+      <li>BANDURA, A. Self-efficacy: toward a unifying theory of behavioral change. <i>Psychological Review</i>, v. 84, 1977.</li>
+      <li>DECI, E. L.; RYAN, R. M. The "what" and "why" of goal pursuits. <i>Psychological Inquiry</i>, v. 11, 2000.</li>
+      <li>LALLY, P. et al. How are habits formed: modelling habit formation in the real world. <i>European Journal of Social Psychology</i>, v. 40, 2010.</li>
+      <li>OSTERWALDER, A.; PIGNEUR, Y. <i>Business Model Generation</i>. Rio de Janeiro: Alta Books, 2011.</li>
+      <li>BRASIL. Lei nº 13.709/2018 (Lei Geral de Proteção de Dados). Lei nº 9.696/1998 (regulamenta a profissão de Educação Física). Lei Complementar nº 123/2006 (Simples Nacional e MEI).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 3 ======================================================= -->
+<section class="tab" id="app" data-t="O app" data-i="i-phone">
+  <span class="kick"><svg><use href="#i-phone"/></svg>Parte 3 · Como o app funciona</span>
+  <h1>Três usuários, uma jornada</h1>
+  <p class="lead">O sistema tem quatro partes: o site, o app do aluno, o painel da personal e o painel da empresa. Tudo funciona no navegador do celular ou do computador, sem baixar nada da loja.</p>
+
+  <h2>A jornada do aluno</h2>
+  <ol class="steps">
+    <li><b>Conhece pelo site.</b> Vê os quatro níveis, os preços, as regras de convivência e as perguntas frequentes.</li>
+    <li><b>Responde o questionário.</b> Objetivos, o que impede de começar, dias e horários livres, como prefere conversar e o <b>PAR-Q</b> (questionário de prontidão para atividade física, usado no mundo todo para saber se a pessoa precisa de liberação médica).</li>
+    <li><b>Verifica a identidade.</b> Dados, CPF, documento, selfie e consentimento da LGPD. A empresa aprova.</li>
+    <li><b>Conversa gratuita de 15 minutos</b> com a personal, para criar confiança antes de pagar.</li>
+    <li><b>Paga o nível 1 e recebe o plano.</b> A partir daí, cada nível tem metas claras para subir.</li>
+    <li><b>Treina e evolui:</b> treinos guiados com cronômetro, respiração, agenda, conversa, conquistas e pagamentos, tudo no app.</li>
+  </ol>
+
+  <h2>Metas de cada nível</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Nível</th><th>Preço</th><th>Para subir de nível</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 · Conhecer</b></td><td>R$ 100 (uma vez)</td><td>Questionário, identidade verificada, conversa feita e nível 1 pago</td></tr>
+      <tr><td><b>2 · Em casa</b></td><td>R$ 180 por mês</td><td>Primeiro treino, 3 treinos numa semana e 8 treinos no total</td></tr>
+      <tr><td><b>3 · Ao ar livre</b></td><td>R$ 480 por mês (R$ 60 a aula, 2x por semana)</td><td>Agendar e participar de 4 encontros presenciais</td></tr>
+      <tr><td><b>4 · Academia</b></td><td>R$ 560 por mês (R$ 70 a aula, 2x por semana)</td><td>4 treinos na academia com a personal e um plano para seguir sozinho</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Planos trimestral e semestral têm 10% e 15% de desconto. Os valores são ajustáveis no painel da empresa.</p>
+
+  <p>Quem aperta o botão "Me sinto pronto para o nível seguinte" é o <b>aluno</b>. Voltar um nível também é permitido.</p>
+
+  <h2>Os combinados (o que a plataforma nunca faz)</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Nunca fazemos</th><th>Como aparece no sistema</th></tr></thead>
+    <tbody>
+      <tr><td><b>Pedir foto de antes e depois</b></td><td>O progresso é medido pelo que a pessoa consegue fazer. Não existe campo de foto do corpo.</td></tr>
+      <tr><td><b>Cobrar por dia perdido</b></td><td>Não há "sequência" para quebrar. O app diz: "não existe sequência para perder".</td></tr>
+      <tr><td><b>Comparar você com alguém</b></td><td>Sem ranking e sem grupo.</td></tr>
+      <tr><td><b>Gritar ou pressionar</b></td><td>Nada de "sem dor, sem ganho". Desconforto é sinal para ajustar.</td></tr>
+      <tr><td><b>Empurrar de nível</b></td><td>Quem decide subir é o aluno.</td></tr>
+      <tr><td><b>Compartilhar suas respostas</b></td><td>O questionário fica entre o aluno e a personal; as regras do banco garantem isso.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Números que o site promete: <b>4 níveis</b>, <b>15 minutos</b> de primeira conversa grátis, <b>0 fidelidade</b> (sem multa para sair) e <b>100% das personais com CREF</b>.</p>
+
+  <h2>Planos, descontos e combo</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Plano</th><th class="n">Por mês</th><th class="n">Total</th></tr></thead>
+    <tbody>
+      <tr><td>Nível 2 mensal</td><td class="n">R$ 180</td><td class="n">R$ 180</td></tr>
+      <tr><td>Nível 2 trimestral (−10%)</td><td class="n">R$ 162</td><td class="n">R$ 486 a cada 3 meses</td></tr>
+      <tr><td>Nível 2 semestral (−15%)</td><td class="n">R$ 153</td><td class="n">R$ 918 a cada 6 meses</td></tr>
+      <tr><td>Nível 3, 1x por semana (4 aulas de R$ 60)</td><td class="n">R$ 240</td><td class="n">R$ 240</td></tr>
+      <tr><td>Nível 3, 2x por semana (8 aulas de R$ 60)</td><td class="n">R$ 480</td><td class="n">R$ 480</td></tr>
+      <tr><td>Nível 3, 3x por semana (12 aulas de R$ 60)</td><td class="n">R$ 720</td><td class="n">R$ 720</td></tr>
+      <tr><td><b>Combo:</b> nível 1 grátis + 3 meses do nível 2 trimestral</td><td class="n">–</td><td class="n">R$ 486 (em vez de R$ 640)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Valor por aula = preço do nível ÷ 8. O site tem um simulador de planos e um quiz "Qual nível é para mim?".</p>
+
+  <h2>Conquistas</h2>
+  <p>Primeiro passo (criou o plano), Primeira conversa, 1º treino, Semana firme (3 treinos numa semana), 8 treinos, Nível 2, Nível 3 e Nível 4.</p>
+
+  <h2>Painel da personal</h2>
+  <ul>
+    <li>Alertas do dia (aluno sumido, aluno pronto para subir de nível, pagamento pendente).</li>
+    <li>Lista de alunos com o questionário e as barreiras de cada um.</li>
+    <li>Agenda de encontros, conversas e biblioteca de exercícios com demonstração.</li>
+    <li>Ganhos: quanto recebeu, quanto vai receber e quando cai o repasse.</li>
+  </ul>
+
+  <h2>Painel da empresa</h2>
+  <ul>
+    <li><b>Visão geral:</b> clientes ativos, faturamento, ticket médio, novos alunos.</li>
+    <li><b>Clientes e personais:</b> aprovar cadastros, conferir CREF, trocar personal de um aluno.</li>
+    <li><b>Financeiro:</b> mensalidades, taxas, repasses, margem e resultado dos últimos 6 meses.</li>
+    <li><b>Segurança:</b> verificações de identidade, check-ins dos encontros, relatos confidenciais e alertas.</li>
+    <li><b>Contatos:</b> mensagens do site e pedidos de parceria.</li>
+  </ul>
+
+  <h2>Segurança e confiança</h2>
+  <p>Num serviço em que uma pessoa vai até a casa de outra, segurança é o produto. Por isso:</p>
+  <ul>
+    <li><b>Identidade verificada</b> do aluno e da personal antes de qualquer encontro presencial.</li>
+    <li><b>Personal com CREF</b> (registro no Conselho Regional de Educação Física) e antecedentes checados.</li>
+    <li><b>Código de segurança</b> em cada encontro: a personal só começa a aula depois de confirmar o código do aluno.</li>
+    <li><b>Check-in, botão de emergência e relato confidencial</b>, que só a empresa lê.</li>
+    <li><b>Avaliações:</b> o aluno avalia a personal, mas só a empresa vê as notas.</li>
+    <li><b>Proteção contra desvio:</b> a personal assina termo de não levar alunos para fora da plataforma por 12 meses, e o chat avisa quando alguém tenta combinar pagamento por fora.</li>
+  </ul>
+
+  <h3>O termo de parceria da personal (9 itens)</h3>
+  <ol class="small">
+    <li>Atende como autônoma parceira os clientes da plataforma.</li>
+    <li>Recebe o percentual dela, repassado até o dia combinado, na chave Pix cadastrada.</li>
+    <li>Pagamentos só pela plataforma.</li>
+    <li>Não aliciamento durante a parceria e por 12 meses depois.</li>
+    <li>Contato com o aluno pelo app.</li>
+    <li>Confidencialidade e LGPD.</li>
+    <li>Conduta e segurança: código e check-in obrigatórios.</li>
+    <li>Penalidades: descredenciamento e multa de 10 vezes a última mensalidade de cada cliente envolvido.</li>
+    <li>Vigência indeterminada, com 30 dias de aviso.</li>
+  </ol>
+  <p class="small muted">Os termos são modelos e precisam de revisão de um advogado antes de clientes reais.</p>
+
+  <h2>O ciclo do mês, na prática</h2>
+  <ol class="steps">
+    <li><b>Até o dia 10:</b> os alunos pagam e tocam em "Já fiz o Pix".</li>
+    <li>A empresa confere o extrato e marca como pago no Financeiro. Quem não pagou recebe lembrete pelo app.</li>
+    <li><b>Até o dia 5 do mês seguinte:</b> a empresa faz o Pix de cada personal e registra o repasse. Ela vê "Pago" no painel dela.</li>
+    <li>O relatório do mês é copiado para uma planilha.</li>
+  </ol>
+
+  <h2>Tecnologia (se perguntarem)</h2>
+  <div class="card">
+    <ul>
+      <li><b>Aplicativo web (PWA):</b> abre no navegador e pode ser instalado na tela do celular, sem loja de aplicativos. Funciona até sem internet nas partes já abertas.</li>
+      <li><b>Firebase (Google):</b> login com e-mail e senha e banco de dados na nuvem. O plano gratuito cobre o começo do negócio.</li>
+      <li><b>Regras de acesso:</b> o aluno só vê os próprios dados; a personal só vê os alunos dela; avaliações e relatos só a empresa vê.</li>
+      <li><b>Modo de teste:</b> libera todas as etapas para demonstrar sem precisar cumprir cada exigência.</li>
+      <li><b>Por que um Firebase só do Primeiro Passo:</b> contas e dados sensíveis (CPF, saúde) ficam separados de outros sistemas, cada projeto tem a própria cota grátis e dá para transferir a um sócio sem levar mais nada.</li>
+    </ul>
+  </div>
+
+  <h2>Roteiro da demonstração ao vivo (3 minutos)</h2>
+  <ol class="steps">
+    <li>Abra <b>passosfit.com.br/primeiro-passo</b> e role o site: níveis, segurança, planos.</li>
+    <li>Toque em <b>Começar</b> e mostre 3 ou 4 perguntas do questionário (barreiras e PAR-Q impressionam).</li>
+    <li>No app do aluno, mostre a <b>barra de progresso do nível</b> e abra um <b>treino guiado</b>.</li>
+    <li>Entre no <b>painel da personal</b> e mostre os alertas do dia.</li>
+    <li>Termine no <b>painel da empresa → Financeiro</b>: a divisão de cada mensalidade fecha o raciocínio do modelo de negócio.</li>
+  </ol>
+  <div class="note warn"><svg><use href="#i-alert"/></svg><div><p><b>Dica:</b> faça login nas contas de teste antes da apresentação e deixe as abas abertas. Internet da faculdade pode falhar: tenha prints de cada tela no celular como plano B.</p></div></div>
+</section>
+
+<!-- 4 ======================================================= -->
+<section class="tab" id="mercado" data-t="Mercado" data-i="i-chart">
+  <span class="kick"><svg><use href="#i-chart"/></svg>Parte 4 · Mercado e estratégia</span>
+  <h1>Para quem, contra quem e como crescer</h1>
+
+  <h2>Público-alvo</h2>
+  <div class="grid">
+    <div class="card"><h3>Quem é</h3><p>Adultos de 25 a 60 anos, sedentários ou que pararam há muito tempo. Muitos com sobrepeso, ansiedade, dor ou vergonha de começar.</p></div>
+    <div class="card"><h3>O que sente</h3><p>Quer mudar, já tentou e desistiu, tem medo de academia e não sabe por onde começar.</p></div>
+    <div class="card"><h3>O que valoriza</h3><p>Acolhimento, privacidade, ir no próprio ritmo, segurança e alguém que acompanhe de perto.</p></div>
+  </div>
+
+  <h2>Concorrência</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Alternativa</th><th>Ponto forte</th><th>Onde falha para o iniciante</th></tr></thead>
+    <tbody>
+      <tr><td><b>Academia comum</b></td><td>Preço baixo, estrutura</td><td>Ambiente intimida, pouca atenção individual</td></tr>
+      <tr><td><b>Apps de treino em casa</b></td><td>Barato e prático</td><td>Ninguém acompanha, alta desistência</td></tr>
+      <tr><td><b>Personal autônomo</b></td><td>Atenção total</td><td>Caro, difícil achar e confiar, sem garantias</td></tr>
+      <tr><td><b>Benefícios corporativos de academia</b></td><td>Acesso a muitas academias</td><td>Feito para quem já treina</td></tr>
+      <tr><td><b>Primeiro Passo</b></td><td>Jornada gradual, segurança, acolhimento</td><td>Precisa de personais parceiras em cada região</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Análise FOFA (a que foi entregue)</h2>
+  <div class="grid">
+    <div class="card"><h3>Forças</h3><ul>
+      <li>Nicho pouco atendido: iniciantes com medo, vergonha ou limitação.</li>
+      <li>Jornada em 4 níveis, no ritmo do aluno, que reduz a desistência.</li>
+      <li>Mesma personal do começo ao fim: vínculo e confiança.</li>
+      <li>Acolhimento: sem foto de antes e depois, sem cobrança por falta, sem pressão.</li>
+      <li>Entrada fácil: 1ª conversa grátis, sem câmera, sem fidelidade.</li>
+      <li>Segurança: identidade verificada, CREF checado, código e check-in.</li>
+      <li>Plataforma pronta e de custo quase zero.</li></ul></div>
+    <div class="card"><h3>Fraquezas</h3><ul>
+      <li>Pagamento manual: ainda sem cobrança automática.</li>
+      <li>Poucas personais: presencial só onde há parceira.</li>
+      <li>Equipe enxuta: a operação depende de uma pessoa só.</li>
+      <li>Marca nova, sem clientes e depoimentos.</li>
+      <li>Verificação de identidade manual.</li>
+      <li>Termos sem revisão jurídica.</li>
+      <li>Pouco capital para marketing.</li></ul></div>
+    <div class="card"><h3>Oportunidades</h3><ul>
+      <li>Muita gente sedentária que as academias não conquistam.</li>
+      <li>Saúde mental em alta, com o exercício como apoio.</li>
+      <li>Treino online normalizado após a pandemia.</li>
+      <li>Envelhecimento da população: mobilidade e equilíbrio.</li>
+      <li>Parcerias com psicólogos, clínicas e empresas.</li>
+      <li>Pix e pagamento com divisão automática.</li>
+      <li>Redes sociais para divulgar com baixo custo.</li></ul></div>
+    <div class="card"><h3>Ameaças</h3><ul>
+      <li>Concorrentes: apps de academia, personais do Instagram, vídeos grátis.</li>
+      <li>Desvio de clientes: aluno e personal combinarem por fora.</li>
+      <li>Regras do CREF para atividade física orientada.</li>
+      <li>LGPD: dados de saúde e identidade exigem cuidado.</li>
+      <li>Risco físico nos encontros presenciais.</li>
+      <li>Economia apertada e inadimplência.</li></ul></div>
+  </div>
+
+  <h3>Estratégias a partir da FOFA</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Cruzamento</th><th>Estratégia</th></tr></thead>
+    <tbody>
+      <tr><td><b>Forças + Oportunidades</b></td><td>Usar o nicho acolhedor e o atendimento online nacional para crescer por parcerias com psicólogos e empresas.</td></tr>
+      <tr><td><b>Forças + Ameaças</b></td><td>Usar a segurança e a proteção contra desvio como diferencial frente ao personal "solto" do Instagram.</td></tr>
+      <tr><td><b>Fraquezas + Oportunidades</b></td><td>Ligar um meio de pagamento com divisão automática (Pix) para cobrar e repassar sem trabalho manual.</td></tr>
+      <tr><td><b>Fraquezas + Ameaças</b></td><td>Revisar termos e privacidade antes de crescer, para cumprir a LGPD e as regras do CREF.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Canvas do modelo de negócio</h2>
+  <div class="tbl"><table>
+    <tbody>
+      <tr><th>Proposta de valor</th><td>Começar a treinar sem vergonha e sem medo, em degraus, com segurança.</td></tr>
+      <tr><th>Clientes</th><td>Alunos iniciantes (pagam) e personais parceiras (oferecem o serviço).</td></tr>
+      <tr><th>Canais</th><td>Site, Instagram e TikTok, indicação, parcerias com clínicas e empresas.</td></tr>
+      <tr><th>Relacionamento</th><td>Conversa com a personal, alertas, conquistas, suporte da empresa.</td></tr>
+      <tr><th>Receitas</th><td>30% de cada mensalidade paga.</td></tr>
+      <tr><th>Recursos principais</th><td>Plataforma, rede de personais, marca de confiança.</td></tr>
+      <tr><th>Atividades principais</th><td>Recrutar e verificar personais, atrair alunos, cuidar da segurança e dos pagamentos.</td></tr>
+      <tr><th>Parceiros</th><td>Personais, gateway de pagamento, serviço de verificação de identidade, academias.</td></tr>
+      <tr><th>Custos</th><td>Taxas de pagamento, impostos, contador, marketing, verificação de identidade, tecnologia.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Como medir se está dando certo</h2>
+  <ul>
+    <li><b>Conversão:</b> de cada 100 que respondem o questionário, quantos pagam o nível 1.</li>
+    <li><b>Subida de nível:</b> quantos passam do nível 2 para o 3. É o indicador mais importante, porque o nível 3 é onde a receita cresce.</li>
+    <li><b>Retenção:</b> quantos continuam pagando mês a mês (o contrário é o <i>churn</i>, a taxa de desistência).</li>
+    <li><b>CAC</b> (custo para conquistar um aluno) e <b>LTV</b> (quanto um aluno deixa para a empresa durante todo o tempo que fica). O negócio é saudável quando o LTV é pelo menos 3 vezes o CAC.</li>
+  </ul>
+</section>
+
+<!-- 5 ======================================================= -->
+<section class="tab" id="financas" data-t="Finanças" data-i="i-coin">
+  <span class="kick"><svg><use href="#i-coin"/></svg>Parte 5 · Finanças</span>
+  <h1>De onde vem e para onde vai o dinheiro</h1>
+  <p class="lead">Os números abaixo são uma simulação para o trabalho, feita com os preços e as regras que já estão no app.</p>
+
+  <h2>Como cada mensalidade se divide</h2>
+  <p>A personal recebe 70% do valor cheio. A empresa fica com 30% e paga dele a taxa do meio de pagamento. Exemplo com pagamento por Pix (taxa de 0,99%):</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Nível</th><th class="n">Aluno paga</th><th class="n">Personal (70%)</th><th class="n">Taxa Pix</th><th class="n">Fica com a empresa</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Conhecer</td><td class="n">R$ 100,00</td><td class="n">R$ 70,00</td><td class="n">R$ 0,99</td><td class="n">R$ 29,01</td></tr>
+      <tr><td>2 · Em casa</td><td class="n">R$ 180,00</td><td class="n">R$ 126,00</td><td class="n">R$ 1,78</td><td class="n">R$ 52,22</td></tr>
+      <tr><td>3 · Ao ar livre</td><td class="n">R$ 480,00</td><td class="n">R$ 336,00</td><td class="n">R$ 4,75</td><td class="n">R$ 139,25</td></tr>
+      <tr><td>4 · Academia</td><td class="n">R$ 560,00</td><td class="n">R$ 392,00</td><td class="n">R$ 5,54</td><td class="n">R$ 162,46</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Taxas usadas no app: Pix 0,99%, boleto 1,99%, cartão 3,49%. Cada gateway cobra diferente.</p>
+
+  <h2>Simulação de um mês (após um ano de operação)</h2>
+  <p>Cenário: 10 alunos no nível 2, 12 no nível 3, 8 no nível 4 e 6 novos alunos pagando o nível 1 no mês.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Linha</th><th class="n">Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Faturamento total (tudo que os alunos pagam)</td><td class="n">R$ 12.640,00</td></tr>
+      <tr><td>Repasse às personais (70%)</td><td class="n">– R$ 8.848,00</td></tr>
+      <tr><td><b>Receita da empresa (30%)</b></td><td class="n"><b>R$ 3.792,00</b></td></tr>
+      <tr><td>Taxas de pagamento (média de 2%)</td><td class="n">– R$ 252,80</td></tr>
+      <tr><td>Imposto (Simples Nacional, 6% sobre a comissão)</td><td class="n">– R$ 227,52</td></tr>
+      <tr><td>INSS do pró-labore (11% de 1 salário mínimo)</td><td class="n">– R$ 178,31</td></tr>
+      <tr><td>Contador</td><td class="n">– R$ 250,00</td></tr>
+      <tr><td>Marketing (anúncios e conteúdo)</td><td class="n">– R$ 800,00</td></tr>
+      <tr><td>Verificação de identidade (6 novos alunos)</td><td class="n">– R$ 30,00</td></tr>
+      <tr><td>Domínio e outros</td><td class="n">– R$ 10,00</td></tr>
+      <tr class="tot"><td>Resultado do mês (lucro)</td><td class="n">R$ 2.043,37</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note warn"><svg><use href="#i-alert"/></svg><div><p><b>Ponto que impressiona a banca:</b> se o imposto fosse cobrado sobre o faturamento total (R$ 12.640) e não só sobre a comissão, o imposto subiria para R$ 758,40 e o lucro cairia para R$ 1.512,49. Por isso a forma de cobrar importa: a plataforma deve funcionar como <b>intermediadora</b>, com o pagamento dividido na hora (split), para que só os 30% sejam receita da empresa. Isso precisa ser confirmado com o contador.</p></div></div>
+
+  <h2>Ponto de equilíbrio</h2>
+  <p>Custos fixos do mês: INSS do pró-labore + contador + marketing + domínio + outros = <b>cerca de R$ 1.270</b>.</p>
+  <p>Cada aluno no nível 3 deixa, depois de taxa e imposto, <b>cerca de R$ 130,61</b> por mês para a empresa.</p>
+  <p class="big">R$ 1.270 ÷ R$ 130,61 ≈ 10 alunos</p>
+  <p>Ou seja: com <b>10 alunos no nível 3</b> (ou uma mistura equivalente) a empresa já paga as contas. Sem o marketing pago, que dá para trocar por redes sociais, bastariam 4 alunos.</p>
+
+  <h2>Quanto vale um aluno (LTV)</h2>
+  <p>Se um aluno passa em média 2 meses no nível 2, 3 meses no nível 3 e 3 meses no nível 4, ele deixa para a empresa aproximadamente:</p>
+  <p class="big">R$ 29 + 2×R$ 52 + 3×R$ 139 + 3×R$ 162 ≈ R$ 1.036</p>
+  <p>Se custar até cerca de R$ 345 em anúncios para conquistar esse aluno, a regra do LTV de 3 vezes o CAC está atendida.</p>
+
+  <h2>Quanto custa abrir e operar (Santo André, SP)</h2>
+  <p>Estes são os valores do trabalho entregue (FOFA e abertura da empresa).</p>
+  <div class="grid">
+    <div class="card"><span class="muted small">Para abrir o CNPJ</span><div class="big">≈ R$ 420</div><p class="small muted">Taxa da JUCESP + certificado digital</p></div>
+    <div class="card"><span class="muted small">Para operar</span><div class="big">≈ R$ 330 a 530</div><p class="small muted">por mês: INSS da dona + contador, mais o imposto sobre o que vender</p></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Para abrir</th><th class="n">Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Taxa da Junta Comercial (JUCESP), Ltda./SLU Microempresa</td><td class="n">R$ 218,99</td></tr>
+      <tr><td>Certificado digital da empresa (e-CNPJ, 1 ano)</td><td class="n">≈ R$ 200</td></tr>
+      <tr><td>Contador para a abertura (contabilidade online)</td><td class="n">R$ 0*</td></tr>
+      <tr><td>Alvará municipal (atividade de baixo risco, operada de casa)</td><td class="n">R$ 0**</td></tr>
+      <tr class="tot"><td>Total para abrir</td><td class="n">≈ R$ 420</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">* Muitas contabilidades online abrem a empresa sem custo ao contratar o plano mensal. ** Pela Lei da Liberdade Econômica (Lei 13.874/2019), atividades de baixo risco dispensam alvará; confirmar a lista da Prefeitura de Santo André.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Custo fixo mensal</th><th class="n">Valor</th></tr></thead>
+    <tbody>
+      <tr><td>INSS sobre o pró-labore (11% de 1 salário mínimo de R$ 1.621)</td><td class="n">R$ 178,31</td></tr>
+      <tr><td>Contador (contabilidade online)</td><td class="n">R$ 150 a R$ 350</td></tr>
+      <tr><td>Site, app e banco de dados (GitHub e Firebase, planos gratuitos)</td><td class="n">R$ 0</td></tr>
+      <tr class="tot"><td>Total fixo por mês</td><td class="n">≈ R$ 330 a R$ 530</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Custos que só existem quando há venda</th><th class="n">Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Imposto do Simples Nacional (serviços)</td><td class="n">a partir de 6%</td></tr>
+      <tr><td>Taxa do meio de pagamento (Pix · cartão)</td><td class="n">≈ 1% · 3% a 5%</td></tr>
+      <tr><td>Repasse à personal parceira</td><td class="n">70% da mensalidade</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Pró-labore é o "salário" que a dona da empresa tira para si. Sobre ele a empresa recolhe 11% de INSS, o que garante aposentadoria e auxílios. A tecnologia já está pronta e o plano gratuito do Firebase cobre o início, então o maior custo de uma startup comum (desenvolver o app) aqui já foi feito.</p>
+</section>
+
+<!-- 6 ======================================================= -->
+<section class="tab" id="empresa" data-t="Abrir a empresa" data-i="i-build">
+  <span class="kick"><svg><use href="#i-build"/></svg>Parte 6 · Abrir a empresa</span>
+  <h1>MEI, ME e o caminho certo para o Primeiro Passo</h1>
+  <p class="lead">Primeiro, tudo sobre o MEI. Depois, a parte que mais conta para a banca: por que o Primeiro Passo não pode ser MEI e qual é o caminho correto.</p>
+
+  <h2>O que é o MEI</h2>
+  <p>O <b>Microempreendedor Individual</b> é a forma mais simples de ter um CNPJ no Brasil. Foi criado pela Lei Complementar 128/2008, que alterou a LC 123/2006 (a lei do Simples Nacional).</p>
+  <div class="grid">
+    <div class="card"><span class="muted small">Limite de faturamento (2026)</span><div class="big">R$ 81 mil</div><p class="small muted">por ano, cerca de R$ 6.750 por mês</p></div>
+    <div class="card"><span class="muted small">Imposto mensal (DAS 2026)</span><div class="big">R$ 82 a R$ 87</div><p class="small muted">valor fixo, não importa quanto faturou</p></div>
+    <div class="card"><span class="muted small">Funcionários</span><div class="big">Até 1</div><p class="small muted">recebendo 1 salário mínimo ou o piso da categoria</p></div>
+  </div>
+  <p>O DAS de 2026 é calculado sobre o salário mínimo de R$ 1.621: 5% para o INSS (R$ 81,05), mais R$ 1 de ICMS para comércio e indústria e/ou R$ 5 de ISS para serviços. Fica <b>R$ 82,05</b> (comércio ou indústria), <b>R$ 86,05</b> (serviços) ou <b>R$ 87,05</b> (comércio e serviços).</p>
+  <div class="note"><svg><use href="#i-info"/></svg><div><p>Existe um projeto no Congresso para aumentar o limite do MEI. Até o fim de outubro de 2026 o valor em vigor continua <b>R$ 81 mil</b>. Confira antes de apresentar.</p></div></div>
+
+  <h3>Quem pode ser MEI</h3>
+  <ul>
+    <li>Ter 18 anos ou mais (ou ser emancipado).</li>
+    <li>Não ser sócio, administrador ou titular de outra empresa.</li>
+    <li>Faturar até R$ 81 mil por ano.</li>
+    <li>Exercer uma das <b>ocupações da lista permitida</b> (são cerca de 460).</li>
+    <li>Servidor público federal não pode; estadual e municipal depende do estatuto de cada um.</li>
+  </ul>
+
+  <h3>Passo a passo para abrir um MEI</h3>
+  <ol class="steps">
+    <li>Criar ou subir sua conta <b>gov.br</b> para o nível <b>prata ou ouro</b> (pelo app gov.br, com reconhecimento facial ou banco).</li>
+    <li>Entrar no <b>Portal do Empreendedor</b> (gov.br/mei) → "Quero ser MEI" → "Formalize-se".</li>
+    <li>Preencher dados pessoais, endereço, <b>ocupação principal</b> (até 15 secundárias) e forma de atuação (internet, local fixo, porta a porta etc.).</li>
+    <li>Aceitar as declarações. Sai na hora o <b>CNPJ</b> e o <b>CCMEI</b> (Certificado da Condição de MEI). É <b>gratuito</b>.</li>
+    <li>Conferir na prefeitura se a atividade precisa de alvará ou licença no endereço.</li>
+    <li>Abrir uma conta PJ (muitos bancos digitais são gratuitos para MEI).</li>
+  </ol>
+
+  <h3>Obrigações do MEI depois de aberto</h3>
+  <ul>
+    <li><b>Pagar o DAS todo mês</b>, até o dia 20 (pelo app MEI ou pelo Portal do Simples Nacional).</li>
+    <li><b>Emitir nota fiscal</b> quando vender para empresas. Para serviços, desde 2023 é pelo <b>emissor nacional de NFS-e</b> (gov.br/nfse).</li>
+    <li><b>Relatório mensal de receitas</b>, guardado junto com as notas.</li>
+    <li><b>Declaração anual (DASN-SIMEI)</b> até 31 de maio, informando quanto faturou no ano anterior.</li>
+  </ul>
+
+  <h3>Vantagens e direitos</h3>
+  <ul>
+    <li>CNPJ para emitir nota, abrir conta PJ e conseguir crédito.</li>
+    <li>Imposto fixo e baixo.</li>
+    <li>Contribui para o INSS: aposentadoria por idade, auxílio por incapacidade, salário-maternidade e pensão para a família.</li>
+  </ul>
+
+  <h3>Se passar do limite</h3>
+  <p>Se faturar até 20% acima (até R$ 97.200), paga a diferença do imposto sobre o excesso e vira Microempresa no ano seguinte. Acima de 20%, o desenquadramento vale desde janeiro daquele ano, com imposto retroativo.</p>
+
+  <h2>Por que o Primeiro Passo não pode ser MEI</h2>
+  <div class="note warn"><svg><use href="#i-alert"/></svg><div><p><b>Resposta curta para a banca:</b> as atividades do Primeiro Passo não estão na lista do MEI, e o faturamento passaria do limite. Por isso o certo é abrir uma <b>Microempresa (ME) no Simples Nacional</b>.</p></div></div>
+  <ol>
+    <li><b>A atividade não é permitida.</b> O que o Primeiro Passo faz é <b>intermediar serviços</b> por uma plataforma (CNAE 7490-1/04, "atividades de intermediação e agenciamento de serviços e negócios em geral"). Essa atividade <b>não está na lista do MEI</b>.</li>
+    <li><b>Personal trainer também não pode ser MEI.</b> Educação física é profissão regulamentada (Lei 9.696/1998, exige CREF) e a ocupação de personal trainer foi retirada da lista do MEI a partir de 2018 (Resolução CGSN 137/2017).</li>
+    <li><b>O limite seria ultrapassado.</b> Na simulação, o faturamento total é R$ 151.680 por ano, quase o dobro do limite do MEI.</li>
+  </ol>
+
+  <h3>Comparando os formatos (tabela do trabalho entregue)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>MEI</th><th>Empresário Individual</th><th>SLU (Ltda. Unipessoal)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Para quem trabalha sozinho</b></td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+      <tr><td><b>Atividade permitida</b></td><td>Não: personal trainer saiu da lista em 2018</td><td>Sim</td><td>Sim</td></tr>
+      <tr><td><b>Separa bens pessoais das dívidas da empresa</b></td><td>Não</td><td>Não</td><td>Sim</td></tr>
+      <tr><td><b>Limite de faturamento por ano</b></td><td>R$ 81 mil</td><td>R$ 360 mil (como ME)</td><td>R$ 360 mil (como ME)</td></tr>
+      <tr><td><b>Serve para o caso?</b></td><td>Não se encaixa</td><td>Serve, mas arrisca os bens</td><td><b>Indicado</b></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>O caminho certo: SLU + Microempresa + Simples Nacional</h2>
+  <div class="grid">
+    <div class="card"><h3>SLU</h3><p><b>Sociedade Limitada Unipessoal</b>: empresa de um dono só, com o patrimônio pessoal separado do da empresa. Se a empresa tiver dívida, a casa e o carro do dono ficam protegidos.</p></div>
+    <div class="card"><h3>ME</h3><p><b>Microempresa</b> é o porte: faturamento de até <b>R$ 360 mil por ano</b>. Acima disso vira EPP (até R$ 4,8 milhões).</p></div>
+    <div class="card"><h3>Simples Nacional</h3><p>Regime de imposto que junta vários tributos numa guia só (DAS). Para intermediação costuma ser o <b>Anexo III</b>, começando em <b>6%</b> sobre a receita.</p></div>
+  </div>
+
+  <h3>Passo a passo para abrir a ME</h3>
+  <ol class="steps">
+    <li><b>Contratar um contador</b> (online custa de R$ 150 a R$ 350 por mês; muitos fazem a abertura de graça).</li>
+    <li><b>Escolher o nome</b> e conferir se a marca está livre no INPI (registrar a marca é recomendado).</li>
+    <li><b>Consulta de viabilidade</b> na prefeitura, pelo sistema da Junta Comercial do estado (REDESIM): confirma se a atividade pode funcionar no endereço.</li>
+    <li><b>Registro na Junta Comercial</b> (em SP, a JUCESP: R$ 218,99) com o ato constitutivo da SLU e a atividade (CNAE).</li>
+    <li><b>CNPJ</b> sai integrado pela Receita Federal.</li>
+    <li><b>Inscrição municipal</b> e <b>alvará</b> (atividade de baixo risco, operada de casa, costuma ser dispensada pela Lei da Liberdade Econômica).</li>
+    <li><b>Opção pelo Simples Nacional</b> (até 30 dias após a última inscrição, e no máximo 180 dias da abertura do CNPJ).</li>
+    <li><b>Certificado digital</b> (e-CNPJ), <b>conta PJ</b> e cadastro no <b>gateway de pagamento com split</b>.</li>
+  </ol>
+
+  <h3>Documentos legais que a plataforma precisa</h3>
+  <ul>
+    <li><b>Termos de uso</b> do aluno e <b>política de privacidade</b> (LGPD, porque o app guarda dados de saúde, que são dados sensíveis).</li>
+    <li><b>Contrato de parceria</b> com a personal: ela é profissional autônoma, não funcionária. Para não virar vínculo de emprego, a personal precisa ter liberdade de horário e de aceitar ou recusar alunos.</li>
+    <li>Respeito ao <b>Código de Defesa do Consumidor</b>: preço claro, direito de arrependimento em 7 dias para compras pela internet, canal de atendimento.</li>
+  </ul>
+
+  <h3>E a personal, como recebe?</h3>
+  <p>Como não pode ser MEI, a personal pode receber como <b>autônoma</b> (pessoa física, recolhendo INSS e imposto de renda pelo carnê-leão) ou abrir a própria <b>ME</b> (CNAE 9313-1/00, atividades de condicionamento físico). Com o pagamento dividido na hora pelo gateway, a parte dela cai direto na conta dela.</p>
+
+  <h2>Começar com pouco recurso: as três fases</h2>
+  <p>Por ser uma ideia nascendo, o plano é gastar só quando entrar dinheiro. Imposto e contador só existem a partir da primeira venda. O app não precisa das lojas da Apple e do Google: o próprio site é instalado no celular pelo navegador, com ícone e tela cheia, sem custo.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Fase</th><th>Custo</th><th>O que acontece</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 · Validar</b></td><td>≈ R$ 0</td><td>Só níveis online (1 e 2), poucas personais e alunos de teste. A plataforma ainda não cobra.</td></tr>
+      <tr><td><b>2 · Primeiras vendas</b></td><td>≈ R$ 420 + R$ 330/mês</td><td>Abre a SLU, contabilidade online, Pix manual.</td></tr>
+      <tr><td><b>3 · Crescer</b></td><td>com a receita</td><td>Advogado e seguro, encontros presenciais, pagamento automático.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note ok"><svg><use href="#i-check"/></svg><div><p><b>Apoio gratuito:</b> a Sala do Empreendedor, o Sebrae e a incubadora da faculdade oferecem orientação com contador e advogado para quem está começando.</p></div></div>
+  <p class="small muted">Leis e valores mudam. Confirme com um contador antes de abrir a empresa de verdade. Fontes: Portal do Empreendedor (gov.br/mei); LC 123/2006; Resolução CGSN 140/2018; Resolução CGSN 137/2017; tabela de preços da JUCESP (2026); Lei 13.874/2019. Valores de contador e certificado digital são médias de mercado.</p>
+</section>
+
+<!-- 7 ======================================================= -->
+<section class="tab" id="ideias" data-t="Ideias" data-i="i-bulb">
+  <span class="kick"><svg><use href="#i-bulb"/></svg>Parte 7 · Ideias e próximos passos</span>
+  <h1>Para onde o Primeiro Passo pode ir</h1>
+
+  <h2>O que falta para virar produto real</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Item</th><th>O que fazer</th></tr></thead>
+    <tbody>
+      <tr><td><b>1. Desligar o modo de teste</b></td><td>Mudar antes do primeiro cliente real.</td></tr>
+      <tr><td><b>2. Termos com advogado</b></td><td>Revisar termo de parceria, termos de uso e política de privacidade.</td></tr>
+      <tr><td><b>3. Pagamento online</b></td><td>Ligar um gateway com split (Mercado Pago, Asaas, Pagar.me) que cobra o aluno e repassa à personal sozinho.</td></tr>
+      <tr><td><b>4. Verificação de identidade de verdade</b></td><td>Serviço especializado (unico, idwall, Serpro) ou, no mínimo, guardar as fotos com acesso só da empresa.</td></tr>
+      <tr><td><b>5. Telefone da central</b></td><td>Trocar o número de exemplo pelo real no botão de emergência.</td></tr>
+      <tr><td><b>6. Avisos por e-mail ou celular</b></td><td>Nova mensagem, encontro amanhã, pagamento confirmado.</td></tr>
+      <tr><td><b>7. Vídeos dos treinos</b></td><td>Gravar os vídeos de cada exercício (o espaço no app já existe).</td></tr>
+      <tr><td><b>8. Planos no valor cobrado</b></td><td>Aplicar desconto por período e frequência de aulas nas mensalidades.</td></tr>
+      <tr><td><b>9. Domínio próprio</b></td><td>Hoje o Primeiro Passo já está em passosfit.com.br/primeiro-passo.</td></tr>
+      <tr><td><b>10. Login com Google</b></td><td>Opcional: botão "Entrar com Google".</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Ideias para crescer</h2>
+  <div class="grid">
+    <div class="card"><h3>Empresas</h3><p>Vender pacotes para o RH de empresas como benefício de saúde para funcionários sedentários.</p></div>
+    <div class="card"><h3>Clínicas e médicos</h3><p>Parceria com nutricionistas, psicólogos e cardiologistas que indicam pacientes que precisam começar a se mexer.</p></div>
+    <div class="card"><h3>Academias parceiras</h3><p>O nível 4 entrega à academia um aluno que vai continuar. A academia pode dar desconto na matrícula ou pagar comissão.</p></div>
+    <div class="card"><h3>Turmas pequenas</h3><p>Grupos de 3 a 5 alunos no nível 3, em praças, com preço menor por pessoa e mais ganho para a personal.</p></div>
+    <div class="card"><h3>Grupos específicos</h3><p>Trilhas para idosos, pós-parto e pessoas com obesidade, sempre com profissional preparado.</p></div>
+    <div class="card"><h3>Comunidade</h3><p>Mural de conquistas entre alunos do mesmo nível, sem fotos de corpo, só de progresso.</p></div>
+  </div>
+
+  <h2>Riscos e como responder</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Risco</th><th>Resposta</th></tr></thead>
+    <tbody>
+      <tr><td>Personal levar o aluno para fora</td><td>Termo de não aliciamento por 12 meses, alerta no chat, pagamento só pela plataforma e benefícios para ficar (alunos novos, repasse garantido, segurança).</td></tr>
+      <tr><td>Incidente num encontro presencial</td><td>Identidade verificada, código de segurança, check-in, botão de emergência e seguro de responsabilidade civil.</td></tr>
+      <tr><td>Aluno desistir</td><td>Treinos curtos, alertas para a personal quando o aluno some, conquistas e a escada de níveis.</td></tr>
+      <tr><td>Problema de saúde</td><td>PAR-Q obrigatório e pedido de liberação médica quando alguma resposta for "sim".</td></tr>
+      <tr><td>Vazamento de dados</td><td>Regras de acesso por perfil no banco de dados, mínimo de dados guardados e política de privacidade.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 8 ======================================================= -->
+<section class="tab" id="apresentar" data-t="Apresentar" data-i="i-mic">
+  <span class="kick"><svg><use href="#i-mic"/></svg>Parte 8 · Roteiro da apresentação</span>
+  <h1>O texto da apresentação (cerca de 6 minutos)</h1>
+  <p class="lead">Este é o texto final que você entregou, dividido nas partes do roteiro com o tempo de cada uma. Leia em voz alta com o cronômetro.</p>
+
+  <div class="card no-print">
+    <h3>Cronômetro de ensaio</h3>
+    <p class="big timer" id="tm">6:00</p>
+    <div class="fc-nav" style="justify-content:flex-start"><button id="tmg">Começar</button><button id="tmr">Zerar</button></div>
+  </div>
+
+  <div class="card">
+    <div class="slide"><span class="t">1<small>30 s</small></span><div><b>Abertura</b> <span class="muted small">(levante a mão junto com a pergunta)</span><p class="say">"Quero começar com uma pergunta. Quem aqui já pensou em começar a treinar, comprou a roupa, fez a matrícula, e desistiu antes mesmo de passar pela porta da academia? Se você levantou a mão, mesmo que só por dentro, fica tranquilo, muita gente passa por isso. E foi pensando nessas pessoas que eu criei o projeto que vou apresentar hoje: o Primeiro Passo. A ideia é simples: seu primeiro passo, no seu tempo."</p></div></div>
+    <div class="slide"><span class="t">2<small>45 s</small></span><div><b>O problema</b><p class="say">"Tem muita gente que quer cuidar da saúde, mas não se sente à vontade numa academia. Gente com vergonha do próprio corpo, com medo de ser julgada, que tem ansiedade, alguma limitação física, ou que nem sabe por onde começar. Pra essas pessoas, a academia é um lugar de exposição. E aí elas continuam paradas. E não é por preguiça, é porque ninguém mostrou um caminho que respeite o tempo delas."</p></div></div>
+    <div class="slide"><span class="t">3<small>1 min</small></span><div><b>A solução</b> <span class="muted small">(se der, mostre o app no celular)</span><p class="say">"O Primeiro Passo é uma plataforma que acompanha a pessoa do zero até a academia, em quatro níveis. No primeiro, ela conhece a personal numa conversa online, sem precisar ligar a câmera se não quiser, e as duas montam o plano juntas. No segundo, ela treina em casa, com vídeos curtos, sem ninguém olhando. No terceiro, começam os encontros presenciais, numa praça ou na casa dela. E no quarto, a personal vai junto com ela até a academia, até ela se sentir segura pra ir sozinha. E o mais legal é que a mesma personal acompanha tudo, do começo ao fim, e quem decide a hora de subir de nível é o próprio aluno."</p></div></div>
+    <div class="slide"><span class="t">4<small>40 s</small></span><div><b>O diferencial</b><p class="say">"A gente tem alguns combinados que nunca quebra: não pede foto de antes e depois, não cobra por dia perdido, não compara ninguém com ninguém e não pressiona. E como tem encontro presencial, a segurança faz parte de tudo: todo mundo tem a identidade verificada, as personais têm o CREF conferido, e cada encontro tem um código de segurança. E é aí que está a nossa maior força: é um público enorme, e quase ninguém olha pra ele com esse cuidado."</p></div></div>
+    <div class="slide"><span class="t">5<small>1 min</small></span><div><b>A FOFA: oportunidades e desafios</b><p class="say">"E o momento ajuda. Tem muita gente sedentária no Brasil, as pessoas estão falando cada vez mais de saúde mental, e depois da pandemia todo mundo se acostumou a fazer as coisas online, inclusive treinar. Claro que tem desafios. O projeto ainda é pequeno, com poucas personais, e muita coisa ainda é feita na mão. E existe concorrência: aplicativo de academia, personal que vende pelo Instagram, vídeo de graça no YouTube. Também tem o risco do aluno e da personal combinarem as aulas por fora. Por isso a segurança e o acompanhamento são tão importantes: são eles que fazem valer a pena ficar na plataforma."</p></div></div>
+    <div class="slide"><span class="t">6<small>1 min</small></span><div><b>A empresa e os custos</b><p class="say">"Também pesquisei quanto custaria abrir a empresa aqui em Santo André. Pra abrir, fica em torno de 420 reais. E pra manter funcionando, uns 300 a 500 reais por mês, com contador e impostos. Por isso a ideia é começar pequeno e só abrir o CNPJ quando os primeiros clientes chegarem. E dá pra economizar em várias coisas: o aplicativo, por exemplo, não precisa estar na loja da Apple nem do Google. O próprio site pode ser instalado no celular, com ícone e tudo, sem pagar nada."</p></div></div>
+    <div class="slide"><span class="t">7<small>20 s</small></span><div><b>Onde o projeto está hoje</b><p class="say">"E o Primeiro Passo já não é só uma ideia. O site, o aplicativo do aluno e os painéis da personal e da empresa já estão funcionando, com login e tudo."</p></div></div>
+    <div class="slide"><span class="t">8<small>40 s</small></span><div><b>Fechamento</b> <span class="muted small">(pausa curta antes da última frase)</span><p class="say">"Lembram da pergunta do começo, sobre quem já desistiu antes de passar pela porta da academia? O Primeiro Passo existe pra essa pessoa. Pra mostrar que ela não precisa estar pronta pra começar. Ela só precisa dar o primeiro passo, no tempo dela. Agradeço a atenção de todos. Fico à disposição para perguntas."</p></div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>Para o dia</h3><p>Ensaie em voz alta cronometrando. Fale do problema com emoção e da empresa com segurança. Números ajudam a turma a lembrar: <b>4 níveis, 15 minutos grátis, R$ 420 para abrir</b>.</p></div>
+    <div class="card"><h3>Se o tempo for curto</h3><p>Corte primeiro o trecho do aplicativo fora das lojas e encurte o diferencial. A abertura e o fechamento nunca saem: são eles que deixam a apresentação redonda.</p></div>
+  </div>
+
+  <h2>Perguntas que a banca pode fazer</h2>
+  <details><summary>Qual é a diferença para um app de treino comum?</summary><div class="in"><p>Apps de treino entregam o exercício e deixam a pessoa sozinha. O Primeiro Passo entrega uma pessoa (a personal) e um caminho em níveis, para quem tem medo ou vergonha de começar. O foco é a mudança de comportamento, não o treino em si.</p></div></details>
+  <details><summary>Como vocês ganham dinheiro?</summary><div class="in"><p>Ficamos com 30% de cada mensalidade paga pela plataforma. A personal fica com 70%. A empresa paga as taxas, os impostos e os custos com a sua parte.</p></div></details>
+  <details><summary>O que impede a personal de levar o aluno para fora da plataforma?</summary><div class="in"><p>Três coisas: o termo de parceria proíbe por 12 meses; o chat detecta e registra tentativas de combinar pagamento por fora; e a plataforma oferece o que a personal sozinha não tem: alunos novos, cobrança, segurança e agenda organizada.</p></div></details>
+  <details><summary>Por que não abrir como MEI, que é mais barato?</summary><div class="in"><p>Porque não é permitido: intermediação de serviços e personal trainer não estão na lista do MEI, e o faturamento passaria dos R$ 81 mil por ano. O certo é uma SLU no Simples Nacional, que começa com 6% de imposto.</p></div></details>
+  <details><summary>E se o aluno passar mal durante o treino?</summary><div class="in"><p>Antes de começar, todo aluno responde o PAR-Q. Se alguma resposta indicar risco, pedimos liberação médica. Os treinos dos primeiros níveis são leves e adaptados, e o app tem botão de emergência.</p></div></details>
+  <details><summary>Como garantem a segurança nos encontros?</summary><div class="in"><p>Identidade verificada dos dois lados, CREF e antecedentes da personal checados, código de segurança que precisa ser confirmado no começo de cada encontro, check-in e relato confidencial.</p></div></details>
+  <details><summary>Como os dados de saúde são protegidos?</summary><div class="in"><p>Pela LGPD, dado de saúde é sensível. Pedimos consentimento explícito, guardamos só o necessário e o banco de dados tem regras: cada pessoa só vê o que precisa ver.</p></div></details>
+  <details><summary>Quanto custa para começar?</summary><div class="in"><p>Quase nada na fase de validação, porque a tecnologia já está pronta e roda em planos gratuitos. Para abrir o CNPJ em Santo André, cerca de R$ 420 (JUCESP + certificado digital). Para operar, de R$ 330 a R$ 530 por mês (INSS do pró-labore + contador), mais o imposto, que só existe quando há venda.</p></div></details>
+  <details><summary>Como vão atrair alunos?</summary><div class="in"><p>Conteúdo nas redes falando com quem tem vergonha de começar, indicação de alunos, parcerias com clínicas e empresas, e a conversa gratuita de 15 minutos, que tira o medo de pagar sem conhecer.</p></div></details>
+
+  <h2 class="no-print">Cartões de estudo</h2>
+  <p class="no-print muted">Leia a pergunta, tente responder em voz alta e toque no cartão para conferir.</p>
+  <div class="fc no-print">
+    <div class="fc-card" id="fc" tabindex="0" role="button" aria-label="Virar cartão">
+      <div class="fc-face fc-front"><span class="fc-tip">Pergunta</span><b id="fcq"></b><span class="fc-tip">Toque para ver a resposta</span></div>
+      <div class="fc-face fc-back"><span class="fc-tip">Resposta</span><span id="fca"></span></div>
+    </div>
+    <div class="fc-nav"><button id="fcp" aria-label="Cartão anterior">Anterior</button><span id="fcn"></span><button id="fcx" aria-label="Próximo cartão">Próximo</button></div>
+  </div>
+</section>
+
+<!-- 9 ======================================================= -->
+<section class="tab" id="glossario" data-t="Glossário" data-i="i-list">
+  <span class="kick"><svg><use href="#i-list"/></svg>Parte 9 · Glossário</span>
+  <h1>Palavras que podem aparecer</h1>
+  <div class="tbl"><table>
+    <tbody>
+      <tr><th>CNPJ</th><td>Cadastro da empresa na Receita Federal, como o CPF da empresa.</td></tr>
+      <tr><th>CNAE</th><td>Código que diz qual é a atividade da empresa. Define se pode ser MEI e qual imposto paga.</td></tr>
+      <tr><th>MEI</th><td>Microempreendedor Individual: CNPJ simplificado, até R$ 81 mil por ano, imposto fixo mensal.</td></tr>
+      <tr><th>ME / EPP</th><td>Microempresa (até R$ 360 mil por ano) e Empresa de Pequeno Porte (até R$ 4,8 milhões).</td></tr>
+      <tr><th>SLU</th><td>Sociedade Limitada Unipessoal: empresa de um dono só, com patrimônio separado.</td></tr>
+      <tr><th>Simples Nacional</th><td>Regime que junta vários impostos numa guia só, com alíquota que cresce com o faturamento.</td></tr>
+      <tr><th>DAS</th><td>A guia mensal de pagamento do Simples Nacional e do MEI.</td></tr>
+      <tr><th>CCMEI</th><td>Certificado que comprova que a pessoa é MEI.</td></tr>
+      <tr><th>NFS-e</th><td>Nota fiscal de serviço eletrônica.</td></tr>
+      <tr><th>CREF</th><td>Registro obrigatório do profissional de Educação Física no conselho regional.</td></tr>
+      <tr><th>PAR-Q</th><td>Questionário de prontidão para atividade física: 7 perguntas que indicam se a pessoa precisa de liberação médica.</td></tr>
+      <tr><th>LGPD</th><td>Lei Geral de Proteção de Dados (13.709/2018). Dado de saúde é "dado sensível".</td></tr>
+      <tr><th>KYC</th><td>"Conheça seu cliente": verificação de identidade com documento e selfie.</td></tr>
+      <tr><th>Gateway</th><td>Serviço que processa pagamentos por Pix, cartão e boleto.</td></tr>
+      <tr><th>Split</th><td>Divisão automática do pagamento entre empresa e personal no momento da compra.</td></tr>
+      <tr><th>Repasse</th><td>Valor que a empresa transfere para a personal.</td></tr>
+      <tr><th>Ticket médio</th><td>Quanto, em média, cada cliente paga por mês.</td></tr>
+      <tr><th>Churn</th><td>Taxa de clientes que cancelam no mês.</td></tr>
+      <tr><th>CAC</th><td>Custo de aquisição de cliente: quanto se gasta para conquistar um aluno.</td></tr>
+      <tr><th>LTV</th><td>Valor do tempo de vida do cliente: quanto ele deixa para a empresa enquanto fica.</td></tr>
+      <tr><th>Ponto de equilíbrio</th><td>Quantidade de vendas em que a empresa não tem lucro nem prejuízo.</td></tr>
+      <tr><th>PWA</th><td>Aplicativo que funciona pelo navegador e pode ser instalado na tela do celular.</td></tr>
+      <tr><th>Efeito de rede</th><td>Quando cada novo usuário deixa o serviço mais valioso para os outros.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<nav class="next" aria-label="Navegar entre as partes"><button id="prev"><svg><use href="#i-back"/></svg><span></span></button><button id="nextb"><span></span><svg><use href="#i-next"/></svg></button></nav>
+</main>
+
+<script>
+(function(){
+  const secs=[...document.querySelectorAll("section.tab")],tabs=document.getElementById("tabs");
+  tabs.innerHTML=secs.map((s,i)=>`<button data-go="${s.id}"><svg><use href="#${s.dataset.i}"/></svg><span class="n">${i+1}</span>${s.dataset.t}</button>`).join("");
+  const prev=document.getElementById("prev"),next=document.getElementById("nextb");
+  function show(id,scroll){
+    let i=secs.findIndex(s=>s.id===id);if(i<0)i=0;
+    secs.forEach((s,k)=>s.classList.toggle("on",k===i));
+    tabs.querySelectorAll("button").forEach((b,k)=>{b.classList.toggle("on",k===i);if(k===i)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+    const on=tabs.children[i];if(on)tabs.scrollTo({left:on.offsetLeft-tabs.clientWidth/2+on.clientWidth/2,behavior:"smooth"});
+    prev.hidden=i===0;next.hidden=i===secs.length-1;
+    if(i>0)prev.querySelector("span").textContent=secs[i-1].dataset.t;
+    if(i<secs.length-1)next.querySelector("span").textContent=secs[i+1].dataset.t;
+    prev.onclick=()=>go(secs[i-1].id);next.onclick=()=>go(secs[i+1].id);
+    if(scroll)window.scrollTo({top:0,behavior:"smooth"});
+  }
+  function go(id){history.replaceState(null,"","#"+id);show(id,true)}
+  tabs.addEventListener("click",e=>{const b=e.target.closest("button");if(b)go(b.dataset.go)});
+  show(location.hash.slice(1),false);
+  addEventListener("hashchange",()=>show(location.hash.slice(1),true));
+
+  /* cartões de estudo */
+  const C=[
+    ["Qual é a frase que resume o Primeiro Passo?","Uma plataforma que leva quem nunca treinou do zero até a academia, em quatro níveis, no ritmo de cada um, com uma personal verificada do lado."],
+    ["Quais são os quatro níveis?","1 Conhecer (conversa online), 2 Em casa (vídeos), 3 Ao ar livre (encontros presenciais), 4 Academia (autonomia)."],
+    ["Qual é a teoria principal do trabalho?","O Modelo Transteórico de Mudança, de Prochaska e DiClemente: pré-contemplação, contemplação, preparação, ação e manutenção."],
+    ["O que diz a teoria da Autoeficácia?","De Bandura: a pessoa só tenta o que acredita conseguir. Pequenas vitórias criam essa crença."],
+    ["Quantos dias leva para formar um hábito?","Em média 66 dias, variando de 18 a 254 (Lally, 2010)."],
+    ["Quantos adultos não fazem atividade suficiente?","31% no mundo, cerca de 1,8 bilhão de pessoas (OMS, dados de 2022)."],
+    ["Como a receita se divide?","70% para a personal e 30% para a empresa, que paga taxas, impostos e custos."],
+    ["Quanto a empresa ganha com um aluno no nível 3 pagando por Pix?","R$ 139,25 por mês antes do imposto; cerca de R$ 130,61 depois do imposto."],
+    ["Qual é o ponto de equilíbrio?","Cerca de 10 alunos no nível 3 cobrem os custos fixos de cerca de R$ 1.270 por mês (com marketing pago)."],
+    ["Quanto custa abrir e operar a empresa em Santo André?","Abrir: cerca de R$ 420 (JUCESP R$ 218,99 + certificado digital). Operar: R$ 330 a R$ 530 por mês (INSS do pró-labore + contador), mais o imposto sobre as vendas."],
+    ["Quais são os combinados que a plataforma nunca quebra?","Não pede foto de antes e depois, não cobra por dia perdido, não compara ninguém, não pressiona, não empurra de nível e não compartilha as respostas."],
+    ["Quais são as três fases para começar com pouco?","1 Validar (quase R$ 0, só online), 2 Primeiras vendas (abre a SLU, cerca de R$ 420 + R$ 330 por mês), 3 Crescer (com a receita)."],
+    ["Qual é o limite do MEI em 2026?","R$ 81 mil por ano, com DAS fixo de R$ 82,05 a R$ 87,05 por mês."],
+    ["Por que o Primeiro Passo não pode ser MEI?","Intermediação de serviços e personal trainer não estão na lista do MEI, e o faturamento passaria do limite."],
+    ["Qual é o formato certo da empresa?","SLU (Sociedade Limitada Unipessoal), porte ME, no Simples Nacional, em geral Anexo III a partir de 6%."],
+    ["O que é split de pagamento?","A divisão automática do valor pago entre empresa e personal na hora da compra."],
+    ["O que é o PAR-Q?","Questionário de 7 perguntas que indica se a pessoa precisa de liberação médica antes de se exercitar."],
+    ["Como a plataforma garante segurança?","Identidade verificada, CREF checado, código de segurança no encontro, check-in, botão de emergência e relato confidencial."]
+  ];
+  let k=0;const card=document.getElementById("fc"),q=document.getElementById("fcq"),a=document.getElementById("fca"),n=document.getElementById("fcn");
+  function fc(){card.classList.remove("flip");setTimeout(()=>{q.textContent=C[k][0];a.textContent=C[k][1];n.textContent=(k+1)+" de "+C.length},card.classList.contains("flip")?250:0)}
+  card.onclick=()=>card.classList.toggle("flip");
+  card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();card.classList.toggle("flip")}};
+  document.getElementById("fcx").onclick=()=>{k=(k+1)%C.length;fc()};
+  document.getElementById("fcp").onclick=()=>{k=(k-1+C.length)%C.length;fc()};
+  q.textContent=C[0][0];a.textContent=C[0][1];n.textContent="1 de "+C.length;
+
+  /* cronômetro de ensaio */
+  let left=360,iv=null;const tm=document.getElementById("tm"),tg=document.getElementById("tmg");
+  const draw=()=>{const m=Math.floor(Math.abs(left)/60),s=Math.abs(left)%60;tm.textContent=(left<0?"+":"")+m+":"+String(s).padStart(2,"0");tm.style.color=left<0?"var(--red)":left<=60?"var(--gold)":""};
+  tg.onclick=()=>{if(iv){clearInterval(iv);iv=null;tg.textContent="Continuar"}else{iv=setInterval(()=>{left--;draw()},1000);tg.textContent="Pausar"}};
+  document.getElementById("tmr").onclick=()=>{clearInterval(iv);iv=null;left=360;tg.textContent="Começar";draw()};
+
+  /* PDF pelo navegador: abre tudo antes de imprimir */
+  addEventListener("beforeprint",()=>document.querySelectorAll("details").forEach(d=>d.open=true));
+})();
+</script>
+</body>
+</html>
