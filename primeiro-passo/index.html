@@ -795,6 +795,30 @@ body.ux .role:hover::after{opacity:1}
 .lead p{font-size:15px}
 .lead small{color:var(--muted)}
 .info{display:flex;gap:10px;align-items:flex-start;background:var(--mist);border-radius:16px;padding:14px 16px;font-size:14.5px;color:var(--muted)}
+.ap-hero{display:grid;gap:14px;background:linear-gradient(135deg,#1B3A5C,#24508a);color:#fff;border-radius:22px;padding:clamp(18px,3vw,28px);margin-bottom:22px}
+.ap-hero h2{font-family:var(--display);font-size:clamp(22px,3vw,30px);line-height:1.15;color:#fff}
+.ap-hero p{color:#C9D8EA;max-width:640px}
+.ap-hero .acts{display:flex;flex-wrap:wrap;gap:10px}
+.ap-hero .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)}
+.ap-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font-family:var(--display);font-size:clamp(19px,2.2vw,23px);color:var(--navy)}
+.ap-sec span{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--gold,#e0a526);color:#fff;font-size:15px;flex:none}
+.ap-docs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:14px}
+.ap-doc{display:grid;gap:8px;align-content:start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.ap-doc .ic{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--sky);color:var(--navy)}
+.ap-doc h3{font-size:16.5px;color:var(--navy)}
+.ap-doc p{font-size:14px;color:var(--muted)}
+.ap-doc .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.ap-doc.main{border-color:var(--gold,#e0a526);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold,#e0a526) 25%,transparent)}
+.ap-parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr));gap:10px}
+.ap-parts button{display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-weight:600;color:var(--ink);min-height:58px}
+.ap-parts button:hover{border-color:var(--navy)}
+.ap-parts button small{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+.ap-parts button i,.ap-parts button svg{flex:none;color:var(--navy)}
+.apv{position:fixed;inset:0;z-index:90;display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--bg,#fff)}
+.apv-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#1B3A5C;color:#fff}
+.apv-bar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apv-bar .btn{background:rgba(255,255,255,.14);color:#fff;border-color:transparent}
+.apv iframe{width:100%;height:100%;border:0;background:#fff}
 .info svg{color:var(--blue);margin-top:1px}
 .set{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:12px}
 
@@ -2727,7 +2751,7 @@ function panelAdmin(tab){
   if(SESS.role!=="admin"){location.hash="#/entrar";return}
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
   const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Personais",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
-  const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Personais"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Exemplo com 15 alunos, para apresentar","Apresentação"]}[tab]||["",""];
+  const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Personais"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Trabalho da faculdade","Apresentação"]}[tab]||["",""];
   shell({role:"Empresa",tabs,tab,base:"#/admin",me:{name:"Administração",sub:"Primeiro Passo"},title:T[1],kick:T[0]});
   ({geral:aGeral,clientes:aClientes,personais:aPersonais,financeiro:aFin,seguranca:aSeg,leads:aLeads,ajustes:aAjustes,apresentacao:aApres}[tab]||aGeral)(bl);
   bindOpen("admin");icons();
@@ -2792,6 +2816,20 @@ function aPersonais(bl){
   document.querySelectorAll("[data-asp]").forEach(b=>b.onclick=()=>{setSess({role:"personal",pid:b.dataset.asp,back:"admin"});location.hash="#/personal"});
   $("#np").onsubmit=e=>{e.preventDefault();const name=$("#npn").value.trim();DB.personals.push({id:"p"+Date.now(),name,email:mailOf(name),cref:"CREF "+$("#npc").value.trim(),uf:$("#npu").value,area:$("#npa").value.trim()+" / "+$("#npu").value,bio:"",spec:[$("#nps").value.trim()||"Iniciantes"],status:"ativo",cap:15,rating:null,since:Date.now()});saveDB();toast(`${name.split(" ")[0]} cadastrada`);route(true)};
 }
+const AP_DOCS=[["primeiro-passo-trabalho.pdf","book-open-check","Material completo","Tudo do trabalho num PDF só: ideia, teoria, app, mercado, finanças, empresa e roteiro.",1],
+ ["docs/Primeiro-Passo-Guia-Completo.pdf","book-open","Guia completo do sistema","Como tudo funciona: site, app do aluno, painéis, dinheiro, segurança e operação."],
+ ["docs/Primeiro-Passo-Apresentacao.pdf","presentation","Texto da apresentação","O texto para falar na frente da turma."],
+ ["docs/Primeiro-Passo-Roteiro-antigo.pdf","timer","Roteiro com tempos","Quem fala o quê e quanto tempo cada parte leva."],
+ ["docs/Primeiro-Passo-FOFA-e-CNPJ.pdf","building-2","FOFA e abertura da empresa","Forças, fraquezas, oportunidades, ameaças e como abrir o CNPJ."]];
+const AP_PARTS=[["resumo","star","Resumo","o negócio em 1 minuto"],["teoria","graduation-cap","Teoria","autores e referências"],["app","smartphone","O app","jornada e painéis"],["mercado","chart-no-axes-combined","Mercado","público, FOFA, canvas"],["financas","coins","Finanças","15 alunos e cenários"],["empresa","landmark","Abrir a empresa","MEI, SLU e custos"],["ideias","lightbulb","Ideias","crescer e riscos"],["apresentar","mic","Apresentar","roteiro e perguntas"],["glossario","list","Glossário","palavras do trabalho"]];
+function apView(url,title){
+  document.querySelector(".apv")?.remove();
+  const v=document.createElement("div");v.className="apv";v.setAttribute("role","dialog");v.setAttribute("aria-label",title);
+  v.innerHTML=`<div class="apv-bar"><button class="btn btn-sm" data-apx><i data-lucide="arrow-left"></i>Voltar ao painel</button><b>${esc(title)}</b><a class="btn btn-sm" href="${url}" target="_blank" rel="noopener" aria-label="Abrir em outra aba"><i data-lucide="external-link"></i></a></div><iframe src="${url}" title="${esc(title)}"></iframe>`;
+  document.body.appendChild(v);icons();
+  const close=e=>{if(e.type==="keydown"&&e.key!=="Escape")return;v.remove();removeEventListener("keydown",close);removeEventListener("hashchange",close)};
+  v.querySelector("[data-apx]").onclick=close;addEventListener("keydown",close);addEventListener("hashchange",close);
+}
 let AP=15;
 function aApres(){
   const S={15:{lv:[3,4,5,3],np:2,mk:300,ct:250,nv:3},30:{lv:[6,8,10,6],np:4,mk:600,ct:250,nv:6},50:{lv:[10,13,17,10],np:6,mk:1000,ct:350,nv:10}}[AP],PR=[100,180,480,560];
@@ -2800,7 +2838,15 @@ function aApres(){
   const lucro=emp-fee-tax-inss-S.ct-S.mk-ot;
   const OUT=[["Taxa de pagamento (2% do total)",fee],["Imposto (6% da parte da empresa)",tax],["INSS",inss],["Contador",S.ct],["Divulgação",S.mk],[`Verificação de identidade (${S.nv} novos)`,S.nv*5],["Domínio do site",10]];
   const NM=["Ana C.","Bruno M.","Carla S.","Diego R.","Elisa P.","Fábio L.","Gabi T.","Hugo A.","Iara N.","João V.","Karen D.","Lucas F.","Marta B.","Nina G.","Otávio H."],LV15=[1,1,1,2,2,2,2,3,3,3,3,3,4,4,4],PN=["Personal A","Personal B"];
-  $("#pv").innerHTML=`<div class="info" style="margin-bottom:16px"><i data-lucide="presentation"></i><span><b style="color:var(--ink)">Modo apresentação:</b> tudo aqui é exemplo, com os mesmos números do trabalho. Seus clientes e valores reais não mudam.</span></div>
+  const T="trabalho/";
+  $("#pv").innerHTML=`<div class="ap-hero"><h2>Tudo do trabalho da faculdade, em um lugar só</h2><p>Os documentos entregues, o conteúdo completo do trabalho e o painel montado com 15 alunos de exemplo. Abra cada parte e volte quando quiser.</p>
+    <div class="acts"><button class="btn btn-primary" data-apo="${T}#resumo" data-apt="Trabalho completo"><i data-lucide="book-open-check"></i>Abrir o trabalho completo</button><a class="btn btn-ghost" href="#ap-painel" data-apj><i data-lucide="layout-dashboard"></i>Painel com 15 alunos</a><a class="btn btn-ghost" href="${T}primeiro-passo-trabalho.pdf" download><i data-lucide="download"></i>Baixar PDF</a></div></div>
+  <h2 class="ap-sec"><span>1</span>Documentos</h2>
+  <div class="ap-docs">${AP_DOCS.map(([f,ic,t,d,m])=>`<article class="ap-doc ${m?"main":""}"><span class="ic"><i data-lucide="${ic}"></i></span><h3>${t}</h3><p>${d}</p><div class="acts"><a class="btn ${m?"btn-primary":"btn-ghost"} btn-sm" href="${T}${f}" target="_blank" rel="noopener"><i data-lucide="eye"></i>Abrir</a><a class="btn btn-ghost btn-sm" href="${T}${f}" download><i data-lucide="download"></i>Baixar</a></div></article>`).join("")}</div>
+  <h2 class="ap-sec"><span>2</span>Partes do trabalho</h2>
+  <div class="ap-parts">${AP_PARTS.map(([id,ic,t,d])=>`<button data-apo="${T}#${id}" data-apt="${t}"><i data-lucide="${ic}"></i><span>${t}<small>${d}</small></span></button>`).join("")}</div>
+  <h2 class="ap-sec" id="ap-painel"><span>3</span>Painel com alunos de exemplo</h2>
+  <div class="info" style="margin-bottom:16px"><i data-lucide="presentation"></i><span><b style="color:var(--ink)">Modo apresentação:</b> tudo aqui é exemplo, com os mesmos números do trabalho. Seus clientes e valores reais não mudam.</span></div>
   <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:520px;margin-bottom:16px" role="group" aria-label="Quantidade de alunos">${[15,30,50].map(n=>`<button aria-pressed="${AP===n}" data-ap="${n}"><i data-lucide="users"></i>${n} alunos</button>`).join("")}</div>
   <div class="kpis">${kpi("users","Alunos ativos",AP,`${S.np} personais parceiras`)}${kpi("banknote","Alunos pagam no mês",money(pay),"soma das mensalidades")}${kpi("hand-coins","Vai para as personais",money(rep),"70% do total")}${kpi("building-2","Parte da empresa",money(emp),"30% do total")}${kpi("piggy-bank","Lucro do mês",m2(lucro),"depois de todos os custos")}${kpi("calendar-range","Movimento no ano",money(pay*12),"12 meses de mensalidades")}</div>
   <div class="grid2">
@@ -2816,7 +2862,9 @@ function aApres(){
       <div class="card-h" style="margin:18px 0 10px"><h3>Personais parceiras</h3></div><div class="rows">${Array.from({length:S.np},(_,i)=>`<div class="rw"><span class="av">${String.fromCharCode(65+i)}</span><span><b>Personal ${String.fromCharCode(65+i)}</b><small>cerca de ${Math.round(AP/S.np)} alunos</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(rep/S.np)}</b></span></div>`).join("")}</div></section>
     <section class="card"><div class="card-h"><h3>${AP===15?"Os 15 alunos do exemplo":`15 dos ${AP} alunos do exemplo`}</h3><span class="pill mute">fictícios</span></div><div class="rows clip">${NM.map((n,i)=>`<div class="rw"><span class="av">${n[0]}</span><span><b>${n}</b><small>Nível ${LV15[i]} · ${LEVELS[LV15[i]-1].t} · ${PN[i%2]}</small></span><span class="end" style="font-variant-numeric:tabular-nums">${money(PR[LV15[i]-1])}</span></div>`).join("")}</div></section>
   </div>`;
-  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{AP=+b.dataset.ap;aApres();icons()});
+  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{const y=scrollY;AP=+b.dataset.ap;aApres();icons();scrollTo(0,y)});
+  document.querySelectorAll("[data-apo]").forEach(b=>b.onclick=()=>apView(b.dataset.apo,b.dataset.apt));
+  document.querySelector("[data-apj]").onclick=e=>{e.preventDefault();$("#ap-painel").scrollIntoView({behavior:"smooth"})};
 }
 let LF="novo";
 function aLeads(){
