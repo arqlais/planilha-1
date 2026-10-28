@@ -1830,9 +1830,17 @@ function twinIds(exId) {
   const k = twinKey(e);
   return new Set(db.exercises.filter(x => x.profileId === e.profileId && twinKey(x) === k).map(x => x.id));
 }
-const exHistory = exId => { const ids = twinIds(exId); return db.sessions.filter(s => ids.has(s.exId) && hasDone(s)).sort((a, b) => a.date.localeCompare(b.date)); };
+// Se o mesmo exercício ficou com dois registros no mesmo dia (ex.: internet caindo no meio), vale sempre o mais completo:
+// o enviado, depois o com mais séries feitas. Assim o "antes" e a tela nunca pegam o registro pela metade.
+const sessRank = s => (s.fin ? 1e6 : 0) + s.sets.filter(x => x.done).length * 1e3 + s.sets.filter(x => x.carga != null || x.reps != null).length;
+const bestSession = list => list.length < 2 ? list[0] : list.reduce((a, b) => sessRank(b) > sessRank(a) ? b : a);
+const exHistory = exId => {
+  const ids = twinIds(exId), by = new Map();
+  db.sessions.forEach(s => { if (!ids.has(s.exId) || !hasDone(s)) return; const k = s.exId + '|' + s.date, o = by.get(k); if (!o || sessRank(s) > sessRank(o)) by.set(k, s); });
+  return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
+};
 const prevSession = (exId, date) => exHistory(exId).filter(s => s.date < date).pop();
-const sessionOn = (exId, date) => db.sessions.find(s => s.exId === exId && s.date === date);
+const sessionOn = (exId, date) => bestSession(db.sessions.filter(s => s.exId === exId && s.date === date));
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
 const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0);
 // Divisão da semana do aluno (feita pelo professor): dia da semana (0=domingo) -> grupos
@@ -1871,6 +1879,7 @@ function ensureSession(ex, date) {
   if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); db.sessions.push(s); }
   if (date === today() && !s.t0 && !s.fin) s.t0 = new Date().toISOString(); // começou agora: dá a duração do treino no check-in
   if (ui.studentMode && !meStu()) s.by = 'aluno'; // marcação feita pelo aluno
+  s.up = new Date().toISOString(); s.dv = devKind(); // última mudança: quando e em que aparelho (para conferir depois)
   return s;
 }
 
@@ -7467,7 +7476,7 @@ function subscribeMonths(pid) {
   const un = ref.onSnapshot({ includeMetadataChanges: true }, snap => {
     snap.docChanges().forEach(ch => {
       const path = `profiles/${pid}/months/${ch.doc.id}`;
-      ch.type === 'removed' ? remote.delete(path) : remote.set(path, ch.doc.data());
+      ch.type === 'removed' ? remote.delete(path) : takeRemote(path, ch.doc.data());
     });
     if (freshSnap(snap)) cloud.waiting.delete(pid);
     onRemote();
@@ -7483,8 +7492,8 @@ function ensureFull(pid) {
     // Junta os treinos antigos ao que já está no app, sem apagar nada que foi anotado enquanto carregava
     const haveS = new Set(db.sessions.map(x => x.id)), haveC = new Set(db.cardio.map(x => x.id));
     snap.forEach(d => {
-      const path = `profiles/${pid}/months/${d.id}`, v = d.data();
-      remote.set(path, v); lastSynced.set(path, canon(v));
+      const path = `profiles/${pid}/months/${d.id}`;
+      takeRemote(path, d.data()); const v = remote.get(path); lastSynced.set(path, canon(v));
       (v.sessions || []).forEach(x => { if (!haveS.has(x.id)) db.sessions.push(plain(x)); });
       (v.cardio || []).forEach(c => { if (!haveC.has(c.id)) db.cardio.push({ ...plain(c), profileId: pid }); });
     });
@@ -7511,7 +7520,7 @@ function startAdmin() {
     snap.docChanges().forEach(ch => {
       const pid = ch.doc.id;
       if (ch.type === 'removed') return dropProfile(pid);
-      remote.set('profiles/' + pid, ch.doc.data()); cloud.removed.delete(pid);
+      takeRemote('profiles/' + pid, ch.doc.data()); cloud.removed.delete(pid);
       if (!cloud.months.has(pid)) subscribeMonths(pid);
     });
     if (freshSnap(snap)) cloud.gotProfiles = true;
@@ -7546,7 +7555,7 @@ function startStudent(pid) {
     if (!doc.exists && doc.metadata.fromCache) return; // ainda sem a resposta do servidor: espera
     if (!doc.exists || doc.data().uid !== cloud.user.uid) { if (doc.metadata.fromCache) return; return lostAccess(); }
     if (doc.data().deleted) return showAuth('noprofile');
-    remote.set('profiles/' + pid, doc.data());
+    takeRemote('profiles/' + pid, doc.data());
     cloud.gotProfiles = true; onRemote();
     if (cloud.ready && document.body.classList.contains('locked')) enterApp(); // voltou da lixeira: abre sozinho
   }, err => err.code === 'permission-denied' ? lostAccess() : cloudError(err)));
@@ -7567,7 +7576,7 @@ async function onRemote() {
   db = assemble(srv);
   if (srv !== remote) assemble(); // lixeira (vem da nuvem)
   lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
-  for (const [path, x] of cloud.pending) x.was === undefined ? lastSynced.delete(path) : lastSynced.set(path, x.was);
+  for (const [path, x] of cloud.pending) lastSynced.set(path, canon(x.doc)); // o pendente sobe sozinho (juntando com a nuvem)
   if (cloud.pending.size) scheduleSync();
   enterApp();
   if (cloud.role === 'admin') { runFixes(); setTimeout(dailyBackup, 4000); } // ajustes pontuais + cópia do dia
@@ -7625,7 +7634,7 @@ function linkLoose(d, loose) {
 function assemble(src = remote) {
   const d = { profiles: [], exercises: [], sessions: [], cardio: [], seeded: ['lais'], letters: true }, prefs = {}, bodies = {}, trash = [], loose = [], owns = {};
   for (const [path, v0] of src) {
-    const v = plain(v0), m = path.split('/');
+    const v = plain(v0), m = path.split('/'); delete v.rev;
     if (m[3] === 'prefs') prefs[m[1]] = v; // preferências do aluno (ex.: cor do app)
     else if (m[3] === 'body') bodies[m[1]] = v.entries || []; // medidas do corpo
     else if (m[3] === 'own') owns[m[1]] = v; // treinos que o próprio aluno montou
@@ -7703,20 +7712,15 @@ function scheduleSync() {
   clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 700);
   setSyncState('Salvando…');
 }
-// Ficha do aluno que já existe na nuvem: grava só os campos que ESTE aparelho mudou (e cada data do planejamento
-// separada). Assim um aparelho com dados antigos (ex.: celular aberto há horas) não apaga o que foi feito em outro.
-function profileUpdate(path, was, doc) {
-  if (!was || !/^profiles\/[^/]+$/.test(path)) return null;
-  let old; try { old = JSON.parse(was); } catch (e) { return null; }
-  const del = firebase.firestore.FieldValue.delete(), up = {};
-  for (const k of new Set([...Object.keys(old), ...Object.keys(doc)])) {
-    if (k === 'claim') continue;
-    const a = old[k], b = doc[k];
-    if (k === 'plans' && a && b && typeof a === 'object' && typeof b === 'object') {
-      for (const d of new Set([...Object.keys(a), ...Object.keys(b)])) if (canon(a[d]) !== canon(b[d])) up['plans.' + d] = b[d] === undefined ? del : b[d];
-    } else if (canon(a) !== canon(b)) up[k] = b === undefined ? del : b;
-  }
-  return Object.keys(up).length ? ['update', path, up] : null;
+// Número de gravações de cada documento (campo "rev", +1 a cada gravação deste app). Uma resposta atrasada da nuvem,
+// com um número menor do que o que este aparelho já gravou, é velha: não pode desfazer o que acabou de ser anotado.
+const revs = new Map();
+function takeRemote(path, data) {
+  const v = plain(data || {}), r = typeof v.rev === 'number' ? v.rev : 0; delete v.rev;
+  if (r > 0 && r < (revs.get(path) || 0)) return false;
+  r > 0 ? revs.set(path, r) : revs.delete(path);
+  remote.set(path, v);
+  return true;
 }
 // Junta 3 versões: "base" (o que este aparelho recebeu da nuvem), "mine" (como ficou aqui) e "server" (como está na
 // nuvem agora). Só o que ESTE aparelho mudou entra; o resto fica como está na nuvem. Listas com id (exercícios,
@@ -7748,16 +7752,36 @@ function merge3(base, mine, server) {
 async function writeMerged(path, was, doc) {
   const ref = cloud.fs.doc(path);
   let base; try { base = was ? JSON.parse(was) : undefined; } catch (e) { base = undefined; }
-  return cloud.fs.runTransaction(async tx => {
+  let rev = 0;
+  const out = await cloud.fs.runTransaction(async tx => {
     const snap = await tx.get(ref), server = snap.exists ? plain(snap.data()) : undefined;
+    const r = server && typeof server.rev === 'number' ? server.rev : 0; if (server) delete server.rev;
     const out = server === undefined ? doc : merge3(base, doc, server);
-    if (!server || canon(out) !== canon(server)) tx.set(ref, out);
+    rev = r;
+    if (!server || canon(out) !== canon(server)) { rev = r + 1; tx.set(ref, { ...out, rev }); }
     return out;
   });
+  if (rev) revs.set(path, Math.max(rev, revs.get(path) || 0));
+  return out;
 }
-async function syncNow() {
+// Grava na nuvem o que mudou. Uma gravação por vez: se algo muda enquanto grava, grava de novo logo depois
+// (duas gravações ao mesmo tempo do mesmo mês se atrapalhavam e séries anotadas com internet lenta sumiam).
+let syncRun = null, syncAgain = false, retryTimer = null, retryWait = 0;
+function syncNow() {
   clearTimeout(syncTimer); syncTimer = null;
-  if (!cloud || !cloud.ready) return;
+  if (!cloud || !cloud.ready) return Promise.resolve();
+  if (syncRun) { syncAgain = true; return syncRun; }
+  syncRun = (async () => {
+    try { do { syncAgain = false; await syncOnce(); } while (syncAgain && !syncTimer); }
+    finally { syncRun = null; }
+    if (cloud.remoteDirty && !syncTimer && !isTyping() && !(cloud.pending && cloud.pending.size)) { cloud.remoteDirty = false; db = assemble(); lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)])); fixUi(); render(); }
+  })();
+  return syncRun;
+}
+// Tudo o que vai para a nuvem passa antes pela lista "pendente", guardada no aparelho. Só sai dela quando a nuvem
+// confirma. Assim nada se perde se a internet cair, o app fechar no meio ou o celular desligar: na próxima vez sobe
+// sozinho, juntando com o que estiver na nuvem (nunca grava por cima do que outro aparelho anotou).
+async function syncOnce() {
   cloud.pending = cloud.pending || new Map();
   const cur = splitDb(), ops = [];
   for (const [path, doc] of cur) {
@@ -7771,51 +7795,55 @@ async function syncNow() {
     if (lastSynced.get(path) === canon(empty)) continue;
     ops.push([path, lastSynced.get(path), empty]); lastSynced.set(path, canon(empty)); remote.set(path, empty);
   }
-  if (!ops.length) { setSyncState(navigator.onLine ? 'Tudo salvo na nuvem ✓' : 'Sem internet: salvo no aparelho'); if (cloud.remoteDirty) { cloud.remoteDirty = false; applyRemote(); } return; }
-  let merged = false;
-  try {
-    const offline = [];
-    if (navigator.onLine) {
-      // com internet: cada documento é juntado com o que está na nuvem
-      for (let i = 0; i < ops.length; i += 20) await Promise.all(ops.slice(i, i + 20).map(async op => {
-        const [path, was, doc] = op;
-        try {
-          const out = await writeMerged(path, was, doc);
-          if (canon(out) !== canon(doc)) { merged = true; lastSynced.set(path, canon(out)); remote.set(path, plain(out)); }
-          if (cloud.pending.delete(path)) savePending();
-        } catch (e) {
-          // sem permissão para gravar: não fica preso tentando para sempre (descarta o pendente desse documento)
-          if (e && e.code === 'permission-denied') { if (cloud.pending.delete(path)) savePending(); throw e; }
-          offline.push(op);
-        }
-      }));
-    } else offline.push(...ops);
-    // ficha do aluno sem internet: fica guardada no aparelho e sobe (juntando com a nuvem) quando a internet voltar
-    for (const op of offline.filter(o => /^profiles\/[^/]+$/.test(o[0]))) {
-      const [path, was, doc] = op, keep = cloud.pending.get(path);
-      cloud.pending.set(path, { was: keep ? keep.was : was, doc });
-      keep ? (keep.was === undefined ? lastSynced.delete(path) : lastSynced.set(path, keep.was)) : (was === undefined ? lastSynced.delete(path) : lastSynced.set(path, was));
-      offline.splice(offline.indexOf(op), 1);
+  for (const [path, was, doc] of ops) { const keep = cloud.pending.get(path); cloud.pending.set(path, { was: keep ? keep.was : was, doc: plain(doc) }); }
+  if (ops.length) savePending();
+  if (!cloud.pending.size) { setSyncState(navigator.onLine ? 'Tudo salvo na nuvem ✓' : 'Sem internet: salvo no aparelho'); return; }
+  if (!navigator.onLine) return setSyncState('Sem internet: salvo no aparelho');
+  let merged = false, failed = null;
+  const list = [...cloud.pending];
+  for (let i = 0; i < list.length; i += 20) await Promise.all(list.slice(i, i + 20).map(async ([path, x]) => {
+    try {
+      const out = await writeMerged(path, x.was, x.doc);
+      if (cloud.pending.get(path) === x) cloud.pending.delete(path);
+      if (canon(out) !== canon(x.doc)) merged = true;
+      // A próxima gravação compara com o que ESTE aparelho mandou (não com o resultado juntado): o que veio de outro
+      // aparelho ainda não está na tela e não pode parecer "apagado aqui". Ele entra na tela logo depois (remoteDirty).
+      remote.set(path, plain(out));
+    } catch (e) {
+      // sem permissão (ex.: o professor tirou o acesso): não fica preso tentando para sempre
+      if (e && (e.code === 'permission-denied' || e.code === 'invalid-argument')) { cloud.pending.delete(path); failed = failed || e; }
+      else failed = failed || e || 'erro';
     }
-    savePending();
-    // sem internet: fica na fila do aparelho e sobe quando a internet voltar (ficha do aluno: só os campos mudados)
-    for (let i = 0; i < offline.length; i += 400) {
-      const b = cloud.fs.batch();
-      for (const [path, was, doc] of offline.slice(i, i + 400)) { const u = profileUpdate(path, was, doc); u ? b.update(cloud.fs.doc(path), u[2]) : b.set(cloud.fs.doc(path), doc); }
-      await b.commit();
-    }
-    setSyncState(navigator.onLine ? 'Tudo salvo na nuvem ✓' : 'Sem internet: salvo no aparelho');
-    if (cloud.role === 'admin') { clearTimeout(cloud.bkTimer); cloud.bkTimer = setTimeout(dailyBackup, 60e3); saveVersions(ops.map(o => o[0])); }
-  } catch (err) { cloudError(err); }
+  }));
+  savePending();
   if (merged) cloud.remoteDirty = true; // juntou com algo de outro aparelho: atualiza a tela
-  if (cloud.remoteDirty && !syncTimer && !isTyping()) { cloud.remoteDirty = false; db = assemble(); lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)])); fixUi(); render(); }
+  if (failed) {
+    if (failed.code === 'permission-denied' || failed.code === 'invalid-argument') cloudError(failed);
+    else { // internet fraca: fica guardado no aparelho e tenta de novo daqui a pouco
+      console.warn('nuvem (tenta de novo):', failed.code || failed);
+      setSyncState('Internet fraca: salvo no aparelho, enviando…');
+      retryWait = Math.min(60e3, retryWait ? retryWait * 2 : 3000);
+      clearTimeout(retryTimer); retryTimer = setTimeout(() => { retryTimer = null; syncNow(); }, retryWait);
+    }
+    return;
+  }
+  retryWait = 0;
+  setSyncState('Tudo salvo na nuvem ✓');
+  if (cloud.role === 'admin') { clearTimeout(cloud.bkTimer); cloud.bkTimer = setTimeout(dailyBackup, 60e3); saveVersions(list.map(o => o[0])); }
 }
 const PEND_KEY = 'planilha-pendente';
-function savePending() { try { cloud.pending.size ? localStorage.setItem(PEND_KEY, JSON.stringify([...cloud.pending])) : localStorage.removeItem(PEND_KEY); } catch (e) {} }
+function savePending() {
+  try { cloud.pending.size ? localStorage.setItem(PEND_KEY, JSON.stringify({ uid: cloud.user && cloud.user.uid, list: [...cloud.pending] })) : localStorage.removeItem(PEND_KEY); }
+  catch (e) { console.warn('pendente:', e); }
+}
 function loadPending() {
   cloud.pending = new Map();
-  try { const v = JSON.parse(localStorage.getItem(PEND_KEY)); if (Array.isArray(v)) cloud.pending = new Map(v); } catch (e) {}
-  if (cloud.role !== 'admin') cloud.pending.clear();
+  try {
+    const v = JSON.parse(localStorage.getItem(PEND_KEY));
+    if (Array.isArray(v) && cloud.role === 'admin') cloud.pending = new Map(v); // formato antigo (só o professor usava)
+    else if (v && Array.isArray(v.list) && cloud.user && v.uid === cloud.user.uid) cloud.pending = new Map(v.list); // só o que foi anotado com este login
+  } catch (e) {}
+  for (const path of [...cloud.pending.keys()]) if (!writable(path) || (cloud.role === 'student' && pidOfPath(path) !== cloud.pid)) cloud.pending.delete(path);
 }
 // Histórico de versões da ficha de cada aluno (treinos montados, divisão, planejamento): uma a cada 10 minutos
 // de edição, as últimas 40 de cada aluno. Fica em "Versões salvas" no Planejamento.
@@ -7842,17 +7870,18 @@ const isTyping = () => document.querySelector('dialog[open]') || (document.activ
 // Chegou algo da nuvem (outro aparelho, aluno marcando treino...): atualiza a tela sem perder o que está sendo digitado
 function applyRemote() {
   if (!cloud.ready) return;
-  if (cloud.pending && cloud.pending.size) { if (navigator.onLine) scheduleSync(); else cloud.remoteDirty = true; return; } // primeiro sobe o que ficou guardado
+  if (cloud.pending && cloud.pending.size) { cloud.remoteDirty = true; if (navigator.onLine && !syncRun && !retryTimer) scheduleSync(); return; } // primeiro sobe o que ficou guardado
   let changed = [...remote].some(([k, v]) => lastSynced.get(k) !== canon(v)) || [...lastSynced.keys()].some(k => !remote.has(k));
   if (!changed) return;
-  if (syncTimer || isTyping()) { cloud.remoteDirty = true; return; }
+  if (syncTimer || syncRun || isTyping()) { cloud.remoteDirty = true; return; } // gravando ou digitando: atualiza depois
   db = assemble();
   lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
   fixUi(); render();
 }
-$main.addEventListener('focusout', () => setTimeout(() => { if (cloud && cloud.remoteDirty && !isTyping() && !syncTimer) { cloud.remoteDirty = false; applyRemote(); } }, 50));
-document.addEventListener('close', () => setTimeout(() => { if (cloud && cloud.remoteDirty && !isTyping() && !syncTimer) { cloud.remoteDirty = false; applyRemote(); } }, 50), true);
+$main.addEventListener('focusout', () => setTimeout(() => { if (cloud && cloud.remoteDirty && !isTyping() && !syncTimer && !syncRun) { cloud.remoteDirty = false; applyRemote(); } }, 50));
+document.addEventListener('close', () => setTimeout(() => { if (cloud && cloud.remoteDirty && !isTyping() && !syncTimer && !syncRun) { cloud.remoteDirty = false; applyRemote(); } }, 50), true);
 document.addEventListener('visibilitychange', () => { if (document.hidden && syncTimer) syncNow(); });
+addEventListener('pagehide', () => { if (syncTimer) syncNow(); }); // fechando o app: o que falta já fica guardado no aparelho
 let lastErrToast = 0;
 function cloudError(err) {
   console.error(err);
@@ -7968,7 +7997,7 @@ function renderAcessos() {
 // Sair sem querer obriga a digitar e-mail e senha de novo: pergunta antes
 function askLogout() { confirmAsk('Sair da conta?', 'Para entrar de novo, vai precisar digitar o e-mail e a senha.', 'Sair').then(ok => { if (ok) logout(); }); }
 async function logout() {
-  if (syncTimer) await syncNow();
+  if (syncTimer || syncRun) await Promise.race([syncNow(), new Promise(r => setTimeout(r, 5000))]);
   await cloud.auth.signOut(); location.reload();
 }
 const accountHtml = () => CLOUD && cloud && cloud.user ? `<section class="card" style="margin-top:14px">
@@ -8121,7 +8150,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '28/10-10:57';
+const APP_VERSION = '28/10-11:40';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
@@ -8133,7 +8162,7 @@ async function checkUpdate() {
     if (tv === v && Date.now() - (+tt || 0) < 120e3) return;
     try { sessionStorage.setItem('planilha-atualizou', v + '|' + Date.now()); } catch (e) {}
     try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.update(); } catch (e) {} // guarda do aparelho também se atualiza
-    if (typeof syncTimer !== 'undefined' && syncTimer) await syncNow(); // salva o que estiver pendente antes
+    if (typeof syncTimer !== 'undefined' && (syncTimer || syncRun)) await Promise.race([syncNow(), new Promise(r => setTimeout(r, 5000))]); // salva o que estiver pendente antes (e fica guardado no aparelho)
     location.replace(location.pathname + '?v=' + encodeURIComponent(v)); // endereço novo = baixa a versão nova
   } catch (e) {}
 }
