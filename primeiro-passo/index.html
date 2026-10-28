@@ -2715,6 +2715,17 @@ const CENTRAL="(11) 4000-0000";
 function cpfOk(v){const c=String(v).replace(/\D/g,"");if(c.length!==11||/^(\d)\1+$/.test(c))return false;
   const d=n=>{let s=0;for(let i=0;i<n;i++)s+=+c[i]*(n+1-i);const r=(s*10)%11;return r===10?0:r};return d(9)===+c[9]&&d(10)===+c[10]}
 const maskCpf=v=>{const c=String(v).replace(/\D/g,"");return c.length===11?`***.${c.slice(3,6)}.${c.slice(6,9)}-**`:"—"};
+/* CEP: ao digitar os 8 números, busca a rua, o bairro e a cidade (ViaCEP, grátis) e deixa o cursor no lugar do número */
+const fmtCep=v=>{const c=String(v).replace(/\D/g,"").slice(0,8);return c.length>5?c.slice(0,5)+"-"+c.slice(5):c};
+document.addEventListener("input",e=>{const z=e.target;if(!z.matches||!z.matches('#kz,[data-inf="cep"]'))return;
+  z.value=fmtCep(z.value);const n=z.value.replace(/\D/g,"");if(n.length!==8||z.dataset.cepOk===n)return;z.dataset.cepOk=n;
+  const box=z.closest(".set")||document,ad=z.id==="kz"?$("#ka"):box.querySelector('[data-inf="addr"]'),ci=z.id==="kz"?$("#ky"):box.querySelector('[data-inf="city"]');
+  fetch("https://viacep.com.br/ws/"+n+"/json/").then(r=>r.json()).then(d=>{
+    if(d.erro){z.dataset.cepOk="";toast("CEP não encontrado. Confira os números ou preencha o endereço.");return}
+    if(ci&&d.localidade)ci.value=d.localidade+(d.uf?" - "+d.uf:"");
+    if(ad&&d.logradouro){const ini=d.logradouro+", ";ad.value=ini+(d.bairro?" - "+d.bairro:"");ad.focus();try{ad.setSelectionRange(ini.length,ini.length)}catch(er){}}
+    else if(ad)ad.focus();
+  }).catch(()=>{z.dataset.cepOk=""})});
 const fmtCpf=v=>{const c=String(v).replace(/\D/g,"").slice(0,11);return c.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})\.(\d{3})(\d)/,"$1.$2.$3").replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/,"$1.$2.$3-$4")};
 const meetCode=b=>String(1000+(Math.floor(b.ts/6e4)*7919+(b.cid||"").length*131)%9000).slice(0,4);
 function seedSafety(db){
@@ -2749,8 +2760,8 @@ function vVerif(){
       <div class="field"><label for="kc">CPF</label><input id="kc" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" value="${esc(KV.d.cpf||"")}"><small class="err" id="kce"></small></div>
       <div class="field"><label for="kb">Data de nascimento</label><input id="kb" type="date" value="${esc(KV.d.birth||"")}"></div>
       <div class="field"><label for="kt">Celular</label><input id="kt" type="tel" autocomplete="tel" placeholder="(11) 90000-0000" value="${esc(KV.d.tel||"")}"></div>
-      <div class="field"><label for="kz">CEP</label><input id="kz" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" value="${esc(KV.d.cep||"")}"></div>
-      <div class="field"><label for="ka">Endereço e número</label><input id="ka" autocomplete="street-address" value="${esc(KV.d.addr||"")}"></div>
+      <div class="field"><label for="kz">CEP</label><input id="kz" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" value="${esc(KV.d.cep||"")}"></div>
+      <div class="field"><label for="ka">Endereço e número</label><input id="ka" autocomplete="street-address" placeholder="Preenche sozinho pelo CEP" value="${esc(KV.d.addr||"")}"></div>
       <div class="field"><label for="ky">Cidade</label><input id="ky" autocomplete="address-level2" value="${esc(KV.d.city||"")}"></div>
     </div>
     <div class="card-h" style="margin:8px 0 10px"><h3 style="font-size:18px">Contato de emergência</h3></div>
