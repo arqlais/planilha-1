@@ -20,8 +20,13 @@ service cloud.firestore {
     // Pedido de acesso: quem criou conta sem código pede para ser aluno; só o professor aceita
     match /requests/{uid} {
       allow read, delete: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      // Só os campos do app, e o e-mail tem que ser o da própria conta (ninguém pede acesso em nome de outro)
       allow create, update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.uid == uid;
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'email', 'at', 'rescue'])
+        && request.resource.data.get('name', '') is string && request.resource.data.get('name', '').size() <= 60
+        && (request.resource.data.get('email', '') == ''
+            || request.resource.data.email.lower() == request.auth.token.get('email', '').lower());
     }
 
     // Visitantes: o app registra que alguém abriu (mesmo sem login). Só o professor lê.
