@@ -235,6 +235,98 @@ i[data-lucide],svg.lucide{width:20px;height:20px;stroke-width:1.9;flex:none}
 @media (max-width:279px){.sitefx .fxbar span{display:none}.sitefx .fxbar{justify-content:center;padding:8px}.sitefx .fxbar .btn{width:100%}}
 @media (prefers-reduced-motion:reduce){.sitefx .steps-fp,.sitefx .fxbar{display:none}}
 @media (prefers-reduced-motion:reduce){.sitefx .rv,.sitefx .hero h1 .w,.sitefx .stp .bar{opacity:1!important;transform:none!important;filter:none!important}}
+/* ---------- todas as outras telas (cadastro, login, app do aluno, painéis): acabamento vivo e movimento. Liga com body.ux ---------- */
+body.ux{--g1:#1B3A5C;--g2:#2F5D8A;--g3:#E0A93B;--glow:rgba(224,169,59,.35)}
+body.ux::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(700px 480px at 100% 0%,rgba(224,169,59,.13),transparent 60%),radial-gradient(800px 560px at 0% 100%,rgba(47,93,138,.12),transparent 60%),var(--bg);animation:uxbg 16s ease-in-out infinite alternate}
+@keyframes uxbg{to{filter:hue-rotate(-8deg) saturate(1.15)}}
+body.ux{background:transparent}
+body.ux .ob,body.ux .app,body.ux .pn-main,body.ux .login-main{position:relative}
+/* entradas */
+body.ux .fx{opacity:0;transform:translateY(16px) scale(.985);animation:uxin .55s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--d,0ms)}
+@keyframes uxin{to{opacity:1;transform:none}}
+body.ux .fxh{animation:uxhead .6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes uxhead{from{opacity:0;transform:translateY(-10px);filter:blur(4px)}}
+/* títulos com o degradê da marca */
+body.ux .pn-head h1,body.ux .hello h2,body.ux .login-main h1,body.ux .ob-body h2{background:linear-gradient(90deg,var(--navy),var(--blue) 55%,var(--gold));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:uxtitle 8s ease-in-out infinite alternate;width:fit-content;max-width:100%}
+@keyframes uxtitle{to{background-position:100% 0}}
+body.ux .pn-head small{color:var(--gold);font-weight:700;letter-spacing:.02em}
+/* botões */
+body.ux .btn{position:relative;overflow:hidden;transition:transform .18s,box-shadow .25s,background .2s,filter .2s}
+body.ux .btn:active{transform:scale(.97)}
+body.ux .btn-primary{background:linear-gradient(135deg,#2F5D8A,#1B3A5C 60%);color:#fff;box-shadow:0 10px 24px -14px rgba(27,58,92,.9)}
+body.ux .btn-primary:hover{box-shadow:0 14px 30px -12px rgba(27,58,92,.85),0 0 0 3px var(--glow);transform:translateY(-1px)}
+body.ux .btn-primary:disabled{background:#9AA7B6;box-shadow:none}
+:root[data-theme="dark"] body.ux .btn-primary{background:linear-gradient(135deg,#3A6EA5,#244a74);color:#fff}
+body.ux .btn-primary::after,body.ux .btn-gold::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-20deg);transition:left .7s ease}
+body.ux .btn-primary:hover::after,body.ux .btn-gold:hover::after{left:130%}
+body.ux .rip{position:absolute;border-radius:50%;pointer-events:none;background:currentColor;opacity:.22;transform:scale(0);animation:uxrip .6s ease-out forwards}
+@keyframes uxrip{to{transform:scale(1);opacity:0}}
+/* cartões */
+body.ux .card,body.ux .kpi,body.ux .task,body.ux .wcard,body.ux .role,body.ux .lg-card,body.ux .opt,body.ux .booking{transition:transform .3s cubic-bezier(.2,.7,.2,1),box-shadow .3s,border-color .3s}
+body.ux .card:hover,body.ux .role:hover,body.ux .lg-card:hover{box-shadow:0 22px 44px -28px rgba(27,58,92,.45);border-color:color-mix(in srgb,var(--blue) 35%,var(--line))}
+body.ux .kpi{position:relative;overflow:hidden}
+body.ux .kpi::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#E0A93B,#7FA6CF,#E0A93B);background-size:200% 100%;animation:uxbar 5s linear infinite}
+@keyframes uxbar{to{background-position:200% 0}}
+body.ux .kpi:hover,body.ux .task:hover,body.ux .wcard:hover,body.ux .role:hover{transform:translateY(-3px)}
+body.ux .kpi small svg{width:26px;height:26px;padding:5px;border-radius:9px;background:var(--gold-soft);color:var(--navy)}
+body.ux .task:active,body.ux .wcard:active,body.ux .opt:active{transform:scale(.98)}
+body.ux .opt.on,body.ux .opt[aria-pressed="true"],body.ux .opt[aria-checked="true"]{box-shadow:0 0 0 3px var(--glow);animation:uxpop .35s ease}
+@keyframes uxpop{50%{transform:scale(1.02)}}
+body.ux .wcard .th{box-shadow:0 10px 22px -12px rgba(27,58,92,.8)}
+body.ux .wcard:hover .th svg,body.ux .role:hover .ri svg,body.ux .task:hover .ic svg{animation:uxhop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes uxhop{50%{transform:translateY(-3px) rotate(-8deg) scale(1.12)}}
+/* cartão do nível do aluno */
+body.ux .lvcard{background:linear-gradient(135deg,#1B3A5C,#2F5D8A 70%,#1B3A5C);background-size:220% 220%;animation:uxin .6s cubic-bezier(.2,.8,.2,1) both,uxlv 10s ease-in-out .6s infinite alternate;box-shadow:0 24px 44px -24px rgba(27,58,92,.9)}
+@keyframes uxlv{to{background-position:100% 100%}}
+body.ux .lvcard::after{content:"";position:absolute;width:220px;height:220px;right:-70px;top:-90px;border-radius:50%;background:radial-gradient(circle,rgba(224,169,59,.45),transparent 65%);animation:uxorb 7s ease-in-out infinite alternate;pointer-events:none}
+@keyframes uxorb{to{transform:translate(-40px,30px) scale(1.15)}}
+body.ux .lvcard .badge{animation:uxbadge 3s ease-in-out infinite}
+@keyframes uxbadge{50%{transform:translateY(-3px) rotate(-4deg);box-shadow:0 10px 20px -8px rgba(224,169,59,.8)}}
+body.ux .lvcard>*{position:relative;z-index:1}
+/* barras e progresso */
+body.ux .hb i{background:linear-gradient(90deg,#3A6EA5,#2F5D8A);transform-origin:left;animation:uxgrow .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0ms)}
+body.ux .hb div:nth-child(3n+2) i{background:linear-gradient(90deg,#2F5D8A,#E0A93B)}
+@keyframes uxgrow{from{transform:scaleX(0)}}
+body.ux .chart .bar,body.ux .chart .s1,body.ux .chart .s2{transform-box:fill-box;transform-origin:bottom;animation:uxrise .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes uxrise{from{transform:scaleY(0)}}
+body.ux .ob-prog i{background:linear-gradient(90deg,#2F5D8A,#E0A93B,#2F5D8A);background-size:200% 100%;animation:uxbar 3s linear infinite;box-shadow:0 0 12px var(--glow)}
+/* painéis: menu lateral azul-marinho com destaque dourado */
+body.ux .pn-side{background:linear-gradient(180deg,#1B3A5C,#14304D 70%,#112940);border-right:0;color:#E6EEF7}
+:root[data-theme="dark"] body.ux .pn-side{background:linear-gradient(180deg,#14263A,#0E1B2A)}
+body.ux .pn-side .brand{color:#fff}
+body.ux .pn-side .brand .mk{background:rgba(255,255,255,.12)}
+body.ux .pn-side .brand .swchev{color:#C9D8EA}
+body.ux .pn-side .brand[data-appsw]:hover{background:rgba(255,255,255,.08)}
+body.ux .pn-role{background:rgba(224,169,59,.16);border-color:rgba(224,169,59,.4);color:#F5C96A}
+body.ux .pn-side .nv{color:#B8C9DC;position:relative;transition:background .2s,color .2s,transform .2s}
+body.ux .pn-side .nv svg{transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+body.ux .pn-side .nv:hover{color:#fff;background:rgba(255,255,255,.06);transform:translateX(3px)}
+body.ux .pn-side .nv:hover svg{transform:scale(1.15) rotate(-6deg)}
+body.ux .pn-side .nv.on{background:rgba(255,255,255,.12);color:#fff;box-shadow:none}
+body.ux .pn-side .nv.on::before{content:"";position:absolute;left:-14px;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:#E0A93B;box-shadow:0 0 12px #E0A93B}
+body.ux .pn-side .nv.on svg{color:#E0A93B}
+body.ux .pn-side .nv .cnt{animation:uxping 2s ease-in-out infinite}
+@keyframes uxping{50%{box-shadow:0 0 0 5px rgba(196,69,54,.18)}}
+body.ux .pn-me{border-top-color:rgba(255,255,255,.12)}
+body.ux .pn-me b{color:#fff}
+body.ux .pn-me small{color:#9FB3C8}
+body.ux .pn-me .av{background:#E0A93B;color:#1B3A5C}
+body.ux .pn-me .rbtn{background:rgba(255,255,255,.08);color:#E6EEF7}
+/* app do aluno e painéis no celular: barra de baixo viva */
+body.ux .tabbar a{transition:color .2s}
+body.ux .tabbar a svg{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+body.ux .tabbar a.on svg{transform:translateY(-2px) scale(1.12);color:var(--gold)}
+body.ux .tabbar a.on::before{width:30px;animation:uxtab .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes uxtab{from{transform:scaleX(0)}}
+body.ux input:focus,body.ux textarea:focus,body.ux select:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--glow);outline:none;transition:box-shadow .2s,border-color .2s}
+body.ux .app-top,body.ux .topbar{background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+/* login e escolha de área */
+body.ux .role .ri,body.ux .lg-card .ri{background:linear-gradient(135deg,#FBF1DC,#F5DFAE);box-shadow:0 10px 20px -12px rgba(224,169,59,.9)}
+:root[data-theme="dark"] body.ux .role .ri{background:linear-gradient(135deg,#3A2F17,#4A3A18);color:#F0BE5A}
+body.ux .role{position:relative;overflow:hidden}
+body.ux .role::after{content:"";position:absolute;inset:auto -30% -60% -30%;height:70%;background:radial-gradient(closest-side,rgba(224,169,59,.18),transparent);opacity:0;transition:opacity .35s;pointer-events:none}
+body.ux .role:hover::after{opacity:1}
+@media (prefers-reduced-motion:reduce){body.ux .fx,body.ux .fxh{opacity:1!important;transform:none!important;filter:none!important}body.ux::before{animation:none}}
 .foot{padding:40px 0 56px;color:var(--muted);font-size:14px}
 .foot .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
 .care{display:flex;gap:10px;align-items:flex-start;max-width:520px}
@@ -1794,6 +1886,25 @@ function siteFx(){
     const hb=hero.getBoundingClientRect().bottom,ce=endc?endc.getBoundingClientRect().top:1e9,show=hb<0&&ce>innerHeight*.9;bar.classList.toggle("on",show);bar.setAttribute("aria-hidden",String(!show));bar.querySelector("a").tabIndex=show?0:-1};
   addEventListener("scroll",FX.sc,{passive:true});FX.sc();
 }
+/* acabamento das outras telas: entra com movimento a cada troca de tela, números contam, toque com onda */
+const UX={hash:null,raf:0};
+const UXSEL=".kpi,.card,.task,.wcard,.role,.lg-card,.opt,.booking,.hello,.pcard,.plist>*,.minis>*,.quick>*,.journey>*,.vsteps>*,.feel>*,.tips>*";
+function uxFx(){
+  const site=!!$(".sitefx");document.body.classList.toggle("ux",!site);if(site)return;
+  const calm=matchMedia("(prefers-reduced-motion: reduce)").matches,h=location.hash;
+  const fresh=h!==UX.hash;UX.hash=h;if(!fresh||calm)return;
+  const head=document.querySelector(".pn-head,.hello,.login-main>h1,.ob-body h2");if(head){head.classList.remove("fxh");void head.offsetWidth;head.classList.add("fxh")}
+  let i=0;document.querySelectorAll(UXSEL).forEach(el=>{if(el.closest(".modal,.drawer,.player,.toast,details:not([open])")||el.parentElement.closest(".fx"))return;const r=el.getBoundingClientRect();if(!r.width||r.top>innerHeight*1.3)return;el.style.setProperty("--d",Math.min(i++,10)*45+"ms");el.classList.add("fx");const done=ev=>{if(ev.target!==el)return;el.classList.remove("fx");el.removeEventListener("animationend",done)};el.addEventListener("animationend",done)});
+  document.querySelectorAll(".hb").forEach(hb=>[...hb.querySelectorAll("i")].forEach((x,j)=>x.style.setProperty("--d",j*90+"ms")));
+  document.querySelectorAll(".kpi b").forEach(b=>{const m=b.textContent.trim().match(/^(\D*?)(\d{1,3}(?:\.\d{3})*|\d+)(,\d+)?(.*)$/);if(!m)return;const n=+m[2].replace(/\./g,"");if(!n||n>1e7)return;
+    const t0=performance.now(),fmt=v=>m[1]+v.toLocaleString("pt-BR")+(m[3]||"")+m[4],end=b.textContent;
+    const st=t=>{if(!b.isConnected)return;const q=Math.min(1,(t-t0)/900);b.textContent=q<1?fmt(Math.round(n*(1-Math.pow(1-q,3)))):end;if(q<1)requestAnimationFrame(st)};requestAnimationFrame(st)});
+}
+new MutationObserver(()=>{cancelAnimationFrame(UX.raf);UX.raf=requestAnimationFrame(uxFx)}).observe($("#root"),{childList:true});
+addEventListener("hashchange",()=>{cancelAnimationFrame(UX.raf);UX.raf=requestAnimationFrame(uxFx)});
+document.addEventListener("pointerdown",e=>{if(!document.body.classList.contains("ux"))return;const b=e.target.closest(".btn,.tabbar a,.opt,.task,.wcard");if(!b||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*2,x=document.createElement("span");x.className="rip";x.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
+  if(getComputedStyle(b).position==="static")b.style.position="relative";b.style.overflow="hidden";b.append(x);setTimeout(()=>x.remove(),650)},{passive:true});
 
 /* ================== ONBOARDING ================== */
 let OB={step:0,name:"",goals:[],barriers:[],days:[],period:"",contact:"",parq:Array(PARQ.length).fill(null),notes:""};
