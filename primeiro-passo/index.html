@@ -458,6 +458,20 @@ i[data-lucide],svg.lucide{width:20px;height:20px;stroke-width:1.9;flex:none}
 .pn{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
 .pn-side{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100dvh;overflow-y:auto;border-right:1px solid var(--line);background:var(--mist);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
 .pn-side .brand{padding:0 6px 4px}
+.brand[data-appsw]{border-radius:12px;cursor:pointer}
+.brand[data-appsw]:hover{background:var(--surface)}
+.brand .swchev{width:16px;height:16px;color:var(--muted);margin-left:2px;transition:transform .2s}
+.brand[aria-expanded="true"] .swchev{transform:rotate(180deg)}
+#appsw{position:fixed;z-index:80;width:264px;padding:8px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:0 24px 60px -20px rgba(15,23,32,.45);animation:swin .18s ease-out}
+@keyframes swin{from{opacity:0;transform:translateY(-6px) scale(.98)}}
+#appsw small.t{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 10px 8px}
+#appsw .it{display:flex;align-items:center;gap:11px;padding:10px;border-radius:14px;color:var(--ink);text-decoration:none}
+#appsw a.it:hover,#appsw a.it:focus-visible{background:var(--line)}
+#appsw .it b{display:block;font-size:15px}
+#appsw .it small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+#appsw .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+#appsw .ic svg{width:21px;height:21px;color:#E0A93B}
+#appsw .ok{margin-left:auto;width:18px;height:18px;color:#2F5D8A}
 .pn-role{display:inline-flex;align-self:flex-start;margin:6px 6px 16px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
 .pn-side .nv{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:var(--muted);font-weight:600;text-decoration:none;font-size:15px}
 .pn-side .nv:hover{color:var(--navy)}
@@ -2225,12 +2239,14 @@ function logout(){if(FB){FBL.logout();return}setSess({});location.hash="#/entrar
 function shell({role,tabs,tab,base,me,title,kick,acts=""}){
   document.body.style.overflow="";
   const badge=(k)=>k.cnt?`<span class="cnt">${k.cnt}</span>`:"";
+  /* empresa: tocar no logo troca para o app do PassosFit */
+  const sw=role==="Empresa",bh=sw?`href="#" data-appsw aria-haspopup="menu" aria-expanded="false"`:`href="#/"`;
   $("#root").innerHTML=`<div class="pn">
-  <aside class="pn-side"><a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a><span class="pn-role">${role}</span>
+  <aside class="pn-side"><a class="brand" ${bh}><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span>${sw?`<i data-lucide="chevron-down" class="swchev"></i>`:""}</a><span class="pn-role">${role}</span>
     <nav aria-label="${role}">${tabs.map(t=>`<a class="nv ${t.k===tab?"on":""}" href="${base}/${t.k}"><i data-lucide="${t.ic}"></i>${t.l}${badge(t)}</a>`).join("")}</nav>
     <div class="pn-me"><span class="av">${esc(initials(me.name))}</span><div><b>${esc(me.name)}</b><small>${esc(me.sub)}</small></div><button class="rbtn" data-out aria-label="Sair"><i data-lucide="log-out"></i></button></div></aside>
   <div class="pn-main">
-    <div class="pn-mtop"><a class="brand" href="#/" aria-label="Site"><span class="mk"><i data-lucide="footprints"></i></span></a><span class="pn-role">${role}</span><button class="rbtn" data-tgl-theme aria-label="Alternar tema"><i data-lucide="${themeIcon()}"></i></button><button class="rbtn" data-out aria-label="Sair"><i data-lucide="log-out"></i></button></div>
+    <div class="pn-mtop"><a class="brand" ${sw?`href="#" data-appsw aria-haspopup="menu" aria-expanded="false" aria-label="Trocar de app"`:`href="#/" aria-label="Site"`}><span class="mk"><i data-lucide="footprints"></i></span></a><span class="pn-role">${role}</span><button class="rbtn" data-tgl-theme aria-label="Alternar tema"><i data-lucide="${themeIcon()}"></i></button><button class="rbtn" data-out aria-label="Sair"><i data-lucide="log-out"></i></button></div>
     <header class="pn-head"><div><small>${kick}</small><h1>${title}</h1></div><div class="acts">${acts}<button class="rbtn" data-tgl-theme aria-label="Alternar tema" style="${""}"><i data-lucide="${themeIcon()}"></i></button></div></header>
     <div id="pv"></div>
   </div>
@@ -2241,6 +2257,17 @@ function shell({role,tabs,tab,base,me,title,kick,acts=""}){
   document.querySelectorAll("[data-out]").forEach(b=>b.onclick=logout);
   const mt=document.querySelector("[data-more-tabs]");if(mt)mt.onclick=e=>{e.preventDefault();const m=$("#mmenu");m.hidden=!m.hidden};
   document.querySelectorAll("button[data-tgl-theme]").forEach(b=>b.onclick=toggleTheme);
+  document.querySelectorAll("[data-appsw]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();appSwitch(b)});
+}
+function appSwitch(b){
+  const r=b.getBoundingClientRect(),m=document.createElement("div");m.id="appsw";m.setAttribute("role","menu");
+  m.innerHTML=`<small class="t">Seus apps</small>
+    <a class="it" role="menuitem" href="../?app"><span class="ic" style="background:#111A4A"><svg viewBox="0 0 24 24" fill="none" stroke="#CBEF3C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg></span><span><b>PassosFit</b><small>Trocar para o app</small></span></a>
+    <div class="it"><span class="ic" style="background:#1B3A5C"><i data-lucide="footprints"></i></span><span><b>Primeiro Passo</b><small>Você está aqui</small></span><i data-lucide="check" class="ok"></i></div>`;
+  m.style.top=Math.round(r.bottom+8)+"px";m.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-272)))+"px";
+  document.body.append(m);b.setAttribute("aria-expanded","true");if(window.lucide)lucide.createIcons();m.querySelector("a").focus();
+  const close=e=>{if(e.type==="keydown"&&e.key!=="Escape")return;if(e.type==="click"){if(e.target.closest("#appsw"))return;if(e.target.closest("[data-appsw]")){e.preventDefault();e.stopPropagation()}}m.remove();b.setAttribute("aria-expanded","false");removeEventListener("click",close,true);removeEventListener("keydown",close);removeEventListener("hashchange",close)};
+  setTimeout(()=>{addEventListener("click",close,true);addEventListener("keydown",close);addEventListener("hashchange",close)},0);
 }
 function bindOpen(role){document.querySelectorAll("[data-open]").forEach(b=>b.onclick=e=>{if(e.target.closest("[data-stop]"))return;openClient(b.dataset.open,role)})}
 
