@@ -2594,7 +2594,7 @@ function shell({role,tabs,tab,base,me,title,kick,acts=""}){
 function appSwitch(b){
   const r=b.getBoundingClientRect(),m=document.createElement("div");m.id="appsw";m.setAttribute("role","menu");
   m.innerHTML=`<small class="t">Seus apps</small>
-    <a class="it" role="menuitem" href="../?app"><span class="ic" style="background:#111A4A"><svg viewBox="0 0 24 24" fill="none" stroke="#CBEF3C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg></span><span><b>PassosFit</b><small>Trocar para o app</small></span></a>
+    <a class="it" role="menuitem" href="../?app"><span class="ic" style="background:#111A4A"><svg viewBox="0 0 24 24" fill="#CBEF3C" stroke="none"><rect x="8.6" y="1.6" width="6.8" height="2.4" rx="1.2"/><rect x="5.6" y="5" width="12.8" height="2.9" rx="1.45"/><rect x="10.75" y="6.5" width="2.5" height="11" rx="1.25"/><rect x="5.6" y="16.1" width="12.8" height="2.9" rx="1.45"/><rect x="8.6" y="20" width="6.8" height="2.4" rx="1.2"/></svg></span><span><b>PassosFit</b><small>Trocar para o app</small></span></a>
     <div class="it"><span class="ic" style="background:#1B3A5C"><i data-lucide="footprints"></i></span><span><b>Primeiro Passo</b><small>Você está aqui</small></span><i data-lucide="check" class="ok"></i></div>`;
   m.style.top=Math.round(r.bottom+8)+"px";m.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-272)))+"px";
   document.body.append(m);b.setAttribute("aria-expanded","true");if(window.lucide)lucide.createIcons();m.querySelector("a").focus();
