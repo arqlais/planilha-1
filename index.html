@@ -3363,14 +3363,12 @@ function renderMonthPost() {
         ${sts.length > 1 ? `<div class="v2-segin" style="margin-top:8px"><button data-act="m-post-go" data-d="-1" aria-label="Aluno anterior">‹ Aluno</button><button class="on" disabled>${i + 1} de ${sts.length}</button><button data-act="m-post-go" data-d="1" aria-label="Próximo aluno">Aluno ›</button></div>` : ''}
         <div class="v2-cc" style="margin-top:8px"><button class="v2-btn pri" data-act="m-share" data-k="share">${ico('M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v6.5h14V13')}Enviar</button><button class="v2-btn ink" data-act="m-share" data-k="save">${ico('M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14')}Salvar</button></div>
         <textarea class="msg" id="mText" aria-label="Mensagem que vai junto" style="min-height:150px;margin-top:10px">${esc(monthText(o.pid, o.ym))}</textarea>
-        <div class="v2-cc"><button class="v2-btn line" data-act="m-share" data-k="copy">Copiar mensagem</button>${p.phone ? `<a class="v2-btn line" id="mWa" href="${waLink(p, monthText(o.pid, o.ym))}">Abrir conversa</a>` : ''}</div>
-        <p class="v2-muted" style="font-size:13px;margin:8px 2px 0">Enviar: escolha o WhatsApp do aluno; a imagem vai com a mensagem. No computador, a imagem é baixada e a mensagem copiada: é só anexar e colar.</p>
+        <div class="v2-cc"><button class="v2-btn line" data-act="m-share" data-k="copy">Copiar mensagem</button></div>
+        <p class="v2-muted" style="font-size:13px;margin:8px 2px 0">Toque em Enviar e escolha o WhatsApp do aluno: vai a imagem. A mensagem fica copiada: na conversa, segure o dedo e cole. No computador, a imagem é baixada: anexe e cole a mensagem.</p>
       </div>
       <div class="v2-postbig story"><canvas id="mPostBig" width="${PFP.PW}" height="${PFP.PH}" aria-label="Imagem do relatório do mês"></canvas></div>
     </div>`;
   PFP.drawMonth(document.getElementById('mPostBig'), D);
-  const ta = document.getElementById('mText'), wa = document.getElementById('mWa');
-  if (wa) wa.onclick = () => { wa.href = waLink(p, ta.value); };
 }
 async function monthShare(k) {
   const o = ui.mPost, p = profile(o.pid), text = document.getElementById('mText').value;
@@ -3380,9 +3378,10 @@ async function monthShare(k) {
   const can = navigator.canShare && navigator.canShare({ files: [f] });
   const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (can && (k === 'share' || ios)) {
-    if (k === 'share') copyText(text); // alguns aplicativos não levam o texto junto: fica copiado para colar
+    // o WhatsApp descarta a imagem quando vai junto com texto: manda só a imagem e deixa a mensagem copiada para colar
+    if (k === 'share') copyText(text).then(ok => ok && toast('✓ Mensagem copiada. Depois de mandar a imagem, cole a mensagem na conversa.'));
     else toast('Toque em <b>Salvar imagem</b> para guardar na galeria.');
-    try { await navigator.share(k === 'share' ? { files: [f], text } : { files: [f] }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para enviar. Use "Salvar".'); }
+    try { await navigator.share({ files: [f] }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para enviar. Use "Salvar".'); }
     return;
   }
   const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
@@ -6352,7 +6351,7 @@ function perfilHtml(p, desk) {
         <button class="btn" data-act="tpl" data-k="treino">Enviar</button>
         <select id="tplGroup" aria-label="Treino">${workoutsOf(p.id).map(w => `<option value="${w.id}" ${w.id === ui.tplGroup ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select>
         <button class="btn" data-act="tpl" data-k="semana">Resumo da semana</button>
-        <button class="btn" data-act="tpl" data-k="mes">Relatório do mês</button>
+        <button class="btn" data-act="m-post" data-pid="${p.id}">Relatório do mês (imagem)</button>
         <button class="btn" data-act="tpl" data-k="lembrete"><i class="ic ic-alarm"></i> Lembrete</button>
         <button class="btn" data-act="tpl" data-k="parabens">Parabéns</button>
       </div>
@@ -8614,7 +8613,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:23';
+const APP_VERSION = '29/10-12:27';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
