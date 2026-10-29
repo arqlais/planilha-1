@@ -5752,11 +5752,19 @@ const wkExs = (pid, d) => { const w = dayWorkout(pid, d); return w ? letterExs(w
 const wkDaysOf = (pid, name) => WEEK.filter(([d]) => wkExs(pid, d).some(e => sameName(e.name, name))).map(([d]) => d);
 // Lista para escolher: os exercícios que a pessoa já tem com nome próprio (fora do catálogo, ex.: "Remada unilateral"
 // da Evoque) vêm primeiro, marcados "seu", e entram com o mesmo histórico; depois o catálogo em ordem alfabética
+// Grupo pelo nome do exercício, quando o nome deixa claro o músculo
+function nameGroup(k) {
+  return [[/tricep|frances|testa|pulley|mergulho/, 'Tríceps'], [/rosca|bicep|martelo|scott/, 'Bíceps'], [/desenvolvimento|elevacao lateral|elevacao frontal|encolhimento|face pull|arnold|remada alta/, 'Ombros'], [/remada|puxada|pulldown|barra fixa|serrote|lombar|terra|pull over|pullover/, 'Costas'],
+    [/supino|crucifixo|crossover|voador|peck|chest|flexao de braco/, 'Peito'],
+    [/abdom|prancha|crunch|infra/, 'Abdômen'], [/panturrilha|gemeo|soleo/, 'Panturrilha'], [/gluteo|pelvica|hip thrust|coice|abdutora/, 'Glúteos'],
+    [/flexora|stiff|romeno|mesa flexora/, 'Posteriores'], [/agachamento|leg press|extensora|hack|afundo|bulgaro|passada/, 'Quadríceps']].find(([r]) => r.test(k))?.[1] || null;
+}
 function wkOwnList(pid, q, g) {
   const words = q.split(' ').filter(Boolean), seen = new Set(), out = [];
   db.exercises.filter(e => e.profileId === pid && e.name && !catName(e.name)).forEach(e => {
     const k = normName(e.name); if (seen.has(k)) return; seen.add(k);
-    if (q ? words.every(w => k.includes(w)) : groupOf(e) === g) out.push([groupOf(e), e.name]);
+    const gr = nameGroup(k) || groupOf(e); // o nome manda (ex.: "Remada unilateral" fica em Costas, mesmo cadastrado em outro grupo)
+    if (q ? words.every(w => k.includes(w)) : gr === g || groupOf(e) === g) out.push([gr, e.name]);
   });
   return out.sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
 }
@@ -8615,7 +8623,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:34';
+const APP_VERSION = '29/10-12:37';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
