@@ -5050,7 +5050,10 @@ function renderEvolution() {
 
     // Por grupo: kg total por semana do aluno (Semana 1 = 7 dias a partir do primeiro treino). Treinar na sexta em vez
     // da quinta conta na mesma semana. A comparação usa só as mesmas séries dos mesmos exercícios nas duas semanas.
-    const start = trainedDates()[0], wk = d => Math.floor(daysBetween(start, d) / 7) + 1, curWk = start ? wk(today()) : 0;
+    // Só conta o que foi feito no app: o histórico antigo importado (sem marca de envio/edição no app) e o que veio antes
+    // do cadastro do aluno ficam fora.
+    const pf = profile(ui.profile), byApp = s => s.fin || s.t0 || s.up || s.dv || s.by;
+    const start = [...profSessions().filter(byApp).map(s => s.date), ...profCardio().map(c => c.date)].filter(d => !pf.since || d >= pf.since).sort()[0] || trainedDates().find(d => !pf.since || d >= pf.since), wk = d => Math.floor(daysBetween(start, d) / 7) + 1, curWk = start ? wk(today()) : 0;
     for (const g of GROUPS) {
       const exs = profExs().filter(e => e.group === g), exMap = new Map(exs.map(e => [e.id, e]));
       const best = new Map(); // um registro por exercício e dia (o mais completo)
@@ -5078,7 +5081,7 @@ function renderEvolution() {
           }).join('')}</tbody></table>`;
       }).join('');
       html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por semana</h3>
-          <small>Soma de carga × repetições de ${g.toLowerCase()} na semana. A Semana 1 começa no primeiro treino (${fmtDate(start)}) e cada semana tem 7 dias. A % compara as mesmas séries.</small></div></div>
+          <small>Soma de carga × repetições de ${g.toLowerCase()} na semana. A Semana 1 começa no primeiro treino no app (${fmtDate(start)}) e cada semana tem 7 dias. A % compara as mesmas séries.</small></div></div>
         ${sparkline(rows.map(r => r.total))}
         <div class="tbl-scroll"><table class="hist"><thead><tr><th>Semana</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
         ${rows.slice().reverse().map((r, i, arr) => `<tr><td style="white-space:nowrap"><b>Semana ${r.n}</b><br><small style="color:var(--muted);font-weight:400">${r.n === curWk ? 'em andamento' : `${fmtDate(r.from)} a ${fmtDate(addDays(r.from, 6))}`}</small></td><td>${r.ex}</td><td>${r.sets}</td><td>${r.reps}</td>
@@ -8701,7 +8704,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-17:43';
+const APP_VERSION = '29/10-17:56';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
