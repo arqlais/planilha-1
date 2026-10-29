@@ -1978,7 +1978,16 @@ const exHistory = exId => {
   db.sessions.forEach(s => { if (!ids.has(s.exId) || !hasDone(s)) return; const k = s.exId + '|' + s.date, o = by.get(k); if (!o || sessRank(s) > sessRank(o)) by.set(k, s); });
   return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
 };
-const prevSession = (exId, date) => exHistory(exId).filter(s => s.date < date).pop();
+// Livre ou máquina (exercícios que têm os dois jeitos, ex.: Supino reto x Chest press): cada jeito tem a sua carga.
+// O "antes" e as comparações só olham as vezes feitas do mesmo jeito; registro antigo sem marca vale o padrão do exercício.
+const eqDefault = ex => { const k = PFA.guessAnim(ex.name, ex.group), pr = PFA.pairOf(k); return pr ? (k === pr[1] ? 'maq' : 'livre') : ''; };
+const sessEq = s => { const e = exById(s.exId); return e && eqDefault(e) ? s.equip || e.equip || eqDefault(e) : ''; };
+const prevSession = (exId, date) => {
+  const h = exHistory(exId).filter(s => s.date < date), ex = exById(exId);
+  if (!ex || !eqDefault(ex)) return h.pop();
+  const eq = exEq(ex, date) || eqDefault(ex);
+  return h.filter(s => sessEq(s) === eq).pop();
+};
 const sessionOn = (exId, date) => bestSession(db.sessions.filter(s => s.exId === exId && s.date === date));
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
 // soma arredondada: minutos quebrados do cronômetro (ex.: 10,2 + 0,1) não podem virar 76.27000000000001
@@ -4647,14 +4656,14 @@ function periodReport(pid, ws, we, pa, pb, inside) {
   // cada exercício (gêmeos juntos): melhor série da semana x última vez antes da semana
   const up = [], down = [], same = [], cmp = [], seen = new Set();
   for (const s of ss.slice().sort((a, b) => b.date.localeCompare(a.date))) {
-    const ex = exById(s.exId); if (!ex || seen.has(twinKey(ex))) continue; seen.add(twinKey(ex));
-    const own = ss.filter(x => twinIds(s.exId).has(x.exId)).sort((a, b) => a.date.localeCompare(b.date));
-    let hist = exHistory(s.exId).filter(x => x.date < ws), prev = hist.length && topSet(hist[hist.length - 1]), mine = own;
+    const ex = exById(s.exId), eq = sessEq(s); if (!ex || seen.has(twinKey(ex) + eq)) continue; seen.add(twinKey(ex) + eq);
+    const own = ss.filter(x => twinIds(s.exId).has(x.exId) && sessEq(x) === eq).sort((a, b) => a.date.localeCompare(b.date));
+    let hist = exHistory(s.exId).filter(x => x.date < ws && sessEq(x) === eq), prev = hist.length && topSet(hist[hist.length - 1]), mine = own;
     // mês: exercício que começou neste mês compara a primeira vez do mês com o melhor do resto do mês
     if (!prev && inside && own.length >= 2) { prev = topSet(own[0]); hist = [own[0]]; mine = own.slice(1); }
     const now = mine.map(topSet).filter(Boolean).reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
     if (!now || !prev) continue;
-    const it = { name: ex.name, a: prev, b: now, rec: now.carga > Math.max(0, ...hist.map(x => (topSet(x) || {}).carga || 0)) }; // rec: maior carga que já fez
+    const it = { name: ex.name + (eq && eq !== eqDefault(ex) ? (eq === 'maq' ? ' (máquina)' : ' (livre)') : ''), a: prev, b: now, rec: now.carga > Math.max(0, ...hist.map(x => (topSet(x) || {}).carga || 0)) }; // rec: maior carga que já fez
     if (prev.carga > 0) cmp.push((now.carga - prev.carga) / prev.carga);
     if (now.carga > prev.carga || now.carga === prev.carga && (now.reps || 0) > (prev.reps || 0)) up.push(it);
     else if (now.carga < prev.carga) down.push(it);
@@ -5065,7 +5074,7 @@ function renderEvolution() {
       if (!nums.length) continue;
       const rows = nums.map(n => {
         const ss = byWk[n], done = ss.flatMap(s => s.sets.filter(x => x.done)), sets = {};
-        for (const s of ss) { const k = twinKey(exMap.get(s.exId)); sets[k] = (sets[k] || []).concat(s.sets.filter(x => x.done)); }
+        for (const s of ss) { const k = twinKey(exMap.get(s.exId)) + sessEq(s); sets[k] = (sets[k] || []).concat(s.sets.filter(x => x.done)); }
         return { n, from: addDays(start, (n - 1) * 7), ex: Object.keys(sets).length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0), bySet: sets };
       });
       // mesmas séries: de cada exercício feito nas duas semanas, conta só a quantidade de séries que as duas têm
@@ -8705,7 +8714,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-18:08';
+const APP_VERSION = '29/10-19:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
