@@ -4524,7 +4524,7 @@ function compareHtml(s, prev) {
       <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${tm ? fmtSec(total) : `${fmt(total)} ${u}`}</b></div>
     ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}</small></span>
       <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${tm ? fmtSec(pt) : `${fmt(pt)} ${u}`}</b></div>`
-      : '<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>'}
+      : `<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>${ex ? (src => src.length ? `<div class="wk-src"><small>Puxar cargas de</small>${src.map(x => `<button data-act="wk-src" data-id="${ex.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)}</small></button>`).join('')}</div>` : '')(wkSources(ex.profileId, ex)) : ''}`}
     <div>${prev ? progress(total, pt, finished, u) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
 }
 function refreshCard(exId) {
@@ -5821,6 +5821,28 @@ function wkSources(pid, ex) {
   return [...out.values()].map(x => ({ ...x, label: x.key.includes('|') ? x.key.split('|')[0].replace(/^./, c => c.toUpperCase()) : wName(x.ex.letter, pid) || x.ex.name }))
     .sort((a, b) => b.last.date.localeCompare(a.last.date));
 }
+// liga o exercício ao histórico escolhido e copia as cargas e repetições da última vez (também no treino de hoje, se ainda não começou)
+function wkLink(ex, x) {
+  if (x.key.includes('|')) ex.twin = x.key; else { delete ex.twin; ex.name = x.ex.name; }
+  const done = x.last.sets.filter(y => y.done), from = done.length ? done : x.last.sets;
+  ex.sets = from.map(y => ({ carga: y.carga ?? null, reps: y.reps ?? null }));
+  ['rest', 'method', 'note'].forEach(f => { if (x.ex[f] && !ex[f]) ex[f] = x.ex[f]; });
+  ex.planDate = today();
+  const s = sessionOn(ex.id, today());
+  if (s && !s.sets.some(y => y.done)) s.sets = ex.sets.map(y => ({ carga: y.carga, reps: y.reps, done: false }));
+}
+// sozinho só liga a um nome igual ou ao mesmo exercício de outra academia (Evoque/Sky), nunca a um parecido de outro jeito
+const wkAutoOk = e => x => x.key.includes('|') || normName(x.ex.name).replace(/[^a-z0-9]/g, '') === normName(e.name).replace(/[^a-z0-9]/g, '');
+// exercício sem nenhum histórico: liga sozinho ao histórico parecido mais recente (ex.: "Crossover" novo pega o da Evoque)
+function wkAutoLink(pid) {
+  let n = 0;
+  db.exercises.filter(e => e.profileId === pid && !e.archived && e.letter && e.name).forEach(e => {
+    const ids = twinIds(e.id); if (db.sessions.some(x => ids.has(x.exId) && hasDone(x))) return;
+    const w = (profile(pid).workouts || []).find(y => y.id === e.letter); if (!w || w.day == null) return; // só nos dias do Montar por dia
+    const x = wkSources(pid, e).find(wkAutoOk(e)); if (x) { wkLink(e, x); n++; }
+  });
+  return n;
+}
 const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
 function wkToggle(pid, d) {
   const W = ui.wk, P = profile(pid); if (!W.sel || !P) return;
@@ -5841,6 +5863,7 @@ function wkToggle(pid, d) {
       ...(old && old.twin ? { twin: old.twin } : {}), ...(old && old.rest ? { rest: old.rest } : {}), ...(old && old.method ? { method: old.method } : {}), ...(old && old.note ? { note: old.note } : {}),
       sets: old ? old.sets.map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })) : Array.from({ length: prev ? prev.sets.length : 3 }, () => ({ carga: null, reps: isTimed(W.sel) ? 30 : 10 })),
       ...(old ? (old.noLoad ? { noLoad: true } : {}) : noLoadOf(W.sel) || NOLOAD_RX.test(normName(W.sel.name)) ? { noLoad: true } : {}) });
+    if (!old) { const ne = db.exercises[db.exercises.length - 1], x = wkSources(pid, ne).find(wkAutoOk(ne)); if (x) wkLink(ne, x); }
   }
   save();
 }
@@ -5875,6 +5898,9 @@ async function saveWeekNow(pid, b) {
   }
 }
 function wkAct(act, b) {
+  if (act === 'wk-src') { const ex = exById(b.dataset.id), x = ex && wkSources(ex.profileId, ex).find(y => y.key === b.dataset.k); if (!x) return;
+    wkLink(ex, x); save(); toast(`<b>${esc(ex.name)}</b> agora compara com ${esc(x.label)}: ${ex.sets.length} séries da última vez.`);
+    const y = scrollY; render(); scrollTo(0, y); return; }
   const pid = ui.profile, W = ui.wk; if (!W) return;
   const re = () => { const y = scrollY, l = document.getElementById('wkList'), ly = l ? l.scrollTop : 0; render(); scrollTo(0, y); const n = document.getElementById('wkList'); if (n) n.scrollTop = ly; };
   const ex = b.dataset.id && exById(b.dataset.id);
@@ -5892,12 +5918,6 @@ function wkAct(act, b) {
       ex.planDate = today(); save(); return re(); }
     case 'wk-mv': { if (!ex) return; const list = letterExs(ex.letter, pid), i = list.indexOf(ex), j = i + +b.dataset.d; if (j < 0 || j >= list.length) return;
       [list[i], list[j]] = [list[j], list[i]]; list.forEach((e, k) => { e.order = k + 1; }); save(); return re(); }
-    case 'wk-src': { const x = ex && wkSources(pid, ex).find(y => y.key === b.dataset.k); if (!x) return;
-      if (x.key.includes('|')) ex.twin = x.key; else { delete ex.twin; ex.name = x.ex.name; }
-      const done = x.last.sets.filter(y => y.done), from = done.length ? done : x.last.sets;
-      ex.sets = from.map(y => ({ carga: y.carga ?? null, reps: y.reps ?? null }));
-      ['rest', 'method', 'note'].forEach(f => { if (x.ex[f] && !ex[f]) ex[f] = x.ex[f]; });
-      ex.planDate = today(); save(); toast(`<b>${esc(ex.name)}</b> agora compara com ${esc(x.label)}: ${ex.sets.length} séries da última vez.`); return re(); }
     case 'wk-del': if (ex) wkRemove(pid, ex); return re();
     case 'wk-save': return saveWeekNow(pid, b);
     case 'wk-unalso': { // só tira o treino antigo deste dia da semana; o treino e as cargas continuam guardados na aba Treinos
@@ -8085,6 +8105,7 @@ function runFixes() {
   if (!cloud || cloud.role !== 'admin' || !cloud.ready || !cloud.serverSeen || cloud.fixesRan) return;
   cloud.fixesRan = true;
   if (adoptRemoved()) { render(); toast('O exercício que saiu e voltou ao treino recuperou as cargas e o histórico.'); }
+  if (db.profiles.reduce((a, p) => a + wkAutoLink(p.id), 0)) { save(); render(); }
   fixOnce().catch(e => console.warn('ajuste:', e));
 }
 // Primeira vez do professor: a nuvem está vazia. Oferece enviar os dados deste aparelho.
@@ -8648,7 +8669,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:44';
+const APP_VERSION = '29/10-12:50';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
