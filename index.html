@@ -7181,6 +7181,9 @@ async function cloudBoot() {
   const inv = new URLSearchParams(location.search).get('convite');
   if (inv) { try { localStorage.setItem(INVITE_KEY, inv.trim()); } catch (e) {} history.replaceState(null, '', location.pathname); }
   if (new URLSearchParams(location.search).has('cadastro')) { const tag = new URLSearchParams(location.search).get('cadastro'); try { localStorage.setItem(NEW_KEY, SRC_TAG[tag] ? tag : '1'); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  // ?entrar (botão Entrar da página de apresentação): abre direto na tela de entrar, mesmo se a pessoa já tocou em Criar conta antes
+  const wantLogin = new URLSearchParams(location.search).has('entrar');
+  if (wantLogin) history.replaceState(null, '', location.pathname);
   { const de = new URLSearchParams(location.search).get('de'), rs = SRC_TAG[de] || refSrc(); if (rs) try { localStorage.setItem(NEW_KEY + '-ref', rs); } catch (e) {} if (de) history.replaceState(null, '', location.pathname); }
   showAuth('loading');
   try { for (const f of ['app', 'auth', 'firestore']) await loadScript(`vendor/firebase/firebase-${f}-compat.js`); }
@@ -7192,7 +7195,7 @@ async function cloudBoot() {
   try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {} // login fica salvo no aparelho
   try { auth.languageCode = 'pt-BR'; } catch (e) {} // e-mails (troca de senha) em português
   cloud = { auth, fs, role: null, ready: false, unsubs: [] };
-  auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() || firstAccess() ? 'signup' : 'login'); });
+  auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(!wantLogin && (pendingInvite() || firstAccess()) ? 'signup' : 'login'); });
 }
 function pendingInvite() {
   let v = ''; try { v = localStorage.getItem(INVITE_KEY) || ''; } catch (e) {}
@@ -8273,7 +8276,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-01:55';
+const APP_VERSION = '29/10-02:07';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
