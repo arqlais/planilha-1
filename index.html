@@ -595,44 +595,36 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
 .wchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
 .wchips button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px}
 .wchips button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
-.bw .bw-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}.bw .bw-top h3{margin:2px 0 0;font-size:19px}.bw .bw-top small{color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
-.bw-x{width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--text);font-size:16px}
-.bw-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:0 0 14px}.bw-bar span{display:flex;flex-direction:column;gap:5px;min-width:0}
-.bw-bar i{height:5px;border-radius:9px;background:var(--line)}.bw-bar span.on i{background:var(--acc)}
-.bw-bar em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bw-bar span.on em{color:var(--text)}
-.bw-lead{margin:0 0 12px!important}
-.bw-combos{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}.bw-combos span{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-right:2px}
-.bw-combos button,.bw-rest button{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px}
-.bw-combos button.on,.bw-rest button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-.bw-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px}
-.bw-g{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px 10px;border:1.5px solid var(--line);border-radius:14px;background:var(--input);color:var(--text);font:inherit;min-width:0}
-.bw-g b{font-size:13.5px;max-width:100%;overflow-wrap:anywhere}.bw-g.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--input))}
-.bw-fig.mmap{display:block;padding:0;border:0;background:transparent;width:100%;max-width:120px}.bw-fig svg{display:block;width:100%;height:auto;aspect-ratio:1.05}
-.bw-fig .mm-m{cursor:inherit;transition:none}.bw-fig .mm-m.mm-l0{opacity:.6}.bw-g:not(.on) .bw-fig .mm-l2{--c:color-mix(in srgb,var(--acc) 55%,var(--mm-off));filter:none}
-.bw-ck{position:absolute;top:7px;right:7px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900;border:1.5px solid var(--line);color:transparent}
-.on>.bw-ck{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-.bw-goals,.bw-rel{display:grid;gap:8px}
-.bw-goal{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 44px 14px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--input);color:var(--text);font:inherit}
-.bw-goal>.ic{font-size:22px;color:var(--acc)}.bw-goal b{display:block;font-size:15px}.bw-goal small{color:var(--muted);font-size:12.5px}
-.bw-goal.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--input))}.bw-goal .bw-ck{top:50%;right:14px;transform:translateY(-50%)}
-.bw-pickhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;justify-content:space-between;margin-bottom:10px}
-.bw-sel{margin-bottom:10px}.bw-tabs{padding-bottom:4px}
-.bw-list{max-height:min(52vh,440px);overflow:auto;border:1px solid var(--line);border-radius:12px;padding:0 8px}
-.bw-rows{display:grid;gap:8px}.bw-row{border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--input)}
-.bw-rn{display:flex;align-items:center;gap:8px;min-width:0}.bw-rn .grow{min-width:0}.bw-rn b{display:block;font-size:14.5px;overflow-wrap:anywhere}.bw-rn small{color:var(--muted);font-size:12px}
-.bw-num{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--acc-soft);color:var(--acc);font-weight:800;font-size:13px}
+.bmode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--input);border:1px solid var(--line);margin-bottom:12px;max-width:520px}
+.bmode button{border:0;border-radius:10px;padding:10px 8px;background:transparent;color:var(--muted);font:inherit;font-weight:800;font-size:14px}.bmode button.on{background:var(--acc);color:var(--acc-ink)}
+.wk-how{margin:0 0 12px!important}
+.wk-days{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-items:start}
+.wk-day{border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--input);min-width:0;display:grid;gap:6px}
+.wk-day.empty{border-style:dashed}.wk-day.has{border-color:var(--acc)}
+.wk-dh b{display:block;font-size:15px}.wk-dh small{color:var(--muted);font-size:12px}
+.wk-put{border:1.5px dashed var(--acc);background:transparent;color:var(--acc);border-radius:10px;padding:8px;font:inherit;font-weight:800;font-size:13px}
+.wk-put.on{border-style:solid;background:var(--acc);color:var(--acc-ink)}
+.wk-ex{border-radius:10px;background:var(--card);border:1px solid var(--line);min-width:0}.wk-ex.open{border-color:var(--acc)}
+.wk-exn{display:flex;flex-direction:column;gap:1px;width:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:13.5px;font-weight:700;text-align:left;padding:8px}
+.wk-exn .grow{min-width:0;overflow-wrap:break-word}.wk-exn small{color:var(--muted);font-weight:600;font-size:12px}
+.wk-ed{display:grid;gap:8px;padding:0 8px 8px}
+.wk-day:has(.wk-ex.open){grid-column:1/-1}.wk-ed .bw-step{max-width:320px}
+@media (min-width:1000px){.wk-days{grid-template-columns:repeat(7,minmax(0,1fr))}.wk-day:has(.wk-ex.open){grid-column:auto}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}}.wk-eda{display:flex;gap:6px;align-items:center}.wk-eda .btn{margin-left:auto;font-size:13px}
+.wk-also{margin:0;font-size:12px;color:var(--muted)}
+.wk-in{display:block;font-style:normal;font-size:12px;color:var(--acc);font-weight:700}
+.bw-step{display:flex;align-items:center;gap:6px}.bw-step small{flex:1;color:var(--muted);font-weight:700;font-size:12.5px}
+.bw-step button{width:34px;height:34px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--input);color:var(--acc);font-size:18px;font-weight:800}
+.bw-step b{min-width:26px;text-align:center;font-size:16px}
 .bw-mv{width:32px;height:32px;flex:none;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:800}.bw-mv:disabled{opacity:.3}
-.bw-steps{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.bw-step{display:flex;align-items:center;gap:6px;flex:1 1 150px}.bw-step small{flex:1;color:var(--muted);font-weight:700;font-size:12.5px}
-.bw-step button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--acc);font-size:18px;font-weight:800}
-.bw-step b{min-width:30px;text-align:center;font-size:17px}
-.bw-rest{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:14px}.bw-rest span{font-size:13px;font-weight:700;color:var(--muted);margin-right:4px;flex-basis:100%}
-.bw-kv{margin-bottom:12px;grid-template-columns:repeat(3,1fr)}
-.bw-sum{margin:0 0 6px;padding:0;list-style:none;counter-reset:bw}.bw-sum li{counter-increment:bw;display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
-.bw-sum li::before{content:counter(bw);font-weight:800;color:var(--acc);min-width:18px}.bw-sum small{color:var(--muted);white-space:nowrap}
-.bw-foot{position:sticky;bottom:8px;z-index:2;display:flex;justify-content:space-between;gap:10px;margin:14px -6px 0;padding:8px;border-radius:18px;border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 6px 24px rgba(0,0,0,.18)}
-body:not(.desk) .bw-foot{bottom:calc(70px + env(safe-area-inset-bottom))}:root[data-skin="v2"] body:not(.desk) .bw-foot{bottom:calc(88px + env(safe-area-inset-bottom))}
-.bw-foot .btn{padding:12px 18px;font-size:15px;font-weight:800}.bw-foot .btn.primary{flex:0 1 220px}.bw-foot .btn:disabled{opacity:.4}
+.bw-list{max-height:min(52vh,440px);overflow:auto;border:1px solid var(--line);border-radius:12px;padding:0 8px}
+.wkp-bar{position:fixed;left:50%;transform:translateX(-50%);width:min(640px,calc(100% - 24px));bottom:calc(12px + env(safe-area-inset-bottom));z-index:12;padding:10px;border-radius:18px;border:1px solid var(--acc);background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 6px 24px rgba(0,0,0,.2)}
+body:not(.desk) .wkp-bar{bottom:calc(72px + env(safe-area-inset-bottom))}:root[data-skin="v2"] body:not(.desk) .wkp-bar{bottom:calc(90px + env(safe-area-inset-bottom))}
+body.desk .wkp-bar{margin-left:114px;width:min(640px,calc(100% - 252px))}.wk-pad{height:130px}
+.wk-bt{display:flex;align-items:center;gap:10px;margin-bottom:8px}.wk-bt .grow{min-width:0}.wk-bt b{display:block;overflow-wrap:anywhere}.wk-bt small{color:var(--muted);font-size:12px}
+.wk-bd{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wk-bd button{border:1px solid var(--line);border-radius:10px;padding:10px 0;background:var(--input);color:var(--text);font:inherit;font-weight:800;font-size:13px;min-width:0}
+.wk-bd button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.on>.bw-ck{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
 .sel{display:block;width:100%;margin-top:5px;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chk-line{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;margin:0 0 14px}
@@ -5538,10 +5530,11 @@ function renderAlunosDesk() {
 const METHODS = ['Normal', 'Bi-set', 'Tri-set', 'Drop-set', 'Rest-pause', 'Pirâmide', 'Até a falha', 'Isometria', 'Cluster', 'Excêntrica lenta'];
 const allSame = (sets, f) => sets.length && sets.every(x => x[f] === sets[0][f]) ? sets[0][f] : (sets.length ? 'var' : null);
 function builderHtml(pid) {
-  if (ui.bWiz && ui.bWiz.pid === pid) return bwHtml(pid);
-  if (ui.bWiz) ui.bWiz = null;
-  const ws = workoutsOf(pid);
-  if (!isLetter(ui.bGroup, pid)) ui.bGroup = (ws[0] || {}).id || '';
+  if (ui.bMode == null) { try { ui.bMode = localStorage.getItem('pf-montar-modo') || 'semana'; } catch (e) { ui.bMode = 'semana'; } }
+  const modes = `<div class="bmode" role="tablist"><button class="${ui.bMode === 'semana' ? 'on' : ''}" data-act="b-mode" data-v="semana"><i class="ic ic-cal"></i> Montar por dia</button><button class="${ui.bMode !== 'semana' ? 'on' : ''}" data-act="b-mode" data-v="treinos"><i class="ic ic-note"></i> Treinos (tabela)</button></div>`;
+  if (ui.bMode === 'semana') return `<section class="card">${modes}${weekHtml(pid)}</section>`;
+  const ws = workoutsOf(pid).filter(w => w.day == null || w.id === ui.bGroup);
+  if (!ws.some(w => w.id === ui.bGroup)) ui.bGroup = (ws[0] || {}).id || '';
   const L = ui.bGroup, exs = L ? letterExs(L, pid) : [];
   const open = ui.bOpen || (ui.bOpen = new Set());
   const rows = exs.map((e, i) => {
@@ -5563,7 +5556,7 @@ function builderHtml(pid) {
         ${noLoadOf(e) ? '' : `<input data-bs="carga" data-id="${e.id}" data-i="${j}" inputmode="decimal" value="${numVal(x.carga)}" placeholder="kg"> kg ×`}
         <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${isTimed(e) ? 'seg' : 'reps'}">${isTimed(e) ? ' seg' : noLoadOf(e) ? ' reps' : ''}</div>`).join('')}</div></td></tr>` : ''}`;
   }).join('');
-  return `<section class="card">
+  return `<section class="card">${modes}
     <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}${w.hold ? ' <small>(escondido)</small>' : ''}${w.own ? ' <small>(do aluno)</small>' : ''}</button>`).join('')}
       <button data-act="b-neww">＋ Novo treino</button></div>
     ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
@@ -5584,142 +5577,88 @@ function builderHtml(pid) {
     : `<p class="empty">Crie o primeiro treino em <b>＋ Novo treino</b>.</p>`}
   </section>`;
 }
-// ---------- Montar do zero: passo a passo (músculos → objetivo → exercícios → séries → revisar) ----------
-// O treino só é criado no último passo; até lá nada muda nos treinos nem no histórico.
-const BW_STEPS = ['Músculos', 'Objetivo', 'Exercícios', 'Séries', 'Revisar'];
-const BW_GOALS = [
-  { k: 'massa', t: 'Ganhar músculo', d: '3 séries de 10 · descanso 1 min 30', ic: 'dumb', n: 3, reps: 10, rest: 90 },
-  { k: 'forca', t: 'Ficar mais forte', d: '4 séries de 6 · descanso 2 min 30', ic: 'flame', n: 4, reps: 6, rest: 150 },
-  { k: 'definir', t: 'Definir e ter fôlego', d: '3 séries de 15 · descanso 45 s', ic: 'timer', n: 3, reps: 15, rest: 45 },
-  { k: 'comecar', t: 'Começando agora', d: '2 séries de 12 · descanso 1 min', ic: 'star', n: 2, reps: 12, rest: 60 },
-];
-const BW_COMBOS = [['Superiores', UPPER.filter(g => g !== 'Abdômen')], ['Inferiores', LEGS], ['Corpo todo', ['Peito', 'Costas', 'Ombros', 'Quadríceps', 'Posteriores', 'Abdômen']],
-  ['Peito e tríceps', ['Peito', 'Tríceps']], ['Costas e bíceps', ['Costas', 'Bíceps']], ['Pernas e glúteos', ['Quadríceps', 'Posteriores', 'Glúteos']]];
-// desenho pequeno de cada grupo: vista (F/B), metade do corpo (cima/baixo) e músculos que acendem
-const BW_FIG = { Peito: ['F', 0, 'peito serratil'], Costas: ['B', 0, 'dorsal meio lombar'], Ombros: ['F', 0, 'deltAnt deltLat'], 'Bíceps': ['F', 0, 'biceps antebraco'],
-  'Tríceps': ['B', 0, 'triceps'], 'Abdômen': ['F', 0, 'abdomen obliquo'], 'Quadríceps': ['F', 1, 'quad adutor'], Posteriores: ['B', 1, 'posterior'], 'Glúteos': ['B', 1, 'gluteo gluteoMed'], Panturrilha: ['B', 1, 'pant'] };
-function bwFig(g, pid) {
-  const [side, low, keys] = BW_FIG[g], B = bodyMapOf(pid), on = keys.split(' ');
-  const [x, y, w, h] = B['v' + side].split(' ').map(Number), vb = `${x} ${y + (low ? h * .4 : 0)} ${w} ${h * .58}`;
-  return `<svg viewBox="${vb}" aria-hidden="true"><g class="mm-base">${B['b' + side].map(d => d[0] === 'H' ? `<path class="mm-hair" d="${d.slice(1)}"/>` : `<path d="${d}"/>`).join('')}</g>
-    ${B[side].map(([ks, , l, r]) => `<g class="mm-m ${ks.split(' ').some(k => on.includes(k)) ? 'mm-l2' : 'mm-l0'}"><path d="${l}"/><path d="${r}"/></g>`).join('')}</svg>`;
-}
-const bwGoal = () => BW_GOALS.find(x => x.k === ui.bWiz.goal) || BW_GOALS[0];
-const bwName = gs => gs.length > 3 ? (gs.every(g => LEGS.includes(g)) ? 'Inferiores' : gs.every(g => UPPER.includes(g)) ? 'Superiores' : 'Corpo todo')
-  : gs.join(gs.length === 2 ? ' e ' : ', ').replace(/, ([^,]*)$/, ' e $1');
-// sugestão rápida: exercícios variados e comuns de cada grupo (nomes do catálogo), mais por grupo quando são poucos grupos
-const BW_PICKS = { Peito: ['Supino reto', 'Supino inclinado com halteres', 'Crucifixo na polia', 'Peck deck'], Costas: ['Puxada frontal', 'Remada baixa', 'Remada unilateral (serrote)', 'Pulldown com corda'],
-  Ombros: ['Desenvolvimento com halteres', 'Elevação lateral', 'Crucifixo inverso na máquina', 'Elevação frontal'], 'Bíceps': ['Rosca direta', 'Rosca martelo', 'Rosca Scott na máquina'],
-  'Tríceps': ['Tríceps corda', 'Tríceps testa', 'Tríceps francês na polia'], 'Abdômen': ['Abdominal livre', 'Abdominal prancha', 'Elevação de pernas'],
-  'Quadríceps': ['Agachamento livre', 'Leg press 45', 'Cadeira extensora', 'Agachamento búlgaro'], Posteriores: ['Cadeira flexora', 'Stiff', 'Mesa flexora'],
-  'Glúteos': ['Elevação pélvica', 'Cadeira abdutora', 'Glúteo na polia'], Panturrilha: ['Panturrilha em pé', 'Panturrilha sentado'] };
-function bwSuggest() {
-  const W = ui.bWiz, per = W.groups.length === 1 ? 4 : W.groups.length === 2 ? 3 : 2;
-  W.groups.forEach(g => { let k = W.sel.filter(x => x.group === g).length;
-    for (const n of BW_PICKS[g].map(catName).filter(Boolean)) { if (k >= per) break; if (!W.sel.some(x => sameName(x.name, n))) { W.sel.push(bwItem(n, g)); k++; } } });
-}
-const bwItem = (name, group) => { const G = bwGoal(), t = isTimed({ name }); return { name, group, n: G.n, reps: t ? 30 : G.reps }; };
-function bwListHtml() {
-  const W = ui.bWiz, q = normName(W.q || ''), list = catList(q, W.tab, W.eq || '');
-  const isSel = n => W.sel.some(x => sameName(x.name, n));
-  return list.map(([gr, n]) => `<button class="own-item ${isSel(n) ? 'on' : ''}" data-act="bw-pick" data-g="${gr}" data-n="${esc(n)}"><span class="grow">${esc(n)}${q ? ` <small>${gr}</small>` : ''}</span><b>${isSel(n) ? '✓' : '＋'}</b></button>`).join('')
+// ---------- Montar por dia da semana: escolhe o exercício e encaixa nos dias ----------
+// Cada dia vira um treino com o nome do dia (marcado com "day") e entra sozinho na divisão da semana. Os treinos
+// de antes continuam como estão, na aba Treinos. Os exercícios são os de sempre: histórico e comparação de cargas iguais.
+const WK_SHORT = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb', 0: 'Dom' };
+const dayWorkout = (pid, d) => workoutsOf(pid).find(w => w.day === d);
+const wkExs = (pid, d) => { const w = dayWorkout(pid, d); return w ? letterExs(w.id, pid) : []; };
+const wkDaysOf = (pid, name) => WEEK.filter(([d]) => wkExs(pid, d).some(e => sameName(e.name, name))).map(([d]) => d);
+function wkListHtml(pid) {
+  const W = ui.wk, q = normName(W.q || ''), list = catList(q, W.g, '');
+  return list.map(([gr, n]) => { const ds = wkDaysOf(pid, n), on = W.sel && sameName(W.sel.name, n);
+    return `<button class="own-item ${on ? 'on' : ''}" data-act="wk-pick" data-g="${gr}" data-n="${esc(n)}"><span class="grow">${esc(n)}${q ? ` <small>${gr}</small>` : ''}${ds.length ? `<em class="wk-in">${ds.map(d => WK_SHORT[d]).join(' · ')}</em>` : ''}</span><b>${on ? '✓' : '＋'}</b></button>`; }).join('')
     || '<p class="hint" style="margin:8px 0">Nenhum exercício com esse nome.</p>';
 }
-function bwHtml(pid) {
-  const W = ui.bWiz, s = W.step, P = profile(pid);
-  const head = `<div class="bw-top"><button class="bw-x" data-act="bw-cancel" aria-label="Cancelar">✕</button>
-      <div class="grow"><small>Novo treino${pid !== ME ? ` de ${esc(firstName(P))}` : ''} · passo ${s} de ${BW_STEPS.length}</small><h3>${['O que vai treinar?', 'Qual o objetivo?', 'Escolha os exercícios', 'Séries e repetições', 'Tudo certo?'][s - 1]}</h3></div></div>
-    <div class="bw-bar">${BW_STEPS.map((t, i) => `<span class="${i < s ? 'on' : ''}"><i></i><em>${t}</em></span>`).join('')}</div>`;
-  const nOk = [W.groups.length, 1, W.sel.length, W.sel.length, 1][s - 1];
-  const foot = `<div class="bw-foot">${s > 1 ? '<button class="btn" data-act="bw-back">‹ Voltar</button>' : '<span></span>'}
-    ${s < 5 ? `<button class="btn primary" data-act="bw-next" ${nOk ? '' : 'disabled'}>${s === 3 && W.sel.length ? `Próximo (${W.sel.length})` : 'Próximo'} ›</button>`
-      : `<button class="btn primary" data-act="bw-make">✓ Criar treino</button>`}</div>`;
-  let body = '';
-  if (s === 1) body = `<p class="hint bw-lead">Toque nos músculos que este treino vai trabalhar. Pode escolher vários.</p>
-    <div class="bw-combos"><span>Atalhos</span>${BW_COMBOS.map(([t, gs], i) => `<button class="${gs.length === W.groups.length && gs.every(g => W.groups.includes(g)) ? 'on' : ''}" data-act="bw-combo" data-i="${i}">${t}</button>`).join('')}</div>
-    <div class="bw-groups">${GROUPS.map(g => `<button class="bw-g ${W.groups.includes(g) ? 'on' : ''}" data-act="bw-g" data-g="${g}" aria-pressed="${W.groups.includes(g)}">
-      <span class="bw-fig mmap">${bwFig(g, pid)}</span><b>${g}</b><i class="bw-ck">✓</i></button>`).join('')}</div>
-    <p class="hint" style="margin:12px 0 0">Prefere a tabela de sempre? <button class="link" data-act="bw-plain">Criar treino vazio</button></p>`;
-  if (s === 2) body = `<p class="hint bw-lead">Isso só preenche séries, repetições e descanso para começar. Dá para mudar tudo depois.</p>
-    <div class="bw-goals">${BW_GOALS.map(G => `<button class="bw-goal ${G.k === W.goal ? 'on' : ''}" data-act="bw-goal" data-k="${G.k}"><i class="ic ic-${G.ic}"></i><span class="grow"><b>${G.t}</b><small>${G.d}</small></span><i class="bw-ck">✓</i></button>`).join('')}</div>`;
-  if (s === 3) {
-    const cnt = g => W.sel.filter(x => x.group === g).length;
-    body = `<div class="bw-pickhead"><p class="hint" style="margin:0">Toque para colocar no treino. Sem ideia? Deixe o app sugerir.</p>
-        <button class="btn" data-act="bw-suggest"><i class="ic ic-star"></i> Sugerir para mim</button></div>
-      ${W.sel.length ? `<div class="own-sel bw-sel">${W.sel.map((x, i) => `<button data-act="bw-unsel" data-i="${i}" aria-label="Tirar ${esc(x.name)}">${esc(x.name)} ✕</button>`).join('')}</div>` : ''}
-      <input class="search" id="bwSearch" placeholder="Buscar exercício" value="${esc(W.q || '')}" autocomplete="off">
-      <div class="chips own-groups bw-tabs">${W.groups.map(g => `<button class="${g === W.tab ? 'on' : ''}" data-act="bw-tab" data-g="${g}">${g}${cnt(g) ? ` <small>${cnt(g)}</small>` : ''}</button>`).join('')}</div>
-      <div class="chips own-groups own-eq">${EQUIPS.map(([v, l]) => `<button class="${v === (W.eq || '') ? 'on' : ''}" data-act="bw-eq" data-v="${v}">${l}</button>`).join('')}</div>
-      <div class="own-list bw-list" id="bwList">${bwListHtml()}</div>`;
+function weekHtml(pid) {
+  const W = ui.wk || (ui.wk = { sel: null, q: '', g: GROUPS[0], open: null }), P = profile(pid);
+  const days = WEEK.map(([d, nm]) => {
+    const exs = wkExs(pid, d), w = dayWorkout(pid, d), also = ((P.division || {})[d] || []).filter(x => x !== (w || {}).id && x !== CARDIO && isLetter(x, pid));
+    const inSel = W.sel && exs.some(e => sameName(e.name, W.sel.name));
+    return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${W.sel ? 'pick' : ''} ${inSel ? 'has' : ''}">
+      <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
+      ${W.sel ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? '✓ Está aqui' : '＋ Colocar aqui'}</button>` : ''}
+      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}</span><small>${e.sets.length} × ${numVal(allSame(e.sets, 'reps')) || '–'}${isTimed(e) ? ' s' : ''}</small></button>
+        ${W.open === e.id ? `<div class="wk-ed"><div class="bw-step"><small>Séries</small><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${e.sets.length}</b><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
+          <div class="bw-step"><small>${isTimed(e) ? 'Segundos' : 'Repetições'}</small><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="-1" aria-label="Menos">−</button><b>${numVal(allSame(e.sets, 'reps')) || '–'}</b><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="1" aria-label="Mais">＋</button></div>
+          <div class="wk-eda"><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="1" aria-label="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
+          <button class="btn danger" data-act="wk-del" data-id="${e.id}">Tirar do dia</button></div></div>` : ''}</div>`).join('')}
+      ${also.length ? `<p class="wk-also">Também neste dia: ${also.map(x => esc(wName(x, pid))).join(', ')}</p>` : ''}</div>`;
+  }).join('');
+  return `<p class="hint wk-how"><b>1.</b> Toque num exercício da lista. <b>2.</b> Toque em <b>＋ Colocar</b> nos dias em que ele entra. Toque num exercício do dia para mudar séries e repetições.</p>
+    <div class="wk-days">${days}</div>
+    <h4 class="mm-h" id="wkLib">Exercícios</h4>
+    <input class="search" id="wkSearch" placeholder="Buscar exercício" value="${esc(W.q || '')}" autocomplete="off">
+    ${W.q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === W.g ? 'on' : ''}" data-act="wk-g" data-g="${x}">${x}</button>`).join('')}</div>`}
+    <div class="own-list bw-list" id="wkList">${wkListHtml(pid)}</div>
+    ${W.sel ? `<div class="wkp-bar"><div class="wk-bt"><span class="grow"><b>${esc(W.sel.name)}</b><small>Toque nos dias em que ele entra</small></span><button class="btn" data-act="wk-unpick">Pronto</button></div>
+      <div class="wk-bd">${WEEK.map(([d]) => `<button class="${wkExs(pid, d).some(e => sameName(e.name, W.sel.name)) ? 'on' : ''}" data-act="wk-put" data-d="${d}">${WK_SHORT[d]}</button>`).join('')}</div></div><div class="wk-pad"></div>` : ''}`;
+}
+// coloca ou tira o exercício escolhido do dia (o treino do dia é criado na primeira vez e entra na divisão da semana)
+function wkToggle(pid, d) {
+  const W = ui.wk, P = profile(pid); if (!W.sel || !P) return;
+  const cur = wkExs(pid, d).find(e => sameName(e.name, W.sel.name));
+  if (cur) return wkRemove(pid, cur);
+  let w = dayWorkout(pid, d);
+  if (!w) {
+    w = { id: uid(), name: WEEK.find(x => x[0] === d)[1], day: d }; P.workouts = P.workouts || []; P.workouts.push(w);
+    P.division = P.division || {}; P.division[d] = [...(P.division[d] || []).filter(x => x !== w.id), w.id];
   }
-  if (s === 4) body = `<p class="hint bw-lead">Já veio com o objetivo <b>${bwGoal().t}</b>. Ajuste o que quiser com − e ＋.</p>
-    <div class="bw-rows">${W.sel.map((x, i) => { const t = isTimed(x);
-      return `<div class="bw-row"><div class="bw-rn"><span class="bw-num">${i + 1}</span><span class="grow"><b>${esc(x.name)}</b><small>${x.group}</small></span>
-        <button class="bw-mv" data-act="bw-mv" data-i="${i}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button class="bw-mv" data-act="bw-mv" data-i="${i}" data-d="1" aria-label="Descer" ${i < W.sel.length - 1 ? '' : 'disabled'}>↓</button><button class="bw-mv" data-act="bw-unsel" data-i="${i}" aria-label="Tirar">✕</button></div>
-        <div class="bw-steps"><div class="bw-step"><small>Séries</small><button data-act="bw-st" data-i="${i}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${x.n}</b><button data-act="bw-st" data-i="${i}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
-          <div class="bw-step"><small>${t ? 'Segundos' : 'Repetições'}</small><button data-act="bw-st" data-i="${i}" data-f="reps" data-d="-1" aria-label="Menos">−</button><b>${x.reps}</b><button data-act="bw-st" data-i="${i}" data-f="reps" data-d="1" aria-label="Mais">＋</button></div></div></div>`; }).join('')}</div>
-    <div class="bw-rest"><span>Descanso entre séries</span>${[45, 60, 90, 120, 150].map(r => `<button class="${r === W.rest ? 'on' : ''}" data-act="bw-rest" data-v="${r}">${r < 60 ? r + ' s' : fmtSec(r)}</button>`).join('')}</div>`;
-  if (s === 5) {
-    const exs = W.sel.map(x => ({ name: x.name, group: x.group, sets: Array.from({ length: x.n }, () => ({ reps: x.reps })) }));
-    const tot = W.sel.reduce((a, x) => a + x.n, 0), min = Math.round(W.sel.reduce((a, x) => a + x.n * (40 + W.rest), 0) / 60 / 5) * 5;
-    body = `<label class="f" style="margin:0 0 12px">Nome do treino<input id="bwName" value="${esc(W.name)}" maxlength="40" autocomplete="off"></label>
-      <div class="kv bw-kv"><div><b>${W.sel.length}</b><span>exercícios</span></div><div><b>${tot}</b><span>séries</span></div><div><b>~${min}</b><span>minutos</span></div></div>
-      <ol class="bw-sum">${W.sel.map(x => `<li><span class="grow">${esc(x.name)}</span><small>${x.n} × ${x.reps}${isTimed(x) ? ' s' : ''}</small></li>`).join('')}</ol>
-      <h4 class="mm-h">Músculos que este treino trabalha</h4>${muscleMapHtml(exs, pid)}
-      <div class="bw-rel"><p class="plan-g" style="margin:14px 0 6px">Depois de criar</p>
-        <button class="bw-goal ${W.hold ? 'on' : ''}" data-act="bw-hold" data-v="1"><i class="ic ic-lock"></i><span class="grow"><b>Deixar escondido</b><small>Fica salvo para você revisar. ${pid !== ME ? esc(firstName(P)) + ' ainda não vê.' : 'Não aparece no seu Meu treino.'}</small></span><i class="bw-ck">✓</i></button>
-        <button class="bw-goal ${W.hold ? '' : 'on'}" data-act="bw-hold" data-v="0"><i class="ic ic-unlock"></i><span class="grow"><b>Liberar já no app</b><small>Aparece nos dias em que estiver na divisão ou no planejamento.</small></span><i class="bw-ck">✓</i></button></div>`;
-  }
-  return `<section class="card bw" id="bwCard">${head}<div class="bw-body">${body}</div>${foot}</section>`;
+  const list = letterExs(w.id, pid), prev = list.slice(-1)[0], back = recentRemoved(pid, W.sel.name);
+  if (back) { back.letter = w.id; delete back.archived; back.order = list.length + 1; }
+  else db.exercises.push({ id: uid(), profileId: pid, group: W.sel.group, letter: w.id, name: W.sel.name, order: list.length + 1, planDate: today(),
+    sets: Array.from({ length: prev ? prev.sets.length : 3 }, () => ({ carga: null, reps: isTimed(W.sel) ? 30 : 10 })), ...(noLoadOf(W.sel) || NOLOAD_RX.test(normName(W.sel.name)) ? { noLoad: true } : {}) });
+  save();
 }
-function bwOpen(pid) {
-  ui.bWiz = { pid, step: 1, groups: [], goal: 'massa', sel: [], tab: '', q: '', eq: '', rest: 90, name: '', hold: true };
-  render(); bwScroll();
+// tirar do dia: com treinos anotados fica guardado (volta com as cargas se colocar de novo); sem, sai de vez
+function wkRemove(pid, ex) {
+  const L = ex.letter;
+  if (db.sessions.some(s => s.exId === ex.id)) { ex.letter = null; ex.archived = true; } else db.exercises = db.exercises.filter(e => e !== ex);
+  if (!letterExs(L, pid).length) { const P = profile(pid); P.workouts = P.workouts.filter(w => w.id !== L);
+    if (P.division) for (const k in P.division) P.division[k] = P.division[k].filter(x => x !== L); }
+  letterExs(L, pid).forEach((e, k) => { e.order = k + 1; });
+  if (ui.wk.open === ex.id) ui.wk.open = null;
+  save();
 }
-const bwScroll = () => { const c = document.getElementById('bwCard'), t = c && c.getBoundingClientRect().top; if (c && (t < 0 || t > innerHeight * .5)) c.scrollIntoView({ block: 'start' }); };
-function bwMake() {
-  const W = ui.bWiz, pid = W.pid, P = profile(pid); if (!P || !W.sel.length) return;
-  const nm = document.getElementById('bwName'); if (nm) W.name = nm.value;
-  let name = (W.name || '').trim().slice(0, 40) || bwName(W.groups);
-  P.workouts = P.workouts || [];
-  if (P.workouts.some(x => sameName(x.name, name))) name = `${name} (novo)`.slice(0, 40);
-  const id = uid(); P.workouts.push({ id, name, ...(W.hold ? { hold: true } : {}) });
-  W.sel.forEach((x, k) => db.exercises.push({ id: uid(), profileId: pid, group: x.group, letter: id, name: x.name, order: k + 1, planDate: today(), rest: W.rest,
-    sets: Array.from({ length: x.n }, () => ({ carga: null, reps: x.reps })), ...(noLoadOf(x) || NOLOAD_RX.test(normName(x.name)) ? { noLoad: true } : {}) }));
-  ui.bWiz = null; ui.bGroup = id; save(); render();
-  const c = $main.querySelector('.wchips'); if (c) c.scrollIntoView({ block: 'start' });
-  toast(`✓ Treino <b>${esc(name)}</b> criado. Coloque as cargas e observações aqui embaixo e toque em <b>Salvar</b>.`);
-}
-async function bwAct(act, b) {
-  const W = ui.bWiz; if (!W) return;
-  const keepName = () => { const n = document.getElementById('bwName'); if (n) W.name = n.value; };
-  const re = (top) => { const y = scrollY; render(); top ? bwScroll() : scrollTo(0, y); };
+function wkAct(act, b) {
+  const pid = ui.profile, W = ui.wk; if (!W) return;
+  const re = () => { const y = scrollY, l = document.getElementById('wkList'), ly = l ? l.scrollTop : 0; render(); scrollTo(0, y); const n = document.getElementById('wkList'); if (n) n.scrollTop = ly; };
+  const ex = b.dataset.id && exById(b.dataset.id);
   switch (act) {
-    case 'bw-cancel':
-      if (W.sel.length && !await confirmAsk('Sair sem criar o treino?', 'Os exercícios escolhidos neste passo a passo não serão guardados.', 'Sair')) return;
-      ui.bWiz = null; return render();
-    case 'bw-plain': { ui.bWiz = null; const g = ui.group; await newWorkout(true); ui.bGroup = ui.group; ui.group = g; return render(); }
-    case 'bw-g': { const g = b.dataset.g, i = W.groups.indexOf(g); i >= 0 ? W.groups.splice(i, 1) : W.groups.push(g); W.groups.sort((a, c) => GROUPS.indexOf(a) - GROUPS.indexOf(c)); return re(); }
-    case 'bw-combo': W.groups = [...BW_COMBOS[+b.dataset.i][1]]; return re();
-    case 'bw-goal': { W.goal = b.dataset.k; const G = bwGoal(); W.rest = G.rest; W.sel.forEach(x => { x.n = G.n; x.reps = isTimed(x) ? 30 : G.reps; }); return re(); }
-    case 'bw-next':
-      if (W.step === 1) { W.sel = W.sel.filter(x => W.groups.includes(x.group)); if (!W.groups.includes(W.tab)) W.tab = W.groups[0]; }
-      if (W.step === 4 && !W.name) W.name = bwName(W.groups);
-      W.step = Math.min(5, W.step + 1); return re(true);
-    case 'bw-back': keepName(); W.step = Math.max(1, W.step - 1); return re(true);
-    case 'bw-tab': W.tab = b.dataset.g; W.q = ''; return re();
-    case 'bw-eq': W.eq = b.dataset.v; return re();
-    case 'bw-suggest': bwSuggest(); return re();
-    case 'bw-pick': { const n = b.dataset.n, i = W.sel.findIndex(x => sameName(x.name, n));
-      if (i >= 0) W.sel.splice(i, 1); else W.sel.push(bwItem(n, b.dataset.g));
-      const L = document.getElementById('bwList'), ly = L ? L.scrollTop : 0; re(); const N = document.getElementById('bwList'); if (N) N.scrollTop = ly; return; }
-    case 'bw-unsel': W.sel.splice(+b.dataset.i, 1); return re();
-    case 'bw-mv': { const i = +b.dataset.i, j = i + +b.dataset.d; if (j < 0 || j >= W.sel.length) return; [W.sel[i], W.sel[j]] = [W.sel[j], W.sel[i]]; return re(); }
-    case 'bw-st': { const x = W.sel[+b.dataset.i], f = b.dataset.f, d = +b.dataset.d, st = f === 'reps' && isTimed(x) ? 5 : 1;
-      x[f] = Math.max(1, Math.min(f === 'n' ? 10 : isTimed(x) ? 300 : 50, x[f] + d * st)); return re(); }
-    case 'bw-rest': W.rest = +b.dataset.v; return re();
-    case 'bw-hold': keepName(); W.hold = b.dataset.v === '1'; return re();
-    case 'bw-make': return bwMake();
+    case 'wk-g': W.g = b.dataset.g; return re();
+    case 'wk-pick': W.sel = W.sel && sameName(W.sel.name, b.dataset.n) ? null : { name: b.dataset.n, group: b.dataset.g }; return re();
+    case 'wk-unpick': W.sel = null; return re();
+    case 'wk-put': wkToggle(pid, +b.dataset.d); return re();
+    case 'wk-open': W.open = W.open === b.dataset.id ? null : b.dataset.id; return re();
+    case 'wk-st': { if (!ex) return; const f = b.dataset.f, d = +b.dataset.d;
+      if (f === 'n') { const n = Math.max(1, Math.min(10, ex.sets.length + d)), last = ex.sets[ex.sets.length - 1] || { carga: null, reps: 10 };
+        ex.sets = Array.from({ length: n }, (_, i) => ex.sets[i] || { carga: last.carga, reps: last.reps });
+        const s = sessionOn(ex.id, today()); if (s && s.sets.length !== n) resizeSets(s, n); }
+      else { const r = allSame(ex.sets, 'reps'), st = isTimed(ex) ? 5 : 1, v = Math.max(1, Math.min(isTimed(ex) ? 300 : 50, (typeof r === 'number' ? r : 10) + d * st)); ex.sets.forEach(x => { x.reps = v; }); }
+      ex.planDate = today(); save(); return re(); }
+    case 'wk-mv': { if (!ex) return; const list = letterExs(ex.letter, pid), i = list.indexOf(ex), j = i + +b.dataset.d; if (j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]]; list.forEach((e, k) => { e.order = k + 1; }); save(); return re(); }
+    case 'wk-del': if (ex) wkRemove(pid, ex); return re();
   }
 }
 function renderMontar() {
@@ -5959,7 +5898,7 @@ async function builderAct(act, b) {
     if (ok) { w.hold = true; save(); render(); toast(`<b>${esc(w.name)}</b> escondido do app.`); }
     return;
   }
-  if (act === 'b-neww') return bwOpen(pid);
+  if (act === 'b-neww') { const g = ui.group; await newWorkout(true); ui.bGroup = ui.group; ui.group = g; return render(); }
   if (act === 'b-ren') return renameWorkout(L);
   if (act === 'b-delw') { await deleteWorkout(L); ui.bGroup = firstWorkout(pid); return render(); }
   if (act === 'b-dupw') { const r = copyWorkout(pid, L, pid); if (r) { ui.bGroup = r.id; save(); render(); toast(`Treino duplicado: <b>${esc(r.name)}</b>`); } return; }
@@ -6320,8 +6259,7 @@ $date.addEventListener('change', () => { if ($date.value) { ui.date = $date.valu
 
 // Digitar carga/reps: atualiza os números sem redesenhar os campos (não perde o foco)
 $main.addEventListener('input', e => {
-  if (e.target.id === 'bwSearch' && ui.bWiz) { ui.bWiz.q = e.target.value; const l = document.getElementById('bwList'); if (l) l.innerHTML = bwListHtml(); return; }
-  if (e.target.id === 'bwName' && ui.bWiz) { ui.bWiz.name = e.target.value; return; }
+  if (e.target.id === 'wkSearch' && ui.wk) { ui.wk.q = e.target.value; const l = document.getElementById('wkList'); if (l) l.innerHTML = wkListHtml(ui.profile); return; }
   if (e.target.id === 'v2Q') {
     ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
     const f = ui.v2filter || 'Todos', el = document.getElementById('v2List');
@@ -6419,8 +6357,8 @@ $main.addEventListener('click', e => {
       box.querySelectorAll('.mm-sel').forEach(x => x.classList.remove('mm-sel')); if (ui.mmSel != null) b.classList.add('mm-sel');
       box.querySelector('.mm-name').innerHTML = ui.mmSel != null ? `<b>${m[1]}</b>` : 'Toque em um músculo do desenho para ver o nome.'; return;
     }
-    case 'bw-cancel': case 'bw-plain': case 'bw-g': case 'bw-combo': case 'bw-goal': case 'bw-next': case 'bw-back': case 'bw-tab': case 'bw-eq': case 'bw-suggest':
-    case 'bw-pick': case 'bw-unsel': case 'bw-mv': case 'bw-st': case 'bw-rest': case 'bw-hold': case 'bw-make': return bwAct(act, b);
+    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': return wkAct(act, b);
+    case 'b-mode': ui.bMode = b.dataset.v; try { localStorage.setItem('pf-montar-modo', ui.bMode); } catch (e) {} ui.wk = null; return render();
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
     case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
     case 'export': return exportData();
@@ -8458,7 +8396,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-10:01';
+const APP_VERSION = '29/10-11:34';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
