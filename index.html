@@ -609,7 +609,11 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
 .wk-exn .grow{min-width:0;overflow-wrap:break-word}.wk-exn small{color:var(--muted);font-weight:600;font-size:12px}
 .wk-ed{display:grid;gap:8px;padding:0 8px 8px}
 .wk-day:has(.wk-ex.open){grid-column:1/-1}.wk-ed .bw-step{max-width:320px}
-@media (min-width:1000px){.wk-days{grid-template-columns:repeat(7,minmax(0,1fr))}.wk-day:has(.wk-ex.open){grid-column:auto}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}}.wk-eda{display:flex;gap:6px;align-items:center}.wk-eda .btn{margin-left:auto;font-size:13px}
+.wk-eda{display:flex;gap:6px;align-items:center}.wk-eda .btn{margin-left:auto;font-size:13px}
+.wk-wrap{container-type:inline-size}
+@container (min-width:840px){.wk-days{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.wk-day{padding:7px}.wk-exn{padding:6px 7px;font-size:12.5px}.wk-dh b{font-size:14px}.wk-dh small{font-size:11px}.wk-put{font-size:12px;padding:6px 4px}
+  .wk-day:has(.wk-ex.open){grid-column:auto}.wk-ed{padding:0 6px 6px}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-ed .bw-step button{width:30px;height:30px;font-size:16px}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}}
+.wk-save{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:14px 0 4px}.wk-save .btn{padding:12px 20px;font-size:15px;font-weight:800}.wk-save small{color:var(--muted);font-size:12.5px;flex:1 1 220px}.wk-save small.ok{color:var(--acc);font-weight:700}
 .wk-also{margin:0;font-size:12px;color:var(--muted)}.wk-also .link{font-size:12px;padding:4px 0}
 .wk-in{display:block;font-style:normal;font-size:12px;color:var(--acc);font-weight:700}
 .bw-step{display:flex;align-items:center;gap:6px}.bw-step small{flex:1;color:var(--muted);font-weight:700;font-size:12.5px}
@@ -5766,7 +5770,9 @@ function weekHtml(pid) {
       ${also.map(x => `<p class="wk-also">Também neste dia: <b>${esc(wName(x, pid))}</b><br><button class="link" data-act="wk-unalso" data-d="${d}" data-w="${x}">Tirar deste dia</button></p>`).join('')}</div>`;
   }).join('');
   return `<p class="hint wk-how"><b>1.</b> Toque num exercício da lista. <b>2.</b> Toque em <b>＋ Colocar</b> nos dias em que ele entra. Toque num exercício do dia para mudar séries e repetições.</p>
-    <div class="wk-days">${days}</div>
+    <div class="wk-wrap"><div class="wk-days">${days}</div></div>
+    <div class="wk-save"><button class="btn primary" data-act="wk-save">✓ Salvar semana</button>
+      ${ui.wkSaved && ui.wkSaved.pid === pid ? `<small class="ok">✓ Semana salva às ${ui.wkSaved.hora}. Ela já aparece em Hoje, em cada dia.</small>` : '<small>Cada mudança já fica guardada sozinha. O botão confere se está tudo salvo na nuvem.</small>'}</div>
     <h4 class="mm-h" id="wkLib">Exercícios</h4>
     <input class="search" id="wkSearch" placeholder="Buscar exercício" value="${esc(W.q || '')}" autocomplete="off">
     ${W.q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === W.g ? 'on' : ''}" data-act="wk-g" data-g="${x}">${x}</button>`).join('')}</div>`}
@@ -5807,6 +5813,26 @@ function wkRemove(pid, ex) {
   if (ui.wk.open === ex.id) ui.wk.open = null;
   save();
 }
+// Salvar semana: confere na nuvem que todos os dias estão lá (cada mudança já é guardada na hora)
+async function saveWeekNow(pid, b) {
+  const p = profile(pid), exs = WEEK.flatMap(([d]) => wkExs(pid, d)), days = WEEK.filter(([d]) => wkExs(pid, d).length);
+  b.disabled = true; b.textContent = 'Salvando…';
+  try {
+    if (CLOUD && cloud && cloud.ready) {
+      await syncNow();
+      if (!navigator.onLine || (cloud.pending && cloud.pending.has('profiles/' + pid))) throw 'offline';
+      const snap = await cloud.fs.doc('profiles/' + pid).get({ source: 'server' }), got = (snap.exists && snap.data().exercises) || [];
+      if (!exs.every(e => got.some(g => g.id === e.id && canon(g.sets) === canon(e.sets) && g.name === e.name && g.letter === e.letter))) throw 'diff';
+      if (cloud.verAt) cloud.verAt[pid] = 0; saveVersions(['profiles/' + pid]);
+    } else save();
+    ui.wkSaved = { pid, hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
+    render();
+    await ask({ title: '✓ Semana salva', msg: `${pid === ME ? 'Sua semana' : `A semana de ${firstName(p)}`} foi salva${CLOUD ? ' na nuvem' : ''} às ${ui.wkSaved.hora}: ${days.length ? days.map(([, n]) => n).join(', ') : 'nenhum dia montado'} · ${exs.length} exercício${exs.length === 1 ? '' : 's'}. ${pid === ME ? 'Para treinar, abra Hoje no celular' : `${firstName(p)} já vê no app`}: cada dia mostra os exercícios dele.`, ok: 'OK', noCancel: true });
+  } catch (e) {
+    console.warn('salvar semana:', e); render();
+    toast(e === 'offline' ? 'Sem internet: a semana ficou guardada neste aparelho e sobe sozinha quando a internet voltar. Não feche o app até aparecer "Tudo salvo".' : 'Não foi possível confirmar o salvamento. Confira a internet e toque em Salvar semana de novo.');
+  }
+}
 function wkAct(act, b) {
   const pid = ui.profile, W = ui.wk; if (!W) return;
   const re = () => { const y = scrollY, l = document.getElementById('wkList'), ly = l ? l.scrollTop : 0; render(); scrollTo(0, y); const n = document.getElementById('wkList'); if (n) n.scrollTop = ly; };
@@ -5826,6 +5852,7 @@ function wkAct(act, b) {
     case 'wk-mv': { if (!ex) return; const list = letterExs(ex.letter, pid), i = list.indexOf(ex), j = i + +b.dataset.d; if (j < 0 || j >= list.length) return;
       [list[i], list[j]] = [list[j], list[i]]; list.forEach((e, k) => { e.order = k + 1; }); save(); return re(); }
     case 'wk-del': if (ex) wkRemove(pid, ex); return re();
+    case 'wk-save': return saveWeekNow(pid, b);
     case 'wk-unalso': { // só tira o treino antigo deste dia da semana; o treino e as cargas continuam guardados na aba Treinos
       const P = profile(pid), d = +b.dataset.d; if (P.division && P.division[d]) P.division[d] = P.division[d].filter(x => x !== b.dataset.w);
       save(); toast(`<b>${esc(wName(b.dataset.w, pid))}</b> saiu de ${WEEK.find(x => x[0] === d)[1]}. Ele continua guardado em Treinos (tabela).`); return re(); }
@@ -6528,7 +6555,7 @@ $main.addEventListener('click', e => {
       box.querySelectorAll('.mm-sel').forEach(x => x.classList.remove('mm-sel')); if (ui.mmSel != null) b.classList.add('mm-sel');
       box.querySelector('.mm-name').innerHTML = ui.mmSel != null ? `<b>${m[1]}</b>` : 'Toque em um músculo do desenho para ver o nome.'; return;
     }
-    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-unalso': return wkAct(act, b);
+    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-unalso': case 'wk-save': return wkAct(act, b);
     case 'b-mode': ui.bMode = b.dataset.v; try { localStorage.setItem('pf-montar-modo', ui.bMode); } catch (e) {} ui.wk = null; return render();
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
     case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
@@ -8573,7 +8600,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-11:56';
+const APP_VERSION = '29/10-12:12';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
