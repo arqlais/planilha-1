@@ -1241,6 +1241,21 @@ body.desk .v2-pf-a{position:sticky;top:12px}
 
 :root[data-skin="v2"] body.desk nav.bottom::before{display:none}
 .v2-navbrand{display:none;padding:4px 8px 22px}
+/* Computador: menu lateral recolhível (entra e sai pela esquerda) */
+.navtgl{display:none}
+body.desk .navtgl{display:grid;place-items:center;position:fixed;top:50%;left:228px;z-index:11;width:22px;height:60px;margin-top:-30px;padding:0;border:1px solid var(--line);border-left:0;border-radius:0 12px 12px 0;background:var(--card);color:var(--muted);cursor:pointer;transition:left .25s ease,color .2s}
+body.desk .navtgl:hover,body.desk .navtgl:focus-visible{color:var(--text)}
+body.desk .navtgl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s}
+body.locked .navtgl{display:none!important}
+body.desk nav.bottom{transition:transform .25s ease}
+body.desk .hero,body.desk main{transition:margin-left .25s ease}
+body.desk.nav-off nav.bottom{transform:translateX(-100%)}
+body.desk.nav-off .navtgl{left:0}
+body.desk.nav-off .navtgl svg{transform:rotate(180deg)}
+body.desk.nav-off .hero,body.desk.nav-off main{margin-left:0}
+body.desk.nav-off main > *{max-width:none}
+body.desk.nav-off #rest{left:50%}
+body.desk.nav-off .wkp-bar{margin-left:0;width:min(640px,calc(100% - 24px))}
 /* trocar de app pelo logo (só o professor): PassosFit ou Primeiro Passo */
 .v2-sw{font:inherit;color:inherit;background:none;border:0;padding:4px 8px 4px 4px;margin:-4px 0 -4px -4px;border-radius:16px;cursor:pointer;text-align:left;transition:background .2s}
 .v2-sw:hover,.v2-sw[aria-expanded="true"]{background:var(--card)}
@@ -2240,10 +2255,24 @@ function renderNav() {
   $nav.innerHTML = views().map(([id, label]) => { const svg = `<svg viewBox="0 0 24 24" aria-hidden="true">${(v2 && ui.studentMode && V2NAV[id]) || (v2 && !ui.studentMode && V2PNAV[id]) || SVG[id]}</svg>`;
     return `${v2 && isDesk() && id === views()[0][0] ? `<div class="v2-navbrand">${v2BrandHtml()}</div>` : ''}<button class="${id === ui.view || id === 'alunos' && (ui.view === 'perfil' || v2 && !ui.studentMode && ui.profile !== ME && MY_VIEWS.includes(ui.view)) || v2 && !ui.studentMode && id === 'eu' && ui.profile === ME && MY_VIEWS.includes(ui.view) || v2 && !ui.studentMode && id === 'painel' && ['ajustes', 'acessos', 'ia'].includes(ui.view) && !isDesk() || id === 'config' && sub.includes(ui.view) ? 'on' : ''}" data-view="${id}">${v2 ? `<span class="nb">${svg}</span>` : svg}${label}</button>`; }).join('');
 }
+// Computador: o menu lateral entra e sai pela esquerda; a escolha fica lembrada neste aparelho
+let navOff = false; try { navOff = localStorage.getItem('pf-nav-off') === '1'; } catch (e) {}
+function navToggle(desk) {
+  let b = document.querySelector('.navtgl');
+  if (!b) {
+    b = document.createElement('button'); b.className = 'navtgl'; b.type = 'button';
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+    b.onclick = () => { navOff = !navOff; try { localStorage.setItem('pf-nav-off', navOff ? '1' : '0'); } catch (e) {} navToggle(isDesk()); };
+    document.body.append(b);
+  }
+  document.body.classList.toggle('nav-off', desk && navOff);
+  b.title = navOff ? 'Mostrar o menu' : 'Esconder o menu'; b.setAttribute('aria-label', b.title); b.setAttribute('aria-expanded', String(!navOff));
+}
 function render() {
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
   const desk = isDesk();
   document.body.classList.toggle('desk', desk);
+  navToggle(desk);
   document.body.classList.remove('v2-full', 'v2-chatv'); // tela do treino do aluno no app novo (liga de novo ao desenhar)
   if (desk && ui.view === 'perfil') ui.view = 'alunos'; // no computador o perfil abre dentro da área de alunos
   renderHero();
@@ -8624,7 +8653,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:37';
+const APP_VERSION = '29/10-12:44';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
