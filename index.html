@@ -3230,9 +3230,9 @@ function monthArt(c, D, A) {
   brandRow(c, 80, 100, ink, A);
   c.fillStyle = ink; c.textAlign = 'right'; c.font = '700 38px Manrope'; c.fillText(D.month.toUpperCase(), PW - 80, 150);
   c.textAlign = 'left'; fitFont(c, `RELATÓRIO DE ${D.name.toUpperCase()}`, 800, 'Manrope', 46, 920); c.fillText(`RELATÓRIO DE ${D.name.toUpperCase()}`, 84, 310);
-  fitFont(c, String(D.did), 700, 'Unbounded', 250, 600); c.fillText(String(D.did), 66, 560);
-  const nw = c.measureText(String(D.did)).width;
-  c.font = '700 54px Unbounded'; c.fillText(D.did === 1 ? 'DIA DE' : 'DIAS DE', 66 + nw + 30, 470); c.fillText('TREINO', 66 + nw + 30, 540);
+  fitFont(c, D.big, 700, 'Unbounded', 250, 600); c.fillText(D.big, 66, 560);
+  const nw = c.measureText(D.big).width;
+  c.font = '700 54px Unbounded'; c.fillText(D.bigL[0], 66 + nw + 30, 470); c.fillText(D.bigL[1], 66 + nw + 30, 540);
   c.font = '600 44px Outfit'; c.fillText(D.planTxt, 84, 640);
   // calendário do mês (domingo a sábado)
   const cw = 920 / 7, rh = 90, top = 760;
@@ -3344,9 +3344,11 @@ function renderWeekPost() {
 }
 function monthPostData(pid, ym) {
   const p = profile(pid), r = monthReport(pid, ym), { bad } = monthNotes(r), sh = n => `${fmt(n.carga)} kg`;
-  return { name: firstName(p), coach: v2Coach(), month: `${mesNome(ym)} ${ym.slice(0, 4)}`, did: r.did, days: r.dayList, dow: toDate(`${ym}-01`).getDay(),
-    planTxt: r.planned ? (r.hit === r.planned ? `Todos os ${r.planned} treinos do plano ✓` : `${r.hit} de ${r.planned} treinos do plano`) : `${r.sets} séries no mês`,
-    tiles: [[fmt(Math.round(r.kg)), 'kg levantados'], [String(r.sets), 'séries'], [fmtMin(Math.round(r.cmin)), 'min de cardio']],
+  const recs = r.up.filter(x => x.rec).length;
+  return { name: firstName(p), coach: v2Coach(), month: `${mesNome(ym)} ${ym.slice(0, 4)}`, days: r.dayList, dow: toDate(`${ym}-01`).getDay(),
+    big: r.planned ? `${r.hit}/${r.planned}` : String(r.did), bigL: r.planned ? ['TREINOS', 'FEITOS'] : [r.did === 1 ? 'DIA DE' : 'DIAS DE', 'TREINO'],
+    planTxt: r.planned ? (r.hit === r.planned ? `Foi em todos os ${r.planned} treinos do plano ✓` : `Foi em ${r.hit} dos ${r.planned} treinos do plano`) : `${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino no mês`,
+    tiles: [[String(r.sets), 'séries'], [fmtMin(Math.round(r.cmin)), 'min de cardio'], recs ? [String(recs), recs === 1 ? 'recorde de carga' : 'recordes de carga'] : [String(r.up.length), 'cargas subiram']],
     ups: r.up.map(x => [x.name, sh(x.a), sh(x.b)]), tipTitle: `Para ${mesNome(shiftMonth(ym, 1))}`,
     tips: bad.length ? bad.slice(0, 2) : [r.did ? 'Continue assim, o mês foi muito bom!' : 'Bora voltar com tudo!'] };
 }
@@ -4712,7 +4714,6 @@ function monthNotes(r) {
   const good = [], bad = [], prev = mesNome(shiftMonth(r.ym, -1));
   if (r.planned && r.hit === r.planned && !r.open) good.push(`Não faltou nenhum treino do plano (${r.hit} de ${r.planned})`);
   if (r.didPrev && r.did > r.didPrev) good.push(`Treinou mais dias que em ${prev} (${r.did} contra ${r.didPrev})`);
-  if (r.kgPrev && r.kg > r.kgPrev * 1.05) good.push(`Levantou ${fmt(Math.round((r.kg - r.kgPrev) / r.kgPrev * 100))}% a mais que em ${prev}`);
   const recs = r.up.filter(x => x.rec).length;
   if (recs) good.push(`${recs} ${recs === 1 ? 'recorde de carga' : 'recordes de carga'} (a maior carga que já fez)`);
   if (r.cgoal && r.cmin >= r.cgoal) good.push(`Bateu a meta de cardio do mês: ${fmtMin(r.cmin)} de ${fmtMin(r.cgoal)} min`);
@@ -4721,7 +4722,6 @@ function monthNotes(r) {
   if (r.cgoal && r.cmin < r.cgoal) bad.push(`Cardio abaixo da meta: ${fmtMin(r.cmin)} de ${fmtMin(r.cgoal)} min`);
   if (r.same.length) bad.push(`Mesma carga há 3 treinos em ${r.same.slice(0, 3).map(x => x.name).join(', ')}: dá para tentar subir`);
   if (r.down.length) bad.push(`Carga caiu em ${r.down.slice(0, 3).map(x => x.name).join(', ')}`);
-  if (r.kgPrev && r.kg < r.kgPrev * .85 && r.did) bad.push(`Levantou ${fmt(Math.round((r.kgPrev - r.kg) / r.kgPrev * 100))}% menos que em ${prev}`);
   return { good, bad };
 }
 // mensagem para o WhatsApp (vai junto com a imagem)
@@ -4730,8 +4730,8 @@ function monthText(pid, ym) {
   const ups = r.up.slice(0, 5).map(x => `  - ${x.name}: ${kgTxt(x.a)} → ${kgTxt(x.b)}`);
   const df = r.bw && r.bprev ? Math.round((r.bw.peso - r.bprev.peso) * 10) / 10 : null;
   return [`Oi, ${firstName(p)}! Seu relatório de *${mesNome(ym)}* no PassosFit:`, '',
-    `• ${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino${r.planned ? ` (${r.hit} de ${r.planned} do plano)` : ''}`,
-    `• ${r.sets} séries · ${fmt(Math.round(r.kg))} kg levantados`,
+    r.planned ? `• Treinos feitos: ${r.hit}/${r.planned} do plano` : `• ${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino`,
+    `• ${r.sets} séries`,
     `• ${fmtMin(r.cmin)} min de cardio${r.cgoal ? ` (meta: ${fmtMin(r.cgoal)})` : ''}`,
     ...(df != null ? [`• Peso: ${fmtMin(r.bprev.peso)} → ${fmtMin(r.bw.peso)} kg`] : []),
     ...(ups.length ? ['', '*Cargas que subiram:*', ...ups] : []),
@@ -4747,8 +4747,8 @@ function monthReportHtml(p) {
   return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Relatório do mês</h3><small>${nm} de ${ym.slice(0, 4)}${r.open ? ' · em andamento' : ''} · para mandar ao aluno</small></div>
       <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, -1)}" aria-label="Mês anterior">‹</button>
       <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, 1)}" aria-label="Próximo mês" ${ym >= cur ? 'disabled' : ''}>›</button></div>
-    <div class="month-sum"><div><b>${r.did}</b><span>${r.did === 1 ? 'dia treinado' : 'dias treinados'}${r.planned ? ` · ${r.hit}/${r.planned} do plano` : ''}</span></div>
-      <div><b>${r.sets}</b><span>séries</span></div><div><b>${fmt(Math.round(r.kg))}</b><span>kg ${r.kgPrev ? delta(r.kg, r.kgPrev) : ''}</span></div>
+    <div class="month-sum"><div><b>${r.planned ? `${r.hit}/${r.planned}` : r.did}</b><span>${r.planned ? 'treinos feitos / do plano' : r.did === 1 ? 'dia treinado' : 'dias treinados'}</span></div>
+      <div><b>${r.sets}</b><span>séries</span></div><div><b>${r.up.filter(x => x.rec).length}</b><span>recordes de carga</span></div>
       <div><b>${fmtMin(r.cmin)}${r.cgoal ? `<small>/${fmtMin(r.cgoal)}</small>` : ''}</b><span>min cardio</span></div></div>
     ${r.up.length ? `<h4 class="wk-h up">Cargas que subiram</h4><ul class="wk-list">${r.up.slice(0, 5).map(x => `<li><b>${esc(x.name)}</b>: ${kgTxt(x.a)} → ${kgTxt(x.b)}${x.rec ? ' <span class="pill up">recorde</span>' : ''}</li>`).join('')}${r.up.length > 5 ? `<li>Mais ${r.up.length - 5}</li>` : ''}</ul>` : ''}
     <h4 class="wk-h up">O que foi bem</h4>${li(good, r.did ? 'Ainda não dá para comparar com o mês anterior.' : 'Nada marcado neste mês.')}
@@ -8624,7 +8624,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-11:36';
+const APP_VERSION = '29/10-11:46';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
