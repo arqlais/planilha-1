@@ -1981,7 +1981,8 @@ const exHistory = exId => {
 const prevSession = (exId, date) => exHistory(exId).filter(s => s.date < date).pop();
 const sessionOn = (exId, date) => bestSession(db.sessions.filter(s => s.exId === exId && s.date === date));
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
-const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0);
+// soma arredondada: minutos quebrados do cronômetro (ex.: 10,2 + 0,1) não podem virar 76.27000000000001
+const cardioBetween = (from, to, pid = ui.profile) => Math.round(profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0) * 10) / 10;
 // Divisão da semana do aluno (feita pelo professor): dia da semana (0=domingo) -> grupos
 const WEEK = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
 // Plano do dia: o professor pode marcar um treino só para uma data (planejamento); senão vale a divisão da semana
@@ -4225,7 +4226,7 @@ function dayStats(pid, d) {
   if (est && (!min || min < est)) min = Math.min(300, est);
   const ws = [...new Set(ss.map(x => (exById(x.exId) || {}).letter).filter(Boolean))].map(L => wName(L, pid));
   return { min, ws, sets: ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0), ex: ss.length,
-    kg: ss.reduce((a, x) => a + vol(x.sets), 0), cardio: db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) };
+    kg: ss.reduce((a, x) => a + vol(x.sets), 0), cardio: Math.round(db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) * 10) / 10 };
 }
 const durTxt = m => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') + 'min' : ''}` : `${m} min`;
 const siteTxt = () => (location.host + location.pathname).replace(/\/(index\.html)?$/, '');
@@ -4549,7 +4550,7 @@ function cardioHtml(noBanner) {
   const ws = weekStart(ui.date), now = cardioBetween(ws, addDays(ws, 6)), before = cardioBetween(addDays(ws, -7), addDays(ws, -1));
   const day = profCardio().filter(c => c.date === ui.date);
   const w = ui.watch;
-  return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>`}
+  return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>Cardio</h2><small>Semana: <b>${fmt(now)} min</b> · anterior ${fmt(before)} min</small></div>${delta(now, before)}</div>`}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Qual cardio você vai fazer?</h3></div></div>
       <div class="modes">${MODES.map(([id, label]) => `<button class="${ui.mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
@@ -4565,7 +4566,7 @@ function cardioHtml(noBanner) {
     </section>
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Cardio ${ui.date === today() ? 'de hoje' : 'do dia ' + fmtDate(ui.date)}</h3>
-        <small>${day.length ? `Total: ${day.reduce((a, c) => a + c.min, 0)} min` : 'Nada registrado ainda'}</small></div></div>
+        <small>${day.length ? `Total: ${fmt(day.reduce((a, c) => a + c.min, 0))} min` : 'Nada registrado ainda'}</small></div></div>
       ${day.map(c => `<div class="list-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b></div>
         <b>${fmtMin(c.min)} min</b><button class="icon" data-act="del-cardio" data-id="${c.id}" aria-label="Apagar">✕</button></div>`).join('')}
     </section>`;
@@ -5043,9 +5044,9 @@ function renderEvolution() {
     const cw = data.weeks.map(w => cardioBetween(w, addDays(w, 6)));
     const byMode = MODES.map(m => [m, profCardio().filter(c => c.mode === m[0] && c.date >= data.weeks[0]).reduce((a, c) => a + c.min, 0)]).filter(x => x[1]);
     if (cw.some(Boolean)) html += `<section class="card"><div class="card-h"><div class="grow"><h3>Cardio · minutos por semana</h3>
-        <small>Total no período: ${cw.reduce((a, b) => a + b, 0)} min · ${byMode.map(([m, v]) => `${m[1]} ${fmt(v)} min`).join(' · ')}</small></div></div>
+        <small>Total no período: ${fmt(cw.reduce((a, b) => a + b, 0))} min · ${byMode.map(([m, v]) => `${m[1]} ${fmt(v)} min`).join(' · ')}</small></div></div>
       ${sparkline(cw)}<table class="hist"><thead><tr><th>Semana</th><th>Minutos</th><th></th></tr></thead><tbody>
-      ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${v} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
+      ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${fmt(v)} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
       </tbody></table></section>`;
 
     // Por grupo: kg total por semana do aluno (Semana 1 = 7 dias a partir do primeiro treino). Treinar na sexta em vez
@@ -5294,7 +5295,7 @@ function msgTemplate(kind, p) {
     const [now, before] = weekPair(null, p.id, today());
     const ws = weekStart(today()), dias = trainedDates(p.id).filter(d => d >= ws).length, cm = cardioBetween(ws, addDays(ws, 6), p.id);
     const pc = before ? Math.round((now - before) / before * 100) : null;
-    return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${cm} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim!' : 'Vamos pra cima essa semana!'}`;
+    return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${fmt(cm)} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim!' : 'Vamos pra cima essa semana!'}`;
   }
   if (kind === 'mes') return monthText(p.id, repMonth());
   if (kind === 'lembrete') return `Oi, ${n}! Passando pra lembrar do treino de hoje. Te espero!`;
@@ -6404,7 +6405,7 @@ function perfilHtml(p, desk) {
       <div class="kv">
         <div><b>${s.weekDays}</b><span>treinos na semana</span></div>
         <div><b>${fmt(s.now)} kg</b><span>na semana ${delta(s.now, s.before)}</span></div>
-        <div><b>${cm} min</b><span>cardio na semana</span></div>
+        <div><b>${fmt(cm)} min</b><span>cardio na semana</span></div>
         <div><b>${trainedDates(p.id).length}</b><span>treinos no total</span></div>
       </div>
       <p class="plan-g" style="margin-top:14px">kg por grupo · semana atual × anterior</p>
@@ -8704,7 +8705,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-17:56';
+const APP_VERSION = '29/10-18:08';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
