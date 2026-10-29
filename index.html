@@ -3345,9 +3345,9 @@ function monthPostData(pid, ym) {
   const p = profile(pid), r = monthReport(pid, ym), { bad } = monthNotes(r), sh = n => `${fmt(n.carga)} kg`;
   const recs = r.up.filter(x => x.rec).length;
   return { name: firstName(p), coach: v2Coach(), month: `${mesNome(ym)} ${ym.slice(0, 4)}`, days: r.dayList, dow: toDate(`${ym}-01`).getDay(),
-    big: r.planned ? `${r.hit}/${r.planned}` : String(r.did), bigL: r.planned ? ['TREINOS', 'FEITOS'] : [r.did === 1 ? 'DIA DE' : 'DIAS DE', 'TREINO'],
-    planTxt: r.planned ? (r.hit === r.planned ? `Foi em todos os ${r.planned} treinos do plano ✓` : `Foi em ${r.hit} dos ${r.planned} treinos do plano`) : `${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino no mês`,
-    tiles: [[String(r.sets), 'séries'], [fmtMin(Math.round(r.cmin)), 'min de cardio'], recs ? [String(recs), recs === 1 ? 'recorde de carga' : 'recordes de carga'] : [String(r.up.length), 'cargas subiram']],
+    big: r.missed.length ? `${r.did}/${r.did + r.missed.length}` : String(r.did), bigL: r.missed.length ? ['TREINOS', 'FEITOS'] : [r.did === 1 ? 'DIA DE' : 'DIAS DE', 'TREINO'],
+    planTxt: r.missed.length ? `Treinou ${r.did} dias e faltou ${r.missed.length}` : r.planned ? `Não faltou nenhum treino ✓` : `${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino no mês`,
+    tiles: [[String(r.sets), 'séries'], [String(Math.round(r.cmin)), 'min de cardio'], recs ? [String(recs), recs === 1 ? 'recorde de carga' : 'recordes de carga'] : r.up.length ? [String(r.up.length), r.up.length === 1 ? 'carga subiu' : 'cargas subiram'] : [String(new Set(profSessions(pid).filter(s => s.date.startsWith(ym) && hasDone(s)).map(s => twinKey(exById(s.exId) || {}))).size), 'exercícios feitos']],
     ups: r.up.map(x => [x.name, sh(x.a), sh(x.b)]), tipTitle: `Para ${mesNome(shiftMonth(ym, 1))}`,
     tips: bad.length ? bad.slice(0, 2) : [r.did ? 'Continue assim, o mês foi muito bom!' : 'Bora voltar com tudo!'] };
 }
@@ -4623,10 +4623,10 @@ function weekReport(pid, ws) { return periodReport(pid, ws, addDays(ws, 6), addD
 // mês inteiro (1º ao último dia), comparado com o mês anterior
 function monthReport(pid, ym) {
   const [y, m] = ym.split('-').map(Number), last = isoDate(new Date(y, m, 0)), pa = isoDate(new Date(y, m - 2, 1)), pb = isoDate(new Date(y, m - 1, 0));
-  return { ...periodReport(pid, `${ym}-01`, last, pa, pb), ym };
+  return { ...periodReport(pid, `${ym}-01`, last, pa, pb, true), ym };
 }
 // resumo de um período (semana ou mês): presença, séries, kg, cardio e cargas que subiram/caíram em relação à última vez antes do período
-function periodReport(pid, ws, we, pa, pb) {
+function periodReport(pid, ws, we, pa, pb, inside) {
   const p = profile(pid), t = today(), first = trainedDates(pid)[0], all = [];
   for (let d = ws; d <= we; d = addDays(d, 1)) all.push(d);
   const days = all.filter(d => d <= t);
@@ -4641,9 +4641,11 @@ function periodReport(pid, ws, we, pa, pb) {
   const up = [], down = [], same = [], cmp = [], seen = new Set();
   for (const s of ss.slice().sort((a, b) => b.date.localeCompare(a.date))) {
     const ex = exById(s.exId); if (!ex || seen.has(twinKey(ex))) continue; seen.add(twinKey(ex));
-    const mine = ss.filter(x => twinIds(s.exId).has(x.exId)).map(topSet).filter(Boolean);
-    const now = mine.reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
-    const hist = exHistory(s.exId).filter(x => x.date < ws), prev = hist.length && topSet(hist[hist.length - 1]);
+    const own = ss.filter(x => twinIds(s.exId).has(x.exId)).sort((a, b) => a.date.localeCompare(b.date));
+    let hist = exHistory(s.exId).filter(x => x.date < ws), prev = hist.length && topSet(hist[hist.length - 1]), mine = own;
+    // mês: exercício que começou neste mês compara a primeira vez do mês com o melhor do resto do mês
+    if (!prev && inside && own.length >= 2) { prev = topSet(own[0]); hist = [own[0]]; mine = own.slice(1); }
+    const now = mine.map(topSet).filter(Boolean).reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
     if (!now || !prev) continue;
     const it = { name: ex.name, a: prev, b: now, rec: now.carga > Math.max(0, ...hist.map(x => (topSet(x) || {}).carga || 0)) }; // rec: maior carga que já fez
     if (prev.carga > 0) cmp.push((now.carga - prev.carga) / prev.carga);
@@ -4703,14 +4705,14 @@ const kgTxt = n => `${fmt(n.carga)} kg${n.reps ? ` × ${n.reps}` : ''}`;
 // o que foi bem e o que pode melhorar no mês (textos simples, sem HTML)
 function monthNotes(r) {
   const good = [], bad = [], prev = mesNome(shiftMonth(r.ym, -1));
-  if (r.planned && r.hit === r.planned && !r.open) good.push(`Não faltou nenhum treino do plano (${r.hit} de ${r.planned})`);
+  if (r.planned && !r.missed.length && r.did && !r.open) good.push(`Não faltou nenhum treino (${r.did} dias)`);
   if (r.didPrev && r.did > r.didPrev) good.push(`Treinou mais dias que em ${prev} (${r.did} contra ${r.didPrev})`);
   const recs = r.up.filter(x => x.rec).length;
   if (recs) good.push(`${recs} ${recs === 1 ? 'recorde de carga' : 'recordes de carga'} (a maior carga que já fez)`);
-  if (r.cgoal && r.cmin >= r.cgoal) good.push(`Bateu a meta de cardio do mês: ${fmtMin(r.cmin)} de ${fmtMin(r.cgoal)} min`);
-  else if (!r.cgoal && r.cmin) good.push(`Fez ${fmtMin(r.cmin)} min de cardio`);
-  if (r.missed.length >= 2 || r.missed.length && r.planned && r.missed.length / r.planned > .2) bad.push(`Faltou em ${r.missed.length} ${r.missed.length === 1 ? 'treino' : 'treinos'} do plano`);
-  if (r.cgoal && r.cmin < r.cgoal) bad.push(`Cardio abaixo da meta: ${fmtMin(r.cmin)} de ${fmtMin(r.cgoal)} min`);
+  if (r.cgoal && r.cmin >= r.cgoal) good.push(`Bateu a meta de cardio do mês: ${Math.round(r.cmin)} de ${Math.round(r.cgoal)} min`);
+  else if (!r.cgoal && r.cmin) good.push(`Fez ${Math.round(r.cmin)} min de cardio`);
+  if (r.missed.length >= 2 || r.missed.length && r.planned && r.missed.length / r.planned > .2) bad.push(`Faltou em ${r.missed.length} ${r.missed.length === 1 ? 'dia de treino' : 'dias de treino'}`);
+  if (r.cgoal && r.cmin < r.cgoal) bad.push(`Cardio abaixo da meta: ${Math.round(r.cmin)} de ${Math.round(r.cgoal)} min`);
   if (r.same.length) bad.push(`Mesma carga há 3 treinos em ${r.same.slice(0, 3).map(x => x.name).join(', ')}: dá para tentar subir`);
   if (r.down.length) bad.push(`Carga caiu em ${r.down.slice(0, 3).map(x => x.name).join(', ')}`);
   return { good, bad };
@@ -8613,7 +8615,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:29';
+const APP_VERSION = '29/10-12:34';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
