@@ -1737,10 +1737,10 @@ const NOLOAD_ALWAYS = /abdominal (livre|supra|infra|obliquo|bicicleta|canivete|r
 const noLoadOf = ex => !!ex && (!!ex.noLoad || isTimed(ex) || NOLOAD_ALWAYS.test(normName(ex.name)));
 const fmtSec = v => { if (v == null) return '–'; const t = Math.round(v), m = Math.floor(t / 60), r = t % 60; return m ? `${m} min${r ? ` ${String(r).padStart(2, '0')} s` : ''}` : `${r} s`; };
 const catGroup = name => { const n = (name || '').toLowerCase(); for (const [g, l] of Object.entries(CATALOG)) if (l.some(x => x.toLowerCase() === n)) return g; return null; };
-// Exercícios do catálogo: com busca (sem acento, várias palavras), ou do grupo escolhido; filtro de equipamento
+// Exercícios do catálogo em ordem alfabética: com busca (sem acento, várias palavras), ou do grupo escolhido; filtro de equipamento
 function catList(q, g, eqF) {
   const words = q.split(' ').filter(Boolean), hit = n => { const t = normName(n); return words.every(w => t.includes(w)); };
-  return (q ? Object.entries(CATALOG).flatMap(([gr, l]) => l.filter(hit).map(n => [gr, n])) : (CATALOG[g] || []).map(n => [g, n]))
+  return (q ? Object.entries(CATALOG).flatMap(([gr, l]) => l.filter(hit).map(n => [gr, n])) : (CATALOG[g] || []).map(n => [g, n])).sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
     .filter(([, n]) => !eqF || equipOf(n) === eqF);
 }
 // Nome do catálogo com a grafia certa (para os nomes ficarem iguais e as comparações funcionarem)
@@ -5895,7 +5895,7 @@ $exLib.addEventListener('click', e => {
 });
 document.getElementById('exLibSearch').addEventListener('input', e => { if (ui.lib) { ui.lib.q = e.target.value; exLibRender(); } });
 $exLib.addEventListener('close', () => { if (ui.lib && ui.lib.n) render(); ui.lib = null; });
-document.getElementById('exNames').innerHTML = Object.values(CATALOG).flat().map(n => `<option value="${esc(n)}">`).join('');
+document.getElementById('exNames').innerHTML = Object.values(CATALOG).flat().sort((a, b) => a.localeCompare(b, 'pt-BR')).map(n => `<option value="${esc(n)}">`).join('');
 async function builderAct(act, b) {
   const pid = ui.profile, p = profile(pid), L = ui.bGroup;
   if (act === 'b-w') { ui.bGroup = b.dataset.id; return render(); }
@@ -8406,7 +8406,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-11:48';
+const APP_VERSION = '29/10-11:52';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
