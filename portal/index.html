@@ -53,6 +53,7 @@ img{max-width:100%;display:block}
 .duo i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;border:2px solid var(--bg)}
 .duo i+i{margin-left:-8px}
 .duo svg{width:14px;height:14px}
+.duo svg.halter{width:17px;height:17px}
 .top nav{margin-left:auto;display:flex;gap:4px}
 .top nav{gap:8px}
 .top nav a{position:relative;overflow:hidden;text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border-radius:999px;background-size:300% 100%;animation:navflow 7s linear infinite;transition:transform .2s,box-shadow .2s}
@@ -283,6 +284,7 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 .ac-i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
 .ac-i.pf{background:#111A4A}.ac-i.pp{background:#1B3A5C}
 .ac-i svg{width:17px;height:17px}
+.ac-i svg.halter{width:22px;height:22px}
 .ac-r b{display:block;font-size:15px}
 .ac-r small{display:block;color:var(--muted);font-size:13px}
 .ac-go{width:16px;height:16px;margin-left:auto;color:var(--muted)}
@@ -407,7 +409,7 @@ body[data-view="passosfit"] .prog{background:linear-gradient(90deg,#2E4BDB,#CBEF
 
 <header class="top"><div class="wrap">
   <a class="home" href="#inicio" data-go="inicio" aria-label="Início">
-    <span class="duo"><i style="background:#1B3A5C"><svg viewBox="0 0 24 24" fill="none" stroke="#E0A93B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 3 10.5 3 8c0-2.7 1.5-6 4.5-6C9.4 2 10 3.8 10 5.5c0 3.1-2 5.7-2 8.7V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.1 1-3.1 1-5.6 0-2.7-1.5-6-4.5-6C14.6 6 14 7.8 14 9.5c0 3.1 2 5.7 2 8.7V20a2 2 0 1 0 4 0Z"/></svg></i><i style="background:#111A4A"><svg viewBox="0 0 24 24" fill="none" stroke="#CBEF3C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg></i></span>
+    <span class="duo"><i style="background:#1B3A5C"><svg viewBox="0 0 24 24" fill="none" stroke="#E0A93B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 3 10.5 3 8c0-2.7 1.5-6 4.5-6C9.4 2 10 3.8 10 5.5c0 3.1-2 5.7-2 8.7V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.1 1-3.1 1-5.6 0-2.7-1.5-6-4.5-6C14.6 6 14 7.8 14 9.5c0 3.1 2 5.7 2 8.7V20a2 2 0 1 0 4 0Z"/></svg></i><i style="background:#111A4A"><svg class="halter" viewBox="0 0 24 24" fill="#C9F03D" stroke="none"><rect x="8.6" y="1.6" width="6.8" height="2.4" rx="1.2"/><rect x="5.6" y="5" width="12.8" height="2.9" rx="1.45"/><rect x="10.75" y="6.5" width="2.5" height="11" rx="1.25"/><rect x="5.6" y="16.1" width="12.8" height="2.9" rx="1.45"/><rect x="8.6" y="20" width="6.8" height="2.4" rx="1.2"/></svg></i></span>
     <span>passosfit.com.br</span>
   </a>
   <nav aria-label="Plataformas">
@@ -416,7 +418,7 @@ body[data-view="passosfit"] .prog{background:linear-gradient(90deg,#2E4BDB,#CBEF
   </nav>
   <details class="acc" id="acc"><summary aria-label="Entrar ou criar conta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg><span>Entrar</span></summary>
     <div class="acc-m" role="menu">
-      <a class="ac-r" role="menuitem" data-link="passosfit" href="../?app&amp;entrar"><span class="ac-i pf"><svg viewBox="0 0 24 24" fill="none" stroke="#CBEF3C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg></span><span><b>PassosFit</b><small>Aluno ou professor</small></span><svg class="ac-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></a>
+      <a class="ac-r" role="menuitem" data-link="passosfit" href="../?app&amp;entrar"><span class="ac-i pf"><svg class="halter" viewBox="0 0 24 24" fill="#C9F03D" stroke="none"><rect x="8.6" y="1.6" width="6.8" height="2.4" rx="1.2"/><rect x="5.6" y="5" width="12.8" height="2.9" rx="1.45"/><rect x="10.75" y="6.5" width="2.5" height="11" rx="1.25"/><rect x="5.6" y="16.1" width="12.8" height="2.9" rx="1.45"/><rect x="8.6" y="20" width="6.8" height="2.4" rx="1.2"/></svg></span><span><b>PassosFit</b><small>Aluno ou professor</small></span><svg class="ac-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></a>
       <a class="ac-r" role="menuitem" data-link="primeiroPassoEntrar" href="../primeiro-passo/#/entrar"><span class="ac-i pp"><svg viewBox="0 0 24 24" fill="none" stroke="#E0A93B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 3 10.5 3 8c0-2.7 1.5-6 4.5-6C9.4 2 10 3.8 10 5.5c0 3.1-2 5.7-2 8.7V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.1 1-3.1 1-5.6 0-2.7-1.5-6-4.5-6C14.6 6 14 7.8 14 9.5c0 3.1 2 5.7 2 8.7V20a2 2 0 1 0 4 0Z"/></svg></span><span><b>Primeiro Passo</b><small>Aluno, personal ou empresa</small></span><svg class="ac-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></a>
     </div></details>
 </div></header>
@@ -522,7 +524,7 @@ body[data-view="passosfit"] .prog{background:linear-gradient(90deg,#2E4BDB,#CBEF
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Caminho passo a passo, com o próximo passo sempre à vista</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Treinos guiados, pausa para respirar e exercícios com demonstração</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Agenda, conversa com a personal e conquistas</li></ul></div>
-      <div class="role"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg>Para a personal</h3><ul>
+      <div class="role"><h3><svg class="halter" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="8.6" y="1.6" width="6.8" height="2.4" rx="1.2"/><rect x="5.6" y="5" width="12.8" height="2.9" rx="1.45"/><rect x="10.75" y="6.5" width="2.5" height="11" rx="1.25"/><rect x="5.6" y="16.1" width="12.8" height="2.9" rx="1.45"/><rect x="8.6" y="20" width="6.8" height="2.4" rx="1.2"/></svg>Para a personal</h3><ul>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Alunos chegam com questionário de saúde e objetivos respondidos</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Alertas do dia, agenda, mensagens e indicação de exercícios</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Ganhos do mês e repasse direto na chave Pix</li></ul></div>
@@ -537,7 +539,7 @@ body[data-view="passosfit"] .prog{background:linear-gradient(90deg,#2E4BDB,#CBEF
   <a class="back" href="#inicio" data-go="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Escolher outra plataforma</a>
   <div class="hero">
     <div>
-      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg>Para quem já treina na academia</span>
+      <span class="tag"><svg class="halter" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="8.6" y="1.6" width="6.8" height="2.4" rx="1.2"/><rect x="5.6" y="5" width="12.8" height="2.9" rx="1.45"/><rect x="10.75" y="6.5" width="2.5" height="11" rx="1.25"/><rect x="5.6" y="16.1" width="12.8" height="2.9" rx="1.45"/><rect x="8.6" y="20" width="6.8" height="2.4" rx="1.2"/></svg>Para quem já treina na academia</span>
       <h1>Seu treino do dia, <em>na palma da mão.</em></h1>
       <p class="lead">Marque cada série com carga e repetições, veja quanto pegou da última vez e acompanhe a sua evolução. Funciona no celular e no computador, direto pelo navegador.</p>
       <div class="ctas">
