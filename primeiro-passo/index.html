@@ -72,7 +72,7 @@ i[data-lucide],svg.lucide{width:20px;height:20px;stroke-width:1.9;flex:none}
 .hero .wrap{display:grid;grid-template-columns:1.3fr .9fr;gap:48px;align-items:center}
 .tag{display:inline-flex;align-items:center;gap:8px;background:var(--gold-soft);padding:6px 13px;border-radius:999px;font-weight:600;font-size:14px}
 .tag svg{width:16px;height:16px;color:var(--gold)}
-.hero h1{font-size:clamp(44px,6.6vw,78px);font-weight:800;line-height:.98;letter-spacing:-.03em;margin:20px 0}
+.hero h1{font-size:clamp(36px,calc(3vw + 26px),64px);font-weight:800;line-height:.98;letter-spacing:-.03em;margin:20px 0}
 .hero h1 em{font-style:normal;color:var(--gold)}
 .hero .lead{font-size:19px;color:var(--muted);max-width:34ch}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
@@ -105,7 +105,7 @@ i[data-lucide],svg.lucide{width:20px;height:20px;stroke-width:1.9;flex:none}
 
 .sec{padding:72px 0;border-top:1px solid var(--line)}
 .sec-h{max-width:620px;margin-bottom:36px}
-.sec-h h2{font-size:clamp(30px,4vw,44px);font-weight:800}
+.sec-h h2{font-size:clamp(26px,calc(1.6vw + 20px),40px);font-weight:800}
 .sec-h p{color:var(--muted);font-size:17px;margin-top:10px}
 .kicker{color:var(--gold);font-weight:700;font-size:15px;margin-bottom:10px;display:block}
 
@@ -403,7 +403,8 @@ body.ux .role:hover::after{opacity:1}
 .lvsteps i.cur{background:linear-gradient(90deg,#E0A93B var(--p,0%),rgba(255,255,255,.18) var(--p,0%))}
 .lvcard .meta{display:flex;justify-content:space-between;font-size:13px;color:#C9D8EA}
 .block{margin-top:24px}
-.block-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.block-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.block-h h3{min-width:0}.block-h>a,.block-h>.link{white-space:nowrap;flex:none}
 .block-h h3{font-size:20px}
 .block-h a,.link{color:var(--blue);font-weight:700;font-size:14px;text-decoration:none;min-height:40px;display:inline-flex;align-items:center;padding:0 4px}
 .tasks{display:grid;gap:10px}
@@ -873,9 +874,8 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
   .pn-mtop{margin-inline:-16px;padding-inline:16px}
   .kpis{grid-template-columns:1fr}
   .minis{grid-template-columns:1fr 1fr}
-  .pn-tabbar a{font-size:10px}
+  .pn-tabbar a{font-size:10.5px}
   .tabbar svg{width:21px;height:21px}
-  .hero h1{font-size:40px}
   .mood .row{grid-template-columns:1fr 1fr}
   .feel,.bpick{gap:6px}
   .ring,.ring svg{width:170px;height:170px}
@@ -1358,9 +1358,9 @@ img,video,canvas{max-width:100%}
 .plans>*,.pcard,.lead,.stat{min-width:0}
 /* PC de tela grande: o site cresce junto em vez de ficar pequeno no meio */
 @media (min-width:1400px){.wrap{max-width:1220px}}
-@media (min-width:1700px){html{zoom:1.2}}
-@media (min-width:2200px){html{zoom:1.35}}
-@media (min-width:3000px){html{zoom:1.7}}
+@media (min-width:1700px){html{zoom:1.1}}
+@media (min-width:2200px){html{zoom:1.25}}
+@media (min-width:3000px){html{zoom:1.5}}
 @media (max-width:340px){
   body{overflow-wrap:anywhere}
   .wrap{padding-left:12px;padding-right:12px}

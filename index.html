@@ -1275,6 +1275,15 @@ img,video,canvas{max-width:100%}
 .v2-top .v2-brand{min-width:0}
 .v2-howto{flex-wrap:wrap}.v2-howto .grow{min-width:0}
 .v2-badges{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* celular: títulos grandes acompanham a largura da tela (nem enormes num celular estreito, nem pequenos num grande) */
+@media (max-width:480px){
+  .v2-greet,.v2-ph-title h1,.v2-rest{font-size:clamp(24px,7.4vw,30px)}
+  .v2-wtitle h1{font-size:clamp(22px,6.8vw,28px)}
+  .v2-gv b{font-size:clamp(26px,7.6vw,30px)}
+  .v2-tile b{font-size:clamp(22px,6.4vw,26px)}
+  .v2-tile b.xl{font-size:clamp(32px,9.6vw,40px)}
+  .v2-hello{font-size:clamp(22px,6.4vw,26px)}
+}
 @media (max-width:359px){
   main{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
   body{overflow-wrap:anywhere}
@@ -1286,15 +1295,12 @@ img,video,canvas{max-width:100%}
   .v2-fld.pm input{padding:0 16px 12px}
   .v2-pm{width:18px}
   .v2-pm .v2i{width:12px;height:12px}
-  .v2-fld small{font-size:9.5px}
+  .v2-fld small{font-size:10px}
   .v2-howto-anim{width:100%;height:96px}
   .v2-eq{flex-wrap:wrap}
   .v2-exh{gap:8px;padding:10px}
   .v2-thumb{width:48px;height:48px}
   .v2-tile{padding:12px;min-height:100px}
-  .v2-tile b{font-size:24px}
-  .v2-ph-title h1,.v2-rest{font-size:28px}
-  .v2-wtitle h1{font-size:26px}
   .v2-whead{margin:0 -10px}
   .pill,.wk-rt small{white-space:normal}
   .wsnav{flex-wrap:wrap;margin-left:0}
@@ -7357,6 +7363,9 @@ async function cloudBoot() {
   const inv = new URLSearchParams(location.search).get('convite');
   if (inv) { try { localStorage.setItem(INVITE_KEY, inv.trim()); } catch (e) {} history.replaceState(null, '', location.pathname); }
   if (new URLSearchParams(location.search).has('cadastro')) { const tag = new URLSearchParams(location.search).get('cadastro'); try { localStorage.setItem(NEW_KEY, SRC_TAG[tag] ? tag : '1'); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  // ?entrar (botão Entrar da página de apresentação): abre direto na tela de entrar, mesmo se a pessoa já tocou em Criar conta antes
+  const wantLogin = new URLSearchParams(location.search).has('entrar');
+  if (wantLogin) history.replaceState(null, '', location.pathname);
   { const de = new URLSearchParams(location.search).get('de'), rs = SRC_TAG[de] || refSrc(); if (rs) try { localStorage.setItem(NEW_KEY + '-ref', rs); } catch (e) {} if (de) history.replaceState(null, '', location.pathname); }
   showAuth('loading');
   try { for (const f of ['app', 'auth', 'firestore']) await loadScript(`vendor/firebase/firebase-${f}-compat.js`); }
@@ -7368,7 +7377,7 @@ async function cloudBoot() {
   try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {} // login fica salvo no aparelho
   try { auth.languageCode = 'pt-BR'; } catch (e) {} // e-mails (troca de senha) em português
   cloud = { auth, fs, role: null, ready: false, unsubs: [] };
-  auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(pendingInvite() || firstAccess() ? 'signup' : 'login'); });
+  auth.onAuthStateChanged(user => { if (user) startSession(user).catch(err => showAuth('login', 'Erro ao abrir sua conta: ' + (err.code || err.message))); else showAuth(!wantLogin && (pendingInvite() || firstAccess()) ? 'signup' : 'login'); });
 }
 function pendingInvite() {
   let v = ''; try { v = localStorage.getItem(INVITE_KEY) || ''; } catch (e) {}
@@ -8449,7 +8458,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-00:44';
+const APP_VERSION = '29/10-10:01';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
