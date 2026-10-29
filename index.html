@@ -513,6 +513,7 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .wk-verdict span{font-size:22px}.wk-verdict.up{background:var(--up-bg);color:var(--up)}.wk-verdict.down{background:var(--down-bg);color:var(--down)}.wk-verdict.eq{background:var(--acc-soft)}
 .wk-h{margin:14px 0 2px;font-size:14px}.wk-h.up{color:var(--up)}.wk-h.down{color:var(--down)}
 .wk-list{margin:4px 0 0;padding-left:20px;line-height:1.45}.wk-list li{margin:3px 0}
+.m-imgbox{margin-top:10px;aspect-ratio:9/16;max-width:360px;margin-inline:auto;border-radius:16px;overflow:hidden;background:var(--acc-soft)}.m-imgbox img{display:block;width:100%;height:100%}.m-imgbox:not(.ok) img{visibility:hidden}
 .month-sum small{font-size:.6em;color:var(--muted)}
 .ws:not([data-active=all]) [data-tab]{display:none}
 .ws[data-active=resumo] [data-tab=resumo],.ws[data-active=montar] [data-tab=montar],.ws[data-active=plano] [data-tab=plano],.ws[data-active=marcacoes] [data-tab=marcacoes],
@@ -3361,32 +3362,25 @@ function renderMonthPost() {
     <div class="v2-post"><div class="v2-post-ctl">
         <div class="v2-segin"><button data-act="m-post-ym" data-d="-1" aria-label="Mês anterior">‹ Mês</button><button class="on" disabled>${esc(mesNome(o.ym).replace(/^./, c => c.toUpperCase()))}</button><button data-act="m-post-ym" data-d="1" aria-label="Próximo mês" ${o.ym >= cur ? 'disabled' : ''}>Mês ›</button></div>
         ${sts.length > 1 ? `<div class="v2-segin" style="margin-top:8px"><button data-act="m-post-go" data-d="-1" aria-label="Aluno anterior">‹ Aluno</button><button class="on" disabled>${i + 1} de ${sts.length}</button><button data-act="m-post-go" data-d="1" aria-label="Próximo aluno">Aluno ›</button></div>` : ''}
-        <div class="v2-cc" style="margin-top:8px"><button class="v2-btn pri" data-act="m-share" data-k="share">${ico('M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v6.5h14V13')}Enviar</button><button class="v2-btn ink" data-act="m-share" data-k="save">${ico('M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14')}Salvar</button></div>
-        <textarea class="msg" id="mText" aria-label="Mensagem que vai junto" style="min-height:150px;margin-top:10px">${esc(monthText(o.pid, o.ym))}</textarea>
-        <div class="v2-cc"><button class="v2-btn line" data-act="m-share" data-k="copy">Copiar mensagem</button></div>
-        <p class="v2-muted" style="font-size:13px;margin:8px 2px 0">Toque em Enviar e escolha o WhatsApp do aluno: vai a imagem. A mensagem fica copiada: na conversa, segure o dedo e cole. No computador, a imagem é baixada: anexe e cole a mensagem.</p>
+        <button class="v2-btn pri full" style="margin-top:10px" data-act="m-share" data-pid="${o.pid}" data-ym="${o.ym}">${ico('M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14')}Salvar imagem</button>
+        <p class="v2-muted" style="font-size:13px;margin:8px 2px 0">Salve na galeria e encaminhe pelo WhatsApp. No celular também dá para segurar o dedo na imagem e tocar em <b>Salvar</b>.</p>
       </div>
-      <div class="v2-postbig story"><canvas id="mPostBig" width="${PFP.PW}" height="${PFP.PH}" aria-label="Imagem do relatório do mês"></canvas></div>
+      <div class="v2-postbig story"><img data-mimg="${o.pid}|${o.ym}" alt="Relatório do mês de ${esc(firstName(p))}" style="display:block;width:100%;height:auto;border-radius:inherit"></div>
     </div>`;
-  PFP.drawMonth(document.getElementById('mPostBig'), D);
+  fillMonthImgs(); // a imagem vira uma foto comum na tela: segurar o dedo nela já oferece "Salvar"
 }
-async function monthShare(k) {
-  const o = ui.mPost, p = profile(o.pid), text = document.getElementById('mText').value;
-  if (k === 'copy') return copyText(text, document.getElementById('mText')).then(ok => toast(ok ? '✓ Mensagem copiada.' : 'Não deu para copiar: segure o dedo no texto e copie.'));
-  const cv = document.getElementById('mPostBig'), slug = firstName(p).toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
-  const f = await new Promise(r => cv.toBlob(b => r(new File([b], `relatorio-${slug}-${o.ym}.png`, { type: 'image/png' })), 'image/png'));
-  const can = navigator.canShare && navigator.canShare({ files: [f] });
+async function monthShare(pid, ym) {
+  const p = profile(pid), slug = firstName(p).toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+  const blob = await (await fetch(await monthImgUrl(pid, ym))).blob(), f = new File([blob], `relatorio-${slug}-${ym}.png`, { type: 'image/png' });
+  // iPhone/iPad: baixar vai para "Arquivos"; pela tela de compartilhar dá para tocar em "Salvar imagem" (vai para Fotos)
   const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (can && (k === 'share' || ios)) {
-    // o WhatsApp descarta a imagem quando vai junto com texto: manda só a imagem e deixa a mensagem copiada para colar
-    if (k === 'share') copyText(text).then(ok => ok && toast('✓ Mensagem copiada. Depois de mandar a imagem, cole a mensagem na conversa.'));
-    else toast('Toque em <b>Salvar imagem</b> para guardar na galeria.');
-    try { await navigator.share({ files: [f] }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para enviar. Use "Salvar".'); }
+  if (ios && navigator.canShare && navigator.canShare({ files: [f] })) {
+    toast('Toque em <b>Salvar imagem</b> para guardar na galeria.');
+    try { await navigator.share({ files: [f] }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para salvar: segure o dedo na imagem e toque em Salvar.'); }
     return;
   }
   const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
-  if (k === 'share') { copyText(text); toast('✓ Imagem baixada e mensagem copiada. No WhatsApp, anexe a imagem e cole a mensagem.'); }
-  else toast('✓ Imagem salva.');
+  toast('✓ Imagem salva. Agora é só encaminhar pelo WhatsApp.');
 }
 function v2PostFile() {
   const cv = document.getElementById('v2PostBig'), d = ui.wkPost ? ui.wkPost.ws : (ui.v2done || {}).d || today();
@@ -4736,21 +4730,27 @@ function monthText(pid, ym) {
     ...(bad.length ? ['', `*Para ${nx}:*`, ...bad.map(x => `› ${x}`)] : []),
     '', r.did ? `Parabéns pelo mês! Bora pra cima em ${nx}.` : `Bora voltar com tudo em ${nx}! Seu treino está no app.`].join('\n');
 }
+// imagem do relatório pronta (uma por aluno/mês; desenha de novo só se os números mudarem)
+const mImgCache = new Map();
+function monthImgUrl(pid, ym) {
+  const D = monthPostData(pid, ym), key = JSON.stringify(D), hit = mImgCache.get(`${pid}|${ym}`);
+  if (hit && hit.key === key) return Promise.resolve(hit.url);
+  const cv = Object.assign(document.createElement('canvas'), { width: PFP.PW, height: PFP.PH });
+  return PFP.drawMonth(cv, D).then(() => { const url = cv.toDataURL('image/png'); mImgCache.set(`${pid}|${ym}`, { key, url }); return url; });
+}
+// coloca a imagem nos <img data-mimg> que acabaram de aparecer na tela
+function fillMonthImgs() { document.querySelectorAll('img[data-mimg]').forEach(im => { const [pid, ym] = im.dataset.mimg.split('|'); monthImgUrl(pid, ym).then(u => { im.src = u; im.closest('.m-imgbox')?.classList.add('ok'); }); }); }
 function monthReportHtml(p) {
   if (!p) return '';
-  const cur = today().slice(0, 7), ym = ui.mRep && ui.mRep.pid === p.id ? ui.mRep.ym : repMonth(), r = monthReport(p.id, ym), { good, bad } = monthNotes(r);
-  const li = (a, empty) => a.length ? `<ul class="wk-list">${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : `<p class="hint" style="margin:4px 0 0">${empty}</p>`;
+  const cur = today().slice(0, 7), ym = ui.mRep && ui.mRep.pid === p.id ? ui.mRep.ym : repMonth(), r = monthReport(p.id, ym);
   const nm = mesNome(ym).replace(/^./, c => c.toUpperCase());
-  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Relatório do mês</h3><small>${nm} de ${ym.slice(0, 4)}${r.open ? ' · em andamento' : ''} · para mandar ao aluno</small></div>
+  setTimeout(fillMonthImgs);
+  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Relatório do mês</h3><small>${nm} de ${ym.slice(0, 4)}${r.open ? ' · em andamento' : ''} · imagem para mandar ao aluno</small></div>
       <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, -1)}" aria-label="Mês anterior">‹</button>
       <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, 1)}" aria-label="Próximo mês" ${ym >= cur ? 'disabled' : ''}>›</button></div>
-    <div class="month-sum"><div><b>${r.planned ? `${r.hit}/${r.planned}` : r.did}</b><span>${r.planned ? 'treinos feitos / do plano' : r.did === 1 ? 'dia treinado' : 'dias treinados'}</span></div>
-      <div><b>${r.sets}</b><span>séries</span></div><div><b>${r.up.filter(x => x.rec).length}</b><span>recordes de carga</span></div>
-      <div><b>${fmtMin(r.cmin)}${r.cgoal ? `<small>/${fmtMin(r.cgoal)}</small>` : ''}</b><span>min cardio</span></div></div>
-    ${r.up.length ? `<h4 class="wk-h up">Cargas que subiram</h4><ul class="wk-list">${r.up.slice(0, 5).map(x => `<li><b>${esc(x.name)}</b>: ${kgTxt(x.a)} → ${kgTxt(x.b)}${x.rec ? ' <span class="pill up">recorde</span>' : ''}</li>`).join('')}${r.up.length > 5 ? `<li>Mais ${r.up.length - 5}</li>` : ''}</ul>` : ''}
-    <h4 class="wk-h up">O que foi bem</h4>${li(good, r.did ? 'Ainda não dá para comparar com o mês anterior.' : 'Nada marcado neste mês.')}
-    <h4 class="wk-h down">Para o próximo mês</h4>${li(bad, r.did ? 'Nada a apontar. Continue assim!' : 'Voltar a treinar.')}
-    <button class="btn primary" style="width:100%;margin-top:12px" data-act="m-post" data-pid="${p.id}" data-ym="${ym}"><i class="ic ic-cam"></i> Imagem e mensagem para enviar</button>
+    <div class="m-imgbox"><img data-mimg="${p.id}|${ym}" alt="Relatório de ${esc(nm.toLowerCase())} de ${esc(firstName(p))}"></div>
+    <button class="btn primary" style="width:100%;margin-top:12px" data-act="m-share" data-pid="${p.id}" data-ym="${ym}"><i class="ic ic-down"></i> Salvar imagem</button>
+    <p class="hint" style="margin:8px 0 0">Salve e encaminhe pelo WhatsApp. No celular também dá para segurar o dedo na imagem e tocar em Salvar.</p>
   </section>`;
 }
 function renderHistorico() {
@@ -6720,7 +6720,7 @@ $main.addEventListener('click', e => {
     case 'm-post-close': { const pid = ui.mPost && ui.mPost.from === 'painel' ? null : ui.mPost && ui.mPost.pid; ui.mPost = null; if (pid) { ui.profile = pid; ui.stTab = 'resumo'; } render(); return window.scrollTo({ top: 0 }); }
     case 'm-post-go': { const o = ui.mPost, l = v2Students().map(x => x.id), i = (l.indexOf(o.pid) + +b.dataset.d + l.length) % l.length; ui.mPost = { ...o, pid: l[i] }; ensureFull(l[i]); render(); return window.scrollTo({ top: 0 }); }
     case 'm-post-ym': ui.mPost = { ...ui.mPost, ym: shiftMonth(ui.mPost.ym, +b.dataset.d) }; return render();
-    case 'm-share': return monthShare(b.dataset.k);
+    case 'm-share': return monthShare(b.dataset.pid, b.dataset.ym);
     case 'go-montar': return go('montar');
     case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
     case 'b-w': case 'b-neww': case 'b-ren': case 'b-delw': case 'b-dupw': case 'b-copyw': case 'b-add':
@@ -8613,7 +8613,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:27';
+const APP_VERSION = '29/10-12:29';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
