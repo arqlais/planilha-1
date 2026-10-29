@@ -2244,6 +2244,7 @@ function render() {
   document.body.classList.toggle('v2-stu', skinOn());
   document.body.classList.toggle('no-figs', skinOn() && ui.profile === ME); // treino do professor: sem os bonequinhos fazendo o exercício document.body.classList.remove('v2-done');
   if (ui.wkPost) return renderWeekPost();
+  if (ui.mPost) return renderMonthPost();
   if (v2Prof()) {
     const R = { painel: renderPainelV2, ajustes: renderAjustesV2, eu: renderMeuPerfilV2, ia: renderIa, ...(desk ? {} : { alunos: renderAlunosV2, perfil: renderPerfilV2 }) }[ui.view];
     if (R) return R();
@@ -2257,7 +2258,7 @@ function render() {
 deskMq.addEventListener && deskMq.addEventListener('change', () => { if (!document.body.classList.contains('locked')) render(); });
 function go(view) {
   if (ui.studentMode && !STUDENT_VIEWS.some(v => v[0] === view) && !STUDENT_SUB.includes(view)) view = 'treino';
-  stopDemo(); ui.demo = false; ui.wkPost = null; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  stopDemo(); ui.demo = false; ui.wkPost = null; ui.mPost = null; ui.view = view === 'perfil' && ui.profile === ME ? 'alunos' : view; saveUi(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 // ---------- Treino ----------
 function bannerHtml(L) {
@@ -3213,6 +3214,50 @@ function weekArt(c, D, A, H) {
   D.tiles.forEach(([v, l], i) => { const x = 80 + i * 470, ty = 1440; rr(c, x, ty, 450, 280, 48); c.fillStyle = ink; c.fill(); c.fillStyle = acc; c.textAlign = 'left'; fitFont(c, v, 600, 'Outfit', 140, 390); c.fillText(v, x + 36, ty + 160); fitFont(c, l, 700, 'Manrope', 38, 380); c.fillText(l, x + 38, ty + 236); });
   c.fillStyle = ink; c.textAlign = 'left'; c.font = '700 38px Manrope'; c.fillText('passos.fit', 84, 1840); c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 80, 1840);
 }
+// Relatório do mês (para mandar ao aluno): dias treinados no calendário, números do mês e as cargas que subiram
+function monthArt(c, D, A) {
+  const acc = A.acc, ink = A.on, H = PH;
+  c.fillStyle = acc; c.fillRect(0, 0, PW, H);
+  c.save(); c.globalAlpha = .07; c.fillStyle = ink; [[720, 380, 160, 600], [900, 200, 160, 780]].forEach(([x, y, w, h]) => { rr(c, x, y, w, h, 48); c.fill(); }); c.restore();
+  brandRow(c, 80, 100, ink, A);
+  c.fillStyle = ink; c.textAlign = 'right'; c.font = '700 38px Manrope'; c.fillText(D.month.toUpperCase(), PW - 80, 150);
+  c.textAlign = 'left'; fitFont(c, `RELATÓRIO DE ${D.name.toUpperCase()}`, 800, 'Manrope', 46, 920); c.fillText(`RELATÓRIO DE ${D.name.toUpperCase()}`, 84, 310);
+  fitFont(c, D.big, 700, 'Unbounded', 250, 600); c.fillText(D.big, 66, 560);
+  const nw = c.measureText(D.big).width;
+  c.font = '700 54px Unbounded'; c.fillText(D.bigL[0], 66 + nw + 30, 470); c.fillText(D.bigL[1], 66 + nw + 30, 540);
+  c.font = '600 44px Outfit'; c.fillText(D.planTxt, 84, 640);
+  // calendário do mês (domingo a sábado)
+  const cw = 920 / 7, rh = 90, top = 760;
+  c.font = '800 32px Manrope'; c.textAlign = 'center'; c.globalAlpha = .6;
+  ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].forEach((l, i) => c.fillText(l, 80 + cw * i + cw / 2, top - 22)); c.globalAlpha = 1;
+  D.days.forEach((st, i) => {
+    const k = i + D.dow, cx = 80 + cw * (k % 7) + cw / 2, cy = top + Math.floor(k / 7) * rh + 38, r = 36;
+    c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2);
+    if (st === 'done') { c.fillStyle = ink; c.fill(); } else if (st === 'miss') { c.strokeStyle = ink; c.lineWidth = 4; c.stroke(); }
+    c.fillStyle = st === 'done' ? acc : ink; c.globalAlpha = st === 'off' ? .45 : st === 'future' ? .22 : 1;
+    c.font = `${st === 'done' ? 800 : 700} 32px Manrope`; c.fillText(String(i + 1), cx, cy + 11); c.globalAlpha = 1;
+  });
+  const rows = Math.ceil((D.days.length + D.dow) / 7), ty = top + rows * rh + 20;
+  // números do mês
+  D.tiles.forEach(([v, l], i) => { const w = (920 - 40) / 3, x = 80 + i * (w + 20); rr(c, x, ty, w, 190, 40); c.fillStyle = ink; c.fill(); c.fillStyle = acc; c.textAlign = 'left'; fitFont(c, v, 600, 'Outfit', 92, w - 56); c.fillText(v, x + 28, ty + 108); fitFont(c, l, 700, 'Manrope', 32, w - 56); c.fillText(l, x + 30, ty + 158); });
+  // cargas que subiram (ou o recado para o próximo mês)
+  let y = ty + 270; c.fillStyle = ink; c.textAlign = 'left';
+  c.font = '800 38px Manrope'; c.fillText(D.ups.length ? 'CARGAS QUE SUBIRAM' : D.tipTitle.toUpperCase(), 84, y);
+  const lines = D.ups.length ? D.ups : D.tips.map(t => [t]);
+  lines.slice(0, Math.max(1, Math.floor((H - 110 - y) / 64))).forEach(([n, a, b2]) => {
+    y += 64;
+    if (!a) { fitFont(c, n, 600, 'Outfit', 42, 920); c.fillText(n, 84, y); return; }
+    c.textAlign = 'right'; c.font = '600 42px Outfit'; const t = `${a} → ${b2}`, tw = c.measureText(t).width; c.fillText(t, PW - 80, y);
+    c.textAlign = 'left'; fitFont(c, n, 700, 'Manrope', 40, 920 - tw - 30); c.fillText(n, 84, y);
+  });
+  c.fillStyle = ink; c.textAlign = 'left'; c.font = '700 36px Manrope'; c.fillText('passos.fit', 84, H - 60); c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 80, H - 60);
+}
+async function drawMonth(cv, D) {
+  await postFonts();
+  const acc = cssVar('--accent') || '#C9F03D', on = cssVar('--on-accent') || '#12150F';
+  const c = cv.getContext('2d'); c.setTransform(cv.width / PW, 0, 0, cv.height / PH, 0, 0); c.clearRect(0, 0, PW, PH);
+  c.save(); monthArt(c, D, { acc, on }); c.restore();
+}
 async function drawWeek(cv, D, fmt = 'story') {
   await postFonts();
   const acc = cssVar('--accent') || '#C9F03D', on = cssVar('--on-accent') || '#12150F', H = fmt === 'feed' ? FH : PH;
@@ -3229,7 +3274,7 @@ async function drawPost(cv, k, D, fmt = 'story') {
   const c = cv.getContext('2d'); c.setTransform(cv.width / PW, 0, 0, cv.height / H, 0, 0); c.clearRect(0, 0, PW, H);
   c.save(); (fmt === 'feed' ? FEEDS[k] : TEMPLATES[k].draw)(c, D, { acc, on, fig, sym, photo }); c.restore();
 }
-return { drawPost, drawWeek, TEMPLATES, PW, PH, FH };
+return { drawPost, drawWeek, drawMonth, TEMPLATES, PW, PH, FH };
 })();
 // ===== App novo: tela "Treino completo" com as artes para postar =====
 function v2PostData(pid, d) {
@@ -3288,6 +3333,55 @@ function renderWeekPost() {
       <div class="v2-postbig ${fmt}"><canvas id="v2PostBig" width="${PFP.PW}" height="${fmt === 'feed' ? PFP.FH : PFP.PH}" aria-label="Arte da semana"></canvas></div>
     </div>`;
   PFP.drawWeek(document.getElementById('v2PostBig'), D, fmt);
+}
+function monthPostData(pid, ym) {
+  const p = profile(pid), r = monthReport(pid, ym), { bad } = monthNotes(r), sh = n => `${fmt(n.carga)} kg`;
+  const recs = r.up.filter(x => x.rec).length;
+  return { name: firstName(p), coach: v2Coach(), month: `${mesNome(ym)} ${ym.slice(0, 4)}`, days: r.dayList, dow: toDate(`${ym}-01`).getDay(),
+    big: r.planned ? `${r.hit}/${r.planned}` : String(r.did), bigL: r.planned ? ['TREINOS', 'FEITOS'] : [r.did === 1 ? 'DIA DE' : 'DIAS DE', 'TREINO'],
+    planTxt: r.planned ? (r.hit === r.planned ? `Foi em todos os ${r.planned} treinos do plano ✓` : `Foi em ${r.hit} dos ${r.planned} treinos do plano`) : `${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino no mês`,
+    tiles: [[String(r.sets), 'séries'], [fmtMin(Math.round(r.cmin)), 'min de cardio'], recs ? [String(recs), recs === 1 ? 'recorde de carga' : 'recordes de carga'] : [String(r.up.length), 'cargas subiram']],
+    ups: r.up.map(x => [x.name, sh(x.a), sh(x.b)]), tipTitle: `Para ${mesNome(shiftMonth(ym, 1))}`,
+    tips: bad.length ? bad.slice(0, 2) : [r.did ? 'Continue assim, o mês foi muito bom!' : 'Bora voltar com tudo!'] };
+}
+function renderMonthPost() {
+  const o = ui.mPost, p = profile(o.pid);
+  if (!p) { ui.mPost = null; return render(); }
+  const D = monthPostData(o.pid, o.ym), sts = v2Students(), i = sts.findIndex(x => x.id === o.pid), cur = today().slice(0, 7);
+  const ico = d => `<svg viewBox="0 0 24 24" class="v2i"><path d="${d}"/></svg>`;
+  document.body.classList.add('v2-stu', 'v2-done');
+  $main.innerHTML = `<div class="v2-donetop"><div class="grow"><h2>Relatório do mês</h2><small>${esc(p.name)} · ${esc(D.month)}</small></div>
+      <button class="v2-icbtn" data-act="m-post-close" aria-label="Fechar">${ico('M6 6l12 12M18 6L6 18')}</button></div>
+    <div class="v2-post"><div class="v2-post-ctl">
+        <div class="v2-segin"><button data-act="m-post-ym" data-d="-1" aria-label="Mês anterior">‹ Mês</button><button class="on" disabled>${esc(mesNome(o.ym).replace(/^./, c => c.toUpperCase()))}</button><button data-act="m-post-ym" data-d="1" aria-label="Próximo mês" ${o.ym >= cur ? 'disabled' : ''}>Mês ›</button></div>
+        ${sts.length > 1 ? `<div class="v2-segin" style="margin-top:8px"><button data-act="m-post-go" data-d="-1" aria-label="Aluno anterior">‹ Aluno</button><button class="on" disabled>${i + 1} de ${sts.length}</button><button data-act="m-post-go" data-d="1" aria-label="Próximo aluno">Aluno ›</button></div>` : ''}
+        <div class="v2-cc" style="margin-top:8px"><button class="v2-btn pri" data-act="m-share" data-k="share">${ico('M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v6.5h14V13')}Enviar</button><button class="v2-btn ink" data-act="m-share" data-k="save">${ico('M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14')}Salvar</button></div>
+        <textarea class="msg" id="mText" aria-label="Mensagem que vai junto" style="min-height:150px;margin-top:10px">${esc(monthText(o.pid, o.ym))}</textarea>
+        <div class="v2-cc"><button class="v2-btn line" data-act="m-share" data-k="copy">Copiar mensagem</button>${p.phone ? `<a class="v2-btn line" id="mWa" href="${waLink(p, monthText(o.pid, o.ym))}">Abrir conversa</a>` : ''}</div>
+        <p class="v2-muted" style="font-size:13px;margin:8px 2px 0">Enviar: escolha o WhatsApp do aluno; a imagem vai com a mensagem. No computador, a imagem é baixada e a mensagem copiada: é só anexar e colar.</p>
+      </div>
+      <div class="v2-postbig story"><canvas id="mPostBig" width="${PFP.PW}" height="${PFP.PH}" aria-label="Imagem do relatório do mês"></canvas></div>
+    </div>`;
+  PFP.drawMonth(document.getElementById('mPostBig'), D);
+  const ta = document.getElementById('mText'), wa = document.getElementById('mWa');
+  if (wa) wa.onclick = () => { wa.href = waLink(p, ta.value); };
+}
+async function monthShare(k) {
+  const o = ui.mPost, p = profile(o.pid), text = document.getElementById('mText').value;
+  if (k === 'copy') return copyText(text, document.getElementById('mText')).then(ok => toast(ok ? '✓ Mensagem copiada.' : 'Não deu para copiar: segure o dedo no texto e copie.'));
+  const cv = document.getElementById('mPostBig'), slug = firstName(p).toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+  const f = await new Promise(r => cv.toBlob(b => r(new File([b], `relatorio-${slug}-${o.ym}.png`, { type: 'image/png' })), 'image/png'));
+  const can = navigator.canShare && navigator.canShare({ files: [f] });
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (can && (k === 'share' || ios)) {
+    if (k === 'share') copyText(text); // alguns aplicativos não levam o texto junto: fica copiado para colar
+    else toast('Toque em <b>Salvar imagem</b> para guardar na galeria.');
+    try { await navigator.share(k === 'share' ? { files: [f], text } : { files: [f] }); } catch (e) { if (e.name !== 'AbortError') toast('Não deu para enviar. Use "Salvar".'); }
+    return;
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+  if (k === 'share') { copyText(text); toast('✓ Imagem baixada e mensagem copiada. No WhatsApp, anexe a imagem e cole a mensagem.'); }
+  else toast('✓ Imagem salva.');
 }
 function v2PostFile() {
   const cv = document.getElementById('v2PostBig'), d = ui.wkPost ? ui.wkPost.ws : (ui.v2done || {}).d || today();
@@ -3396,6 +3490,9 @@ function renderPainelV2() {
     <div class="v2-sec"><h3>Seu treino de hoje</h3><button data-act="v2-mytreino">Abrir</button></div>
     <button class="v2-feat" data-act="v2-mytreino">${v2Art(myEx ? v2Key(myEx) : 'remada', `<div class="v2-over"><span class="v2-chip">${esc(me.name)}</span></div><div class="v2-ph-title sm"><b>${esc(myPlan.map(g => wName(g, ME)).join(' + ') || (myW ? wName(myW, ME) : 'Meu treino'))}</b><small>Toque para começar · pesos da última vez</small></div><span class="arr">${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>`, 'v2-featph')}</button>
     <button class="v2-btn line full" style="margin-top:10px" data-act="my-student">${v2Ico('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>')}Meu perfil de aluno</button>
+    ${sts.length ? `<div class="v2-sec"><h3>Relatório do mês</h3></div>
+    <section class="card"><div class="v2-row" style="border:0;padding:0"><div class="grow"><b>${esc(mesNome(repMonth()).replace(/^./, c => c.toUpperCase()))} de cada aluno</b><small>Imagem e mensagem prontas para mandar no WhatsApp, um aluno por vez</small></div></div>
+      <button class="v2-btn pri full" style="margin-top:10px" data-act="m-post" data-pid="${sts[0].id}" data-from="painel">Abrir relatórios</button></section>` : ''}
     <div class="v2-sec"><h3>Atalhos</h3></div>
     <div class="v2-tiles"><button class="v2-tile sur" data-act="add-student">${v2Ico('<path d="M12 5v14M5 12h14"/>')}<b class="md">Novo aluno</b></button>
       <button class="v2-tile sur" data-act="v2-signup">${v2Ico('<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17.5 9a4 4 0 0 1 0 6"/>')}<b class="md">Link de cadastro</b></button>
@@ -4523,15 +4620,23 @@ const sundayOf = iso => addDays(iso, -toDate(iso).getDay());
 const rangeLabel = (a, b) => `${+a.slice(8)}${a.slice(5, 7) === b.slice(5, 7) ? '' : ` de ${MONTHS[+a.slice(5, 7) - 1].slice(0, 3)}`} a ${+b.slice(8)} de ${MONTHS[+b.slice(5, 7) - 1].slice(0, 3)}`;
 // melhor série de uma sessão: maior carga e, nela, mais repetições
 const topSet = s => s.sets.filter(x => x.done && x.carga != null).reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
-function weekReport(pid, ws) {
-  const p = profile(pid), we = addDays(ws, 6), t = today(), first = trainedDates(pid)[0];
-  const days = Array.from({ length: 7 }, (_, i) => addDays(ws, i)).filter(d => d <= t);
+function weekReport(pid, ws) { return periodReport(pid, ws, addDays(ws, 6), addDays(ws, -7), addDays(ws, -1)); }
+// mês inteiro (1º ao último dia), comparado com o mês anterior
+function monthReport(pid, ym) {
+  const [y, m] = ym.split('-').map(Number), last = isoDate(new Date(y, m, 0)), pa = isoDate(new Date(y, m - 2, 1)), pb = isoDate(new Date(y, m - 1, 0));
+  return { ...periodReport(pid, `${ym}-01`, last, pa, pb), ym };
+}
+// resumo de um período (semana ou mês): presença, séries, kg, cardio e cargas que subiram/caíram em relação à última vez antes do período
+function periodReport(pid, ws, we, pa, pb) {
+  const p = profile(pid), t = today(), first = trainedDates(pid)[0], all = [];
+  for (let d = ws; d <= we; d = addDays(d, 1)) all.push(d);
+  const days = all.filter(d => d <= t);
   const did = new Set(trainedDates(pid).filter(d => d >= ws && d <= we));
   const planned = days.filter(d => first && d >= first && !(datePlan(p, d) || {}).skip && dayPlan(p, d).some(w => w !== CARDIO && !isHeld(w, pid)));
   const missed = planned.filter(d => !did.has(d) && d < t), hit = planned.filter(d => did.has(d)), extra = [...did].filter(d => !planned.includes(d));
   const ss = profSessions(pid).filter(s => s.date >= ws && s.date <= we);
   const sets = ss.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), half = ss.reduce((a, s) => a + s.sets.filter(x => !x.done).length, 0);
-  const kg = volumeBetween(ws, we, null, pid), kgPrev = volumeBetween(addDays(ws, -7), addDays(ws, -1), null, pid);
+  const kg = volumeBetween(ws, we, null, pid), kgPrev = volumeBetween(pa, pb, null, pid);
   const cmin = cardioBetween(ws, we, pid), cgoal = days.reduce((a, d) => a + (d < t || did.has(d) ? cardioGoalOf(p, d) : 0), 0);
   // cada exercício (gêmeos juntos): melhor série da semana x última vez antes da semana
   const up = [], down = [], same = [], cmp = [], seen = new Set();
@@ -4541,7 +4646,7 @@ function weekReport(pid, ws) {
     const now = mine.reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
     const hist = exHistory(s.exId).filter(x => x.date < ws), prev = hist.length && topSet(hist[hist.length - 1]);
     if (!now || !prev) continue;
-    const it = { name: ex.name, a: prev, b: now };
+    const it = { name: ex.name, a: prev, b: now, rec: now.carga > Math.max(0, ...hist.map(x => (topSet(x) || {}).carga || 0)) }; // rec: maior carga que já fez
     if (prev.carga > 0) cmp.push((now.carga - prev.carga) / prev.carga);
     if (now.carga > prev.carga || now.carga === prev.carga && (now.reps || 0) > (prev.reps || 0)) up.push(it);
     else if (now.carga < prev.carga) down.push(it);
@@ -4551,8 +4656,8 @@ function weekReport(pid, ws) {
   // nota da semana: presença nos dias com treino (70%) e meta de cardio (30%)
   const att = planned.length ? hit.length / planned.length : Math.min(1, did.size / 3), car = cgoal ? Math.min(1, cmin / cgoal) : null;
   const score = car == null ? att : att * .7 + car * .3;
-  const dayList = Array.from({ length: 7 }, (_, i) => addDays(ws, i)).map(d => did.has(d) ? 'done' : missed.includes(d) ? 'miss' : 'off');
-  return { ws, we, open: we >= t, dayList, prog: cmp.length ? Math.round(cmp.reduce((a, x) => a + x, 0) / cmp.length * 100) : null, did: did.size, planned: planned.length, hit: hit.length, missed, extra, sets, half, kg, kgPrev, cmin, cgoal, up, down, same, bw, bprev, score };
+  const dayList = all.map(d => did.has(d) ? 'done' : missed.includes(d) ? 'miss' : d > t ? 'future' : 'off');
+  return { ws, we, open: we >= t, dayList, days: all, cprev: cardioBetween(pa, pb, pid), didPrev: trainedDates(pid).filter(d => d >= pa && d <= pb).length, prog: cmp.length ? Math.round(cmp.reduce((a, x) => a + x, 0) / cmp.length * 100) : null, did: did.size, planned: planned.length, hit: hit.length, missed, extra, sets, half, kg, kgPrev, cmin, cgoal, up, down, same, bw, bprev, score };
 }
 function weekReportHtml(p) {
   if (!p) return '';
@@ -4588,6 +4693,59 @@ function weekReportHtml(p) {
     <h4 class="wk-h down">O que pode melhorar</h4>${li(bad, r.did ? 'Nada a apontar. Continue assim!' : r.open ? 'A semana ainda está rolando.' : 'Voltar a treinar na próxima semana.')}
     ${r.did ? `<button class="btn primary" style="width:100%;margin-top:12px" data-act="wk-post" data-pid="${p.id}" data-ws="${ws}"><i class="ic ic-cam"></i> Arte para postar</button>` : ''}
     ${df != null ? `<p class="hint" style="margin:10px 0 0">Peso: ${fmtMin(r.bprev.peso)} → <b>${fmtMin(r.bw.peso)} kg</b> (${df > 0 ? '+' : ''}${fmtMin(df)} kg desde ${fmtDate(r.bprev.date)})</p>` : ''}
+  </section>`;
+}
+// ---------- Relatório do mês (para mandar ao aluno): mês inteiro, com a arte e a mensagem prontas ----------
+// do dia 25 em diante mostra o mês atual (fechando); antes disso, o mês que passou
+const repMonth = () => today().slice(8) >= '25' ? today().slice(0, 7) : addDays(`${today().slice(0, 7)}-01`, -1).slice(0, 7);
+const shiftMonth = (ym, n) => { const [y, m] = ym.split('-').map(Number); return isoDate(new Date(y, m - 1 + n, 1)).slice(0, 7); };
+const mesNome = ym => MONTHS[+ym.slice(5, 7) - 1];
+const kgTxt = n => `${fmt(n.carga)} kg${n.reps ? ` × ${n.reps}` : ''}`;
+// o que foi bem e o que pode melhorar no mês (textos simples, sem HTML)
+function monthNotes(r) {
+  const good = [], bad = [], prev = mesNome(shiftMonth(r.ym, -1));
+  if (r.planned && r.hit === r.planned && !r.open) good.push(`Não faltou nenhum treino do plano (${r.hit} de ${r.planned})`);
+  if (r.didPrev && r.did > r.didPrev) good.push(`Treinou mais dias que em ${prev} (${r.did} contra ${r.didPrev})`);
+  const recs = r.up.filter(x => x.rec).length;
+  if (recs) good.push(`${recs} ${recs === 1 ? 'recorde de carga' : 'recordes de carga'} (a maior carga que já fez)`);
+  if (r.cgoal && r.cmin >= r.cgoal) good.push(`Bateu a meta de cardio do mês: ${fmtMin(r.cmin)} de ${fmtMin(r.cgoal)} min`);
+  else if (!r.cgoal && r.cmin) good.push(`Fez ${fmtMin(r.cmin)} min de cardio`);
+  if (r.missed.length >= 2 || r.missed.length && r.planned && r.missed.length / r.planned > .2) bad.push(`Faltou em ${r.missed.length} ${r.missed.length === 1 ? 'treino' : 'treinos'} do plano`);
+  if (r.cgoal && r.cmin < r.cgoal) bad.push(`Cardio abaixo da meta: ${fmtMin(r.cmin)} de ${fmtMin(r.cgoal)} min`);
+  if (r.same.length) bad.push(`Mesma carga há 3 treinos em ${r.same.slice(0, 3).map(x => x.name).join(', ')}: dá para tentar subir`);
+  if (r.down.length) bad.push(`Carga caiu em ${r.down.slice(0, 3).map(x => x.name).join(', ')}`);
+  return { good, bad };
+}
+// mensagem para o WhatsApp (vai junto com a imagem)
+function monthText(pid, ym) {
+  const p = profile(pid), r = monthReport(pid, ym), { good, bad } = monthNotes(r), nx = mesNome(shiftMonth(ym, 1));
+  const ups = r.up.slice(0, 5).map(x => `  - ${x.name}: ${kgTxt(x.a)} → ${kgTxt(x.b)}`);
+  const df = r.bw && r.bprev ? Math.round((r.bw.peso - r.bprev.peso) * 10) / 10 : null;
+  return [`Oi, ${firstName(p)}! Seu relatório de *${mesNome(ym)}* no PassosFit:`, '',
+    r.planned ? `• Treinos feitos: ${r.hit}/${r.planned} do plano` : `• ${r.did} ${r.did === 1 ? 'dia' : 'dias'} de treino`,
+    `• ${r.sets} séries`,
+    `• ${fmtMin(r.cmin)} min de cardio${r.cgoal ? ` (meta: ${fmtMin(r.cgoal)})` : ''}`,
+    ...(df != null ? [`• Peso: ${fmtMin(r.bprev.peso)} → ${fmtMin(r.bw.peso)} kg`] : []),
+    ...(ups.length ? ['', '*Cargas que subiram:*', ...ups] : []),
+    ...(good.length ? ['', '*O que foi bem:*', ...good.map(x => `✓ ${x}`)] : []),
+    ...(bad.length ? ['', `*Para ${nx}:*`, ...bad.map(x => `› ${x}`)] : []),
+    '', r.did ? `Parabéns pelo mês! Bora pra cima em ${nx}.` : `Bora voltar com tudo em ${nx}! Seu treino está no app.`].join('\n');
+}
+function monthReportHtml(p) {
+  if (!p) return '';
+  const cur = today().slice(0, 7), ym = ui.mRep && ui.mRep.pid === p.id ? ui.mRep.ym : repMonth(), r = monthReport(p.id, ym), { good, bad } = monthNotes(r);
+  const li = (a, empty) => a.length ? `<ul class="wk-list">${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : `<p class="hint" style="margin:4px 0 0">${empty}</p>`;
+  const nm = mesNome(ym).replace(/^./, c => c.toUpperCase());
+  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Relatório do mês</h3><small>${nm} de ${ym.slice(0, 4)}${r.open ? ' · em andamento' : ''} · para mandar ao aluno</small></div>
+      <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, -1)}" aria-label="Mês anterior">‹</button>
+      <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, 1)}" aria-label="Próximo mês" ${ym >= cur ? 'disabled' : ''}>›</button></div>
+    <div class="month-sum"><div><b>${r.planned ? `${r.hit}/${r.planned}` : r.did}</b><span>${r.planned ? 'treinos feitos / do plano' : r.did === 1 ? 'dia treinado' : 'dias treinados'}</span></div>
+      <div><b>${r.sets}</b><span>séries</span></div><div><b>${r.up.filter(x => x.rec).length}</b><span>recordes de carga</span></div>
+      <div><b>${fmtMin(r.cmin)}${r.cgoal ? `<small>/${fmtMin(r.cgoal)}</small>` : ''}</b><span>min cardio</span></div></div>
+    ${r.up.length ? `<h4 class="wk-h up">Cargas que subiram</h4><ul class="wk-list">${r.up.slice(0, 5).map(x => `<li><b>${esc(x.name)}</b>: ${kgTxt(x.a)} → ${kgTxt(x.b)}${x.rec ? ' <span class="pill up">recorde</span>' : ''}</li>`).join('')}${r.up.length > 5 ? `<li>Mais ${r.up.length - 5}</li>` : ''}</ul>` : ''}
+    <h4 class="wk-h up">O que foi bem</h4>${li(good, r.did ? 'Ainda não dá para comparar com o mês anterior.' : 'Nada marcado neste mês.')}
+    <h4 class="wk-h down">Para o próximo mês</h4>${li(bad, r.did ? 'Nada a apontar. Continue assim!' : 'Voltar a treinar.')}
+    <button class="btn primary" style="width:100%;margin-top:12px" data-act="m-post" data-pid="${p.id}" data-ym="${ym}"><i class="ic ic-cam"></i> Imagem e mensagem para enviar</button>
   </section>`;
 }
 function renderHistorico() {
@@ -5115,6 +5273,7 @@ function msgTemplate(kind, p) {
     const pc = before ? Math.round((now - before) / before * 100) : null;
     return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${cm} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim!' : 'Vamos pra cima essa semana!'}`;
   }
+  if (kind === 'mes') return monthText(p.id, repMonth());
   if (kind === 'lembrete') return `Oi, ${n}! Passando pra lembrar do treino de hoje. Te espero!`;
   if (kind === 'parabens') return `Parabéns, ${n}! Você está evoluindo muito nos treinos. Continue assim!`;
   return '';
@@ -6109,7 +6268,7 @@ function perfilHtml(p, desk) {
       </div>
     </section>
     ${desk ? `<div class="tabs">${tabs.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test || mine ? '' : readyBtn(p)}</div>` : ''}
-    <div data-tab="resumo"><div class="rs-col">${weekReportHtml(p)}${weekSetsHtml(p)}${cardioDaysHtml(p)}</div><div class="rs-col">
+    <div data-tab="resumo"><div class="rs-col">${weekReportHtml(p)}${p.id !== ME ? monthReportHtml(p) : ''}${weekSetsHtml(p)}${cardioDaysHtml(p)}</div><div class="rs-col">
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
@@ -6151,6 +6310,7 @@ function perfilHtml(p, desk) {
         <button class="btn" data-act="tpl" data-k="treino">Enviar</button>
         <select id="tplGroup" aria-label="Treino">${workoutsOf(p.id).map(w => `<option value="${w.id}" ${w.id === ui.tplGroup ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select>
         <button class="btn" data-act="tpl" data-k="semana">Resumo da semana</button>
+        <button class="btn" data-act="tpl" data-k="mes">Relatório do mês</button>
         <button class="btn" data-act="tpl" data-k="lembrete"><i class="ic ic-alarm"></i> Lembrete</button>
         <button class="btn" data-act="tpl" data-k="parabens">Parabéns</button>
       </div>
@@ -6514,6 +6674,12 @@ $main.addEventListener('click', e => {
     case 'wk-post': ui.wkPost = { pid: b.dataset.pid, ws: b.dataset.ws }; render(); return window.scrollTo({ top: 0 });
     case 'wk-post-close': ui.wkPost = null; render(); return window.scrollTo({ top: 0 });
     case 'wk-rep': ui.wkRep = { pid: b.dataset.pid, ws: b.dataset.ws }; return render();
+    case 'm-rep': ui.mRep = { pid: b.dataset.pid, ym: b.dataset.ym }; return render();
+    case 'm-post': ui.mPost = { pid: b.dataset.pid, ym: b.dataset.ym || repMonth(), from: b.dataset.from }; ensureFull(ui.mPost.pid); render(); return window.scrollTo({ top: 0 });
+    case 'm-post-close': { const pid = ui.mPost && ui.mPost.from === 'painel' ? null : ui.mPost && ui.mPost.pid; ui.mPost = null; if (pid) { ui.profile = pid; ui.stTab = 'resumo'; } render(); return window.scrollTo({ top: 0 }); }
+    case 'm-post-go': { const o = ui.mPost, l = v2Students().map(x => x.id), i = (l.indexOf(o.pid) + +b.dataset.d + l.length) % l.length; ui.mPost = { ...o, pid: l[i] }; ensureFull(l[i]); render(); return window.scrollTo({ top: 0 }); }
+    case 'm-post-ym': ui.mPost = { ...ui.mPost, ym: shiftMonth(ui.mPost.ym, +b.dataset.d) }; return render();
+    case 'm-share': return monthShare(b.dataset.k);
     case 'go-montar': return go('montar');
     case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
     case 'b-w': case 'b-neww': case 'b-ren': case 'b-delw': case 'b-dupw': case 'b-copyw': case 'b-add':
@@ -8406,7 +8572,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-11:52';
+const APP_VERSION = '29/10-11:56';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
