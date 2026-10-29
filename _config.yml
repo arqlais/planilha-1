@@ -1,0 +1,11 @@
+# Site no GitHub Pages: estes arquivos ficam só no GitHub, não vão para passosfit.com.br
+exclude:
+  - CLAUDE.md
+  - README.md
+  - bump-version.sh
+  - firebase.json
+  - firestore.rules
+  - firestore-debug.log
+  - primeiro-passo/README.md
+  - primeiro-passo/firebase.json
+  - primeiro-passo/firestore.rules
