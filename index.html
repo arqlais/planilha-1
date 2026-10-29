@@ -5048,17 +5048,24 @@ function renderEvolution() {
       ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${v} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
       </tbody></table></section>`;
 
-    // Por grupo: kg total de cada treino do grupo (soma de carga × reps de todos os exercícios)
+    // Por grupo: kg total por semana do aluno (Semana 1 = 7 dias a partir do primeiro treino). Treinar na sexta em vez
+    // da quinta conta na mesma semana. A comparação usa só as mesmas séries dos mesmos exercícios nas duas semanas.
+    const start = trainedDates()[0], wk = d => Math.floor(daysBetween(start, d) / 7) + 1, curWk = start ? wk(today()) : 0;
     for (const g of GROUPS) {
-      const exs = profExs().filter(e => e.group === g), ids = new Set(exs.map(e => e.id));
-      const byDay = {};
-      for (const s of db.sessions) if (ids.has(s.exId) && hasDone(s)) (byDay[s.date] = byDay[s.date] || []).push(s);
-      const days = Object.keys(byDay).sort().slice(-8);
-      if (!days.length) continue;
-      const rows = days.map(d => {
-        const ss = byDay[d], done = ss.flatMap(s => s.sets.filter(x => x.done));
-        return { d, ex: ss.length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0) };
+      const exs = profExs().filter(e => e.group === g), exMap = new Map(exs.map(e => [e.id, e]));
+      const best = new Map(); // um registro por exercício e dia (o mais completo)
+      for (const s of db.sessions) if (exMap.has(s.exId) && hasDone(s) && s.date >= start) { const k = s.exId + '|' + s.date, o = best.get(k); if (!o || sessRank(s) > sessRank(o)) best.set(k, s); }
+      const byWk = {};
+      for (const s of [...best.values()].sort((a, b) => a.date.localeCompare(b.date))) (byWk[wk(s.date)] = byWk[wk(s.date)] || []).push(s);
+      const nums = Object.keys(byWk).map(Number).sort((a, b) => a - b).slice(-8);
+      if (!nums.length) continue;
+      const rows = nums.map(n => {
+        const ss = byWk[n], done = ss.flatMap(s => s.sets.filter(x => x.done)), sets = {};
+        for (const s of ss) { const k = twinKey(exMap.get(s.exId)); sets[k] = (sets[k] || []).concat(s.sets.filter(x => x.done)); }
+        return { n, from: addDays(start, (n - 1) * 7), ex: Object.keys(sets).length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0), bySet: sets };
       });
+      // mesmas séries: de cada exercício feito nas duas semanas, conta só a quantidade de séries que as duas têm
+      const fair = (a, b) => { let x = 0, y = 0; for (const k in a.bySet) if (b.bySet[k]) { const m = Math.min(a.bySet[k].length, b.bySet[k].length); x += vol(a.bySet[k].slice(0, m)); y += vol(b.bySet[k].slice(0, m)); } return y ? delta(x, y) : ''; };
       const perEx = exs.map(e => {
         const h = exHistory(e.id).slice(-6);
         if (!h.length) return '';
@@ -5070,12 +5077,12 @@ function renderEvolution() {
               <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
           }).join('')}</tbody></table>`;
       }).join('');
-      html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por treino</h3>
-          <small>Soma de carga × repetições de todos os exercícios de ${g.toLowerCase()} no dia</small></div></div>
+      html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por semana</h3>
+          <small>Soma de carga × repetições de ${g.toLowerCase()} na semana. A Semana 1 começa no primeiro treino (${fmtDate(start)}) e cada semana tem 7 dias. A % compara as mesmas séries.</small></div></div>
         ${sparkline(rows.map(r => r.total))}
-        <div class="tbl-scroll"><table class="hist"><thead><tr><th>Data</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
-        ${rows.slice().reverse().map((r, i, arr) => `<tr><td>${fmtDate(r.d)}</td><td>${r.ex}</td><td>${r.sets}</td><td>${r.reps}</td>
-          <td><b>${fmt(r.total)}</b></td><td>${arr[i + 1] ? delta(r.total, arr[i + 1].total) : ''}</td></tr>`).join('')}</tbody></table></div>
+        <div class="tbl-scroll"><table class="hist"><thead><tr><th>Semana</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
+        ${rows.slice().reverse().map((r, i, arr) => `<tr><td style="white-space:nowrap"><b>Semana ${r.n}</b><br><small style="color:var(--muted);font-weight:400">${r.n === curWk ? 'em andamento' : `${fmtDate(r.from)} a ${fmtDate(addDays(r.from, 6))}`}</small></td><td>${r.ex}</td><td>${r.sets}</td><td>${r.reps}</td>
+          <td><b>${fmt(r.total)}</b></td><td>${arr[i + 1] ? fair(r, arr[i + 1]) : ''}</td></tr>`).join('')}</tbody></table></div>
         <details class="tbl" style="margin-top:10px"><summary>Ver por exercício</summary>${perEx}</details></section>`;
     }
   }
@@ -8694,7 +8701,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-14:03';
+const APP_VERSION = '29/10-17:43';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
