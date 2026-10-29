@@ -8477,7 +8477,8 @@ let authMode = 'login';
 let loaderT = null;
 // Visual novo: marca (haltere em pé = o "I" de Igor) e a abertura do desenho Passos Fit 2.0
 const V2SYM = [[8.6, 1.6, 6.8, 2.4], [5.6, 5, 12.8, 2.9], [10.75, 6.5, 2.5, 11], [5.6, 16.1, 12.8, 2.9], [8.6, 20, 6.8, 2.4]];
-const v2Mark = (fill = 'var(--accent)') => `<svg viewBox="0 0 24 24" aria-hidden="true">${V2SYM.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w, h) / 2}" fill="${fill}"/>`).join('')}</svg>`;
+// style inline: dentro de botões da barra lateral o CSS geral (fill:none; stroke) apagava o símbolo
+const v2Mark = (fill = 'var(--accent)') => `<svg viewBox="0 0 24 24" aria-hidden="true" style="stroke:none">${V2SYM.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w, h) / 2}" style="fill:${fill}"/>`).join('')}</svg>`;
 function v2LoadingHtml() {
   let ticks = '';
   for (let i = 0; i <= 32; i++) { const a = Math.PI * (1 - i / 32), r1 = i % 8 ? 106 : 99, r2 = 116; ticks += `<line class="lt" x1="${(160 + r1 * Math.cos(a)).toFixed(1)}" y1="${(128 - r1 * Math.sin(a)).toFixed(1)}" x2="${(160 + r2 * Math.cos(a)).toFixed(1)}" y2="${(128 - r2 * Math.sin(a)).toFixed(1)}"/>`; }
@@ -8615,7 +8616,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:34';
+const APP_VERSION = '29/10-12:37';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
