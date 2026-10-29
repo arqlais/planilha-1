@@ -271,6 +271,23 @@ footer a{color:var(--ink);font-weight:600;text-decoration:none}
 @media (min-width:3200px){html{zoom:1.5}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
+/* Entrar: um botão no topo com as duas plataformas; cada app mostra lá dentro entrar ou criar conta */
+.acc{position:relative;flex:none}
+.acc summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;font-size:14px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary svg{width:17px;height:17px}
+.acc[open] summary{border-color:var(--ink)}
+.acc-m{position:absolute;right:0;top:calc(100% + 8px);width:min(280px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 20px 44px -20px rgba(14,19,25,.4);z-index:20}
+.ac-r{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;text-decoration:none;color:var(--ink)}
+.ac-r:hover,.ac-r:focus-visible{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.ac-i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ac-i.pf{background:#111A4A}.ac-i.pp{background:#1B3A5C}
+.ac-i svg{width:17px;height:17px}
+.ac-r b{display:block;font-size:15px}
+.ac-r small{display:block;color:var(--muted);font-size:13px}
+.ac-go{width:16px;height:16px;margin-left:auto;color:var(--muted)}
+@media (max-width:430px){.acc summary span{display:none}.acc summary{padding:8px 10px}}
+@media (max-width:250px){.acc{display:none}}
 /* ---------- movimento: fundo vivo, revelar ao rolar, cartões que inclinam, telas do app ---------- */
 .pick{position:relative;overflow:hidden}
 .pick>.wrap{position:relative;z-index:1}
@@ -397,6 +414,11 @@ body[data-view="passosfit"] .prog{background:linear-gradient(90deg,#2E4BDB,#CBEF
     <a class="pp" href="#primeiro-passo" data-go="primeiro-passo">Primeiro Passo</a>
     <a class="pf" href="#passosfit" data-go="passosfit">PassosFit</a>
   </nav>
+  <details class="acc" id="acc"><summary aria-label="Entrar ou criar conta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg><span>Entrar</span></summary>
+    <div class="acc-m" role="menu">
+      <a class="ac-r" role="menuitem" data-link="passosfit" href="../?app&amp;entrar"><span class="ac-i pf"><svg viewBox="0 0 24 24" fill="none" stroke="#CBEF3C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg></span><span><b>PassosFit</b><small>Aluno ou professor</small></span><svg class="ac-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></a>
+      <a class="ac-r" role="menuitem" data-link="primeiroPassoEntrar" href="../primeiro-passo/#/entrar"><span class="ac-i pp"><svg viewBox="0 0 24 24" fill="none" stroke="#E0A93B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 3 10.5 3 8c0-2.7 1.5-6 4.5-6C9.4 2 10 3.8 10 5.5c0 3.1-2 5.7-2 8.7V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.1 1-3.1 1-5.6 0-2.7-1.5-6-4.5-6C14.6 6 14 7.8 14 9.5c0 3.1 2 5.7 2 8.7V20a2 2 0 1 0 4 0Z"/></svg></span><span><b>Primeiro Passo</b><small>Aluno, personal ou empresa</small></span><svg class="ac-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></a>
+    </div></details>
 </div></header>
 
 <div class="prog" aria-hidden="true"></div>
@@ -519,8 +541,8 @@ body[data-view="passosfit"] .prog{background:linear-gradient(90deg,#2E4BDB,#CBEF
       <h1>Seu treino do dia, <em>na palma da mão.</em></h1>
       <p class="lead">Marque cada série com carga e repetições, veja quanto pegou da última vez e acompanhe a sua evolução. Funciona no celular e no computador, direto pelo navegador.</p>
       <div class="ctas">
-        <a class="btn main" data-link="passosfit" href="https://passosfit.com.br/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Abrir o PassosFit</a>
-        <a class="btn ghost" href="#pf-professor">Sou professor</a>
+        <a class="btn main" data-link="passosfitCadastro" href="../?cadastro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Criar minha conta</a>
+        <a class="btn ghost" data-link="passosfit" href="../?app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Entrar</a>
       </div>
     </div>
     <div class="phone3" role="img" aria-label="Telas do app PassosFit com uma aluna de exemplo">
@@ -580,8 +602,12 @@ const LINKS={
   primeiroPasso:"../primeiro-passo/#/comecar",
   primeiroPassoEntrar:"../primeiro-passo/#/entrar",
   passosfitCadastro:"../?cadastro", /* abre o app já na tela de criar conta */
-  passosfit:"../?app" /* abre o app e lembra neste aparelho: da próxima vez passosfit.com.br já abre direto no app */
+  passosfit:"../?app&entrar" /* abre o app na tela de entrar (aluno ou professor) e lembra neste aparelho */
 };
+/* menu Entrar do topo: fecha ao tocar fora ou apertar Esc */
+(()=>{const d=document.getElementById("acc");if(!d)return;
+  document.addEventListener("click",e=>{if(d.open&&!d.contains(e.target))d.open=false});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&d.open){d.open=false;d.querySelector("summary").focus()}})})();
 document.querySelectorAll("[data-link]").forEach(a=>{const u=LINKS[a.dataset.link];if(u)a.href=u});
 
 /* troca entre a escolha e as apresentações sem recarregar a página */
