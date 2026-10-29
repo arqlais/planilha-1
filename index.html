@@ -616,6 +616,7 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
   .wk-day:has(.wk-ex.open){grid-column:auto}.wk-ed{padding:0 6px 6px}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-ed .bw-step button{width:30px;height:30px;font-size:16px}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}}
 .wk-save{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:14px 0 4px}.wk-save .btn{padding:12px 20px;font-size:15px;font-weight:800}.wk-save small{color:var(--muted);font-size:12.5px;flex:1 1 220px}.wk-save small.ok{color:var(--acc);font-weight:700}
 .wk-also{margin:0;font-size:12px;color:var(--muted)}.wk-also .link{font-size:12px;padding:4px 0}
+.wk-src{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}.wk-src>small{width:100%;color:var(--muted);font-weight:700}.wk-src button{display:flex;flex-direction:column;align-items:flex-start;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.wk-src button small{color:var(--muted);font-size:11px}.wk-src button.on{border-color:var(--acc);background:var(--acc-soft)}.wk-src button.on b::before{content:'✓ '}
 .wk-mine{display:inline-block;padding:1px 7px;border-radius:99px;background:var(--acc-soft);color:var(--acc)!important;font-weight:800}
 .wk-in{display:block;font-style:normal;font-size:12px;color:var(--acc);font-weight:700}
 .bw-step{display:flex;align-items:center;gap:6px}.bw-step small{flex:1;color:var(--muted);font-weight:700;font-size:12.5px}
@@ -5785,9 +5786,11 @@ function weekHtml(pid) {
     return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${W.sel ? 'pick' : ''} ${inSel ? 'has' : ''}">
       <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
       ${W.sel ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? '✓ Está aqui' : '＋ Colocar aqui'}</button>` : ''}
-      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}</span><small>${e.sets.length} × ${numVal(allSame(e.sets, 'reps')) || '–'}${isTimed(e) ? ' s' : ''}</small></button>
+      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} × ${numVal(allSame(e.sets, 'reps')) || '–'}${isTimed(e) ? ' s' : ''}</small></button>
         ${W.open === e.id ? `<div class="wk-ed"><div class="bw-step"><small>Séries</small><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${e.sets.length}</b><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
           <div class="bw-step"><small>${isTimed(e) ? 'Segundos' : 'Repetições'}</small><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="-1" aria-label="Menos">−</button><b>${numVal(allSame(e.sets, 'reps')) || '–'}</b><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="1" aria-label="Mais">＋</button></div>
+          ${(src => src.length ? `<div class="wk-src"><small>Comparar cargas com</small>${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
+            return `<button class="${twinKey(e) === x.key ? 'on' : ''}" data-act="wk-src" data-id="${e.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)} · ${top && top.carga != null ? numVal(top.carga) + ' kg' : 'sem carga'}${top && top.reps != null ? ' × ' + numVal(top.reps) : ''}</small></button>`; }).join('')}</div>` : '')(wkSources(pid, e))}
           <div class="wk-eda"><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="1" aria-label="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
           <button class="btn danger" data-act="wk-del" data-id="${e.id}">Tirar do dia</button></div></div>` : ''}</div>`).join('')}
       ${also.map(x => `<p class="wk-also">Também neste dia: <b>${esc(wName(x, pid))}</b><br><button class="link" data-act="wk-unalso" data-d="${d}" data-w="${x}">Tirar deste dia</button></p>`).join('')}</div>`;
@@ -5804,6 +5807,21 @@ function weekHtml(pid) {
       <div class="wk-bd">${WEEK.map(([d]) => `<button class="${wkExs(pid, d).some(e => sameName(e.name, W.sel.name)) ? 'on' : ''}" data-act="wk-put" data-d="${d}">${WK_SHORT[d]}</button>`).join('')}</div></div><div class="wk-pad"></div>` : ''}`;
 }
 // coloca ou tira o exercício escolhido do dia (o treino do dia é criado na primeira vez e entra na divisão da semana)
+// De onde vêm as cargas de comparação ("antes") de um exercício do dia: cada histórico já feito com nome igual ou parecido
+// (ex.: o mesmo exercício na Evoque e na Sky). Escolher um liga o exercício a esse histórico e copia as últimas cargas e repetições.
+function wkSources(pid, ex) {
+  const flat = n => normName(n).replace(/[^a-z0-9]/g, ''), me = flat(ex.name), out = new Map();
+  db.exercises.filter(e => e.profileId === pid && e.id !== ex.id && e.name).forEach(e => {
+    const o = flat(e.name); if (!o || !(o === me || o.includes(me) || me.includes(o))) return;
+    const last = db.sessions.filter(x => x.exId === e.id && hasDone(x)).sort((a, b) => b.date.localeCompare(a.date))[0];
+    if (!last) return;
+    const k = twinKey(e), cur = out.get(k);
+    if (!cur || last.date > cur.last.date) out.set(k, { key: k, ex: e, last });
+  });
+  return [...out.values()].map(x => ({ ...x, label: x.key.includes('|') ? x.key.split('|')[0].replace(/^./, c => c.toUpperCase()) : wName(x.ex.letter, pid) || x.ex.name }))
+    .sort((a, b) => b.last.date.localeCompare(a.last.date));
+}
+const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
 function wkToggle(pid, d) {
   const W = ui.wk, P = profile(pid); if (!W.sel || !P) return;
   const cur = wkExs(pid, d).find(e => sameName(e.name, W.sel.name));
@@ -5874,6 +5892,12 @@ function wkAct(act, b) {
       ex.planDate = today(); save(); return re(); }
     case 'wk-mv': { if (!ex) return; const list = letterExs(ex.letter, pid), i = list.indexOf(ex), j = i + +b.dataset.d; if (j < 0 || j >= list.length) return;
       [list[i], list[j]] = [list[j], list[i]]; list.forEach((e, k) => { e.order = k + 1; }); save(); return re(); }
+    case 'wk-src': { const x = ex && wkSources(pid, ex).find(y => y.key === b.dataset.k); if (!x) return;
+      if (x.key.includes('|')) ex.twin = x.key; else { delete ex.twin; ex.name = x.ex.name; }
+      const done = x.last.sets.filter(y => y.done), from = done.length ? done : x.last.sets;
+      ex.sets = from.map(y => ({ carga: y.carga ?? null, reps: y.reps ?? null }));
+      ['rest', 'method', 'note'].forEach(f => { if (x.ex[f] && !ex[f]) ex[f] = x.ex[f]; });
+      ex.planDate = today(); save(); toast(`<b>${esc(ex.name)}</b> agora compara com ${esc(x.label)}: ${ex.sets.length} séries da última vez.`); return re(); }
     case 'wk-del': if (ex) wkRemove(pid, ex); return re();
     case 'wk-save': return saveWeekNow(pid, b);
     case 'wk-unalso': { // só tira o treino antigo deste dia da semana; o treino e as cargas continuam guardados na aba Treinos
@@ -6578,7 +6602,7 @@ $main.addEventListener('click', e => {
       box.querySelectorAll('.mm-sel').forEach(x => x.classList.remove('mm-sel')); if (ui.mmSel != null) b.classList.add('mm-sel');
       box.querySelector('.mm-name').innerHTML = ui.mmSel != null ? `<b>${m[1]}</b>` : 'Toque em um músculo do desenho para ver o nome.'; return;
     }
-    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-unalso': case 'wk-save': return wkAct(act, b);
+    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-unalso': case 'wk-save': return wkAct(act, b);
     case 'b-mode': ui.bMode = b.dataset.v; try { localStorage.setItem('pf-montar-modo', ui.bMode); } catch (e) {} ui.wk = null; return render();
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
     case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
@@ -8624,7 +8648,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:37';
+const APP_VERSION = '29/10-12:44';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
