@@ -616,6 +616,8 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
   .wk-day:has(.wk-ex.open){grid-column:auto}.wk-ed{padding:0 6px 6px}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-ed .bw-step button{width:30px;height:30px;font-size:16px}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}}
 .wk-save{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:14px 0 4px}.wk-save .btn{padding:12px 20px;font-size:15px;font-weight:800}.wk-save small{color:var(--muted);font-size:12.5px;flex:1 1 220px}.wk-save small.ok{color:var(--acc);font-weight:700}
 .wk-also{margin:0;font-size:12px;color:var(--muted)}.wk-also .link{font-size:12px;padding:4px 0}
+.wk-src{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}.wk-src>small{width:100%;color:var(--muted);font-weight:700}.wk-src button{display:flex;flex-direction:column;align-items:flex-start;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.wk-src button small{color:var(--muted);font-size:11px}.wk-src button.on{border-color:var(--acc);background:var(--acc-soft)}.wk-src button.on b::before{content:'✓ '}
+.lr{margin:0 0 14px}.lr h3{margin:0 0 4px}.lr-it{padding:10px 0;border-top:1px solid var(--line)}.lr-it>small{display:block;color:var(--muted)}
 .wk-mine{display:inline-block;padding:1px 7px;border-radius:99px;background:var(--acc-soft);color:var(--acc)!important;font-weight:800}
 .wk-in{display:block;font-style:normal;font-size:12px;color:var(--acc);font-weight:700}
 .bw-step{display:flex;align-items:center;gap:6px}.bw-step small{flex:1;color:var(--muted);font-weight:700;font-size:12.5px}
@@ -1991,10 +1993,20 @@ const exHistory = exId => {
   db.sessions.forEach(s => { if (!ids.has(s.exId) || !hasDone(s)) return; const k = s.exId + '|' + s.date, o = by.get(k); if (!o || sessRank(s) > sessRank(o)) by.set(k, s); });
   return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
 };
-const prevSession = (exId, date) => exHistory(exId).filter(s => s.date < date).pop();
+// Livre ou máquina (exercícios que têm os dois jeitos, ex.: Supino reto x Chest press): cada jeito tem a sua carga.
+// O "antes" e as comparações só olham as vezes feitas do mesmo jeito; registro antigo sem marca vale o padrão do exercício.
+const eqDefault = ex => { const k = PFA.guessAnim(ex.name, ex.group), pr = PFA.pairOf(k); return pr ? (k === pr[1] ? 'maq' : 'livre') : ''; };
+const sessEq = s => { const e = exById(s.exId); return e && eqDefault(e) ? s.equip || e.equip || eqDefault(e) : ''; };
+const prevSession = (exId, date) => {
+  const h = exHistory(exId).filter(s => s.date < date), ex = exById(exId);
+  if (!ex || !eqDefault(ex)) return h.pop();
+  const eq = exEq(ex, date) || eqDefault(ex);
+  return h.filter(s => sessEq(s) === eq).pop();
+};
 const sessionOn = (exId, date) => bestSession(db.sessions.filter(s => s.exId === exId && s.date === date));
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
-const cardioBetween = (from, to, pid = ui.profile) => profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0);
+// soma arredondada: minutos quebrados do cronômetro (ex.: 10,2 + 0,1) não podem virar 76.27000000000001
+const cardioBetween = (from, to, pid = ui.profile) => Math.round(profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0) * 10) / 10;
 // Divisão da semana do aluno (feita pelo professor): dia da semana (0=domingo) -> grupos
 const WEEK = [[1, 'Segunda'], [2, 'Terça'], [3, 'Quarta'], [4, 'Quinta'], [5, 'Sexta'], [6, 'Sábado'], [0, 'Domingo']];
 // Plano do dia: o professor pode marcar um treino só para uma data (planejamento); senão vale a divisão da semana
@@ -3500,6 +3512,7 @@ function renderPainelV2() {
     <h2 class="v2-hello">${v2Hello()}, ${esc(firstName(me))}</h2><p class="v2-muted" style="margin:0 0 16px">${v2DayLabel(today())}</p>
     <div class="v2-kpis"><button class="v2-tile dk" data-view="alunos">${v2Ico(V2PNAV.alunos)}<b class="xl">${sts.length}</b><span>alunos</span></button>
       <div class="v2-tile acc"><b>${todayL.length}</b><span>treinaram hoje</span></div><div class="v2-tile lil"><b>${week.length}</b><span>ativos na semana</span></div></div>
+    ${linkReviewHtml()}
     <button class="ia-cta" data-view="ia"><span class="ia-badge">${v2Ico(V2PNAV.ia)}</span><span class="grow"><b>Assistente</b><small>Pergunte qualquer coisa sobre seus alunos e o app</small></span>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>
     ${reqs}
     <div class="v2-d2"><div class="col">
@@ -4251,7 +4264,7 @@ function dayStats(pid, d) {
   if (est && (!min || min < est)) min = Math.min(300, est);
   const ws = [...new Set(ss.map(x => (exById(x.exId) || {}).letter).filter(Boolean))].map(L => wName(L, pid));
   return { min, ws, sets: ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0), ex: ss.length,
-    kg: ss.reduce((a, x) => a + vol(x.sets), 0), cardio: db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) };
+    kg: ss.reduce((a, x) => a + vol(x.sets), 0), cardio: Math.round(db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) * 10) / 10 };
 }
 const durTxt = m => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') + 'min' : ''}` : `${m} min`;
 const siteTxt = () => (location.host + location.pathname).replace(/\/(index\.html)?$/, '');
@@ -4546,13 +4559,16 @@ function rowClass(x, p) {
 function compareHtml(s, prev) {
   const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && noLoadOf(ex)) || tm, u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
   const reps = sets => sets.reduce((a, x) => a + (x.done && x.reps != null ? x.reps : 0), 0);
-  const total = nl ? reps(s.sets) : vol(s.sets), pt = prev ? (nl ? reps(prev.sets) : vol(prev.sets)) : 0, max = Math.max(total, pt, 1);
+  // número de séries diferente da outra vez (tirou ou colocou uma): compara só as mesmas séries (as primeiras), para a meta ser justa
+  const cut = prev && prev.sets.length !== s.sets.length ? Math.min(prev.sets.length, s.sets.length) : 0;
+  const ts = cut ? s.sets.slice(0, cut) : s.sets, ps = prev ? (cut ? prev.sets.slice(0, cut) : prev.sets) : [];
+  const total = nl ? reps(ts) : vol(ts), pt = prev ? (nl ? reps(ps) : vol(ps)) : 0, max = Math.max(total, pt, 1);
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
-  return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}</small></span>
+  return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}${cut && s.sets.length > cut ? ` · ${cut} séries` : ''}</small></span>
       <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${tm ? fmtSec(total) : `${fmt(total)} ${u}`}</b></div>
-    ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}</small></span>
+    ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}${cut ? ` · ${cut} série${cut === 1 ? '' : 's'}` : ''}</small></span>
       <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${tm ? fmtSec(pt) : `${fmt(pt)} ${u}`}</b></div>`
-      : '<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>'}
+      : `<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>${ex && !(CLOUD && cloud && cloud.role === 'student') ? (src => src.length ? `<div class="wk-src"><small>Puxar cargas de</small>${src.map(x => `<button data-act="wk-src" data-id="${ex.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)}</small></button>`).join('')}</div>` : '')(wkSources(ex.profileId, ex)) : ''}`}
     <div>${prev ? progress(total, pt, finished, u) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
 }
 function refreshCard(exId) {
@@ -4572,7 +4588,7 @@ function cardioHtml(noBanner) {
   const ws = weekStart(ui.date), now = cardioBetween(ws, addDays(ws, 6)), before = cardioBetween(addDays(ws, -7), addDays(ws, -1));
   const day = profCardio().filter(c => c.date === ui.date);
   const w = ui.watch;
-  return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>Cardio</h2><small>Semana: <b>${now} min</b> · anterior ${before} min</small></div>${delta(now, before)}</div>`}
+  return `${noBanner ? '' : `<div class="banner"><div class="grow"><h2>Cardio</h2><small>Semana: <b>${fmt(now)} min</b> · anterior ${fmt(before)} min</small></div>${delta(now, before)}</div>`}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Qual cardio você vai fazer?</h3></div></div>
       <div class="modes">${MODES.map(([id, label]) => `<button class="${ui.mode === id ? 'on' : ''}" data-act="mode" data-m="${id}">${label}</button>`).join('')}</div>
@@ -4588,7 +4604,7 @@ function cardioHtml(noBanner) {
     </section>
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Cardio ${ui.date === today() ? 'de hoje' : 'do dia ' + fmtDate(ui.date)}</h3>
-        <small>${day.length ? `Total: ${day.reduce((a, c) => a + c.min, 0)} min` : 'Nada registrado ainda'}</small></div></div>
+        <small>${day.length ? `Total: ${fmt(day.reduce((a, c) => a + c.min, 0))} min` : 'Nada registrado ainda'}</small></div></div>
       ${day.map(c => `<div class="list-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b></div>
         <b>${fmtMin(c.min)} min</b><button class="icon" data-act="del-cardio" data-id="${c.id}" aria-label="Apagar">✕</button></div>`).join('')}
     </section>`;
@@ -4669,14 +4685,14 @@ function periodReport(pid, ws, we, pa, pb, inside) {
   // cada exercício (gêmeos juntos): melhor série da semana x última vez antes da semana
   const up = [], down = [], same = [], cmp = [], seen = new Set();
   for (const s of ss.slice().sort((a, b) => b.date.localeCompare(a.date))) {
-    const ex = exById(s.exId); if (!ex || seen.has(twinKey(ex))) continue; seen.add(twinKey(ex));
-    const own = ss.filter(x => twinIds(s.exId).has(x.exId)).sort((a, b) => a.date.localeCompare(b.date));
-    let hist = exHistory(s.exId).filter(x => x.date < ws), prev = hist.length && topSet(hist[hist.length - 1]), mine = own;
+    const ex = exById(s.exId), eq = sessEq(s); if (!ex || seen.has(twinKey(ex) + eq)) continue; seen.add(twinKey(ex) + eq);
+    const own = ss.filter(x => twinIds(s.exId).has(x.exId) && sessEq(x) === eq).sort((a, b) => a.date.localeCompare(b.date));
+    let hist = exHistory(s.exId).filter(x => x.date < ws && sessEq(x) === eq), prev = hist.length && topSet(hist[hist.length - 1]), mine = own;
     // mês: exercício que começou neste mês compara a primeira vez do mês com o melhor do resto do mês
     if (!prev && inside && own.length >= 2) { prev = topSet(own[0]); hist = [own[0]]; mine = own.slice(1); }
     const now = mine.map(topSet).filter(Boolean).reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
     if (!now || !prev) continue;
-    const it = { name: ex.name, a: prev, b: now, rec: now.carga > Math.max(0, ...hist.map(x => (topSet(x) || {}).carga || 0)) }; // rec: maior carga que já fez
+    const it = { name: ex.name + (eq && eq !== eqDefault(ex) ? (eq === 'maq' ? ' (máquina)' : ' (livre)') : ''), a: prev, b: now, rec: now.carga > Math.max(0, ...hist.map(x => (topSet(x) || {}).carga || 0)) }; // rec: maior carga que já fez
     if (prev.carga > 0) cmp.push((now.carga - prev.carga) / prev.carga);
     if (now.carga > prev.carga || now.carga === prev.carga && (now.reps || 0) > (prev.reps || 0)) up.push(it);
     else if (now.carga < prev.carga) down.push(it);
@@ -5066,22 +5082,32 @@ function renderEvolution() {
     const cw = data.weeks.map(w => cardioBetween(w, addDays(w, 6)));
     const byMode = MODES.map(m => [m, profCardio().filter(c => c.mode === m[0] && c.date >= data.weeks[0]).reduce((a, c) => a + c.min, 0)]).filter(x => x[1]);
     if (cw.some(Boolean)) html += `<section class="card"><div class="card-h"><div class="grow"><h3>Cardio · minutos por semana</h3>
-        <small>Total no período: ${cw.reduce((a, b) => a + b, 0)} min · ${byMode.map(([m, v]) => `${m[1]} ${fmt(v)} min`).join(' · ')}</small></div></div>
+        <small>Total no período: ${fmt(cw.reduce((a, b) => a + b, 0))} min · ${byMode.map(([m, v]) => `${m[1]} ${fmt(v)} min`).join(' · ')}</small></div></div>
       ${sparkline(cw)}<table class="hist"><thead><tr><th>Semana</th><th>Minutos</th><th></th></tr></thead><tbody>
-      ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${v} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
+      ${data.weeks.map((w, i) => [w, cw[i], cw[i - 1]]).filter(r => r[1]).reverse().map(([w, v, b]) => `<tr><td>${fmtDate(w)}</td><td><b>${fmt(v)} min</b></td><td>${b ? delta(v, b) : ''}</td></tr>`).join('')}
       </tbody></table></section>`;
 
-    // Por grupo: kg total de cada treino do grupo (soma de carga × reps de todos os exercícios)
+    // Por grupo: kg total por semana do aluno (Semana 1 = 7 dias a partir do primeiro treino). Treinar na sexta em vez
+    // da quinta conta na mesma semana. A comparação usa só as mesmas séries dos mesmos exercícios nas duas semanas.
+    // Só conta o que foi feito no app: o histórico antigo importado (sem marca de envio/edição no app) e o que veio antes
+    // do cadastro do aluno ficam fora.
+    const pf = profile(ui.profile), byApp = s => s.fin || s.t0 || s.up || s.dv || s.by;
+    const start = [...profSessions().filter(byApp).map(s => s.date), ...profCardio().map(c => c.date)].filter(d => !pf.since || d >= pf.since).sort()[0] || trainedDates().find(d => !pf.since || d >= pf.since), wk = d => Math.floor(daysBetween(start, d) / 7) + 1, curWk = start ? wk(today()) : 0;
     for (const g of GROUPS) {
-      const exs = profExs().filter(e => e.group === g), ids = new Set(exs.map(e => e.id));
-      const byDay = {};
-      for (const s of db.sessions) if (ids.has(s.exId) && hasDone(s)) (byDay[s.date] = byDay[s.date] || []).push(s);
-      const days = Object.keys(byDay).sort().slice(-8);
-      if (!days.length) continue;
-      const rows = days.map(d => {
-        const ss = byDay[d], done = ss.flatMap(s => s.sets.filter(x => x.done));
-        return { d, ex: ss.length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0) };
+      const exs = profExs().filter(e => e.group === g), exMap = new Map(exs.map(e => [e.id, e]));
+      const best = new Map(); // um registro por exercício e dia (o mais completo)
+      for (const s of db.sessions) if (exMap.has(s.exId) && hasDone(s) && s.date >= start) { const k = s.exId + '|' + s.date, o = best.get(k); if (!o || sessRank(s) > sessRank(o)) best.set(k, s); }
+      const byWk = {};
+      for (const s of [...best.values()].sort((a, b) => a.date.localeCompare(b.date))) (byWk[wk(s.date)] = byWk[wk(s.date)] || []).push(s);
+      const nums = Object.keys(byWk).map(Number).sort((a, b) => a - b).slice(-8);
+      if (!nums.length) continue;
+      const rows = nums.map(n => {
+        const ss = byWk[n], done = ss.flatMap(s => s.sets.filter(x => x.done)), sets = {};
+        for (const s of ss) { const k = twinKey(exMap.get(s.exId)) + sessEq(s); sets[k] = (sets[k] || []).concat(s.sets.filter(x => x.done)); }
+        return { n, from: addDays(start, (n - 1) * 7), ex: Object.keys(sets).length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0), bySet: sets };
       });
+      // mesmas séries: de cada exercício feito nas duas semanas, conta só a quantidade de séries que as duas têm
+      const fair = (a, b) => { let x = 0, y = 0; for (const k in a.bySet) if (b.bySet[k]) { const m = Math.min(a.bySet[k].length, b.bySet[k].length); x += vol(a.bySet[k].slice(0, m)); y += vol(b.bySet[k].slice(0, m)); } return y ? delta(x, y) : ''; };
       const perEx = exs.map(e => {
         const h = exHistory(e.id).slice(-6);
         if (!h.length) return '';
@@ -5093,12 +5119,12 @@ function renderEvolution() {
               <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
           }).join('')}</tbody></table>`;
       }).join('');
-      html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por treino</h3>
-          <small>Soma de carga × repetições de todos os exercícios de ${g.toLowerCase()} no dia</small></div></div>
+      html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por semana</h3>
+          <small>Soma de carga × repetições de ${g.toLowerCase()} na semana. A Semana 1 começa no primeiro treino no app (${fmtDate(start)}) e cada semana tem 7 dias. A % compara as mesmas séries.</small></div></div>
         ${sparkline(rows.map(r => r.total))}
-        <div class="tbl-scroll"><table class="hist"><thead><tr><th>Data</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
-        ${rows.slice().reverse().map((r, i, arr) => `<tr><td>${fmtDate(r.d)}</td><td>${r.ex}</td><td>${r.sets}</td><td>${r.reps}</td>
-          <td><b>${fmt(r.total)}</b></td><td>${arr[i + 1] ? delta(r.total, arr[i + 1].total) : ''}</td></tr>`).join('')}</tbody></table></div>
+        <div class="tbl-scroll"><table class="hist"><thead><tr><th>Semana</th><th>Exerc.</th><th>Séries</th><th>Reps</th><th>Total kg</th><th></th></tr></thead><tbody>
+        ${rows.slice().reverse().map((r, i, arr) => `<tr><td style="white-space:nowrap"><b>Semana ${r.n}</b><br><small style="color:var(--muted);font-weight:400">${r.n === curWk ? 'em andamento' : `${fmtDate(r.from)} a ${fmtDate(addDays(r.from, 6))}`}</small></td><td>${r.ex}</td><td>${r.sets}</td><td>${r.reps}</td>
+          <td><b>${fmt(r.total)}</b></td><td>${arr[i + 1] ? fair(r, arr[i + 1]) : ''}</td></tr>`).join('')}</tbody></table></div>
         <details class="tbl" style="margin-top:10px"><summary>Ver por exercício</summary>${perEx}</details></section>`;
     }
   }
@@ -5307,7 +5333,7 @@ function msgTemplate(kind, p) {
     const [now, before] = weekPair(null, p.id, today());
     const ws = weekStart(today()), dias = trainedDates(p.id).filter(d => d >= ws).length, cm = cardioBetween(ws, addDays(ws, 6), p.id);
     const pc = before ? Math.round((now - before) / before * 100) : null;
-    return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${cm} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim!' : 'Vamos pra cima essa semana!'}`;
+    return `Oi, ${n}! Resumo da sua semana:\n• ${dias} ${dias === 1 ? 'treino' : 'treinos'}\n• ${fmt(now)} kg levantados${pc != null ? ` (${pc >= 0 ? '+' : ''}${pc}% vs semana passada)` : ''}\n• ${fmt(cm)} min de cardio\n\n${pc != null && pc > 0 ? 'Mandou bem, continue assim!' : 'Vamos pra cima essa semana!'}`;
   }
   if (kind === 'mes') return monthText(p.id, repMonth());
   if (kind === 'lembrete') return `Oi, ${n}! Passando pra lembrar do treino de hoje. Te espero!`;
@@ -5814,9 +5840,11 @@ function weekHtml(pid) {
     return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${W.sel ? 'pick' : ''} ${inSel ? 'has' : ''}">
       <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
       ${W.sel ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? '✓ Está aqui' : '＋ Colocar aqui'}</button>` : ''}
-      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}</span><small>${e.sets.length} × ${numVal(allSame(e.sets, 'reps')) || '–'}${isTimed(e) ? ' s' : ''}</small></button>
+      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} × ${numVal(allSame(e.sets, 'reps')) || '–'}${isTimed(e) ? ' s' : ''}</small></button>
         ${W.open === e.id ? `<div class="wk-ed"><div class="bw-step"><small>Séries</small><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${e.sets.length}</b><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
           <div class="bw-step"><small>${isTimed(e) ? 'Segundos' : 'Repetições'}</small><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="-1" aria-label="Menos">−</button><b>${numVal(allSame(e.sets, 'reps')) || '–'}</b><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="1" aria-label="Mais">＋</button></div>
+          ${(src => src.length ? `<div class="wk-src"><small>Comparar cargas com</small>${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
+            return `<button class="${twinKey(e) === x.key ? 'on' : ''}" data-act="wk-src" data-id="${e.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)} · ${top && top.carga != null ? numVal(top.carga) + ' kg' : 'sem carga'}${top && top.reps != null ? ' × ' + numVal(top.reps) : ''}</small></button>`; }).join('')}</div>` : '')(wkSources(pid, e))}
           <div class="wk-eda"><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="1" aria-label="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
           <button class="btn danger" data-act="wk-del" data-id="${e.id}">Tirar do dia</button></div></div>` : ''}</div>`).join('')}
       ${also.map(x => `<p class="wk-also">Também neste dia: <b>${esc(wName(x, pid))}</b><br><button class="link" data-act="wk-unalso" data-d="${d}" data-w="${x}">Tirar deste dia</button></p>`).join('')}</div>`;
@@ -5833,6 +5861,60 @@ function weekHtml(pid) {
       <div class="wk-bd">${WEEK.map(([d]) => `<button class="${wkExs(pid, d).some(e => sameName(e.name, W.sel.name)) ? 'on' : ''}" data-act="wk-put" data-d="${d}">${WK_SHORT[d]}</button>`).join('')}</div></div><div class="wk-pad"></div>` : ''}`;
 }
 // coloca ou tira o exercício escolhido do dia (o treino do dia é criado na primeira vez e entra na divisão da semana)
+// De onde vêm as cargas de comparação ("antes") de um exercício do dia: cada histórico já feito com nome igual ou parecido
+// (ex.: o mesmo exercício na Evoque e na Sky). Escolher um liga o exercício a esse histórico e copia as últimas cargas e repetições.
+// nome "puro" para achar o mesmo exercício escrito de outro jeito ("Agachamento no Smith" = "Agachamento Smith")
+const nameCore = n => normName(n).replace(/\(.*?\)/g, ' ').split(/[^a-z0-9]+/).filter(w => w && !/^(no|na|nos|nas|com|de|da|do|das|dos|em|a|o|e)$/.test(w)).join('');
+function wkSources(pid, ex) {
+  const flat = n => normName(n).replace(/[^a-z0-9]/g, ''), me = flat(ex.name), core = nameCore(ex.name), out = new Map();
+  db.exercises.filter(e => e.profileId === pid && e.id !== ex.id && e.name).forEach(e => {
+    const o = flat(e.name); if (!o || !(o === me || o.includes(me) || me.includes(o) || nameCore(e.name) === core)) return;
+    const last = db.sessions.filter(x => x.exId === e.id && hasDone(x)).sort((a, b) => b.date.localeCompare(a.date))[0];
+    if (!last) return;
+    const k = twinKey(e), cur = out.get(k);
+    if (!cur || last.date > cur.last.date) out.set(k, { key: k, ex: e, last });
+  });
+  return [...out.values()].map(x => ({ ...x, label: x.key.includes('|') ? x.key.split('|')[0].replace(/^./, c => c.toUpperCase()) : sameName(x.ex.name, ex.name) ? wName(x.ex.letter, pid) : x.ex.name }))
+    .sort((a, b) => b.last.date.localeCompare(a.last.date));
+}
+// liga o exercício ao histórico escolhido e copia as cargas e repetições da última vez (também no treino de hoje, se ainda não começou)
+function wkLink(ex, x, copy = true) {
+  if (twinKey(ex) !== x.key) ex.twin = x.key; // mesmo histórico, sem mudar o nome
+  delete ex.noLink;
+  if (!copy) return;
+  const done = x.last.sets.filter(y => y.done), from = done.length ? done : x.last.sets;
+  ex.sets = from.map(y => ({ carga: y.carga ?? null, reps: y.reps ?? null }));
+  ['rest', 'method', 'note'].forEach(f => { if (x.ex[f] && !ex[f]) ex[f] = x.ex[f]; });
+  ex.planDate = today();
+  const s = sessionOn(ex.id, today());
+  if (s && !s.sets.some(y => y.done)) s.sets = ex.sets.map(y => ({ carga: y.carga, reps: y.reps, done: false }));
+}
+// sozinho só liga a um nome igual ou ao mesmo exercício de outra academia (Evoque/Sky), nunca a um parecido de outro jeito
+const wkAutoOk = (e, day) => x => (day && x.key.includes('|')) || nameCore(x.ex.name) === nameCore(e.name);
+// exercício sem nenhum histórico: liga sozinho ao histórico parecido mais recente (ex.: "Crossover" novo pega o da Evoque)
+// (nos dias do Montar por dia também pega o mesmo exercício de outra academia e copia as cargas; nos outros treinos só liga o histórico)
+const noHistory = e => { const ids = twinIds(e.id); return !db.sessions.some(x => ids.has(x.exId) && hasDone(x)); };
+const liveExs = pid => db.exercises.filter(e => e.profileId === pid && !e.archived && e.letter && e.name && (profile(pid).workouts || []).some(w => w.id === e.letter));
+function wkAutoLink(pid) {
+  let n = 0;
+  liveExs(pid).forEach(e => {
+    if (!noHistory(e)) return;
+    const day = (profile(pid).workouts.find(w => w.id === e.letter) || {}).day != null;
+    const x = wkSources(pid, e).find(wkAutoOk(e, day)); if (x) { wkLink(e, x, day); n++; }
+  });
+  return n;
+}
+// para o professor conferir: exercícios sem anterior que têm um histórico de nome parecido
+const linkReview = () => db.profiles.flatMap(p => liveExs(p.id).filter(e => !e.noLink && noHistory(e)).map(e => ({ p, e, src: wkSources(p.id, e) })).filter(x => x.src.length));
+function linkReviewHtml() {
+  const list = linkReview(); if (!list.length) return '';
+  return `<div class="card lr"><h3>Conferir comparação de cargas</h3><p class="hint">Estes exercícios aparecem sem "anterior", mas parecem com um que a pessoa já fez. Toque no certo para juntar o histórico, ou em "Não é o mesmo".</p>
+    ${list.map(({ p, e, src }) => `<div class="lr-it"><b>${esc(firstName(p))} · ${esc(e.name)}</b><small>${esc(wName(e.letter, p.id))}</small>
+      <div class="wk-src">${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
+        return `<button data-act="wk-src" data-id="${e.id}" data-k="${esc(x.key)}"><b>${esc(x.ex.name)}</b><small>${x.ex.letter && !x.ex.archived ? esc(wName(x.ex.letter, p.id)) : 'tirado do treino'} · ${fmtDate(x.last.date)}${top && top.carga != null ? ' · ' + numVal(top.carga) + ' kg' : ''}</small></button>`; }).join('')}
+        <button data-act="wk-nolink" data-id="${e.id}"><b>Não é o mesmo</b><small>deixar começar do zero</small></button></div></div>`).join('')}</div>`;
+}
+const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
 function wkToggle(pid, d) {
   const W = ui.wk, P = profile(pid); if (!W.sel || !P) return;
   const cur = wkExs(pid, d).find(e => sameName(e.name, W.sel.name));
@@ -5852,6 +5934,7 @@ function wkToggle(pid, d) {
       ...(old && old.twin ? { twin: old.twin } : {}), ...(old && old.rest ? { rest: old.rest } : {}), ...(old && old.method ? { method: old.method } : {}), ...(old && old.note ? { note: old.note } : {}),
       sets: old ? old.sets.map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })) : Array.from({ length: prev ? prev.sets.length : 3 }, () => ({ carga: null, reps: isTimed(W.sel) ? 30 : 10 })),
       ...(old ? (old.noLoad ? { noLoad: true } : {}) : noLoadOf(W.sel) || NOLOAD_RX.test(normName(W.sel.name)) ? { noLoad: true } : {}) });
+    if (!old) { const ne = db.exercises[db.exercises.length - 1], x = wkSources(pid, ne).find(wkAutoOk(ne, true)); if (x) wkLink(ne, x); }
   }
   save();
 }
@@ -5886,6 +5969,11 @@ async function saveWeekNow(pid, b) {
   }
 }
 function wkAct(act, b) {
+  if (act === 'wk-nolink') { const ex = exById(b.dataset.id); if (ex) { ex.noLink = true; save(); const y = scrollY; render(); scrollTo(0, y); } return; }
+  if (act === 'wk-src') { const ex = exById(b.dataset.id), x = ex && wkSources(ex.profileId, ex).find(y => y.key === b.dataset.k); if (!x) return;
+    const day = (workoutsOf(ex.profileId).find(w => w.id === ex.letter) || {}).day != null; // nos dias do Montar por dia também copia as cargas
+    wkLink(ex, x, day); save(); toast(`<b>${esc(ex.name)}</b> agora compara com ${esc(x.label)}${day ? `: ${ex.sets.length} séries da última vez` : ''}.`);
+    const y = scrollY; render(); scrollTo(0, y); return; }
   const pid = ui.profile, W = ui.wk; if (!W) return;
   const re = () => { const y = scrollY, l = document.getElementById('wkList'), ly = l ? l.scrollTop : 0; render(); scrollTo(0, y); const n = document.getElementById('wkList'); if (n) n.scrollTop = ly; };
   const ex = b.dataset.id && exById(b.dataset.id);
@@ -6355,7 +6443,7 @@ function perfilHtml(p, desk) {
       <div class="kv">
         <div><b>${s.weekDays}</b><span>treinos na semana</span></div>
         <div><b>${fmt(s.now)} kg</b><span>na semana ${delta(s.now, s.before)}</span></div>
-        <div><b>${cm} min</b><span>cardio na semana</span></div>
+        <div><b>${fmt(cm)} min</b><span>cardio na semana</span></div>
         <div><b>${trainedDates(p.id).length}</b><span>treinos no total</span></div>
       </div>
       <p class="plan-g" style="margin-top:14px">kg por grupo · semana atual × anterior</p>
@@ -6607,7 +6695,7 @@ $main.addEventListener('click', e => {
       box.querySelectorAll('.mm-sel').forEach(x => x.classList.remove('mm-sel')); if (ui.mmSel != null) b.classList.add('mm-sel');
       box.querySelector('.mm-name').innerHTML = ui.mmSel != null ? `<b>${m[1]}</b>` : 'Toque em um músculo do desenho para ver o nome.'; return;
     }
-    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-unalso': case 'wk-save': return wkAct(act, b);
+    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-nolink': case 'wk-unalso': case 'wk-save': return wkAct(act, b);
     case 'b-mode': ui.bMode = b.dataset.v; try { localStorage.setItem('pf-montar-modo', ui.bMode); } catch (e) {} ui.wk = null; return render();
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
     case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
@@ -8090,6 +8178,8 @@ function runFixes() {
   if (!cloud || cloud.role !== 'admin' || !cloud.ready || !cloud.serverSeen || cloud.fixesRan) return;
   cloud.fixesRan = true;
   if (adoptRemoved()) { render(); toast('O exercício que saiu e voltou ao treino recuperou as cargas e o histórico.'); }
+  const linked = db.profiles.reduce((a, p) => a + wkAutoLink(p.id), 0);
+  if (linked) { save(); render(); toast(`${linked} exercício${linked === 1 ? '' : 's'} voltou a comparar com as cargas anteriores (era o mesmo exercício escrito de outro jeito).`); }
   fixOnce().catch(e => console.warn('ajuste:', e));
 }
 // Primeira vez do professor: a nuvem está vazia. Oferece enviar os dados deste aparelho.
@@ -8653,7 +8743,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-12:44';
+const APP_VERSION = '29/10-21:17';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
