@@ -2515,6 +2515,11 @@ Object.assign(POSES, {
   chestpress: { st: `${SEAT(44)}<path d="M92 12v67" ${EQ} stroke-width="4"/>`, w: 'grip',
     A: P([51, 23], [50, 31], [50, 33], [42, 43], [55, 40], [52, 57], [70, 58], [71, 78], [78, 78]),
     B: P([51, 23], [50, 31], [50, 33], [62, 36], [75, 36], [52, 57], [70, 58], [71, 78], [78, 78]) },
+  // crucifixo na máquina (pec fly), visto de frente: encosto alto, barra em cima com os dois braços da máquina;
+  // segura as manoplas com os braços quase esticados, abre bem e fecha na frente do peito
+  crucmaq: { front: true, st: `<path d="M60 4v11" ${EQ} stroke-width="5"/><path d="M28 5h76M104 5v74M92 79h20" ${EQ} stroke-width="4"/><rect x="95" y="44" width="8" height="26" rx="1.5" fill="color-mix(in srgb, currentColor 28%, transparent)"/><path d="M95 50.5h8M95 57h8M95 63.5h8" stroke="color-mix(in srgb, currentColor 45%, transparent)" stroke-width="1"/><path d="M99 8v36" stroke="color-mix(in srgb, currentColor 40%, transparent)" stroke-width="1.5"/><rect x="48" y="14" width="24" height="37" rx="5" fill="color-mix(in srgb, currentColor 20%, transparent)"/>${FRONTSEAT}<path d="M48 79h24" ${EQ} stroke-width="5"/>`, w: 'vgrip', lever: [32, 5],
+    A: P([60, 13], [60, 21], [52, 24], [38, 26], [24, 28], [55, 49], [54, 64], [54, 79], [51, 79]),
+    B: P([60, 13], [60, 21], [52, 24], [47, 29], [56, 31], [55, 49], [54, 64], [54, 79], [51, 79]) },
   peck: { front: true, st: FRONTSEAT, w: 'epad',
     A: P([60, 13], [60, 21], [52, 24], [38, 25], [38, 12], [55, 49], [54, 64], [54, 79], [51, 79]),
     B: P([60, 13], [60, 21], [52, 24], [51, 27], [56, 13], [55, 49], [54, 64], [54, 79], [51, 79]) },
@@ -2675,7 +2680,7 @@ Object.assign(POSES, {
     B: X(P([71, 35], [64, 38], [62, 39], [52, 40], [39, 39], [38, 42], [40, 55], [28, 56], [24, 54]), { k2: [32, 62], a2: [34, 79], t2: [41, 79] }) },
 });
 // Mesmo exercício feito livre ou na máquina: [livre, máquina]
-const VARIANTS = [['supino', 'chestpress'], ['supinoinc', 'chestpressinc'], ['supinoinchalter', 'chestpressinc'], ['supinohalter', 'chestpress'], ['cavalinho', 'cavalinhomaq'], ['remada', 'remadamaq'], ['agacha', 'smith'], ['desenv', 'desenvmaq']];
+const VARIANTS = [['supino', 'chestpress'], ['supinoinc', 'chestpressinc'], ['supinoinchalter', 'chestpressinc'], ['supinohalter', 'chestpress'], ['cavalinho', 'cavalinhomaq'], ['remada', 'remadamaq'], ['agacha', 'smith'], ['desenv', 'desenvmaq'], ['crucifixo', 'crucmaq']];
 const pairOf = k => VARIANTS.find(v => v.includes(k)) || null;
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 const L = (p, q, w, extra = '') => `<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" stroke-width="${w}" ${extra}/>`;
@@ -2684,6 +2689,7 @@ function weightAt(kind, w, a, e, k, hp) {
   const acc = 'fill="var(--accent)" stroke="currentColor" stroke-width="1.6"';
   if (kind === 'bar') return `<circle cx="${w[0]}" cy="${w[1]}" r="7" ${acc}/><circle cx="${w[0]}" cy="${w[1]}" r="1.6" fill="currentColor"/>`;
   if (kind === 'db') return `<rect x="${w[0] - 5}" y="${w[1] - 3}" width="10" height="6" rx="2" ${acc}/>`;
+  if (kind === 'vgrip') return `<rect x="${w[0] - 2.6}" y="${w[1] - 6}" width="5.2" height="12" rx="2.6" ${acc}/>`;
   if (kind === 'grip') return `<circle cx="${w[0]}" cy="${w[1]}" r="3.2" ${acc}/>`;
   if (kind === 'pad') return `<circle cx="${a[0]}" cy="${a[1]}" r="4.5" ${acc}/>`;
   if ((kind === 'padf' || kind === 'padb') && k) { // rolo encostado na frente (extensora) ou atrás (flexora) da canela
@@ -2707,6 +2713,7 @@ function figure(key, t) {
   if (D.front) {
     const sides = [q, Object.fromEntries(Object.entries(q).map(([k, v]) => [k, mir(v)]))];
     if (D.cable) sides.forEach((sd, i) => g += cable(i ? mir(D.cable) : D.cable, sd.w));
+    if (D.lever) sides.forEach((sd, i) => g += L(i ? mir(D.lever) : D.lever, sd.w, 4, 'stroke="color-mix(in srgb, currentColor 55%, transparent)" stroke-linecap="round"'));
     sides.forEach(sd => { g += H(sd.hp, sd.k, 6.5, ink) + H(sd.k, sd.a, 6, ink) + L(sd.a, sd.t, 4, ink); });
     g += L(q.n, [60, q.hp[1]], 10, ink) + L(q.s, mir(q.s), 7, ink) + L(q.hp, mir(q.hp), 8, ink);
     sides.forEach(sd => { g += H(sd.s, sd.e, 5.5, arm) + H(sd.e, sd.w, 5, arm) + weightAt(D.w, sd.w, sd.a, sd.e, sd.k, sd.hp); });
@@ -2748,7 +2755,7 @@ function guessAnim(name, group) {
     [/supino inclinad.*(maquina|articulad)|chest press inclinad/, 'chestpressinc'], [/supino inclinad.*halter/, 'supinoinchalter'], [/supino inclinad/, 'supinoinc'],
     [/desenvolvimento.*(maquina|articulad)/, 'desenvmaq'],
     [/tricep.*corda|corda.*tricep/, 'tricorda'], [/tricep.*(coice|kickback)|coice.*tricep/, 'tricoice'], [/tricep.*unilateral/, 'triceps'],
-    [/voador inverso|crucifixo inverso|peck deck inverso/, 'crucinv'], [/cadeira flexora|flexora sentad/, 'cadflexora'], [/elevacao frontal/, 'elevfrontal'], [/encolhimento/, 'encolhimento'], [/concentrad/, 'concentrada'], [/triceps (no )?banco|mergulho no banco/, 'mergulho'], [/sumo/, 'sumo'], [/ponte/, 'ponte'], [/infra|elevacao de pernas/, 'infra'], [/polichinelo/, 'polichinelo'], [/remo/, 'remoerg'], [/escada/, 'escada'], [/eliptico/, 'eliptico'], [/bicicleta|bike/, 'bike'], [/esteira|corrida|caminhada/, 'esteira'], [/voador|peck/, 'peck'], [/supino.*maquina|chest press/, 'chestpress'], [/remada baixa/, 'remadabaixa'], [/remada.*(maquina|sentad|articulad)/, 'remadamaq'], [/graviton|assistid/, 'graviton'], [/scott/, 'scott'], [/abdutora/, 'abdutora'], [/adutora/, 'adutora'], [/gluteo|coice|kickback/, 'gluteocabo'], [/pelvica|hip thrust/, 'pelvica'], [/panturrilha sentad/, 'pantsentado'], [/hack/, 'hack'], [/smith/, 'smith'], [/terra/, 'terra'], [/stiff/, 'stiff'], [/afundo|passada|bulgaro/, 'afundo'], [/martelo/, 'martelo'], [/frances/, 'frances'], [/testa/, 'testa'], [/serrote|unilateral/, 'serrote'], [/flexao/, 'flexao'], [/prancha/, 'prancha'], [/abdominal.*maquina/, 'abdmaq'], [/rosca.*(cabo|polia)/, 'roscacabo'], [/supino.*halter/, 'supinohalter'], [/crucifixo|fly/, 'crucifixo'], [/cross/, 'cross'], [/supino|flexao/, 'supino'], [/puxada|pulldown|barra fixa/, 'puxada'], [/remada|serrote|row/, 'remada'], [/desenvolvimento|militar|arnold/, 'desenv'], [/elevacao lateral|elevacao frontal|lateral/, 'lateral'], [/rosca|martelo|scott/, 'rosca'], [/tricep|frances|testa|pulley|coice|mergulho/, 'triceps'], [/leg|hack/, 'legpress'], [/extensora/, 'extensora'], [/flexora|mesa|romeno/, 'flexora'], [/panturrilha|gemeo|soleo/, 'pant'], [/abdom|crunch/, 'abdo'], [/agach|afundo|bulgaro|passada|smith/, 'agacha']];
+    [/voador inverso|crucifixo inverso|peck deck inverso/, 'crucinv'], [/cadeira flexora|flexora sentad/, 'cadflexora'], [/elevacao frontal/, 'elevfrontal'], [/encolhimento/, 'encolhimento'], [/concentrad/, 'concentrada'], [/triceps (no )?banco|mergulho no banco/, 'mergulho'], [/sumo/, 'sumo'], [/ponte/, 'ponte'], [/infra|elevacao de pernas/, 'infra'], [/polichinelo/, 'polichinelo'], [/remo/, 'remoerg'], [/escada/, 'escada'], [/eliptico/, 'eliptico'], [/bicicleta|bike/, 'bike'], [/esteira|corrida|caminhada/, 'esteira'], [/crucifixo.*(polia|cabo)/, 'cross'], [/crucifixo.*(maquina|aparelho)|(pec|peitoral) fly|fly.*maquina/, 'crucmaq'], [/voador|peck/, 'peck'], [/supino.*maquina|chest press/, 'chestpress'], [/remada baixa/, 'remadabaixa'], [/remada.*(maquina|sentad|articulad)/, 'remadamaq'], [/graviton|assistid/, 'graviton'], [/scott/, 'scott'], [/abdutora/, 'abdutora'], [/adutora/, 'adutora'], [/gluteo|coice|kickback/, 'gluteocabo'], [/pelvica|hip thrust/, 'pelvica'], [/panturrilha sentad/, 'pantsentado'], [/hack/, 'hack'], [/smith/, 'smith'], [/terra/, 'terra'], [/stiff/, 'stiff'], [/afundo|passada|bulgaro/, 'afundo'], [/martelo/, 'martelo'], [/frances/, 'frances'], [/testa/, 'testa'], [/serrote|unilateral/, 'serrote'], [/flexao/, 'flexao'], [/prancha/, 'prancha'], [/abdominal.*maquina/, 'abdmaq'], [/rosca.*(cabo|polia)/, 'roscacabo'], [/supino.*halter/, 'supinohalter'], [/crucifixo|fly/, 'crucifixo'], [/cross/, 'cross'], [/supino|flexao/, 'supino'], [/puxada|pulldown|barra fixa/, 'puxada'], [/remada|serrote|row/, 'remada'], [/desenvolvimento|militar|arnold/, 'desenv'], [/elevacao lateral|elevacao frontal|lateral/, 'lateral'], [/rosca|martelo|scott/, 'rosca'], [/tricep|frances|testa|pulley|coice|mergulho/, 'triceps'], [/leg|hack/, 'legpress'], [/extensora/, 'extensora'], [/flexora|mesa|romeno/, 'flexora'], [/panturrilha|gemeo|soleo/, 'pant'], [/abdom|crunch/, 'abdo'], [/agach|afundo|bulgaro|passada|smith/, 'agacha']];
   for (const [r, k] of RX) if (r.test(n)) return k;
   return { Peito: 'supino', Costas: 'remada', Ombros: 'desenv', 'Bíceps': 'rosca', 'Tríceps': 'triceps', 'Abdômen': 'abdo', 'Quadríceps': 'agacha', Posteriores: 'flexora', Panturrilha: 'pant' }[group] || 'rosca';
 }
@@ -2785,6 +2792,7 @@ const HOWTO = {
   chestpress: 'Sentado na máquina: empurre as alças para a frente e volte devagar.',
   chestpressinc: 'Na máquina com encosto inclinado: empurre as alças para cima e para a frente.',
   crucifixo: 'Deitado: abra os braços devagar, cotovelos levemente dobrados, e feche em cima do peito.',
+  crucmaq: 'Sentado na máquina, costas no encosto: segure as manoplas com os braços quase esticados, feche na frente do peito e abra devagar.',
   peck: 'Sentado no voador: feche os braços na frente do peito e abra devagar.',
   cross: 'Na polia alta: traga as mãos para a frente do corpo, de cima para baixo.',
   cavalinho: 'Tronco inclinado e barra entre as pernas: puxe até a barriga e desça devagar.',
