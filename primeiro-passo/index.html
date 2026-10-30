@@ -626,6 +626,7 @@ body.ux .role:hover::after{opacity:1}
 .login-main h1{font-size:clamp(34px,5vw,52px);font-weight:800}
 .login-main > p{color:var(--muted);font-size:18px;margin-top:10px}
 .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.roles.two{grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px;margin-inline:auto}
 .role{border:1.5px solid var(--line);border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
 .role .ri{width:52px;height:52px;border-radius:16px;background:var(--gold-soft);color:var(--navy);display:grid;place-items:center}
 .role .ri svg{width:26px;height:26px}
@@ -847,7 +848,7 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
   .facts{grid-template-columns:1fr 1fr}
   .facts div:nth-child(2){border-right:0}
   .facts div:nth-child(-n+2){border-bottom:1px solid var(--line)}
-  .split,.roles{grid-template-columns:1fr}
+  .split,.roles,.roles.two{grid-template-columns:1fr}
   .pn{grid-template-columns:1fr}
   .pn-side{display:none}
   .pn-mtop{display:flex;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 18px;margin:0 -18px 18px}
@@ -1716,7 +1717,6 @@ function site(){
     <div class="acc-menu" id="accm" hidden>
       <a href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}"><span class="ai"><i data-lucide="footprints"></i></span><span><b>Área do aluno</b><small>${has&&!S.loggedOut?"Abrir meu app":"Entrar ou criar conta"}</small></span></a>
       <a href="#/entrar/personal"><span class="ai"><i data-lucide="dumbbell"></i></span><span><b>Área da personal</b><small>Alunos, agenda e ganhos</small></span></a>
-      <a href="#/entrar/empresa"><span class="ai"><i data-lucide="building-2"></i></span><span><b>Área da empresa</b><small>Gestão completa</small></span></a>
     </div>
   </div>
   <a class="btn btn-primary tb-cta" href="${has&&!S.loggedOut?"#/app":"#/comecar"}">${has&&!S.loggedOut?"Meu app":"Começar"}</a>
@@ -2538,10 +2538,10 @@ function login(){
     $("#root").innerHTML=`${top}<main class="login-main lg-center">
       ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Comece do zero, como no dia a dia. Tudo fica só neste aparelho e entra sem senha. Para trocar, use o botão "Trocar perfil".</p>
       <ol class="demo-steps"><li>Crie a personal em "Sou personal".</li><li>Em "Sou da empresa", aprove a personal em Personais.</li><li>Em "Sou aluno", faça o cadastro do aluno.</li><li>Volte na personal para indicar os exercícios dele.</li></ol>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
-      <div class="roles">
+      <div class="roles${DEMO?"":" two"}">
         <div class="role"><span class="ri"><i data-lucide="footprints"></i></span><h2>Sou aluno</h2><p>Seu caminho passo a passo, treinos, agenda e conversa com a sua personal.</p><a class="btn btn-primary" href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}">${has&&!S.loggedOut?"Abrir meu app":"Entrar no app"}<i data-lucide="arrow-right"></i></a></div>
         <div class="role"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Sou personal</h2><p>Seus alunos, alertas do dia, agenda, mensagens e seus ganhos.</p><a class="btn btn-primary" href="#/entrar/personal">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
-        <div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, personais, financeiro e segurança.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
+        ${DEMO?`<div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, personais, financeiro e segurança.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>`:""}
       </div>
       ${DEMO?`<div class="demo-more"><a class="btn btn-ghost" href="#/" data-dsite><i data-lucide="globe"></i>Ver o site, como um visitante</a><button class="btn btn-ghost" id="dreset"><i data-lucide="rotate-ccw"></i>Recomeçar o teste do zero</button></div>`
         :FB?"":`<p class="lg-note"><i data-lucide="info"></i>Versão de demonstração: os dados ficam salvos só neste navegador.</p>`}
@@ -2806,7 +2806,7 @@ function pMsgs(p,cs){
 }
 /* ================== PAINEL DA EMPRESA ================== */
 function panelAdmin(tab){
-  if(SESS.role!=="admin"){location.hash="#/entrar";return}
+  if(SESS.role!=="admin"){location.hash="#/entrar/empresa";return}
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
   const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Personais",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
   const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Personais"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Trabalho da faculdade","Apresentação"]}[tab]||["",""];
