@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PP Teste">
+<meta name="theme-color" content="#1B3A5C">
+<meta name="robots" content="noindex">
+<title>Primeiro Passo (teste)</title>
+<script>
+/* Atalho do modo de teste. Aberto pela tela inicial, entra direto; no navegador, mostra como salvar o atalho. */
+var APP="../?demo#/entrar";
+if(navigator.standalone||matchMedia("(display-mode: standalone)").matches)location.replace(APP);
+</script>
+<style>
+:root{--ink:#1B3A5C;--muted:#5B6B7C;--bg:#F6F8FB;--card:#fff;--line:#DCE3EB;--gold:#D9A441}
+@media(prefers-color-scheme:dark){:root{--ink:#E8EEF5;--muted:#9FB0C2;--bg:#0F1A26;--card:#16243A;--line:#2A3B52}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px 22px;text-align:center}
+img{width:64px;height:64px;border-radius:16px}
+h1{font-size:22px;margin:12px 0 6px}
+p{color:var(--muted);margin:0 0 18px}
+a.go{display:block;background:var(--ink);color:var(--card);text-decoration:none;font-weight:700;border-radius:14px;padding:14px}
+ol{text-align:left;color:var(--muted);padding-left:20px;margin:20px 0 0;font-size:15px}
+ol b{color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <img src="../icon-192.png" alt="">
+  <h1>Primeiro Passo, modo de teste</h1>
+  <p>Entre como aluno, personal ou empresa, sem senha. Tudo é de exemplo e não mexe no app de verdade.</p>
+  <a class="go" href="../?demo#/entrar">Abrir o teste</a>
+  <ol>
+    <li><b>iPhone:</b> toque em Compartilhar e depois em "Adicionar à Tela de Início".</li>
+    <li><b>Android:</b> toque nos três pontinhos e depois em "Adicionar à tela inicial".</li>
+  </ol>
+</main>
+</body>
+</html>
