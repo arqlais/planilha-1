@@ -6063,7 +6063,8 @@ function linkReviewHtml() {
         return `<button data-act="wk-src" data-id="${e.id}" data-k="${esc(x.key)}"><b>${esc(x.ex.name)}</b><small>${x.ex.letter && !x.ex.archived ? esc(wName(x.ex.letter, p.id)) : 'tirado do treino'} · ${fmtDate(x.last.date)}${top && top.carga != null ? ' · ' + numVal(top.carga) + ' kg' : ''}</small></button>`; }).join('')}
         <button data-act="wk-nolink" data-id="${e.id}"><b>Não é o mesmo</b><small>deixar começar do zero</small></button></div></div>`).join('')}</div>`;
 }
-const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
+// etiqueta da academia (Evoque/Sky) só quando há mais de um histórico para escolher; com um só, a comparação continua sem etiqueta
+const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') && wkSources(pid, ex).length > 1 ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
 function wkToggle(pid, d) {
   const W = ui.wk, P = profile(pid); if (!W.sel || !P) return;
   const cur = wkExs(pid, d).find(e => sameName(e.name, W.sel.name));
@@ -8907,7 +8908,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-10:16';
+const APP_VERSION = '30/10-10:30';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
