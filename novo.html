@@ -1318,14 +1318,14 @@ const DEMO_WEEKS = {
 Object.values(DEMO_WEEKS).forEach(w => { w[TODAY.getDay()] = ['A', 'Cardio']; });
 
 let STUDENTS = [
-  { id: 'lais', notes: 'Avaliação 02/08: foco em superiores. Sem restrições.', name: 'Laís Moura', goal: 'Ganhar massa', phone: '(11) 98765-4321', last: 0, week: [1, 1, 0, 1, 1, 1, 0], c: 'c1', note: 'Concluiu o Treino A · 3 recordes', time: '08:12' },
+  { id: 'lais', notes: 'Avaliação 02/08: foco em superiores. Sem restrições.', name: 'Lara Moura', goal: 'Ganhar massa', phone: '(11) 98765-4321', last: 0, week: [1, 1, 0, 1, 1, 1, 0], c: 'c1', note: 'Concluiu o Treino A · 3 recordes', time: '08:12' },
   { id: 'fer', notes: 'Prefere circuito de 40 min. Asma leve: cardio moderado.', name: 'Fernanda Lima', goal: 'Condicionamento', phone: '(11) 99123-4567', last: 0, week: [1, 0, 1, 1, 0, 1, 0], c: 'c4', note: 'Fez 25 min de cardio na esteira', time: '07:40' },
   { id: 'bruno', notes: 'Iniciante. Joelho direito sensível: evitar agachamento livre.', name: 'Bruno Carvalho', goal: 'Emagrecer', phone: '(11) 98222-1100', last: 2, week: [1, 1, 0, 1, 0, 0, 0], c: 'c3', note: 'Treino B · 4 de 5 exercícios', time: 'qui' },
   { id: 'cami', notes: 'Foco em glúteo e posterior.', name: 'Camila Reis', goal: 'Ganhar massa', phone: '(11) 97555-0909', last: 9, week: [0, 0, 0, 0, 0, 0, 0], c: 'c5' },
   { id: 'diego', notes: 'Postura: reforçar costas e abdômen. Começar leve.', name: 'Diego Alves', goal: 'Saúde e postura', phone: '(11) 96000-3232', last: null, invite: true, week: [0, 0, 0, 0, 0, 0, 0], c: 'c2' },
 ];
 const MSGS0 = [
-  { from: 'p', d: -6, t: 'Bem-vinda ao Passos Fit, Laís! Seu treino já está no app. Qualquer dúvida é só me chamar.' },
+  { from: 'p', d: -6, t: 'Bem-vinda ao Passos Fit, Lara! Seu treino já está no app. Qualquer dúvida é só me chamar.' },
   { from: 'a', d: -6, t: 'Obrigada, Igor!' },
   { from: 'p', d: -2, t: 'Mandou bem na quinta! Aumentei o peso da puxada para 45 kg.' },
   { from: 'p', d: 0, t: 'Já treinou hoje? Não esquece do cardio :)' },
@@ -1374,7 +1374,7 @@ const PARITY = [
   ['Comemoração de recorde', 'Treino'], ['Ver e corrigir qualquer dia, anotar treino passado', 'Setas no treino / Histórico'],
   ['Histórico com calendário do mês', 'Agenda / Histórico'], ['Hoje × treino anterior (faltam X kg / +%)', 'Card do exercício'],
   ['Semana atual × anterior', 'Treino / Perfil'], ['Evolução: carga e repetições, 4/8/12 semanas, esconder linhas', 'Evolução'],
-  ['Ver exemplo de progressão', 'Evolução'], ['Análise automática por grupo', 'Dicas automáticas'], ['kg total por treino de cada grupo', 'Evolução'],
+  ['Ver exemplo de progressão', 'Evolução'], ['Análise automática por grupo', 'Dicas automáticas'], ['kg total por semana de cada grupo', 'Evolução'],
   ['Cardio por semana e por modalidade', 'Evolução'], ['Adicionar, renomear, mudar de treino/grupo, excluir exercício', 'Editar exercício'],
   ['Exercícios sem treino (mover para um treino)', 'Montar treino'], ['Alunos: adicionar, editar, excluir', 'Alunos / Perfil'],
   ['Perfil: objetivo, observações, acompanhamento', 'Perfil do aluno'], ['Divisão da semana (o aluno vê só o treino do dia)', 'Perfil → Semana'],
@@ -1623,7 +1623,7 @@ function loginHtml() {
     <p class="by">por Igor Pedro · treino guiado</p></div>
     <div class="l-card"><h2>Entre para treinar</h2><p>Seu treino do dia, feito pelo Igor.</p>
     <form data-form="login">
-      <input id="lgEmail" type="email" placeholder="Seu e-mail" value="lais.moura@email.com" autocomplete="off">
+      <input id="lgEmail" type="email" placeholder="Seu e-mail" value="lara.moura@email.com" autocomplete="off">
       <input id="lgPass" type="password" placeholder="Senha" value="12345678">
       <button class="pill-go">ENTRAR<span class="c">${ic('arrow')}</span></button>
       <div class="alt">Primeira vez? <u>Use o convite do seu professor</u></div>
@@ -1856,7 +1856,7 @@ function euHtml() {
       <div class="list-row"><div class="grow"><b>Botões − / + nas séries</b><small>Para ajustar peso e repetições sem digitar</small></div><button class="toggle ${S.steppers ? 'on' : ''}" data-act="tog" data-k="steppers" aria-label="Botões nas séries" aria-pressed="${S.steppers}"></button></div>
       <div class="list-row"><div class="grow"><b>Tempo de descanso</b><small>Entre uma série e outra</small></div><div class="stepper" style="width:150px"><button data-act="restsec" data-d="-15" aria-label="Menos 15 segundos">−</button><input id="restSec" class="tab" readonly value="${Math.floor(S.restSec / 60)}:${String(S.restSec % 60).padStart(2, '0')}" aria-label="Tempo de descanso"><button data-act="restsec" data-d="15" aria-label="Mais 15 segundos">+</button></div></div>
       <div class="list-row"><div class="grow"><b>Som no fim do descanso</b><small>Apita e vibra</small></div><button class="toggle ${S.sound ? 'on' : ''}" data-act="sound" aria-label="Som no fim do descanso" aria-pressed="${S.sound}"></button></div>
-      <div class="list-row"><div class="grow"><b>Sair da conta</b><small>${REAL ? 'conta do aluno' : 'lais.moura@email.com'}</small></div><button class="btn sm line" data-go="login">Sair</button></div>
+      <div class="list-row"><div class="grow"><b>Sair da conta</b><small>${REAL ? 'conta do aluno' : 'lara.moura@email.com'}</small></div><button class="btn sm line" data-go="login">Sair</button></div>
     </section>
     ${signHtml()}`;
 }
@@ -2128,7 +2128,7 @@ function muralList() {
     { who: 'Fernanda Lima', c: 'c4', t: '08:31', text: 'Treino B + 25 min de corrida · 77 min', tpl: 3, data: mkData('Fernanda', 'B', 'Pernas', 52, 25, 'corrida', 18, 4820, 1, 5, '07:40', 'legpress', 5), likes: [7, 3, 2] },
     { who: 'Fernanda Lima', c: 'c4', t: '07:40', text: 'Fez check-in na Passos Fit às 07:40', likes: [2, 0, 1] },
     { who: 'Bruno Carvalho', c: 'c3', t: 'ontem', text: 'Bateu 2 recordes no Treino B', tpl: 0, fmt: 'feed', data: mkData('Bruno', 'B', 'Pernas', 48, 15, 'bicicleta', 16, 5340, 2, 2, '19:05', 'agacha', 3), likes: [11, 4, 6] },
-    { who: 'Laís Moura', c: 'c1', t: 'quinta', text: 'Treino C + 20 min de escada · 66 min', tpl: 1, data: mkData('Laís', 'C', 'Ombros e Braços', 46, 20, 'escada', 16, 2140, 0, 3, '18:20', 'desenv', 3), likes: [5, 2, 1] },
+    { who: 'Lara Moura', c: 'c1', t: 'quinta', text: 'Treino C + 20 min de escada · 66 min', tpl: 1, data: mkData('Lara', 'C', 'Ombros e Braços', 46, 20, 'escada', 16, 2140, 0, 3, '18:20', 'desenv', 3), likes: [5, 2, 1] },
   ];
   const out = [];
   for (const p of STUDENTS) {

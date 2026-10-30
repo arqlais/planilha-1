@@ -8,13 +8,15 @@ const FILES = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'icon-v2
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(FILES.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
+// o Primeiro Passo mora no mesmo site: só apaga as cópias antigas do PassosFit
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('passosfit') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return; // Firebase (nuvem) cuida de si mesmo
   if (url.pathname.endsWith('version.json')) return; // sempre da internet
+  if (/^\/(portal|primeiro-passo)\//.test(url.pathname.slice(new URL(self.registration.scope).pathname.length - 1))) return; // portal e Primeiro Passo: nunca guardados como o app (o Primeiro Passo tem a própria cópia)
   const isPage = req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname) || url.pathname.endsWith('config.js');
   if (isPage) { // só a página principal fica guardada como o app (novo.html não substitui)
     e.respondWith(fetch(req.url, { cache: 'no-store', credentials: 'same-origin' }).then(res => { // sem a cópia de 10 min do navegador: celular pega a versão nova na hora
