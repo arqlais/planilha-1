@@ -1434,7 +1434,7 @@ const FBL=(()=>{
   const J=v=>JSON.stringify(v===undefined?null:v);
   const clean=o=>JSON.parse(JSON.stringify(o));
   const PUB=["name","cref","uf","area","bio","spec","status","cap","since"],PRIV=["email","split","safety","terms","payout","info"];
-  const CFG=["prices","disc","fees","methodsOn","payoutDay"],CFGI=["split"]; /* CFGI: só empresa e personais leem (config/interno) */
+  const CFG=["prices","disc","fees","methodsOn","payoutDay","teste"],CFGI=["split"]; /* CFGI: só empresa e personais leem (config/interno) */
   const COLS={leads:"contatos",ratings:"avaliacoes",incidents:"relatos",flags:"alertas"};
   const pick=(o,ks)=>{const r={};ks.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
   const warn=(what,e)=>console.warn("[firebase]",what,e&&e.code||e);
@@ -1638,9 +1638,9 @@ function save(){if(FB){if(ME&&S.profile)FBL.saveAluno(ME);return}try{localStorag
 
 /* ================== HELPERS ================== */
 const $=s=>document.querySelector(s);
-/* MODO DE TESTE: true libera todas as etapas obrigatórias para explorar o site, sinalizando cada uma.
-   Para clientes reais, troque para false e as travas voltam a valer. */
-const TEST_MODE=true;
+/* MODO DE TESTE: ligado, libera todas as etapas obrigatórias para explorar o site, sinalizando cada uma.
+   A empresa liga e desliga em Ajustes (fica em config/empresa, campo "teste"). Desligado, as travas valem para todos. */
+Object.defineProperty(window,"TEST_MODE",{get:()=>{try{return DB.teste!==false}catch(e){return true}}});
 const testTag=(t="Obrigatório")=>`<span class="tmode"><i data-lucide="flask-conical"></i>${t} · liberado no modo de teste</span>`;
 const UFS=["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const ufSelect=(id,val,req)=>`<select id="${id}" ${req?"required":""}><option value="">Estado</option>${UFS.map(u=>`<option ${u===val?"selected":""}>${u}</option>`).join("")}</select>`;
@@ -2019,7 +2019,7 @@ function onboarding(){
   async function next(){if(OB.step<OB_STEPS.length-1){OB.step++;onboarding();scrollTo(0,0);return}
     const acc={email:(OB.email||"").toLowerCase(),h:FB?null:await hashPw(OB.pw||"")};
     const build=()=>{S=fresh();if(!FB)S.account=acc;S.info={name:OB.name.trim(),email:acc.email};S.plan=OB.plan||null;S.profile={uf:OB.uf,city:(OB.city||"").trim(),name:OB.name.trim(),goals:OB.goals,barriers:OB.barriers,days:OB.days,period:OB.period,contact:OB.contact,medical:OB.parq.some(x=>x===true),since:Date.now()};
-    S.messages=[{from:"them",text:`Oi, ${OB.name.trim().split(" ")[0]}! Eu sou a ${PERSONAL.name.split(" ")[0]}, sua personal. Li suas respostas e fico feliz que você esteja aqui. 💛`,t:nowT()},{from:"them",text:"Quando quiser, agende nossa primeira conversa na aba Agenda. Pode ser só por mensagem, sem pressa nenhuma.",t:nowT()}];
+    S.messages=[{from:"them",text:FB?`Oi, ${OB.name.trim().split(" ")[0]}! Que bom ter você aqui. Sua personal vai ler suas respostas e falar com você por esta conversa.`:`Oi, ${OB.name.trim().split(" ")[0]}! Eu sou a ${PERSONAL.name.split(" ")[0]}, sua personal. Li suas respostas e fico feliz que você esteja aqui.`,t:nowT()},{from:"them",text:"Quando quiser, agende nossa primeira conversa na aba Agenda. Pode ser só por mensagem, sem pressa nenhuma.",t:nowT()}];
     S.unread=2};
     if(FB){const bt=$("#next");bt.disabled=true;try{await FBL.signupAluno(acc.email,OB.pw,build)}catch(x){bt.disabled=false;toast(x.msg);if(/e-mail|senha/i.test(x.msg)){OB.step=OB_STEPS.indexOf("acesso");onboarding()}return}}
     else{build();save()}
@@ -2129,7 +2129,7 @@ function greet(){const h=new Date().getHours();return h<12?"Bom dia":h<18?"Boa t
 function suggest(){const done=S.workouts.map(w=>w.id);return WORKOUTS.find(w=>!done.includes(w.id))||WORKOUTS[S.workouts.length%WORKOUTS.length]}
 function levelUp(){
   if(S.level>=4){sheet("trophy","Jornada concluída!","Você chegou à academia com autonomia. Esse primeiro passo virou um caminho inteiro.","Voltar ao início");return}
-  S.level++;S.messages.push({from:"them",text:`Parabéns, ${first()}! Você chegou ao nível ${S.level}: ${LEVELS[S.level-1].t}. Estou muito orgulhosa de você! 🎉`,t:nowT()});S.unread++;save();
+  S.level++;if(!FB){S.messages.push({from:"them",text:`Parabéns, ${first()}! Você chegou ao nível ${S.level}: ${LEVELS[S.level-1].t}. Estou muito orgulhosa de você!`,t:nowT()});S.unread++}save();
   confetti();sheet(LEVELS[S.level-1].icon,`Nível ${S.level}: ${LEVELS[S.level-1].t}`,LEVELS[S.level-1].desc,"Vamos lá");
 }
 function sheet(ic,t,p,btn,opt={}){const prev=document.activeElement;const m=document.createElement("div");m.className="modal";
@@ -2200,8 +2200,8 @@ function renderP(){
     <div class="pfoot"><div class="in"><button class="btn btn-primary" id="pdone" ${P.feel?"":"disabled"}>Salvar e voltar</button></div></div>`;
     el.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{P.feel=b.dataset.f;renderP()});
     $("#pdone").onclick=()=>{S.workouts.push({id:w.id,at:Date.now(),feel:P.feel});const n=S.workouts.length;
-      const resp=P.feel==="Difícil"?"Obrigada por me contar. Vou deixar o próximo treino mais leve para você. 💛":P.feel==="Cansativo"?"Cansar é normal no começo! Descansa bem hoje.":"Que ótimo! Você está indo muito bem.";
-      S.messages.push({from:"me",text:`Terminei o treino "${w.t}" e achei ${P.feel.toLowerCase()}.`,t:nowT()},{from:"them",text:resp,t:nowT()});S.unread++;save();closeP();
+      const resp=P.feel==="Difícil"?"Obrigada por me contar. Vou deixar o próximo treino mais leve para você.":P.feel==="Cansativo"?"Cansar é normal no começo! Descansa bem hoje.":"Que ótimo! Você está indo muito bem.";
+      S.messages.push({from:"me",text:`Terminei o treino "${w.t}" e achei ${P.feel.toLowerCase()}.`,t:nowT(),at:Date.now()});if(!FB){S.messages.push({from:"them",text:resp,t:nowT()});S.unread++}save();closeP();
       if(n===1)setTimeout(()=>{confetti();toast("Conquista: 1º treino!")},200);else if(n===8)setTimeout(()=>{confetti();toast("Conquista: 8 treinos!")},200);else toast("Treino salvo!")};
     icons();return}
   const [name,sec,hint]=w.ex[P.i];const nxt=w.ex[P.i+1];
@@ -2261,7 +2261,7 @@ function vAgenda(){
   $("#book").onclick=()=>{if(AG.type==="Primeira conversa"&&(S.talked||S.bookings.some(b=>b.type==="Primeira conversa"))){toast("A conversa gratuita é uma só e já está marcada");return}const d=days[AG.day];const [h,m]=AG.slot.split(":");d.setHours(+h,+m,0,0);
     const mode=AG.type==="Ao ar livre"?"presencial":AG.type==="Academia"?"na academia":S.profile.contact.toLowerCase();
     S.bookings.push({ts:d.getTime(),time:AG.slot,type:AG.type,mode,done:false});
-    S.messages.push({from:"them",text:`Recebi seu agendamento de ${AG.type.toLowerCase()} para ${d.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric"})} às ${AG.slot}. Até lá! 😊`,t:nowT()});S.unread++;
+    if(!FB){S.messages.push({from:"them",text:`Recebi seu agendamento de ${AG.type.toLowerCase()} para ${d.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric"})} às ${AG.slot}. Até lá!`,t:nowT()});S.unread++}
     AG.slot="";save();toast("Agendado! Sua personal foi avisada.");vAgenda();icons()};
   bindDemo();
 }
@@ -2278,7 +2278,7 @@ function vChat(){
   const box=$("#msgs");box.scrollTop=box.scrollHeight;
   if(window._chd){$("#ci").value=window._chd;window._chd=""}
   const send=t=>{if(!t.trim())return;offCheck(t.trim(),"cliente",ME,myP().id,()=>{window._chd="";doSend(t)},d=>{window._chd=d})};
-  const doSend=t=>{S.messages.push({from:"me",text:t.trim(),t:nowT(),at:Date.now()});save();vChat();icons();if(!FB)setTimeout(()=>{S.messages.push({from:"them",text:reply(t),t:nowT()});if(S.level===1&&!S.talked&&S.bookings.length){S.talked=true;autoRx();S.messages.push({from:"them",text:"Adorei nossa primeira conversa! Seu plano está pronto. Quando se sentir à vontade, é só tocar em \"subir de nível\" no Início. 💛",t:nowT()})}save();if(location.hash.startsWith("#/app/mensagens")){vChat();icons()}},1200)};
+  const doSend=t=>{S.messages.push({from:"me",text:t.trim(),t:nowT(),at:Date.now()});save();vChat();icons();if(!FB)setTimeout(()=>{S.messages.push({from:"them",text:reply(t),t:nowT()});if(S.level===1&&!S.talked&&S.bookings.length){S.talked=true;autoRx();S.messages.push({from:"them",text:"Adorei nossa primeira conversa! Seu plano está pronto. Quando se sentir à vontade, é só tocar em \"subir de nível\" no Início.",t:nowT()})}save();if(location.hash.startsWith("#/app/mensagens")){vChat();icons()}},1200)};
   $("#cf").onsubmit=e=>{e.preventDefault();send($("#ci").value)};
   document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>send(b.dataset.q));
 }
@@ -2288,7 +2288,7 @@ function reply(t){t=t.toLowerCase();
   if(t.includes("não estou bem")||t.includes("nao estou bem")||t.includes("triste"))return"Obrigada por me contar. Hoje pode ser só uma respiração de 5 minutos, ou descanso mesmo. Se estiver muito difícil, o CVV atende 24h pelo 188. Estou aqui.";
   if(t.includes("horário")||t.includes("horario"))return"Claro! Pode escolher outro horário na aba Agenda e cancelar o antigo.";
   if(t.includes("dor"))return"Se sentir dor, pare o exercício. Me conta onde está doendo para eu ajustar o seu treino.";
-  return"Anotado! Vou olhar com calma e te respondo por aqui. 😊";
+  return"Anotado! Vou olhar com calma e te respondo por aqui.";
 }
 
 /* profile */
@@ -2361,7 +2361,7 @@ function demoBox(){
 function bindDemo(){document.querySelectorAll("[data-demo]").forEach(x=>x.onclick=()=>{const k=x.dataset.demo;
   if(k==="lvup"){S.level=Math.min(4,S.level+1);S.talked=true;autoRx();S.messages.push({from:"them",text:`Modo de teste: você foi para o nível ${S.level}.`,t:nowT()})}
   if(k==="kyc"){S.kyc={status:"verificado",at:Date.now(),cpf:"***.000.000-**",city:"Teste",emerg:"Contato de teste"}}
-  if(k==="talk"){S.talked=true;autoRx();S.bookings.forEach(b=>b.done=true);S.messages.push({from:"them",text:"Adorei nossa conversa! Seu plano está pronto. 💛",t:nowT()});S.unread++}
+  if(k==="talk"){S.talked=true;autoRx();S.bookings.forEach(b=>b.done=true);S.messages.push({from:"them",text:"Adorei nossa conversa! Seu plano está pronto.",t:nowT()});S.unread++}
   if(k==="outdoor"){S.outdoor++;const b=S.bookings.find(b=>b.type==="Ao ar livre"&&!b.done);if(b)b.done=true}
   if(k==="gym"){S.gymsessions++;const b=S.bookings.find(b=>b.type==="Academia"&&!b.done);if(b)b.done=true}
   if(k==="wk"){const w=WORKOUTS[S.workouts.length%WORKOUTS.length];S.workouts.push({id:w.id,at:Date.now(),feel:"Bom"})}
@@ -2404,7 +2404,7 @@ function seedDB(){
     if(name.startsWith("Carlos"))msgs.push({from:"me",text:"Essa semana foi puxada. Travei no circuito e fiquei meio desanimado.",t:"21:42",at:now-5*3600e3});
     else if(name.startsWith("Luana"))msgs.push({from:"me",text:"Posso trocar o horário de quinta para a noite?",t:"12:03",at:now-2*3600e3});
     else if(name.startsWith("João"))msgs.push({from:"me",text:"Oi! Pode ser só por mensagem mesmo? Fico nervoso com vídeo.",t:"18:20",at:now-20*3600e3});
-    else msgs.push({from:"me",text:pick(["Foi bem! Fiz os treinos certinho.","Consegui treinar 3 vezes 🙌","Um pouco cansada, mas fiz."]),t:"19:30",at:l0},{from:"them",text:"Que orgulho! Segue no seu ritmo. 💛",t:"19:45",at:l0+900e3});
+    else msgs.push({from:"me",text:pick(["Foi bem! Fiz os treinos certinho.","Consegui treinar 3 vezes","Um pouco cansada, mas fiz."]),t:"19:30",at:l0},{from:"them",text:"Que orgulho! Segue no seu ritmo.",t:"19:45",at:l0+900e3});
     const CUF=[["SP","São Paulo"],["RJ","Rio de Janeiro"],["PE","Recife"],["PR","Curitiba"],["RS","Porto Alegre"],["MG","Belo Horizonte"],["BA","Salvador"],["CE","Fortaleza"],["DF","Brasília"],["GO","Goiânia"],["AM","Manaus"],["SC","Florianópolis"]][i%12];
     return {id:"c"+(i+1),uf:CUF[0],city:CUF[1],name,level,pid,since:s0,goals:[pick(GOALS)[0],pick(GOALS)[0]].filter((x,j,a)=>a.indexOf(x)===j),barriers:[pick(BARRIERS)[0],pick(BARRIERS)[0]].filter((x,j,a)=>a.indexOf(x)===j),
       contact:pick(["Só mensagem","Áudio","Vídeo-chamada"]),period:pick(["Manhã","Tarde","Noite"]),days:["Seg","Qua","Sex"],medical:med>0,medOk:med===2,
@@ -2447,7 +2447,7 @@ function pushMsg(id,text){const m={from:"them",text,t:nowT(),at:Date.now()};
   const a=A(id);if(a){(a.messages=a.messages||[]).push(m);a.unread=(a.unread||0)+1;saveA(id)}else{DB.clients.find(c=>c.id===id).msgs.push(m);saveDB()}}
 function autoRx(a=S){if(FB||(a.rx&&a.rx.length))return;const dor=(a.profile.barriers||[]).some(b=>/Dor|energia/.test(b));
   a.rx=(dor?["resp","sentar","lateral","perna","remada"]:["resp","marcha","sentar","parede","ponte"]).map(id=>({id,dose:exById(id).dose,note:id==="resp"?"Comece sempre por este.":"",at:Date.now()}));
-  a.messages.push({from:"them",text:"Montei sua primeira lista de exercícios, com demonstração de cada um. Está em Treinos → Indicados. 💪",t:nowT()});a.unread++}
+  a.messages.push({from:"them",text:"Montei sua primeira lista de exercícios, com demonstração de cada um. Está em Treinos → Indicados.",t:nowT()});a.unread++}
 function lastAct(c){const w=c.workouts[c.workouts.length-1];return w?w.at:c.since}
 const lastMsg=c=>c.msgs[c.msgs.length-1];
 const needsReply=c=>{const m=lastMsg(c);return !!m&&m.from==="me"};
@@ -2575,7 +2575,7 @@ function login(){
       S=fresh();S.account={email:"aluno@teste.com",h:await hashPw(TEST_PASS),demo:true};S.profile={name:"Ana Teste",uf:"SP",city:"São Paulo",goals:["Me sentir melhor comigo","Ter mais disposição"],barriers:["Vergonha do corpo","Falta de energia"],days:["Seg","Qua","Sex"],period:"Manhã",contact:"Só mensagem",medical:false,since:Date.now()-45*D1};
       S.info={name:"Ana Teste",email:"aluno@teste.com",tel:"(11) 90000-1111",city:"São Paulo"};S.kyc={status:"verificado",at:Date.now()-40*D1,cpf:"***.123.456-**",city:"São Paulo",emerg:"Contato de teste (Família)"};S.termsAt=Date.now()-40*D1;
       S.level=2;S.talked=true;S.workouts=[1,3,5,8,10].map((d,i)=>({id:["w1","w2","w3","w4","w5"][i],at:Date.now()-d*D1,feel:["Bom","Leve","Cansativo","Bom","Leve"][i]}));S.bookings=[{ts:Date.now()-38*D1,time:"09:00",type:"Primeira conversa",mode:"só mensagem",done:true},{ts:Date.now()+2*D1,time:"09:00",type:"Check-in online",mode:"só mensagem",done:false}];
-      S.messages=[{from:"them",text:"Oi, Ana! Que bom ter você aqui. 💛",t:"09:00"},{from:"me",text:"Oi! Estou gostando dos treinos.",t:"09:10"}];autoRx();save()}
+      S.messages=[{from:"them",text:"Oi, Ana! Que bom ter você aqui.",t:"09:00"},{from:"me",text:"Oi! Estou gostando dos treinos.",t:"09:10"}];autoRx();save()}
     $("#lgu").value=S.account.email;$("#lgw").value=TEST_PASS;if(!S.account.demo){err("Conta de teste indisponível: há uma conta criada neste aparelho. Use o seu e-mail e senha.");return}$("#lgf").requestSubmit()};
   else if(t)t.onclick=()=>{$("#lgu").value=who==="empresa"?ADMIN_EMAIL:DB.personals.find(x=>x.status==="ativo").email;$("#lgw").value=TEST_PASS;$("#lgf").requestSubmit()};
   if(DEMO&&DEMO_GO===who&&t){DEMO_GO=null;t.click()}
@@ -2663,11 +2663,11 @@ function openClient(id,role){
     const dpp=$("#dpp");if(dpp)dpp.onchange=()=>{updC(c.id,{pid:dpp.value});toast("Personal alterada");render()};
     m.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const a=b.dataset.a,first=c.name.split(" ")[0];
       if(a==="rx"){removeEventListener("keydown",k);m.remove();openRxEditor(c.id);return}
-      if(a==="talk"){updC(c.id,{talked:true});bookingsAll().filter(x=>x.cid===c.id&&x.type==="Primeira conversa").forEach(x=>setBk(x,"feito"));pushMsg(c.id,`Adorei nossa conversa, ${first}! Seu plano está pronto. 💛`);toast("Conversa confirmada")}
+      if(a==="talk"){updC(c.id,{talked:true});bookingsAll().filter(x=>x.cid===c.id&&x.type==="Primeira conversa").forEach(x=>setBk(x,"feito"));pushMsg(c.id,`Adorei nossa conversa, ${first}! Seu plano está pronto.`);toast("Conversa confirmada")}
       if(a==="out"){updC(c.id,{outdoor:c.outdoor+1});const x=bookingsAll().find(x=>x.cid===c.id&&x.type==="Ao ar livre"&&x.status==="agendado");if(x)setBk(x,"feito",true);toast("Encontro registrado")}
       if(a==="gym"){updC(c.id,{gym:c.gym+1});const x=bookingsAll().find(x=>x.cid===c.id&&x.type==="Academia"&&x.status==="agendado");if(x)setBk(x,"feito",true);toast("Aula registrada")}
-      if(a==="med"){updC(c.id,{medOk:true});pushMsg(c.id,"Recebi sua liberação médica. Tudo certo para treinar com segurança! 🩺");toast("Liberação registrada")}
-      if(a==="up"){updC(c.id,{level:c.level+1});pushMsg(c.id,`Parabéns, ${first}! Combinamos e você subiu para o nível ${c.level+1}: ${LEVELS[c.level].t}. 🎉`);confetti();toast(`${first} subiu de nível`)}
+      if(a==="med"){updC(c.id,{medOk:true});pushMsg(c.id,"Recebi sua liberação médica. Tudo certo para treinar com segurança!");toast("Liberação registrada")}
+      if(a==="up"){updC(c.id,{level:c.level+1});pushMsg(c.id,`Parabéns, ${first}! Combinamos e você subiu para o nível ${c.level+1}: ${LEVELS[c.level].t}.`);confetti();toast(`${first} subiu de nível`)}
       if(a==="pause"){updC(c.id,{status:c.status==="pausado"?"ativo":"pausado"});toast(c.status==="pausado"?"Acompanhamento reativado":"Acompanhamento pausado")}
       if(a==="msg"){PM.cid=c.id;close();location.hash=role==="admin"?"#/personal/mensagens":"#/personal/mensagens";if(role==="admin")setSess({role:"personal",pid:c.pid,back:"admin"});return}
       render()});
@@ -2677,7 +2677,7 @@ function openClient(id,role){
 /* muda o estado de um agendamento; skipCount evita contar duas vezes quando a ficha já contou */
 function setBk(b,status,skipCount){
   const a=A(b.cid);if(a){const x=(a.bookings||[]).find(y=>b.cid+"-"+y.ts===b.id);if(!x)return;
-    if(status==="cancelado"){a.bookings=a.bookings.filter(y=>y!==x);a.messages.push({from:"them",text:`Precisei cancelar nosso horário de ${dlabel(b.ts).toLowerCase()} às ${hm(b.ts)}. Vamos remarcar? 🙏`,t:nowT()});a.unread++}
+    if(status==="cancelado"){a.bookings=a.bookings.filter(y=>y!==x);a.messages.push({from:"them",text:`Precisei cancelar nosso horário de ${dlabel(b.ts).toLowerCase()} às ${hm(b.ts)}. Vamos remarcar?`,t:nowT()});a.unread++}
     else{x.done=true;if(!skipCount){if(b.type==="Ao ar livre")a.outdoor++;if(b.type==="Academia")a.gymsessions++}if(b.type==="Primeira conversa")a.talked=true}
     saveA(b.cid);return}
   const x=DB.bookings.find(y=>y.id===b.id);x.status=status;
@@ -2746,7 +2746,7 @@ function bindBookingForm(pid,after){$("#nbk").onsubmit=e=>{e.preventDefault();co
   const[y,mo,da]=$("#nbd").value.split("-"),[h,mi]=$("#nbh").value.split(":");
   const ts=new Date(+y,+mo-1,+da,+h,+mi).getTime(),mode=type==="Ao ar livre"?"presencial":type==="Academia"?"na academia":"online";
   const ab=A(cid);if(ab){(ab.bookings=ab.bookings||[]).push({ts,time:$("#nbh").value,type,mode:mode==="online"?ab.profile.contact.toLowerCase():mode,done:false});saveA(cid)}else DB.bookings.push({id:"b"+Date.now(),cid,pid,ts,type,mode,status:"agendado"});
-  pushMsg(cid,`Marquei nosso ${type.toLowerCase()} para ${dlabel(ts).toLowerCase()} às ${hm(ts)}. Se não puder, é só me avisar. 😊`);saveDB();toast("Horário marcado e aluno avisado");after()}}
+  pushMsg(cid,`Marquei nosso ${type.toLowerCase()} para ${dlabel(ts).toLowerCase()} às ${hm(ts)}. Se não puder, é só me avisar.`);saveDB();toast("Horário marcado e aluno avisado");after()}}
 function pAgenda(p,cs){
   const t0=sod(),all=bookingsAll().filter(b=>b.pid===p.id&&b.status!=="cancelado");
   const up=all.filter(b=>b.ts>=t0).sort((a,b)=>a.ts-b.ts),past=all.filter(b=>b.ts<t0).sort((a,b)=>b.ts-a.ts).slice(0,6);
@@ -2757,12 +2757,12 @@ function pAgenda(p,cs){
     <div style="display:grid;gap:14px;align-content:start">${bookingForm(cs)}<section class="card dm"><div class="card-h"><h3>Realizados recentemente</h3></div><div class="rows">${past.length?past.map(row).join(""):`<p class="empty-s">Nenhum ainda.</p>`}</div></section></div>
   </div>`;
   document.querySelectorAll("[data-ck]").forEach(x=>x.onclick=()=>{const b=bookingsAll().find(y=>y.id===x.dataset.ck),c=DB.checkins[b.id]=DB.checkins[b.id]||{};
-    if(x.dataset.v==="in"){c.in=Date.now();saveDB();pushMsg(b.cid,`Cheguei! O código do nosso encontro é ${meetCode(b)}. Confira antes de abrir a porta. 🛡️`);toast("Check-in feito. A central foi avisada.")}
+    if(x.dataset.v==="in"){c.in=Date.now();saveDB();pushMsg(b.cid,`Cheguei! O código do nosso encontro é ${meetCode(b)}. Confira antes de abrir a porta.`);toast("Check-in feito. A central foi avisada.")}
     else{c.out=Date.now();saveDB();setBk(b,"feito");toast("Encontro encerrado. Obrigada!")}route(true)});
-  document.querySelectorAll("[data-bk]").forEach(x=>x.onclick=()=>{const b=bookingsAll().find(y=>y.id===x.dataset.bk);setBk(b,x.dataset.s);if(x.dataset.s==="cancelado"&&!A(b.cid))pushMsg(b.cid,`Precisei cancelar nosso horário de ${dlabel(b.ts).toLowerCase()}. Vamos remarcar? 🙏`);toast(x.dataset.s==="feito"?"Encontro concluído":"Horário cancelado e aluno avisado");route(true)});
+  document.querySelectorAll("[data-bk]").forEach(x=>x.onclick=()=>{const b=bookingsAll().find(y=>y.id===x.dataset.bk);setBk(b,x.dataset.s);if(x.dataset.s==="cancelado"&&!A(b.cid))pushMsg(b.cid,`Precisei cancelar nosso horário de ${dlabel(b.ts).toLowerCase()}. Vamos remarcar?`);toast(x.dataset.s==="feito"?"Encontro concluído":"Horário cancelado e aluno avisado");route(true)});
   bindBookingForm(p.id,()=>route(true));
 }
-const TEMPLATES=["Como você está hoje?","Lembrete: nosso horário é amanhã.","Liberei um treino novo para você.","Tudo bem pular hoje. Amanhã a gente retoma. 💛"];
+const TEMPLATES=["Como você está hoje?","Lembrete: nosso horário é amanhã.","Liberei um treino novo para você.","Tudo bem pular hoje. Amanhã a gente retoma."];
 function pMsgs(p,cs){
   const list=[...cs].sort((a,b)=>((lastMsg(b)||{}).at||0)-((lastMsg(a)||{}).at||0));
   if(PM.cid&&!list.some(c=>c.id===PM.cid))PM.cid=null;
@@ -2783,7 +2783,7 @@ function pMsgs(p,cs){
   if(PM.draft){$("#pci").value=PM.draft;PM.draft=""}
   const send=t=>{if(!t.trim())return;offCheck(t.trim(),"personal",c.id,c.pid,()=>{PM.draft="";doSend(t)},d=>{PM.draft=d})};
   const doSend=t=>{pushMsg(c.id,t.trim());route(true);
-    if(!FB&&!c.you)setTimeout(()=>{const x=DB.clients.find(y=>y.id===c.id);if(!x)return;x.msgs.push({from:"me",text:["Obrigado! 😊","Combinado!","Vou tentar hoje à noite.","Valeu pelo cuidado 💛"][x.msgs.length%4],t:nowT(),at:Date.now()});saveDB();if(location.hash.includes("personal/mensagens")&&!document.querySelector(".drawer"))route(true)},1800)};
+    if(!FB&&!c.you)setTimeout(()=>{const x=DB.clients.find(y=>y.id===c.id);if(!x)return;x.msgs.push({from:"me",text:["Obrigado!","Combinado!","Vou tentar hoje à noite.","Valeu pelo cuidado"][x.msgs.length%4],t:nowT(),at:Date.now()});saveDB();if(location.hash.includes("personal/mensagens")&&!document.querySelector(".drawer"))route(true)},1800)};
   $("#pcf").onsubmit=e=>{e.preventDefault();send($("#pci").value)};
   document.querySelectorAll("[data-tq]").forEach(b=>b.onclick=()=>send(b.dataset.tq));
   if(wide)$("#pci").focus({preventScroll:true});
@@ -2943,12 +2943,15 @@ function aAjustes(){
     <div class="set">${Object.keys(METHODS).map(k=>`<div class="field" style="margin:0"><label class="chkline" style="margin:0"><input type="checkbox" data-mon="${k}" ${DB.methodsOn[k]?"checked":""}> ${METHODS[k].l}</label><input id="fee-${k}" data-fee="${k}" type="number" min="0" max="20" step="0.01" value="${DB.fees[k]}" inputmode="decimal" aria-label="Taxa ${METHODS[k].l}"><small style="color:var(--muted)">% de taxa · ${METHODS[k].sub.toLowerCase()}</small></div>`).join("")}</div>
     <div id="spprev" class="mt"></div>
     <button class="btn btn-primary mt"><i data-lucide="save"></i>Salvar preços e divisão</button></form>
+  <section class="card mt" style="max-width:760px"><div class="card-h"><h3>Modo de teste</h3></div><p style="color:var(--muted)">Ligado, todo mundo pode pular as etapas obrigatórias (verificação, conversa e pagamento) para ver o app inteiro. Desligue quando começar a receber clientes de verdade: as travas passam a valer para todos.</p>
+    <label class="chkline big mt"><input type="checkbox" id="tmsw" ${TEST_MODE?"checked":""}> Modo de teste ligado</label></section>
   <section class="card mt" style="max-width:760px" ${FB?"hidden":""}><div class="card-h"><h3>Dados de demonstração</h3></div><p style="color:var(--muted)">Volta os clientes, personais, agenda, pagamentos e contatos de exemplo ao estado inicial. O app do cliente deste aparelho não é apagado.</p><button class="btn btn-ghost mt" id="rs" style="color:var(--red)"><i data-lucide="rotate-ccw"></i>Restaurar dados de exemplo</button></section>
   <div class="info mt" style="max-width:760px"><i data-lucide="server"></i><span>${FB?`<b style="color:var(--ink)">Login e dados no Firebase.</b> Contas, alunos, agenda, conversas e financeiro ficam guardados no banco e aparecem em qualquer aparelho. O pagamento online ainda não está ligado: a empresa confirma cada pagamento aqui.`:`<b style="color:var(--ink)">Para usar com clientes reais</b>, este site precisa de um servidor com login, banco de dados e pagamento online (por exemplo Pix). Hoje tudo fica salvo só no navegador de quem usa.`}</span></div>`;
   $("#pr").onsubmit=e=>{e.preventDefault();DB.prices=LEVELS.map((_,i)=>Math.max(0,Math.round(+$("#pr"+i).value||0)));DB.split=Math.min(100,Math.max(0,+$("#spl").value||0));DB.payoutDay=Math.min(28,Math.max(1,Math.round(+$("#pday").value||5)));DB.disc={1:0,3:Math.min(50,Math.max(0,+$("#d3").value||0)),6:Math.min(50,Math.max(0,+$("#d6").value||0))};document.querySelectorAll("[data-fee]").forEach(i=>{DB.fees[i.dataset.fee]=Math.min(20,Math.max(0,+i.value||0))});document.querySelectorAll("[data-mon]").forEach(i=>{DB.methodsOn[i.dataset.mon]=i.checked});if(!Object.values(DB.methodsOn).some(Boolean))DB.methodsOn.pix=true;document.querySelectorAll("[data-sp]").forEach(i=>{findP(i.dataset.sp).split=Math.min(100,Math.max(0,+i.value||0))});saveDB();syncPrices();toast("Preços e divisão salvos");route(true)};
   const prev=()=>{const v=DB.prices[1],fe=(+$("#fee-pix").value||0)/100,x=DB.personals.find(p=>p.status==="ativo")||{id:"",name:"a personal"},sp=(+(($("#sp-"+x.id)||$("#spl")).value)||0)/100;
     $("#spprev").innerHTML=`<p class="week-note" style="margin:0 0 8px">Exemplo com a mensalidade do nível 2 (${money(v)}) de ${esc(x.name.split(" ")[0])}, paga via Pix:</p>${splitBar([{label:"Personal",v:v*sp,k:"k2"},{label:"Empresa",v:Math.max(0,v*(1-sp-fe)),k:"k1"},{label:"Taxa",v:v*fe,k:"k0"}])}`};
   document.querySelectorAll("#pr input").forEach(i=>i.addEventListener("input",prev));prev();
+  $("#tmsw").onchange=e=>{DB.teste=e.target.checked;saveDB();toast(DB.teste?"Modo de teste ligado":"Modo de teste desligado: as travas valem para todos")};
   $("#rs").onclick=()=>sheet("rotate-ccw","Restaurar dados de exemplo?","Todas as alterações feitas nos painéis serão perdidas.","Restaurar",{danger:true,cancel:"Cancelar",onOk:()=>{DB=seedDB();saveDB();syncPrices();FM=null;toast("Dados de exemplo restaurados");route(true)}});
 }
 
@@ -2981,19 +2984,13 @@ async function copyText(t,okMsg){try{await navigator.clipboard.writeText(t);toas
 /* ---------- personal: ganhos ---------- */
 function pGanhos(p){
   const bl=bills().filter(b=>b.pid===p.id),ms=monthsBack(6),cur=mkey(Date.now()),prev=ms[4],sp=splitOf(p.id);
-  const now=fin(bl.filter(b=>b.m===cur)),mine=bl.filter(b=>b.m===cur);
+  const now=fin(bl.filter(b=>b.m===cur));
   const pv=fin(bl.filter(b=>b.m===prev)),po=DB.payouts[payoutKey(p.id,prev)];
   const year=bl.filter(b=>b.paid).reduce((s,b)=>s+b.amount*sp,0);
-  $("#pv").innerHTML=`<div class="kpis">${kpi("banknote","Recebido em "+mlabel(cur,1),money(now.rep),`${now.paidN} de ${now.n} alunos pagaram`)}${kpi("hourglass","A receber",money(now.open*sp),"se todos pagarem este mês")}${(()=>{const ps=payoutState(p.id,prev);return kpi("wallet","Repasse de "+mlabel(prev,1),money(pv.rep),ps.t)})()}${kpi("trending-up","Últimos 6 meses",money(year),`média de ${money(year/6)} por mês`)}</div>
-  <div class="grid2">
-    <section class="card"><div class="card-h"><h3>Seus ganhos por mês</h3></div>${vbars(ms.map(m=>({label:mlabel(m,1),short:mlabel(m),v:fin(bl.filter(b=>b.m===m)).rep})))}</section>
-    <section class="card"><div class="card-h"><h3>Como cada mensalidade se divide</h3><span class="pill info">Você fica com ${pctf(sp)}</span></div>
-      <p class="week-note" style="margin:0 0 12px">De cada ${money(100)} que um aluno paga:</p>
-      ${splitBar([{label:"Para você",v:100*sp,k:"k2"},{label:"Empresa",v:100*(1-sp-feeOf()),k:"k1"},{label:"Taxa de pagamento",v:100*feeOf(),k:"k0"}])}
-      <p class="week-note">A taxa do meio de pagamento (em média ${pctf(feeOf())}) fica por conta da empresa: sua parte é calculada sobre o valor cheio.</p></section>
-  </div>
-  <section class="mt"><div class="card-h"><h3>Mensalidades de ${mlabel(cur,1)}</h3></div><div class="tbl"><table><thead><tr><th>Aluno</th><th class="hm">Nível</th><th class="num hm">Mensalidade</th><th class="num">Sua parte</th><th>Situação</th></tr></thead><tbody>${mine.map(b=>{const c=findC(b.cid);return`<tr data-open="${b.cid}"><td><span class="nm">${avatar(c)}<b>${esc(c.name)}</b></span></td><td class="hm">${lvb(b.lv)}</td><td class="num hm">${money(b.amount)}</td><td class="num"><b>${money(b.amount*sp)}</b></td><td>${pill(...BILL_PILL[b.status])}</td></tr>`}).join("")}</tbody></table></div></section>
-  <section class="card mt"><div class="card-h"><h3>Seus repasses</h3></div><div class="rows">${ms.slice(0,5).reverse().map(m=>{const f=fin(bl.filter(b=>b.m===m)),d=DB.payouts[payoutKey(p.id,m)];return`<div class="rw"><span><b>${mlabel(m,1)} de ${m.slice(0,4)}</b><small>${f.paidN} mensalidades pagas</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(f.rep)}</b>${(()=>{const ps=payoutState(p.id,m);return pill(ps.k,ps.ic,ps.t)})()}</span></div>`}).join("")}</div></section>
+  $("#pv").innerHTML=`<div class="kpis">${kpi("banknote","Recebido em "+mlabel(cur,1),money(now.rep),"sua parte do que já entrou")}${kpi("hourglass","A receber",money(now.open*sp),"previsto até o fim do mês")}${(()=>{const ps=payoutState(p.id,prev);return kpi("wallet","Repasse de "+mlabel(prev,1),money(pv.rep),ps.t)})()}${kpi("trending-up","Últimos 6 meses",money(year),`média de ${money(year/6)} por mês`)}</div>
+  <div class="info mt"><i data-lucide="percent"></i><span>Você fica com <b style="color:var(--ink)">${pctf(sp)}</b> de cada mensalidade dos seus alunos. ${pctf(1-sp)} fica com a empresa.</span></div>
+  <section class="card mt"><div class="card-h"><h3>Seus ganhos por mês</h3></div>${vbars(ms.map(m=>({label:mlabel(m,1),short:mlabel(m),v:fin(bl.filter(b=>b.m===m)).rep})))}</section>
+  <section class="card mt"><div class="card-h"><h3>Seus repasses</h3></div><div class="rows">${ms.slice(0,5).reverse().map(m=>{const f=fin(bl.filter(b=>b.m===m)),d=DB.payouts[payoutKey(p.id,m)];return`<div class="rw"><span><b>${mlabel(m,1)} de ${m.slice(0,4)}</b><small>${f.paidN} ${f.paidN===1?"mensalidade paga":"mensalidades pagas"}</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(f.rep)}</b>${(()=>{const ps=payoutState(p.id,m);return pill(ps.k,ps.ic,ps.t)})()}</span></div>`}).join("")}</div></section>
   <a class="task mt" href="#/personal/dados" style="text-decoration:none;color:inherit"><span class="ti"><i data-lucide="landmark"></i></span><span><b>Onde você recebe</b><small>${p.payout&&p.payout.key?`Pix ${esc(p.payout.type)} ${esc(p.payout.key)}`:"Cadastre sua chave Pix"} · em Meus dados</small></span><i class="go" data-lucide="chevron-right"></i></a>`;
 }
 
@@ -3020,7 +3017,7 @@ function aFin(bl){
   $("#fm").onchange=e=>{FM=e.target.value;route(true)};
   document.querySelectorAll("[data-pay]").forEach(b=>b.onclick=()=>{if(b.dataset.v==="1")markPaid(b.dataset.pay,"pix");else{DB.paid[b.dataset.pay]=false;delete DB.payInfo[b.dataset.pay]}saveDB();toast(b.dataset.v==="1"?"Pagamento registrado":"Pagamento desfeito");route(true)});
   document.querySelectorAll("[data-po]").forEach(b=>b.onclick=()=>{if(b.dataset.v==="1")DB.payouts[b.dataset.po]=Date.now();else delete DB.payouts[b.dataset.po];saveDB();toast(b.dataset.v==="1"?"Repasse registrado. A personal já vê no painel dela.":"Repasse desfeito");route(true)});
-  document.querySelectorAll("[data-remind]").forEach(b=>b.onclick=()=>{pushMsg(b.dataset.remind,"Oi! Passando para lembrar da mensalidade deste mês. Se precisar de mais prazo, é só falar. 💛");toast("Lembrete enviado no app do cliente")});
+  document.querySelectorAll("[data-remind]").forEach(b=>b.onclick=()=>{pushMsg(b.dataset.remind,"Oi! Passando para lembrar da mensalidade deste mês. Se precisar de mais prazo, é só falar.");toast("Lembrete enviado no app do cliente")});
   $("#cprel").onclick=()=>{const L=[`Primeiro Passo · Relatório de ${mlabel(FM,1)} de ${FM.slice(0,4)}`,"",`Faturado\t${money(F.fat)}`,`Recebido\t${money(F.rec)}`,`A receber\t${money(F.open)}`,`Em atraso\t${money(F.late)}`,`Repasse às personais\t${money(F.rep)}`,`Taxas de pagamento\t${money(F.tax)}`,`Fica com a empresa\t${money(F.emp)}`,`Margem\t${pctf(F.margin)}`,"","Personal\tPercentual\tRecebido\tRepasse\tEmpresa\tSituação",...rep.map(r=>`${r.p.name}\t${pctf(r.sp)}\t${money(r.f.rec)}\t${money(r.f.rep)}\t${money(r.f.emp)}\t${DB.payouts[payoutKey(r.p.id,FM)]?"Pago":"A pagar"}`),"","Cliente\tPersonal\tValor\tSituação",...mb.map(b=>`${findC(b.cid).name}\t${(findP(b.pid)||{}).name||""}\t${money(b.amount)}\t${b.status}`)];
     copyText(L.join("\n"),"Relatório copiado. Cole numa planilha ou mensagem.")};
 }
@@ -3181,7 +3178,7 @@ const KYC_PILL={verificado:["ok","shield-check","Identidade verificada"],analise
 let KV={step:0,d:{},doc:null,docB:null,selfie:null,ok:{}};
 function vVerif(){
   const k=kycOf(ME);
-  if(k.status==="analise"&&!FB){const left=4000-(Date.now()-(k.at||0));if(left<=0){S.kyc.status="verificado";S.kyc.approvedAt=Date.now();S.messages.push({from:"them",text:"Sua identidade foi verificada. Agora é só seguir o seu caminho, passo a passo. 🛡️",t:nowT()});S.unread++;save();toast("Identidade verificada!");location.hash="#/app";return}
+  if(k.status==="analise"&&!FB){const left=4000-(Date.now()-(k.at||0));if(left<=0){S.kyc.status="verificado";S.kyc.approvedAt=Date.now();S.messages.push({from:"them",text:"Sua identidade foi verificada. Agora é só seguir o seu caminho, passo a passo.",t:nowT()});S.unread++;save();toast("Identidade verificada!");location.hash="#/app";return}
     clearTimeout(vVerif._t);vVerif._t=setTimeout(()=>{if(location.hash.includes("verificacao"))vVerif()},left+50)}
   if(k.status==="verificado"||k.status==="analise"){$("#view").innerHTML=`<div class="hello"><small>Segurança</small><h2>${k.status==="verificado"?"Sua identidade está verificada":"Recebemos seus dados"}</h2></div>
     <div class="verif-done">${pill(...KYC_PILL[k.status])}<p>${k.status==="verificado"?"Você já pode marcar encontros presenciais. Seus dados ficam protegidos e só são usados para a segurança de todos.":(FB?"A equipe confere seus dados em até 1 dia útil. Você recebe uma mensagem aqui quando for aprovado.":"Na versão final, a equipe e o serviço de verificação conferem em até 1 dia útil. Neste site de teste, a aprovação é automática em alguns segundos.")}</p>${k.status==="verificado"?`<a class="btn btn-primary" href="#/app"><i data-lucide="arrow-right"></i>Seguir meu caminho</a>`:FB?"":`<div class="spin" aria-hidden="true"></div>`}
@@ -3306,7 +3303,7 @@ function aSeg(){
   <section class="card mt"><div class="card-h"><h3>Verificação das personais</h3></div><div class="rows">${DB.personals.filter(p=>p.status!=="inativo").map(p=>{const s=p.safety||{};return`<div class="rw"><span class="av">${esc(initials(p.name))}</span><span><b>${esc(p.name)}</b><small>${esc(p.cref)}</small></span><span class="end">${[["doc","Documento"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes"]].map(([k,t])=>`<button class="pill ${s[k]?"ok":"mute"} tog" data-ps="${p.id}" data-k="${k}" aria-pressed="${!!s[k]}"><i data-lucide="${s[k]?"check":"circle-dashed"}"></i>${t}</button>`).join("")}</span></div>`}).join("")}</div>
     <p class="week-note">Uma personal só recebe alunos para encontros presenciais com os quatro itens conferidos. Toque para marcar ou desmarcar.</p></section>`;
   document.querySelectorAll("[data-kyc]").forEach(b=>b.onclick=()=>{const id=b.dataset.kyc,v=b.dataset.v;
-    const ak=A(id);if(ak){ak.kyc=Object.assign(ak.kyc||{},{status:v,at:Date.now()});saveA(id);ak.messages.push({from:"them",text:v==="verificado"?"Sua identidade foi verificada. Agora podemos marcar encontros presenciais com segurança. 🛡️":"Não conseguimos confirmar sua identidade com as fotos enviadas. Pode tentar de novo pelo seu perfil?",t:nowT()});ak.unread++;saveA(id)}
+    const ak=A(id);if(ak){ak.kyc=Object.assign(ak.kyc||{},{status:v,at:Date.now()});saveA(id);ak.messages.push({from:"them",text:v==="verificado"?"Sua identidade foi verificada. Agora podemos marcar encontros presenciais com segurança.":"Não conseguimos confirmar sua identidade com as fotos enviadas. Pode tentar de novo pelo seu perfil?",t:nowT()});ak.unread++;saveA(id)}
     else{DB.kyc[id]=Object.assign(DB.kyc[id]||{},{status:v});saveDB()}
     toast(v==="verificado"?"Identidade aprovada":"Verificação recusada");route(true)});
   document.querySelectorAll("[data-flag]").forEach(b=>b.onclick=()=>{const f=DB.flags.find(x=>x.id===b.dataset.flag),v=b.dataset.v;
@@ -3453,7 +3450,7 @@ function exDetail(id,opts={}){
   $("#expp").onclick=()=>{const sv=md.querySelector("#exfig svg");paused=!paused;figPause(sv,paused);$("#expp").innerHTML=paused?'<i data-lucide="play"></i>Continuar':'<i data-lucide="pause"></i>Pausar';icons()};
   $("#exsl").onclick=()=>{speed=speed===1?1.8:1;$("#exsl").setAttribute("aria-pressed",speed>1);const sv=md.querySelector("#exfig svg");sv.dataset.speed=speed;sv._t0=performance.now();paused=false;figPause(sv,false);$("#expp").innerHTML='<i data-lucide="pause"></i>Pausar';icons()};
   const d=$("#exdo");if(d)d.onclick=()=>{S.exlog=S.exlog||[];S.exlog.push({id,at:Date.now()});save();close();toast("Registrado! Cada movimento conta.")};
-  const r=$("#exrx");if(r)r.onclick=()=>{const cid=$("#exto").value,l=rxOf(cid).filter(x=>x.id!==id);l.push({id,dose:ex.dose,note:"",at:Date.now()});setRx(cid,l);pushMsg(cid,`Indiquei um exercício novo para você: ${ex.n}. Tem demonstração em Treinos → Indicados. 💪`);close();toast("Exercício indicado")};
+  const r=$("#exrx");if(r)r.onclick=()=>{const cid=$("#exto").value,l=rxOf(cid).filter(x=>x.id!==id);l.push({id,dose:ex.dose,note:"",at:Date.now()});setRx(cid,l);pushMsg(cid,`Indiquei um exercício novo para você: ${ex.n}. Tem demonstração em Treinos → Indicados.`);close();toast("Exercício indicado")};
 }
 /* personal monta a lista de exercícios do aluno */
 function openRxEditor(cid){
@@ -3470,7 +3467,7 @@ function openRxEditor(cid){
     md.querySelectorAll("[data-dose]").forEach(i=>i.oninput=()=>{sel[i.dataset.dose].dose=i.value});
     md.querySelectorAll("[data-note]").forEach(i=>i.oninput=()=>{sel[i.dataset.note].note=i.value});
     $("#rxf").onsubmit=e=>{e.preventDefault();const list=Object.entries(sel).map(([id,v])=>({id,dose:v.dose.trim()||exById(id).dose,note:v.note.trim(),at:Date.now()}));setRx(cid,list);
-      pushMsg(cid,list.length?`Montei sua lista com ${list.length} exercícios. Estão em Treinos → Indicados, com demonstração de cada um. 💪`:"Tirei os exercícios da sua lista por enquanto. Conversamos!");removeEventListener("keydown",k);md.remove();toast("Lista salva e aluno avisado");openClient(cid,"personal")}};
+      pushMsg(cid,list.length?`Montei sua lista com ${list.length} exercícios. Estão em Treinos → Indicados, com demonstração de cada um.`:"Tirei os exercícios da sua lista por enquanto. Conversamos!");removeEventListener("keydown",k);md.remove();toast("Lista salva e aluno avisado");openClient(cid,"personal")}};
   draw();
 }
 /* painel da personal: biblioteca */
