@@ -625,6 +625,7 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
 .wk-also{margin:0;font-size:12px;color:var(--muted)}.wk-also .link{font-size:12px;padding:4px 0}
 .wk-src{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}.wk-src>small{width:100%;color:var(--muted);font-weight:700}.wk-src button{display:flex;flex-direction:column;align-items:flex-start;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.wk-src button small{color:var(--muted);font-size:11px}.wk-src button.on{border-color:var(--acc);background:var(--acc-soft)}.wk-src button.on b::before{content:'✓ '}
 .lr{margin:0 0 14px}.lr h3{margin:0 0 4px}.lr-it{padding:10px 0;border-top:1px solid var(--line)}.lr-it>small{display:block;color:var(--muted)}
+.wk-old{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-radius:14px;padding:10px 12px;margin:10px 0;background:var(--acc-soft);font-size:13.5px}
 .wk-mine{display:inline-block;padding:1px 7px;border-radius:99px;background:var(--acc-soft);color:var(--acc)!important;font-weight:800}
 .wk-in{display:block;font-style:normal;font-size:12px;color:var(--acc);font-weight:700}
 .bw-step{display:flex;align-items:center;gap:6px}.bw-step small{flex:1;color:var(--muted);font-weight:700;font-size:12.5px}
@@ -1837,8 +1838,10 @@ const workoutsOf = (pid = ui.profile) => { const p = db.profiles.find(x => x.id 
 const isLetter = (v, pid = ui.profile) => !!v && workoutsOf(pid).some(w => w.id === v);
 const wName = (id, pid = ui.profile) => (workoutsOf(pid).find(w => w.id === id) || {}).name || 'Treino';
 // Treino guardado (montado mas ainda não liberado): não aparece no app do aluno (nem no Meu treino do professor)
-const isHeld = (id, pid = ui.profile) => !!(workoutsOf(pid).find(w => w.id === id) || {}).hold;
-const liveWorkouts = (pid = ui.profile) => workoutsOf(pid).filter(w => !w.hold);
+const isHeld = (id, pid = ui.profile) => { const w = workoutsOf(pid).find(x => x.id === id) || {}; return !!(w.hold || w.arch); };
+// Treino arquivado: some das listas e do app, mas os exercícios, as cargas e o histórico continuam valendo para a comparação
+const isArch = (id, pid = ui.profile) => !!(workoutsOf(pid).find(w => w.id === id) || {}).arch;
+const liveWorkouts = (pid = ui.profile) => workoutsOf(pid).filter(w => !w.hold && !w.arch);
 const firstWorkout = (pid = ui.profile) => (workoutsOf(pid)[0] || {}).id || '';
 const SVG = {
   treino: '<path d="M9.6 3.2h4.8M6.6 6.4h10.8M12 6.4v11.2M6.6 17.6h10.8M9.6 20.8h4.8"/>',
@@ -4264,7 +4267,7 @@ async function deleteWorkout(id) {
 }
 function groupChips(group) {
   const chip = g => `<button class="${g === group ? 'on' : ''}" data-group="${g}">${g === CARDIO ? g : esc(wName(g))}</button>`;
-  return `<div class="chips">${workoutsOf().filter(w => !(w.hold && (ui.profile === ME || ui.studentMode)) || w.id === group).map(w => chip(w.id)).join('')}${chip(CARDIO)}
+  return `<div class="chips">${workoutsOf().filter(w => !((w.hold || w.arch) && (ui.profile === ME || ui.studentMode)) || w.id === group).map(w => chip(w.id)).join('')}${chip(CARDIO)}
     ${ui.studentMode ? '' : '<button class="add-chip" data-act="new-workout">＋ Novo treino</button>'}</div>`;
 }
 function letterPicker(type, name, checked, withCardio, pid = ui.profile, withNone) {
@@ -5875,12 +5878,19 @@ function renderAlunosDesk() {
 // ---------- Montar treino detalhado ----------
 const METHODS = ['Normal', 'Bi-set', 'Tri-set', 'Drop-set', 'Rest-pause', 'Pirâmide', 'Até a falha', 'Isometria', 'Cluster', 'Excêntrica lenta'];
 const allSame = (sets, f) => sets.length && sets.every(x => x[f] === sets[0][f]) ? sets[0][f] : (sets.length ? 'var' : null);
+function archWorkouts(pid, list) {
+  const P = profile(pid), ids = new Set(list.map(w => w.id));
+  list.forEach(w => { w.arch = true; });
+  if (P.division) for (const k in P.division) P.division[k] = P.division[k].filter(x => !ids.has(x));
+  save();
+}
 function builderHtml(pid) {
   if (ui.bMode == null) { try { ui.bMode = localStorage.getItem('pf-montar-modo') || 'semana'; } catch (e) { ui.bMode = 'semana'; } }
   const modes = `<div class="bmode" role="tablist"><button class="${ui.bMode === 'semana' ? 'on' : ''}" data-act="b-mode" data-v="semana"><i class="ic ic-cal"></i> Montar por dia</button><button class="${ui.bMode !== 'semana' ? 'on' : ''}" data-act="b-mode" data-v="treinos"><i class="ic ic-note"></i> Treinos (tabela)</button></div>`;
   if (ui.bMode === 'semana') return `<section class="card">${modes}${weekHtml(pid)}</section>`;
-  const ws = workoutsOf(pid).filter(w => w.day == null || w.id === ui.bGroup);
-  if (!ws.some(w => w.id === ui.bGroup)) ui.bGroup = (ws[0] || {}).id || '';
+  const all = workoutsOf(pid).filter(w => w.day == null), nArch = all.filter(w => w.arch).length;
+  const ws = all.filter(w => !w.arch || ui.bArch || w.id === ui.bGroup);
+  if (!ws.some(w => w.id === ui.bGroup)) ui.bGroup = (ws.find(w => !w.arch) || ws[0] || {}).id || '';
   const L = ui.bGroup, exs = L ? letterExs(L, pid) : [];
   const open = ui.bOpen || (ui.bOpen = new Set());
   const rows = exs.map((e, i) => {
@@ -5903,14 +5913,16 @@ function builderHtml(pid) {
         <input data-bs="reps" data-id="${e.id}" data-i="${j}" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${isTimed(e) ? 'seg' : 'reps'}">${isTimed(e) ? ' seg' : noLoadOf(e) ? ' reps' : ''}</div>`).join('')}</div></td></tr>` : ''}`;
   }).join('');
   return `<section class="card">${modes}
-    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}${w.hold ? ' <small>(escondido)</small>' : ''}${w.own ? ' <small>(do aluno)</small>' : ''}</button>`).join('')}
-      <button data-act="b-neww">＋ Novo treino</button></div>
+    <div class="wchips">${ws.map(w => `<button class="${w.id === L ? 'on' : ''}" data-act="b-w" data-id="${w.id}">${esc(w.name)}${w.arch ? ' <small>(arquivado)</small>' : w.hold ? ' <small>(escondido)</small>' : ''}${w.own ? ' <small>(do aluno)</small>' : ''}</button>`).join('')}
+      <button data-act="b-neww">＋ Novo treino</button>${nArch ? `<button data-act="b-showarch">${ui.bArch ? 'Esconder arquivados' : `Arquivados (${nArch})`}</button>` : ''}</div>
     ${L ? `<div class="card-h"><div class="grow"><h3>${esc(wName(L, pid))}</h3><small>${esc(letterDesc(L, pid)) || 'Sem exercícios ainda'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries no total. Ao terminar, toque em <b>✓ Salvar treino</b> para confirmar.</small></div></div>
-      <div class="hold-bar ${isHeld(L, pid) ? 'held' : ''}">${isHeld(L, pid)
+      <div class="hold-bar ${isHeld(L, pid) ? 'held' : ''}">${isArch(L, pid)
+        ? `<span class="grow"><b>Arquivado</b> · não aparece em lugar nenhum do app, mas as cargas e o histórico continuam valendo para a comparação.</span><button class="btn primary" data-act="b-arch">Desarquivar</button>`
+        : isHeld(L, pid)
         ? `<span class="grow"><b>Escondido</b> · está salvo, mas não aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''}${pid === ME ? ' (nem no seu Meu treino)' : ''}. Ao colocar no planejamento, ele é liberado sozinho.</span><button class="btn primary" data-act="b-hold">Liberar no app</button>`
         : `<span class="grow"><b>✓ Liberado</b> · aparece no app${pid !== ME ? ` de ${esc(firstName(profile(pid)))}` : ''} nos dias em que estiver na divisão ou no planejamento.</span><button class="btn" data-act="b-hold">Esconder do app</button>`}</div>
       <div class="actions" style="margin:0 0 8px"><button class="btn" data-act="b-ren">✎ Renomear</button><button class="btn" data-act="b-dupw">⧉ Duplicar treino</button>
-        <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button><button class="btn danger" data-act="b-delw">Excluir treino</button></div>
+        <button class="btn" data-act="b-copyw">→ Copiar para outro aluno</button>${isArch(L, pid) ? '' : '<button class="btn" data-act="b-arch">Arquivar treino</button>'}<button class="btn danger" data-act="b-delw">Excluir treino</button></div>
       <div class="bt-wrap"><table class="bt"><colgroup><col style="width:28px"><col><col style="width:118px"><col style="width:58px"><col style="width:58px"><col style="width:66px"><col style="width:66px"><col style="width:120px"><col style="width:104px"></colgroup>
         <thead><tr><th>#</th><th>Exercício</th><th>Grupo</th><th>Séries</th><th>Reps</th><th title="Carga em kg">Kg</th><th title="Descanso em segundos">Desc.</th><th>Técnica</th><th></th></tr></thead>
         <tbody>${rows}</tbody></table></div>
@@ -5978,6 +5990,7 @@ function weekHtml(pid) {
     <div class="wk-wrap"><div class="wk-days">${days}</div></div>
     <div class="wk-save"><button class="btn primary" data-act="wk-save">✓ Salvar semana</button>
       ${ui.wkSaved && ui.wkSaved.pid === pid ? `<small class="ok">✓ Semana salva às ${ui.wkSaved.hora}. Ela já aparece em Hoje, em cada dia.</small>` : '<small>Cada mudança já fica guardada sozinha. O botão confere se está tudo salvo na nuvem.</small>'}</div>
+    ${(old => old.length ? `<div class="wk-old"><span class="grow"><b>${old.length} treino${old.length === 1 ? '' : 's'} antigo${old.length === 1 ? '' : 's'}</b> (${old.map(w => esc(w.name)).join(', ')}). Arquive para limpar a tela: as cargas e o histórico continuam valendo.</span><button class="btn" data-act="wk-arch">Arquivar antigos</button></div>` : '')(workoutsOf(pid).filter(w => w.day == null && !w.arch))}
     <h4 class="mm-h" id="wkLib">Exercícios</h4>
     <input class="search" id="wkSearch" placeholder="Buscar exercício" value="${esc(W.q || '')}" autocomplete="off">
     ${W.q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === W.g ? 'on' : ''}" data-act="wk-g" data-g="${x}">${x}</button>`).join('')}</div>`}
@@ -6019,7 +6032,7 @@ const wkAutoOk = (e, day) => x => (day && x.key.includes('|')) || nameCore(x.ex.
 // exercício sem nenhum histórico: liga sozinho ao histórico parecido mais recente (ex.: "Crossover" novo pega o da Evoque)
 // (nos dias do Montar por dia também pega o mesmo exercício de outra academia e copia as cargas; nos outros treinos só liga o histórico)
 const noHistory = e => { const ids = twinIds(e.id); return !db.sessions.some(x => ids.has(x.exId) && hasDone(x)); };
-const liveExs = pid => db.exercises.filter(e => e.profileId === pid && !e.archived && e.letter && e.name && (profile(pid).workouts || []).some(w => w.id === e.letter));
+const liveExs = pid => db.exercises.filter(e => e.profileId === pid && !e.archived && e.letter && e.name && (profile(pid).workouts || []).some(w => w.id === e.letter && !w.arch));
 function wkAutoLink(pid) {
   let n = 0;
   liveExs(pid).forEach(e => {
@@ -6118,6 +6131,10 @@ function wkAct(act, b) {
       [list[i], list[j]] = [list[j], list[i]]; list.forEach((e, k) => { e.order = k + 1; }); save(); return re(); }
     case 'wk-del': if (ex) wkRemove(pid, ex); return re();
     case 'wk-save': return saveWeekNow(pid, b);
+    case 'wk-arch': { const old = workoutsOf(pid).filter(w => w.day == null && !w.arch);
+      confirmAsk(`Arquivar ${old.length} treino${old.length === 1 ? '' : 's'} antigo${old.length === 1 ? '' : 's'}?`, `${old.map(w => w.name).join(', ')}. Eles somem das listas e do app, ficando só a semana do Montar por dia. Nada é apagado: as cargas e o histórico continuam valendo para a comparação. Dá para desarquivar em Treinos (tabela).`, 'Arquivar').then(ok => {
+        if (!ok) return; archWorkouts(pid, old); re(); toast(`${old.length} treino${old.length === 1 ? '' : 's'} arquivado${old.length === 1 ? '' : 's'}. As cargas continuam guardadas.`); });
+      return; }
     case 'wk-unalso': { // só tira o treino antigo deste dia da semana; o treino e as cargas continuam guardados na aba Treinos
       const P = profile(pid), d = +b.dataset.d; if (P.division && P.division[d]) P.division[d] = P.division[d].filter(x => x !== b.dataset.w);
       save(); toast(`<b>${esc(wName(b.dataset.w, pid))}</b> saiu de ${WEEK.find(x => x[0] === d)[1]}. Ele continua guardado em Treinos (tabela).`); return re(); }
@@ -6359,6 +6376,13 @@ async function builderAct(act, b) {
     const ok = await confirmAsk(`Esconder ${w.name} do app?`, `ATENÇÃO: isto NÃO é para salvar (o treino já se salva sozinho; para confirmar use ✓ Salvar treino). Esconder faz o treino sumir ${who} até você tocar em Liberar no app.`, 'Esconder do app');
     if (ok) { w.hold = true; save(); render(); toast(`<b>${esc(w.name)}</b> escondido do app.`); }
     return;
+  }
+  if (act === 'b-showarch') { ui.bArch = !ui.bArch; return render(); }
+  if (act === 'b-arch') {
+    const w = workoutsOf(pid).find(x => x.id === L); if (!w) return;
+    if (w.arch) { delete w.arch; save(); render(); return toast(`<b>${esc(w.name)}</b> voltou. Coloque nos dias em que ele entra.`); }
+    if (!(await confirmAsk(`Arquivar ${w.name}?`, 'Ele some das listas e do app, mas nada é apagado: as cargas e o histórico continuam valendo para a comparação. Dá para desarquivar quando quiser.', 'Arquivar'))) return;
+    archWorkouts(pid, [w]); ui.bGroup = ''; render(); return toast(`<b>${esc(w.name)}</b> arquivado. As cargas continuam guardadas.`);
   }
   if (act === 'b-neww') { const g = ui.group; await newWorkout(true); ui.bGroup = ui.group; ui.group = g; return render(); }
   if (act === 'b-ren') return renameWorkout(L);
@@ -6824,7 +6848,7 @@ $main.addEventListener('click', e => {
       const id = b.dataset.id, cur = ui.mmPick || [];
       ui.mmPick = !id ? [] : cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; return render();
     }
-    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-nolink': case 'wk-unalso': case 'wk-save': return wkAct(act, b);
+    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-nolink': case 'wk-unalso': case 'wk-save': case 'wk-arch': return wkAct(act, b);
     case 'b-mode': ui.bMode = b.dataset.v; try { localStorage.setItem('pf-montar-modo', ui.bMode); } catch (e) {} ui.wk = null; return render();
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
     case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
@@ -6980,7 +7004,7 @@ $main.addEventListener('click', e => {
     case 'go-montar': return go('montar');
     case 'go-view': if (b.dataset.v === 'montar' && ui.profile === ME) ui.profile = ME; return go(b.dataset.v);
     case 'b-w': case 'b-neww': case 'b-ren': case 'b-delw': case 'b-dupw': case 'b-copyw': case 'b-add':
-    case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': case 'b-save': case 'b-hold': return builderAct(act, b);
+    case 'b-sets': case 'b-up': case 'b-down': case 'b-dup': case 'b-del': case 'b-save': case 'b-hold': case 'b-arch': case 'b-showarch': return builderAct(act, b);
     case 'pay-charge': { const p = profile(b.dataset.pid); return shareMsg(`Cobrança de ${firstName(p)}`, chargeText(p, b.dataset.m), p); }
     case 'pay-month': ui.payMonth = b.dataset.m; return render();
     case 'pay-mark': return openPay(profile(b.dataset.pid), b.dataset.m || ui.payMonth || today().slice(0, 7));
@@ -8872,7 +8896,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-21:24';
+const APP_VERSION = '29/10-21:33';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
