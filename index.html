@@ -618,6 +618,10 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
 .wk-ed{display:grid;gap:8px;padding:0 8px 8px}
 .wk-ed .bw-step{max-width:320px}
 .wk-eda{display:flex;gap:6px;align-items:center}.wk-eda .btn{margin-left:auto;font-size:13px}
+/* editor do exercício no dia: só as séries (repetições ficam nas anotações do treino); tudo cabe na largura do cartão */
+.wk-ed .bw-step{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px;max-width:200px}.wk-ed .bw-step small{grid-column:1/-1}.wk-ed .bw-step b{min-width:0}
+.wk-ed .wk-src{margin:0}.wk-ed .wk-src button{width:100%;min-width:0;overflow-wrap:anywhere;padding:6px 8px}.wk-ed .wk-src button b{font-size:13px}
+.wk-ed{grid-template-columns:minmax(0,1fr)}:root .wk-ed .wk-eda .btn{flex:1 1 100%;margin:0;padding:8px 6px;text-align:center;white-space:normal;font-size:12px}.wk-dh small{display:block;line-height:1.35}
 /* Montar por dia: os 7 dias sempre lado a lado; a tela usa a largura toda (com rolagem para o lado se não couber) */
 body.desk main:has(.ws[data-active=montar] .wk-days) > *,body.desk main:has(> section .wk-days) > *{max-width:none}
 .wk-day{padding:7px}.wk-exn{padding:6px 7px;font-size:12.5px}.wk-dh b{font-size:14px}.wk-dh small{font-size:11px}.wk-put{font-size:12px;padding:6px 4px}.wk-ed{padding:0 6px 6px}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-ed .bw-step button{width:30px;height:30px;font-size:16px}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}
@@ -5983,11 +5987,10 @@ function weekHtml(pid) {
     const exs = wkExs(pid, d), w = dayWorkout(pid, d), also = ((P.division || {})[d] || []).filter(x => x !== (w || {}).id && x !== CARDIO && isLetter(x, pid));
     const inSel = W.sel && exs.some(e => sameName(e.name, W.sel.name));
     return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${W.sel ? 'pick' : ''} ${inSel ? 'has' : ''}">
-      <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'} · ${exs.reduce((a, e) => a + e.sets.length, 0)} séries` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
+      <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'}<br>${(n => `${n} série${n === 1 ? '' : 's'}`)(exs.reduce((a, e) => a + e.sets.length, 0))}` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
       ${W.sel ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? '✓ Está aqui' : '＋ Colocar aqui'}</button>` : ''}
-      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} × ${numVal(allSame(e.sets, 'reps')) || '–'}${isTimed(e) ? ' s' : ''}</small></button>
+      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} série${e.sets.length === 1 ? '' : 's'}</small></button>
         ${W.open === e.id ? `<div class="wk-ed"><div class="bw-step"><small>Séries</small><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${e.sets.length}</b><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
-          <div class="bw-step"><small>${isTimed(e) ? 'Segundos' : 'Repetições'}</small><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="-1" aria-label="Menos">−</button><b>${numVal(allSame(e.sets, 'reps')) || '–'}</b><button data-act="wk-st" data-id="${e.id}" data-f="reps" data-d="1" aria-label="Mais">＋</button></div>
           ${(src => src.length ? `<div class="wk-src"><small>Comparar cargas com</small>${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
             return `<button class="${twinKey(e) === x.key ? 'on' : ''}" data-act="wk-src" data-id="${e.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)} · ${top && top.carga != null ? numVal(top.carga) + ' kg' : 'sem carga'}${top && top.reps != null ? ' × ' + numVal(top.reps) : ''}</small></button>`; }).join('')}</div>` : '')(wkSources(pid, e))}
           <div class="wk-eda"><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="1" aria-label="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
@@ -8904,7 +8907,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-23:03';
+const APP_VERSION = '30/10-10:16';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
