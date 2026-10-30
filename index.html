@@ -4799,7 +4799,7 @@ function missedDay(p, iso) {
   const o = datePlan(p, iso); if (o && o.skip) return false; // dia apagado pelo professor
   return dayPlan(p, iso).some(w => w !== CARDIO && !isHeld(w, p.id));
 }
-// ---------- Resumo da semana (domingo a sábado), calculado com o que o aluno marcou ----------
+// ---------- Resumo da semana (segunda a domingo, igual às Séries por grupo e ao Montar), calculado com o que o aluno marcou ----------
 const sundayOf = iso => addDays(iso, -toDate(iso).getDay());
 const rangeLabel = (a, b) => `${+a.slice(8)}${a.slice(5, 7) === b.slice(5, 7) ? '' : ` de ${MONTHS[+a.slice(5, 7) - 1].slice(0, 3)}`} a ${+b.slice(8)} de ${MONTHS[+b.slice(5, 7) - 1].slice(0, 3)}`;
 // melhor série de uma sessão: maior carga e, nela, mais repetições
@@ -4845,9 +4845,28 @@ function periodReport(pid, ws, we, pa, pb, inside) {
   const dayList = all.map(d => did.has(d) ? 'done' : missed.includes(d) ? 'miss' : d > t ? 'future' : 'off');
   return { ws, we, open: we >= t, dayList, days: all, cprev: cardioBetween(pa, pb, pid), didPrev: trainedDates(pid).filter(d => d >= pa && d <= pb).length, prog: cmp.length ? Math.round(cmp.reduce((a, x) => a + x, 0) / cmp.length * 100) : null, did: did.size, planned: planned.length, hit: hit.length, missed, extra, sets, half, kg, kgPrev, cmin, cgoal, up, down, same, bw, bprev, score };
 }
+// botões ‹ › da semana: o Resumo e as Séries por grupo andam juntos (mesma semana, segunda a domingo, até 8 semanas à frente)
+const wsNavHtml = off => `<button class="icon" data-act="ws-week" data-d="-1" aria-label="Semana anterior">‹</button>
+      <button class="icon" data-act="ws-week" data-d="1" aria-label="Próxima semana" ${off >= 8 ? 'disabled' : ''}>›</button>`;
+// semana que ainda vai começar: o que está planejado, dia por dia (Planejamento; sem data própria, a Divisão da semana)
+function weekPlanHtml(p, ws, off) {
+  const we = addDays(ws, 6), rows = []; let total = 0, nd = 0;
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i), ws2 = dayPlan(p, d).filter(w => w !== CARDIO && !isHeld(w, p.id));
+    const n = ws2.reduce((a, w) => a + letterExs(w, p.id).reduce((b, e) => b + (e.sets || []).length, 0), 0);
+    total += n; if (ws2.length) nd++;
+    rows.push(`<div class="plan-row"><div class="grow"><b>${weekday(d).replace('-feira', '').replace(/^./, c => c.toUpperCase())} ${fmtDate(d)}</b>${ws2.length ? `${(nm => nm ? ` · ${nm}` : '')(ws2.map(w => wName(w, p.id)).filter(x => !normName(weekday(d)).startsWith(normName(x))).map(esc).join(' + '))}${datePlan(p, d) ? ' <small>(planejado só para a data)</small>' : ''}` : ' <small>descanso</small>'}</div><b>${ws2.length ? `${n} série${n === 1 ? '' : 's'}` : '–'}</b></div>`); }
+  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Resumo da semana</h3><small>Segunda a domingo · ${rangeLabel(ws, we)} · planejada</small></div>
+      ${wsNavHtml(off)}</div>
+    <div class="month-sum"><div><b>${nd}</b><span>dias de treino</span></div><div><b>${total}</b><span>séries planejadas</span></div></div>
+    <div style="margin-top:10px">${rows.join('')}</div>
+    <p class="hint" style="margin:8px 2px 0">Conta pelo Planejamento: dia sem data própria segue a semana do Montar. As séries por grupo desta semana estão no cartão Séries por grupo.</p>
+  </section>`;
+}
 function weekReportHtml(p) {
   if (!p) return '';
-  const cur = sundayOf(today()), ws = ui.wkRep && ui.wkRep.pid === p.id ? ui.wkRep.ws : addDays(cur, -7), r = weekReport(p.id, ws);
+  const off = ui.wsOff || 0, ws = addDays(weekStart(today()), 7 * off);
+  if (ws > today()) return weekPlanHtml(p, ws, off);
+  const r = weekReport(p.id, ws);
   const wd = d => weekday(d).replace('-feira', '');
   const kgTxt = n => `${fmt(n.carga)} kg${n.reps ? ` × ${n.reps}` : ''}`;
   const [lvl, emo, txt] = !r.did ? ['down', '<i class="ic ic-moon"></i>', r.open ? 'Semana ainda sem treino' : 'Semana sem treino']
@@ -4868,9 +4887,8 @@ function weekReportHtml(p) {
   if (r.kgPrev && r.kg < r.kgPrev * .85 && r.did) bad.push(`Levantou ${fmt(Math.round((r.kgPrev - r.kg) / r.kgPrev * 100))}% menos que na semana anterior`);
   const li = (a, empty) => a.length ? `<ul class="wk-list">${a.map(x => `<li>${x}</li>`).join('')}</ul>` : `<p class="hint" style="margin:4px 0 0">${empty}</p>`;
   const df = r.bw && r.bprev ? Math.round((r.bw.peso - r.bprev.peso) * 10) / 10 : null;
-  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Resumo da semana</h3><small>Domingo a sábado · ${rangeLabel(r.ws, r.we)}${r.open ? ' · em andamento' : ''}</small></div>
-      <button class="icon" data-act="wk-rep" data-pid="${p.id}" data-ws="${addDays(ws, -7)}" aria-label="Semana anterior">‹</button>
-      <button class="icon" data-act="wk-rep" data-pid="${p.id}" data-ws="${addDays(ws, 7)}" aria-label="Próxima semana" ${ws >= cur ? 'disabled' : ''}>›</button></div>
+  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Resumo da semana</h3><small>Segunda a domingo · ${rangeLabel(r.ws, r.we)}${r.open ? ' · em andamento' : ''}</small></div>
+      ${wsNavHtml(off)}</div>
     <div class="wk-verdict ${lvl}"><span>${emo}</span><b>${txt}</b></div>
     <div class="month-sum"><div><b>${r.planned ? `${r.hit}/${r.planned}` : r.did}</b><span>${r.planned ? 'treinos do plano' : 'dias treinados'}</span></div>
       <div><b>${r.sets}</b><span>séries</span></div><div><b>${fmt(Math.round(r.kg))}</b><span>kg ${r.kgPrev ? delta(r.kg, r.kgPrev) : ''}</span></div>
@@ -7006,7 +7024,6 @@ $main.addEventListener('click', e => {
     case 'st-tab': ui.stTab = b.dataset.t; render(); return showStTab();
     case 'wk-post': ui.wkPost = { pid: b.dataset.pid, ws: b.dataset.ws }; render(); return window.scrollTo({ top: 0 });
     case 'wk-post-close': ui.wkPost = null; render(); return window.scrollTo({ top: 0 });
-    case 'wk-rep': ui.wkRep = { pid: b.dataset.pid, ws: b.dataset.ws }; return render();
     case 'm-rep': ui.mRep = { pid: b.dataset.pid, ym: b.dataset.ym }; return render();
     case 'm-post': ui.mPost = { pid: b.dataset.pid, ym: b.dataset.ym || repMonth(), from: b.dataset.from }; ensureFull(ui.mPost.pid); render(); return window.scrollTo({ top: 0 });
     case 'm-post-close': { const pid = ui.mPost && ui.mPost.from === 'painel' ? null : ui.mPost && ui.mPost.pid; ui.mPost = null; if (pid) { ui.profile = pid; ui.stTab = 'resumo'; } render(); return window.scrollTo({ top: 0 }); }
@@ -8922,7 +8939,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-10:35';
+const APP_VERSION = '30/10-10:48';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
