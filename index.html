@@ -2361,6 +2361,8 @@ function navToggle(desk) {
   b.title = navOff ? 'Mostrar o menu' : 'Esconder o menu'; b.setAttribute('aria-label', b.title); b.setAttribute('aria-expanded', String(!navOff));
 }
 function render() {
+  // perfil aberto: traz os meses antigos (o "antes" e as comparações olham o histórico inteiro, não só os últimos 6 meses)
+  if (CLOUD && cloud && cloud.role === 'admin' && cloud.ready && profile(ui.profile)) ensureFull(ui.profile);
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
   const desk = isDesk();
   document.body.classList.toggle('desk', desk);
@@ -8236,6 +8238,25 @@ async function fixOnce() {
     mark('academias-juntar');
     if (n) { save(); msgs.push('Pronto: as cargas não são mais separadas por academia. Cada exercício compara com a última vez feita.'); }
   }
+  // 1k) (30/10) O app do professor só carregava os últimos 6 meses: exercício feito antes disso parecia "sem histórico"
+  //     e podia ser ligado sozinho a outro histórico parecido, deixando as cargas antigas do mesmo nome de fora.
+  //     Com o histórico inteiro, junta de novo esse histórico antigo do mesmo nome. Nenhuma carga é apagada.
+  if (!done.has('historico-antigo-religar')) {
+    await ensureFullAll();
+    const ws = (cloud && cloud.windowStart) || windowStartMonth();
+    let n = 0;
+    db.profiles.forEach(p => liveExs(p.id).forEach(e => {
+      const own = normName(e.name), k = twinKey(e);
+      if (!e.twin || k === own || e.noLink) return;
+      const lost = db.exercises.filter(o => o.profileId === p.id && o.id !== e.id && !o.noLink && twinKey(o) === own);
+      if (!lost.length) return;
+      const ids = new Set(lost.map(o => o.id)), hist = db.sessions.filter(s => ids.has(s.exId) && hasDone(s));
+      if (!hist.length || hist.some(s => s.date.slice(0, 7) >= ws)) return; // só o que ficava escondido (mais de 6 meses)
+      lost.forEach(o => { o.twin = k; }); n++;
+    }));
+    mark('historico-antigo-religar');
+    if (n) { save(); msgs.push(`${n} exercício${n === 1 ? '' : 's'} voltou a mostrar as cargas antigas.`); }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -8355,6 +8376,7 @@ function ensureFull(pid) {
       (v.cardio || []).forEach(c => { if (!haveC.has(c.id)) db.cardio.push({ ...plain(c), profileId: pid }); });
     });
     cloud.fullLoaded.add(pid); // só agora os meses antigos desse aluno podem ser gravados
+    if (cloud.fixesRan && pid !== ME && wkAutoLink(pid)) save(); // com o histórico inteiro, liga o que ficou sem "antes"
     scheduleSync(); render();
   })().catch(err => cloudError(err)).finally(() => cloud.loadingOld.delete(pid));
   cloud.loadingOld.set(pid, job);
@@ -8445,9 +8467,13 @@ function runFixes() {
   if (!cloud || cloud.role !== 'admin' || !cloud.ready || !cloud.serverSeen || cloud.fixesRan) return;
   cloud.fixesRan = true;
   if (adoptRemoved()) { render(); toast('O exercício que saiu e voltou ao treino recuperou as cargas e o histórico.'); }
-  const linked = db.profiles.reduce((a, p) => a + wkAutoLink(p.id), 0);
-  if (linked) { save(); render(); toast(`${linked} exercício${linked === 1 ? '' : 's'} voltou a comparar com as cargas anteriores (era o mesmo exercício escrito de outro jeito).`); }
-  fixOnce().catch(e => console.warn('ajuste:', e));
+  // o histórico inteiro do professor vem sempre: o "antes" de um exercício feito há mais de 6 meses não pode sumir.
+  // Só liga exercícios "sem histórico" depois de ter o histórico inteiro do perfil (senão parece sem histórico e liga errado).
+  ensureFull(ME).then(() => {
+    const linked = db.profiles.reduce((a, p) => a + (cloud.fullLoaded.has(p.id) ? wkAutoLink(p.id) : 0), 0);
+    if (linked) { save(); render(); toast(`${linked} exercício${linked === 1 ? '' : 's'} voltou a comparar com as cargas anteriores (era o mesmo exercício escrito de outro jeito).`); }
+    return fixOnce();
+  }).catch(e => console.warn('ajuste:', e));
 }
 // Primeira vez do professor: a nuvem está vazia. Oferece enviar os dados deste aparelho.
 async function firstRun() {
@@ -9010,7 +9036,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-11:27';
+const APP_VERSION = '30/10-16:49';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
