@@ -2464,7 +2464,7 @@ Object.assign(POSES, {
     B: P([51, 23], [50, 31], [50, 33], [62, 36], [75, 36], [52, 57], [70, 58], [71, 78], [78, 78]) },
   // crucifixo na máquina (pec fly), visto de frente: encosto alto, barra em cima com os dois braços da máquina;
   // segura as manoplas com os braços quase esticados, abre bem e fecha na frente do peito
-  crucmaq: { front: true, st: `<path d="M60 4v11" ${EQ} stroke-width="5"/><path d="M28 5h64" ${EQ} stroke-width="5"/><rect x="48" y="14" width="24" height="37" rx="5" fill="color-mix(in srgb, currentColor 20%, transparent)"/>${FRONTSEAT}<path d="M48 79h24" ${EQ} stroke-width="5"/>`, w: 'vgrip', lever: [32, 5],
+  crucmaq: { front: true, st: `<path d="M60 4v11" ${EQ} stroke-width="5"/><path d="M28 5h76M104 5v74M92 79h20" ${EQ} stroke-width="4"/><rect x="95" y="44" width="8" height="26" rx="1.5" fill="color-mix(in srgb, currentColor 28%, transparent)"/><path d="M95 50.5h8M95 57h8M95 63.5h8" stroke="color-mix(in srgb, currentColor 45%, transparent)" stroke-width="1"/><path d="M99 8v36" stroke="color-mix(in srgb, currentColor 40%, transparent)" stroke-width="1.5"/><rect x="48" y="14" width="24" height="37" rx="5" fill="color-mix(in srgb, currentColor 20%, transparent)"/>${FRONTSEAT}<path d="M48 79h24" ${EQ} stroke-width="5"/>`, w: 'vgrip', lever: [32, 5],
     A: P([60, 13], [60, 21], [52, 24], [38, 26], [24, 28], [55, 49], [54, 64], [54, 79], [51, 79]),
     B: P([60, 13], [60, 21], [52, 24], [47, 29], [56, 31], [55, 49], [54, 64], [54, 79], [51, 79]) },
   peck: { front: true, st: FRONTSEAT, w: 'epad',
@@ -8751,7 +8751,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-21:21';
+const APP_VERSION = '29/10-21:33';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
