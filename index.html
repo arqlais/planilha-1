@@ -2022,6 +2022,20 @@ const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify({ view:
 
 const setVol = s => (s.done && s.carga != null && s.reps != null) ? s.carga * s.reps : 0;
 const vol = sets => sets.reduce((a, s) => a + setVol(s), 0);
+// Exercício com o peso do corpo (barra fixa, paralela, flexão...): cada repetição conta uma parte do peso do aluno
+// (tela Medidas, o peso anotado mais perto antes do treino) mais a carga extra, se houver. Sem peso anotado, fica como antes (0 kg).
+const BW_RULES = [[/maquina|graviton|nordica|lateral com halter|joelhos? na paralela/, 0], [/barra fixa com elastico/, .7], [/barra fixa|mergulho nas paralelas/, 1],
+  [/flexao de braco com joelhos|flexao inclinada/, .5], [/flexao declinada/, .75], [/flexao pike/, .7], [/flexao (de braco|com pegada|diamante)/, .65], [/remada invertida/, .6]];
+const bwFactor = ex => { const n = normName((ex && ex.name) || ''), r = BW_RULES.find(([rx]) => rx.test(n)); return r ? r[1] : 0; };
+function bodyWeightAt(pid, date) {
+  const b = bodyOf(profile(pid)).filter(e => e.peso != null); if (!b.length) return 0;
+  return (b.filter(e => e.date <= date).pop() || b[0]).peso;
+}
+function effSets(s) {
+  const ex = exById(s.exId), f = ex && !isTimed(ex) ? bwFactor(ex) : 0, bw = f && bodyWeightAt(ex.profileId, s.date);
+  return bw ? s.sets.map(x => ({ ...x, carga: Math.round((bw * f + (x.carga || 0)) * 10) / 10 })) : s.sets;
+}
+const sessVol = s => vol(effSets(s));
 const hasDone = s => s.sets.some(x => x.done);
 const exById = id => db.exercises.find(e => e.id === id);
 const profile = id => db.profiles.find(p => p.id === id);
@@ -2114,7 +2128,7 @@ function addDays(dateStr, n) { const d = toDate(dateStr); d.setDate(d.getDate() 
 function volumeBetween(from, to, group, pid = ui.profile) {
   const match = typeof group === 'function' ? group : e => !group || e.group === group;
   const ids = new Set(profExs(pid).filter(match).map(e => e.id));
-  return db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to).reduce((a, s) => a + vol(s.sets), 0);
+  return db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to).reduce((a, s) => a + sessVol(s), 0);
 }
 function weekPair(group, pid = ui.profile, ref = ui.date) {
   const ws = weekStart(ref);
@@ -2315,7 +2329,7 @@ function renderStats() {
     const d = statsDay();
     const day = profSessions().filter(s => s.date === d);
     cells = [[day.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), 'séries feitas'],
-      [fmt(day.reduce((a, s) => a + vol(s.sets), 0)), 'kg levantados'], [fmtMin(cardioBetween(d, d)), 'min de cardio']];
+      [fmt(day.reduce((a, s) => a + sessVol(s), 0)), 'kg levantados'], [fmtMin(cardioBetween(d, d)), 'min de cardio']];
   }
   document.getElementById('stats').innerHTML = cells.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 }
@@ -3052,7 +3066,7 @@ function renderAgendaV2() {
     cells += `<button class="${cls}" data-act="v2-cal" data-d="${iso}">${d}${fut && plan.length ? '<span class="l">•</span>' : ''}</button>`;
   }
   const ss = profSessions(pid).filter(s => s.date === sel && hasDone(s)), cm = cardioBetween(sel, sel, pid);
-  const nSets = ss.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), kg = ss.reduce((a, s) => a + vol(s.sets), 0);
+  const nSets = ss.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), kg = ss.reduce((a, s) => a + sessVol(s), 0);
   const names = ws => ws.map(w => w === CARDIO ? 'Cardio' : wName(w, pid)).join(' + ');
   const sp = dayPlan(p, sel).filter(w => w === CARDIO || !isHeld(w, pid));
   const body = sel === today() ? `<b>Hoje · ${sp.length ? esc(names(sp)) : 'Descanso'}</b><small>${ss.length || cm ? `${ss.length} exercícios · ${nSets} séries${cm ? ` · ${fmtMin(cm)} min de cardio` : ''}` : 'Ainda não começou'}</small>`
@@ -3662,7 +3676,7 @@ function renderPainelV2() {
         ${inv ? `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Seu treino já está no app. Crie sua senha por este link: ${inviteLink(p)}`)}">${v2Ico('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.5 6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.3-1.2"/>')}Reenviar</a>`
           : `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Sentimos sua falta. Bora voltar hoje? Seu treino está no app.`)}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}Lembrar</a>`}</div>`; }).join('') || '<section class="card v2-muted" style="text-align:center;margin:0">Todos em dia ✓</section>'}</div>
     <div class="v2-sec"><h3>Hoje nos treinos</h3><button data-view="alunos">Todos</button></div>
-    <section class="card">${todayL.map(p => { const ss = profSessions(p.id).filter(s => s.date === today() && hasDone(s)), kg = ss.reduce((a, s) => a + vol(s.sets), 0), cm = cardioBetween(today(), today(), p.id);
+    <section class="card">${todayL.map(p => { const ss = profSessions(p.id).filter(s => s.date === today() && hasDone(s)), kg = ss.reduce((a, s) => a + sessVol(s), 0), cm = cardioBetween(today(), today(), p.id);
       const fin = ss.map(s => s.fin).filter(Boolean).sort().pop();
       return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
     ${cardioWeekListHtml(sts)}
@@ -4404,7 +4418,7 @@ function dayStats(pid, d) {
   if (est && (!min || min < est)) min = Math.min(300, est);
   const ws = [...new Set(ss.map(x => (exById(x.exId) || {}).letter).filter(Boolean))].map(L => wName(L, pid));
   return { min, ws, sets: ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0), ex: ss.length,
-    kg: ss.reduce((a, x) => a + vol(x.sets), 0), cardio: Math.round(db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) * 10) / 10 };
+    kg: ss.reduce((a, x) => a + sessVol(x), 0), cardio: Math.round(db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) * 10) / 10 };
 }
 const durTxt = m => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') + 'min' : ''}` : `${m} min`;
 const siteTxt = () => (location.host + location.pathname).replace(/\/(index\.html)?$/, '');
@@ -4775,7 +4789,7 @@ function dayMap(pid = ui.profile) {
 function dayCard(d, list) {
   list = list.slice().sort((a, b) => GROUPS.indexOf(exById(a.exId).group) - GROUPS.indexOf(exById(b.exId).group));
   const groups = [...new Set(list.map(s => exById(s.exId).group))];
-  const total = list.reduce((a, s) => a + vol(s.sets), 0);
+  const total = list.reduce((a, s) => a + sessVol(s), 0);
   const cardio = profCardio().filter(c => c.date === d);
   if (cardio.length) groups.push(CARDIO);
   return `<section class="card" id="day-${d}">
@@ -4786,7 +4800,7 @@ function dayCard(d, list) {
     ${list.map(s => {
       const done = s.sets.filter(x => x.done), before = prevSession(s.exId, s.date);
       return `<tr><td>${esc(exById(s.exId).name)}${s.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
-        <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
+        <td><b>${fmt(sessVol(s))}</b></td><td>${before ? delta(sessVol(s), sessVol(before)) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
     ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}${cardioExtraTxt(c) ? `<small style="display:block;color:var(--muted)">${cardioExtraTxt(c)}</small>` : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${!ui.studentMode && cloudRole() !== 'student' && d < today() ? `<button class="btn" data-act="move-day" data-d="${d}"><i class="ic ic-cal"></i> Passar para outro dia</button>` : ''}${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}"><i class="ic ic-cam"></i> Check-in</button>` : ''}</div>
@@ -4966,7 +4980,7 @@ function renderHistorico() {
   const first = new Date(y, m - 1, 1), nDays = new Date(y, m, 0).getDate(), offset = (first.getDay() + 6) % 7;
   const monthName = first.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
   const monthDays = Object.keys(days).filter(d => d.startsWith(ui.month)).sort().reverse();
-  const monthVol = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + vol(s.sets), 0), 0);
+  const monthVol = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + sessVol(s), 0), 0);
   const monthCardio = profCardio().filter(c => c.date.startsWith(ui.month)).reduce((a, c) => a + c.min, 0);
   const monthSets = monthDays.reduce((a, d) => a + days[d].reduce((b, s) => b + s.sets.filter(x => x.done).length, 0), 0);
   const all = Object.keys(days).sort();
@@ -5261,8 +5275,8 @@ function renderEvolution() {
       if (!nums.length) continue;
       const rows = nums.map(n => {
         const ss = byWk[n], done = ss.flatMap(s => s.sets.filter(x => x.done)), sets = {};
-        for (const s of ss) { const k = twinKey(exMap.get(s.exId)) + sessEq(s); sets[k] = (sets[k] || []).concat(s.sets.filter(x => x.done)); }
-        return { n, from: addDays(start, (n - 1) * 7), ex: Object.keys(sets).length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + vol(s.sets), 0), bySet: sets };
+        for (const s of ss) { const k = twinKey(exMap.get(s.exId)) + sessEq(s); sets[k] = (sets[k] || []).concat(effSets(s).filter(x => x.done)); }
+        return { n, from: addDays(start, (n - 1) * 7), ex: Object.keys(sets).length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + sessVol(s), 0), bySet: sets };
       });
       // mesmas séries: de cada exercício feito nas duas semanas, conta só a quantidade de séries que as duas têm
       const fair = (a, b) => { let x = 0, y = 0; for (const k in a.bySet) if (b.bySet[k]) { const m = Math.min(a.bySet[k].length, b.bySet[k].length); x += vol(a.bySet[k].slice(0, m)); y += vol(b.bySet[k].slice(0, m)); } return y ? delta(x, y) : ''; };
@@ -5274,7 +5288,7 @@ function renderEvolution() {
             const done = s.sets.filter(x => x.done), before = arr[i + 1];
             const r = done.reduce((a, x) => a + (x.reps || 0), 0);
             return `<tr><td>${fmtDate(s.date)}</td><td>${done.length}</td><td>${isTimed(e) ? fmtSec(r) : r}</td>
-              <td><b>${fmt(vol(s.sets))}</b></td><td>${before ? delta(vol(s.sets), vol(before.sets)) : ''}</td></tr>`;
+              <td><b>${fmt(sessVol(s))}</b></td><td>${before ? delta(sessVol(s), sessVol(before)) : ''}</td></tr>`;
           }).join('')}</tbody></table>`;
       }).join('');
       html += `<section class="card"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g} · kg total por semana</h3>
@@ -5510,7 +5524,7 @@ function marcacoesHtml(p) {
     const rows = ss.filter(x => x.date === d).map(x => {
       const done = x.sets.filter(y => y.done);
       return `<div class="plan-row"><div class="grow"><b>${esc(exById(x.exId).name)}</b>
-        <small>${done.length}/${x.sets.length} séries · ${done.map(y => `${fmt(y.carga)}×${y.reps ?? '–'}`).join('  ')}</small></div><b>${fmt(vol(x.sets))} kg</b></div>`;
+        <small>${done.length}/${x.sets.length} séries · ${done.map(y => `${fmt(y.carga)}×${y.reps ?? '–'}`).join('  ')}</small></div><b>${fmt(sessVol(x))} kg</b></div>`;
     }).join('') + cc.filter(c => c.date === d).map(c => `<div class="plan-row"><div class="grow"><b>${modeOf(c.mode)[1]}</b><small>cardio${cardioExtraTxt(c) ? ' · ' + cardioExtraTxt(c) : ''}</small></div><b>${fmtMin(c.min)} min</b></div>`).join('');
     const sent = ss.filter(x => x.date === d && x.fin).map(x => x.fin).sort().pop();
     return `<p class="plan-g">${weekday(d)}, ${fmtDate(d)}${sent ? ` · <span class="pill up">✓ treino enviado às ${new Date(sent).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>` : ''}</p>${rows}`;
@@ -6566,7 +6580,7 @@ function perfilHtml(p, desk) {
     const byStudent = [...ss, ...cc].some(x => x.by === 'aluno');
     return `<div class="list-row"><div class="grow"><b>${fmtDate(d)}</b> <small style="color:var(--muted)">${weekday(d)}</small>${byStudent ? '<span class="by">marcado pelo aluno</span>' : ''}
       <small style="display:block;color:var(--muted)">${[...groups, cmin ? `cardio ${fmtMin(cmin)} min${cc.map(cardioExtraTxt).filter(Boolean).map(t => ' · ' + t).join('')}` : ''].filter(Boolean).join(' · ')}</small></div>
-      <b>${fmt(ss.reduce((a, x) => a + vol(x.sets), 0))} kg</b>
+      <b>${fmt(ss.reduce((a, x) => a + sessVol(x), 0))} kg</b>
       <button class="icon" data-act="openday" data-d="${d}" data-g="${ss.length ? exById(ss[0].exId).letter || 'A' : CARDIO}" aria-label="Abrir treino">›</button></div>`;
   }).join('');
 
@@ -6753,7 +6767,7 @@ function confetti() {
 }
 function celebrate(ex, s) {
   const prev = prevSession(ex.id, ui.date);
-  const total = vol(s.sets), pt = prev ? vol(prev.sets) : 0;
+  const total = sessVol(s), pt = prev ? sessVol(prev) : 0;
   if (prev && total > pt) { confetti(); toast(`Recorde em <b>${esc(ex.name)}</b>! +${fmt(total - pt)} kg (${fmt((total - pt) / pt * 100)}%)`); }
   else if (!prev) toast(`<b>${esc(ex.name)}</b> concluído — primeiro registro salvo!`);
   else toast(`<b>${esc(ex.name)}</b> concluído. Na próxima passa de ${fmt(pt)} kg `);
@@ -8939,7 +8953,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-10:48';
+const APP_VERSION = '30/10-10:55';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
