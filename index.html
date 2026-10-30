@@ -4964,7 +4964,7 @@ function monthReportHtml(p) {
   const cur = today().slice(0, 7), ym = ui.mRep && ui.mRep.pid === p.id ? ui.mRep.ym : repMonth(), r = monthReport(p.id, ym);
   const nm = mesNome(ym).replace(/^./, c => c.toUpperCase());
   setTimeout(fillMonthImgs);
-  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Relatório do mês</h3><small>${nm} de ${ym.slice(0, 4)}${r.open ? ' · em andamento' : ''} · imagem para mandar ao aluno</small></div>
+  return `<section class="card wk-rep"><div class="card-h"><div class="grow"><h3>Relatório do mês</h3><small>${nm} de ${ym.slice(0, 4)}${r.open ? ' · em andamento' : ''} · ${p.id === ME ? 'sua imagem do mês' : 'imagem para mandar ao aluno'}</small></div>
       <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, -1)}" aria-label="Mês anterior">‹</button>
       <button class="icon" data-act="m-rep" data-pid="${p.id}" data-ym="${shiftMonth(ym, 1)}" aria-label="Próximo mês" ${ym >= cur ? 'disabled' : ''}>›</button></div>
     <div class="m-imgbox"><img data-mimg="${p.id}|${ym}" alt="Relatório de ${esc(nm.toLowerCase())} de ${esc(firstName(p))}"></div>
@@ -6629,7 +6629,7 @@ function perfilHtml(p, desk) {
       </div>
     </section>
     ${desk ? `<div class="tabs">${tabs.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test || mine ? '' : readyBtn(p)}</div>` : ''}
-    <div data-tab="resumo"><div class="rs-col">${weekReportHtml(p)}${p.id !== ME ? monthReportHtml(p) : ''}${weekSetsHtml(p)}${cardioDaysHtml(p)}</div><div class="rs-col">
+    <div data-tab="resumo"><div class="rs-col">${weekReportHtml(p)}${monthReportHtml(p)}${weekSetsHtml(p)}${cardioDaysHtml(p)}</div><div class="rs-col">
     ${noHist ? histImportHtml(p, true) : ''}
     <section class="card">
       <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
@@ -8953,7 +8953,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-10:55';
+const APP_VERSION = '30/10-11:19';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
