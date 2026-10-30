@@ -12,7 +12,7 @@
 <title>Primeiro Passo (teste)</title>
 <script>
 /* Atalho do modo de teste. Aberto pela tela inicial, entra direto; no navegador, mostra como salvar o atalho. */
-var APP="../?demo#/entrar";
+var APP="../?demo&v="+Date.now()+"#/entrar";
 if(navigator.standalone||matchMedia("(display-mode: standalone)").matches)location.replace(APP);
 </script>
 <style>
@@ -34,11 +34,12 @@ ol b{color:var(--ink)}
   <img src="../icon-192.png" alt="">
   <h1>Primeiro Passo, modo de teste</h1>
   <p>Entre como aluno, personal ou empresa, sem senha. Tudo é de exemplo e não mexe no app de verdade.</p>
-  <a class="go" href="../?demo#/entrar">Abrir o teste</a>
+  <a class="go" id="go" href="../?demo#/entrar">Abrir o teste</a>
   <ol>
     <li><b>iPhone:</b> toque em Compartilhar e depois em "Adicionar à Tela de Início".</li>
     <li><b>Android:</b> toque nos três pontinhos e depois em "Adicionar à tela inicial".</li>
   </ol>
 </main>
+<script>document.getElementById("go").href=APP;</script>
 </body>
 </html>
