@@ -606,7 +606,7 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
 .bmode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--input);border:1px solid var(--line);margin-bottom:12px;max-width:520px}
 .bmode button{border:0;border-radius:10px;padding:10px 8px;background:transparent;color:var(--muted);font:inherit;font-weight:800;font-size:14px}.bmode button.on{background:var(--acc);color:var(--acc-ink)}
 .wk-how{margin:0 0 12px!important}
-.wk-days{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-items:start}
+.wk-days{display:grid;grid-template-columns:repeat(7,minmax(118px,1fr));gap:6px;align-items:start;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:6px;overscroll-behavior-x:contain}.wk-day{scroll-snap-align:start}
 .wk-day{border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--input);min-width:0;display:grid;gap:6px}
 .wk-day.empty{border-style:dashed}.wk-day.has{border-color:var(--acc)}
 .wk-dh b{display:block;font-size:15px}.wk-dh small{color:var(--muted);font-size:12px}
@@ -616,11 +616,11 @@ tr.bsets td{background:transparent!important;border:0!important;padding:6px 4px 
 .wk-exn{display:flex;flex-direction:column;gap:1px;width:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:13.5px;font-weight:700;text-align:left;padding:8px}
 .wk-exn .grow{min-width:0;overflow-wrap:break-word}.wk-exn small{color:var(--muted);font-weight:600;font-size:12px}
 .wk-ed{display:grid;gap:8px;padding:0 8px 8px}
-.wk-day:has(.wk-ex.open){grid-column:1/-1}.wk-ed .bw-step{max-width:320px}
+.wk-ed .bw-step{max-width:320px}
 .wk-eda{display:flex;gap:6px;align-items:center}.wk-eda .btn{margin-left:auto;font-size:13px}
-.wk-wrap{container-type:inline-size}
-@container (min-width:840px){.wk-days{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.wk-day{padding:7px}.wk-exn{padding:6px 7px;font-size:12.5px}.wk-dh b{font-size:14px}.wk-dh small{font-size:11px}.wk-put{font-size:12px;padding:6px 4px}
-  .wk-day:has(.wk-ex.open){grid-column:auto}.wk-ed{padding:0 6px 6px}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-ed .bw-step button{width:30px;height:30px;font-size:16px}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}}
+/* Montar por dia: os 7 dias sempre lado a lado; a tela usa a largura toda (com rolagem para o lado se não couber) */
+body.desk main:has(.ws[data-active=montar] .wk-days) > *,body.desk main:has(> section .wk-days) > *{max-width:none}
+.wk-day{padding:7px}.wk-exn{padding:6px 7px;font-size:12.5px}.wk-dh b{font-size:14px}.wk-dh small{font-size:11px}.wk-put{font-size:12px;padding:6px 4px}.wk-ed{padding:0 6px 6px}.wk-ed .bw-step{flex-wrap:wrap}.wk-ed .bw-step small{flex-basis:100%}.wk-ed .bw-step button{width:30px;height:30px;font-size:16px}.wk-eda{flex-wrap:wrap}.wk-eda .btn{margin-left:0;white-space:nowrap}
 .wk-save{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:14px 0 4px}.wk-save .btn{padding:12px 20px;font-size:15px;font-weight:800}.wk-save small{color:var(--muted);font-size:12.5px;flex:1 1 220px}.wk-save small.ok{color:var(--acc);font-weight:700}
 .wk-also{margin:0;font-size:12px;color:var(--muted)}.wk-also .link{font-size:12px;padding:4px 0}
 .wk-src{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}.wk-src>small{width:100%;color:var(--muted);font-weight:700}.wk-src button{display:flex;flex-direction:column;align-items:flex-start;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.wk-src button small{color:var(--muted);font-size:11px}.wk-src button.on{border-color:var(--acc);background:var(--acc-soft)}.wk-src button.on b::before{content:'✓ '}
@@ -8904,7 +8904,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-21:33';
+const APP_VERSION = '29/10-23:03';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
