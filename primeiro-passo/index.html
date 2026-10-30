@@ -1269,6 +1269,10 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 .lg-card .btn-primary{width:100%}
 .lg-card .err{min-height:0}
 .lg-forgot{color:var(--blue);font-weight:600;text-decoration:none;font-size:14.5px}
+#demopill{position:fixed;z-index:60;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#7A4E00;background:#FFF1CC;border:1px solid #D9A441;border-radius:99px;padding:8px 13px;box-shadow:0 4px 14px rgba(0,0,0,.15);text-decoration:none}
+#demopill svg{width:15px;height:15px}
+@media(min-width:900px){#demopill{bottom:18px}}
+.demo-more{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
 .lg-testbox{display:grid;justify-items:center;gap:6px;border-top:1px dashed var(--line);padding-top:12px;margin-top:4px;width:100%}
 .lg-testbox small{color:var(--muted);font-size:12.5px;max-width:34ch}
 .lg-back{display:inline-flex;align-items:center;gap:6px;margin-top:18px;color:var(--muted);font-weight:600;text-decoration:none}
@@ -1410,7 +1414,10 @@ const FIREBASE_CONFIG={
   messagingSenderId:"886654017067",
   appId:"1:886654017067:web:ccce25b3b422ffd59c146e"
 };
-const FB=!!(window.firebase&&FIREBASE_CONFIG.apiKey);
+/* DEMO: o link com ?demo (atalho em demo/) abre só com dados de exemplo, sem senha e sem tocar no banco de verdade.
+   Guarda tudo em chaves próprias deste navegador, separadas do app real. */
+const DEMO=/[?&]demo\b/.test(location.search),DK=DEMO?":demo":"";
+const FB=!DEMO&&!!(window.firebase&&FIREBASE_CONFIG.apiKey);
 /* ME: id do aluno logado ("me" no modo demonstração). AL: outros alunos carregados nos painéis. */
 let ME=FB?null:"me",AL={};
 const A=id=>id==null?null:id===ME?(S.profile?S:null):(AL[id]||null);
@@ -1621,7 +1628,7 @@ const PERSONAL={get name(){return myP().name},get cref(){return myP().cref},get 
 const BADGES=[["Primeiro passo","footprints","Criou seu plano"],["Primeira conversa","message-circle","Conversou com o personal"],["1º treino","flame","Concluiu o primeiro treino"],["Semana firme","calendar-check","3 treinos em uma semana"],["Nível 2","house","Chegou aos treinos em casa"],["8 treinos","award","Completou 8 treinos"],["Nível 3","trees","Primeiro encontro ao ar livre"],["Nível 4","dumbbell","Chegou à academia"]];
 
 /* ================== STATE ================== */
-const KEY="primeiropasso:v1";
+const KEY="primeiropasso:v1"+DK;
 const fresh=()=>({profile:null,level:1,workouts:[],bookings:[],messages:[],talked:false,outdoor:0,gymsessions:0,feel:[],unread:0,breaths:[],mood:null,sound:true});
 let S=load();
 function load(){if(FB)return fresh();try{const r=localStorage.getItem(KEY);return r?Object.assign(fresh(),JSON.parse(r)):fresh()}catch(e){return fresh()}}
@@ -1675,8 +1682,9 @@ function earned(){const n=S.workouts.length;return[!!S.profile,S.talked,n>=1,wee
 /* ================== ROUTER ================== */
 function route(keep){
   if(FB&&!FBL.booted)return;
+  if(DEMO&&(!location.hash||location.hash==="#/"&&!DEMO_SITE)){location.replace("#/entrar");return}
   const h=location.hash||"#/";
-  const y=scrollY;
+  const y=scrollY;demoPill(h);
   if(keep!==true)window.scrollTo(0,0);
   setTimeout(()=>{if(keep===true)scrollTo(0,y)},0);
   if(h.startsWith("#/comecar"))return onboarding();
@@ -2360,7 +2368,7 @@ function bindDemo(){document.querySelectorAll("[data-demo]").forEach(x=>x.onclic
 /* ================== BASE DA EMPRESA ==================
    Demonstração: tudo fica neste navegador. O cliente deste aparelho (S) aparece
    nos painéis como o aluno de id "me", e as ações dos painéis alteram S de verdade. */
-const DBKEY="primeiropasso:db:v1",SKEY="primeiropasso:sessao",D1=864e5;
+const DBKEY="primeiropasso:db:v1"+DK,SKEY="primeiropasso:sessao"+DK,D1=864e5;
 const mkey=ts=>{const d=new Date(ts);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")};
 const monthsBack=n=>[...Array(n)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-(n-1-i));return mkey(d)});
 const mlabel=(k,long)=>{const [y,m]=k.split("-");return new Date(+y,+m-1,1).toLocaleDateString("pt-BR",{month:long?"long":"short"}).replace(".","")};
@@ -2522,14 +2530,18 @@ function login(){
     return}
   if(!R){
     $("#root").innerHTML=`${top}<main class="login-main lg-center">
-      <span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>
+      ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Toque e entre direto, sem senha. Tudo aqui é de exemplo e fica só neste aparelho. Para trocar depois, use o botão "Trocar perfil".</p>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
       <div class="roles">
         <div class="role"><span class="ri"><i data-lucide="footprints"></i></span><h2>Sou aluno</h2><p>Seu caminho passo a passo, treinos, agenda e conversa com a sua personal.</p><a class="btn btn-primary" href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}">${has&&!S.loggedOut?"Abrir meu app":"Entrar no app"}<i data-lucide="arrow-right"></i></a></div>
         <div class="role"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Sou personal</h2><p>Seus alunos, alertas do dia, agenda, mensagens e seus ganhos.</p><a class="btn btn-primary" href="#/entrar/personal">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
         <div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, personais, financeiro e segurança.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
       </div>
-      ${FB?"":`<p class="lg-note"><i data-lucide="info"></i>Versão de demonstração: os dados ficam salvos só neste navegador.</p>`}
+      ${DEMO?`<div class="demo-more"><a class="btn btn-ghost" href="#/" data-dsite><i data-lucide="globe"></i>Ver o site, como um visitante</a><a class="btn btn-ghost" href="#/comecar"><i data-lucide="user-plus"></i>Ver o cadastro de aluno novo</a><button class="btn btn-ghost" id="dreset"><i data-lucide="rotate-ccw"></i>Recomeçar o teste do zero</button></div>`
+        :FB?"":`<p class="lg-note"><i data-lucide="info"></i>Versão de demonstração: os dados ficam salvos só neste navegador.</p>`}
     </main>`;
+    if(DEMO){document.querySelectorAll(".role .btn").forEach((a,i)=>a.onclick=e=>{e.preventDefault();demoGo(["aluno","personal","empresa"][i])});
+      $("[data-dsite]").onclick=()=>{DEMO_SITE=true};
+      $("#dreset").onclick=()=>sheet("rotate-ccw","Recomeçar o teste?","Tudo o que você mexeu no modo de teste volta ao exemplo inicial. O app de verdade não é afetado.","Recomeçar",{danger:true,cancel:"Cancelar",onOk:()=>{[KEY,DBKEY,SKEY].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.reload()}})}
     $("#theme").onclick=toggleTheme;icons();return}
   $("#root").innerHTML=`${top}<main class="login-main lg-center">
     <form class="lg-card" id="lgf" novalidate>
@@ -2541,7 +2553,7 @@ function login(){
       <a href="#" data-forgot class="lg-forgot">Esqueci minha senha</a>
       ${who==="aluno"?`<p class="lg-new">Ainda não tem conta? <a href="#/comecar">Criar meu plano</a></p>`:""}
       ${who==="personal"&&FB?`<p class="lg-new">Ainda não tem conta? <a href="#/entrar/nova-personal">Criar conta de personal</a></p>`:""}
-      ${TEST_MODE&&!FB?`<div class="lg-testbox"><button type="button" class="lg-test" id="lgt"><i data-lucide="flask-conical"></i>Usar conta de teste</button><small>O login de verdade, com senha protegida e recuperação por e-mail, entra junto com o servidor.</small></div>`:""}
+      ${(TEST_MODE||DEMO)&&!FB?`<div class="lg-testbox"><button type="button" class="lg-test" id="lgt"><i data-lucide="flask-conical"></i>Usar conta de teste</button><small>O login de verdade, com senha protegida e recuperação por e-mail, entra junto com o servidor.</small></div>`:""}
     </form>
     <a class="lg-back" href="#/entrar"><i data-lucide="arrow-left"></i>Escolher outro acesso</a>
   </main>`;
@@ -2564,8 +2576,16 @@ function login(){
       S.messages=[{from:"them",text:"Oi, Ana! Que bom ter você aqui.",t:"09:00"},{from:"me",text:"Oi! Estou gostando dos treinos.",t:"09:10"}];autoRx();save()}
     $("#lgu").value=S.account.email;$("#lgw").value=TEST_PASS;if(!S.account.demo){err("Conta de teste indisponível: há uma conta criada neste aparelho. Use o seu e-mail e senha.");return}$("#lgf").requestSubmit()};
   else if(t)t.onclick=()=>{$("#lgu").value=who==="empresa"?ADMIN_EMAIL:DB.personals.find(x=>x.status==="ativo").email;$("#lgw").value=TEST_PASS;$("#lgf").requestSubmit()};
+  if(DEMO&&DEMO_GO===who&&t){DEMO_GO=null;t.click()}
   document.querySelectorAll("[data-forgot]").forEach(a=>a.onclick=e=>{e.preventDefault();if(FB){const u=norm($("#lgu").value);if(!/@/.test(u)){err("Escreva seu e-mail no campo acima e toque de novo em “Esqueci minha senha”.");return}FBL.reset(u).then(()=>toast("Enviamos um link para criar uma nova senha. Confira seu e-mail.")).catch(x=>err(FBL.err(x)));return}toast("Na versão final, enviamos um link de recuperação para o seu e-mail.")});
 }
+/* modo demonstração: botão fixo para trocar de perfil e entrada direta, sem senha */
+let DEMO_SITE=false,DEMO_GO=null;
+function demoPill(h){let b=$("#demopill");if(!DEMO||h==="#/entrar"){if(b)b.remove();return}
+  if(!b){b=document.createElement("a");b.id="demopill";b.href="#/entrar";b.innerHTML=`<i data-lucide="repeat"></i>Trocar perfil`;document.body.appendChild(b)}}
+function demoGo(who){
+  if(who==="aluno"&&S.profile){S.loggedOut=false;save();location.hash="#/app";return}
+  DEMO_GO=who;location.hash="#/entrar/"+who}
 function logout(){if(FB){FBL.logout();return}setSess({});location.hash="#/entrar"}
 
 /* ================== MOLDURA DOS PAINÉIS ================== */
