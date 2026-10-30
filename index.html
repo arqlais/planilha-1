@@ -102,6 +102,7 @@ main{max-width:760px;margin:-40px auto 0;padding:0 16px 150px;position:relative}
 .ic-timer{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2213.5%22 r=%227.5%22/%3E%3Cpath d=%22M12 10v3.5l2.5 1.5M10 2.5h4M12 2.5V6%22/%3E%3C/svg%3E")}
 .ic-warn{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3.5l9.5 16.5h-19z%22/%3E%3Cpath d=%22M12 10v4.5M12 17.3v.2%22/%3E%3C/svg%3E")}
 .ic-up{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 19V5M6 11l6-6 6 6%22/%3E%3C/svg%3E")}
+.ic-move{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3%22/%3E%3C/svg%3E")}
 .ic-down{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 5v14M6 13l6 6 6-6%22/%3E%3C/svg%3E")}
 .ic-plus{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2217%22 height=%2217%22 rx=%224%22/%3E%3Cpath d=%22M12 8v8M8 12h8%22/%3E%3C/svg%3E")}
 .ic-target{--m:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%228.5%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%224.5%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%22.8%22/%3E%3C/svg%3E")}
@@ -521,6 +522,14 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 /* Resumo em duas colunas que se encaixam (sem buracos entre os cartões) */
 body.desk .ws[data-active=resumo] [data-tab=resumo]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
 body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:14px}
+/* Organizar cartões do Resumo */
+.rs-bar{grid-column:1/-1;display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:0 0 8px}
+.rs-bar.on{justify-content:flex-start;flex-wrap:wrap;background:var(--card);border:2px solid var(--acc);border-radius:16px;padding:12px 14px;margin-bottom:14px}
+.rs-bar.on small{display:block;color:var(--muted)}
+.rs-mini{display:flex;align-items:center;gap:8px;padding:12px 14px}
+.rs-mini.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.rs-mini .icon:disabled{opacity:.3}
+body:not(.desk) .rs-side{display:none}
 /* cardio dia a dia (domingo a sábado) */
 .cd-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:16px;text-align:center}
 .cd-day{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer}
@@ -6556,6 +6565,45 @@ const readyBtn = p => readyOk(p)
 // Abas do aluno (computador)
 // a aba escolhida fica à vista na fileira de abas (no celular ela rola para o lado)
 const showStTab = () => { const t = document.querySelector('.ws .tabs button.on'); if (t) t.scrollIntoView({ block: 'nearest', inline: 'center' }); };
+// Resumo do perfil: o professor escolhe a ordem e o lado de cada cartão (vale em todos os perfis, salvo na nuvem)
+const RS_NAMES = { sem: 'Resumo da semana', mes: 'Relatório do mês', series: 'Séries por grupo', cardio: 'Cardio da semana', acomp: 'Acompanhamento', ultimos: 'Últimos treinos', conta: 'Link e conta do aluno', hist: 'Histórico antigo' };
+const RS_DEF = { a: ['sem', 'mes', 'series', 'cardio'], b: ['acomp', 'ultimos', 'conta', 'hist'] };
+function rsLayout(noHist) {
+  const o = profile(ME).rsOrder;
+  if (!o) return { a: [...RS_DEF.a], b: noHist ? ['hist', 'acomp', 'ultimos', 'conta'] : [...RS_DEF.b] };
+  const a = (o.a || []).filter(k => RS_NAMES[k]), b = (o.b || []).filter(k => RS_NAMES[k] && !a.includes(k));
+  for (const c of ['a', 'b']) for (const k of RS_DEF[c]) if (!a.includes(k) && !b.includes(k)) (c === 'a' ? a : b).push(k);
+  return { a, b };
+}
+function rsResumoHtml(h, noHist) {
+  const L = rsLayout(noHist);
+  ui.rsNoHist = noHist; ui.rsVis = Object.keys(h).filter(k => h[k]);
+  if (!ui.rsEdit) return `<div class="rs-bar"><button class="link" data-act="rs-edit"><i class="ic ic-move"></i> Organizar cartões</button></div>
+    <div class="rs-col">${L.a.map(k => h[k]).join('')}</div><div class="rs-col">${L.b.map(k => h[k]).join('')}</div>`;
+  const seq = [...L.a, ...L.b].filter(k => h[k]), first = seq[0], last = seq[seq.length - 1];
+  const mini = k => `<section class="card rs-mini${ui.rsLast === k ? ' on' : ''}"><i class="ic ic-move"></i><b class="grow">${RS_NAMES[k]}</b>
+      <button class="icon" data-act="rs-mv" data-k="${k}" data-d="up" aria-label="Subir ${RS_NAMES[k]}" ${k === first ? 'disabled' : ''}>↑</button>
+      <button class="icon" data-act="rs-mv" data-k="${k}" data-d="down" aria-label="Descer ${RS_NAMES[k]}" ${k === last ? 'disabled' : ''}>↓</button>
+      <button class="icon rs-side" data-act="rs-mv" data-k="${k}" data-d="side" aria-label="Passar ${RS_NAMES[k]} para o outro lado">⇄</button></section>`;
+  const col = (c, t) => `<div class="rs-col"><p class="plan-g rs-side">${t}</p>${L[c].filter(k => h[k]).map(mini).join('') || '<p class="empty rs-side">Nenhum cartão deste lado.</p>'}</div>`;
+  return `<div class="rs-bar on"><div class="grow"><b>Organizar cartões</b><small>Use as setas para subir e descer.<span class="rs-side"> ⇄ passa o cartão para o outro lado.</span></small></div>
+      <button class="link" data-act="rs-reset">Voltar ao padrão</button><button class="btn primary" data-act="rs-done">Pronto</button></div>
+    ${col('a', 'Lado esquerdo')}${col('b', 'Lado direito')}`;
+}
+function rsMove(k, d) {
+  const L = rsLayout(ui.rsNoHist), vis = new Set(ui.rsVis || []), c = L.a.includes(k) ? 'a' : 'b', o = c === 'a' ? 'b' : 'a', arr = L[c], i = arr.indexOf(k);
+  if (i < 0) return;
+  if (d === 'side') { arr.splice(i, 1); L[o].splice(Math.min(i, L[o].length), 0, k); }
+  else {
+    const up = d === 'up', step = up ? -1 : 1;
+    let j = i + step; while (j >= 0 && j < arr.length && !vis.has(arr[j])) j += step;
+    if (j >= 0 && j < arr.length) [arr[i], arr[j]] = [arr[j], arr[i]];
+    else if (up && c === 'b') { arr.splice(i, 1); L.a.push(k); } // passa do começo da direita para o fim da esquerda (no celular é uma fila só)
+    else if (!up && c === 'a') { arr.splice(i, 1); L.b.unshift(k); }
+    else return;
+  }
+  profile(ME).rsOrder = { a: L.a, b: L.b }; ui.rsLast = k; save(); render();
+}
 const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
 function perfilHtml(p, desk) {
   const s = profileSummary(p.id), ws = weekStart(today()), noHist = !trainedDates(p.id).length;
@@ -6605,6 +6653,29 @@ function perfilHtml(p, desk) {
   }).join('');
 
   const log = (p.messages || []).slice().reverse().slice(0, 10), mine = p.id === ME;
+  // cartões do Resumo: cada um tem um nome curto para o professor mudar de lugar (rsResumoHtml)
+  const rsHtml = {
+    sem: weekReportHtml(p), mes: monthReportHtml(p), series: weekSetsHtml(p), cardio: cardioDaysHtml(p),
+    acomp: `
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
+      <div class="kv">
+        <div><b>${s.weekDays}</b><span>treinos na semana</span></div>
+        <div><b>${fmt(s.now)} kg</b><span>na semana ${delta(s.now, s.before)}</span></div>
+        <div><b>${fmt(cm)} min</b><span>cardio na semana</span></div>
+        <div><b>${trainedDates(p.id).length}</b><span>treinos no total</span></div>
+      </div>
+      <p class="plan-g" style="margin-top:14px">kg por grupo · semana atual × anterior</p>
+      <div class="bars">${bars}</div>
+    </section>`,
+    ultimos: `
+    <section class="card">
+      <div class="card-h"><div class="grow"><h3>Últimos treinos</h3></div></div>
+      ${recent || '<p class="empty">Ainda não treinou.</p>'}
+    </section>`,
+    conta: mine ? '' : inviteHtml(p) + studentAccountHtml(p),
+    hist: histImportHtml(p, noHist)
+  };
   const tabs = mine ? ST_TABS.filter(t => !['mensagens', 'pagamento'].includes(t[0])) : ST_TABS;
   const tab = tabs.some(t => t[0] === ui.stTab) ? ui.stTab : 'resumo';
   return `<div class="ws" data-active="${desk ? tab : 'all'}">
@@ -6629,25 +6700,7 @@ function perfilHtml(p, desk) {
       </div>
     </section>
     ${desk ? `<div class="tabs">${tabs.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test || mine ? '' : readyBtn(p)}</div>` : ''}
-    <div data-tab="resumo"><div class="rs-col">${weekReportHtml(p)}${monthReportHtml(p)}${weekSetsHtml(p)}${cardioDaysHtml(p)}</div><div class="rs-col">
-    ${noHist ? histImportHtml(p, true) : ''}
-    <section class="card">
-      <div class="card-h"><div class="grow"><h3>Acompanhamento</h3><small><span class="dot ${s.last === today() ? 'on' : ''}"></span>${s.lastTxt}</small></div></div>
-      <div class="kv">
-        <div><b>${s.weekDays}</b><span>treinos na semana</span></div>
-        <div><b>${fmt(s.now)} kg</b><span>na semana ${delta(s.now, s.before)}</span></div>
-        <div><b>${fmt(cm)} min</b><span>cardio na semana</span></div>
-        <div><b>${trainedDates(p.id).length}</b><span>treinos no total</span></div>
-      </div>
-      <p class="plan-g" style="margin-top:14px">kg por grupo · semana atual × anterior</p>
-      <div class="bars">${bars}</div>
-    </section>
-    <section class="card">
-      <div class="card-h"><div class="grow"><h3>Últimos treinos</h3></div></div>
-      ${recent || '<p class="empty">Ainda não treinou.</p>'}
-    </section>
-    ${mine ? '' : inviteHtml(p) + studentAccountHtml(p)}
-    ${noHist ? '' : histImportHtml(p)}</div></div>
+    <div data-tab="resumo">${rsResumoHtml(rsHtml, noHist)}</div>
     <div data-tab="medidas">${bodySummaryHtml(p)}</div>
     <div data-tab="marcacoes">${marcacoesHtml(p)}</div>
     <div data-tab="plano">${plannerHtml(p)}
@@ -7036,6 +7089,10 @@ $main.addEventListener('click', e => {
     }
     case 'desk-pick': ui.profile = b.dataset.pid; if (b.dataset.t) ui.stTab = b.dataset.t; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null; ui.bGroup = null; return go('alunos');
     case 'st-tab': ui.stTab = b.dataset.t; render(); return showStTab();
+    case 'rs-edit': ui.rsEdit = true; ui.rsLast = null; return render();
+    case 'rs-done': ui.rsEdit = false; ui.rsLast = null; return render();
+    case 'rs-mv': return rsMove(b.dataset.k, b.dataset.d);
+    case 'rs-reset': delete profile(ME).rsOrder; ui.rsLast = null; save(); return render();
     case 'wk-post': ui.wkPost = { pid: b.dataset.pid, ws: b.dataset.ws }; render(); return window.scrollTo({ top: 0 });
     case 'wk-post-close': ui.wkPost = null; render(); return window.scrollTo({ top: 0 });
     case 'm-rep': ui.mRep = { pid: b.dataset.pid, ym: b.dataset.ym }; return render();
@@ -8953,7 +9010,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-11:19';
+const APP_VERSION = '30/10-11:27';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
