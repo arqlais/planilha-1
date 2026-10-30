@@ -1627,7 +1627,7 @@ const BARRIERS=[["Vergonha do corpo","eye-off"],["Medo de ser julgado","users"],
 const GOALS=[["Me sentir melhor comigo","smile"],["Ter mais disposição","zap"],["Perder peso com saúde","scale"],["Cuidar da saúde mental","brain"],["Ganhar força e mobilidade","activity"],["Conseguir ir à academia","dumbbell"]];
 const CONTACT=[["Só mensagem","message-square","Sem câmera e sem áudio"],["Áudio","mic","Conversa por voz"],["Vídeo-chamada","video","Com câmera"]];
 const PARQ=["Algum médico já disse que você tem problema no coração e só deve fazer atividade física com orientação?","Você sente dor no peito quando faz atividade física?","No último mês, sentiu dor no peito sem estar fazendo atividade física?","Você perde o equilíbrio por tontura ou já desmaiou?","Tem algum problema nos ossos ou articulações que pode piorar com exercício?","Toma remédio para pressão arterial ou para o coração?","Sabe de algum outro motivo pelo qual não deveria fazer atividade física?"];
-const NOP={id:null,name:"Seu professor",cref:"CREF a confirmar",bio:"Profissional de educação física parceira",status:"ativo",spec:[]};
+const NOP={id:null,name:"Seu professor",cref:"CREF a confirmar",bio:"Profissional de educação física parceiro",status:"ativo",spec:[]};
 const myP=()=>DB.personals.find(p=>p.id===(S.pid||(FB?null:"p1")))||DB.personals.find(p=>p.status==="ativo")||DB.personals[0]||NOP;
 const PERSONAL={get name(){return myP().name},get cref(){return myP().cref},get bio(){return myP().bio||""},get initials(){return initials(myP().name)}};
 const BADGES=[["Primeiro passo","footprints","Criou seu plano"],["Primeira conversa","message-circle","Conversou com o professor"],["1º treino","flame","Concluiu o primeiro treino"],["Semana firme","calendar-check","3 treinos em uma semana"],["Nível 2","house","Chegou aos treinos em casa"],["8 treinos","award","Completou 8 treinos"],["Nível 3","trees","Primeiro encontro ao ar livre"],["Nível 4","dumbbell","Chegou à academia"]];
@@ -1897,7 +1897,7 @@ function siteFx(){
   /* título palavra por palavra */
   const h=hero.querySelector("h1");let k=0;const wrap=n=>[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.append(t);return}const w=document.createElement("span");w.className="w";w.style.setProperty("--i",k++);w.textContent=t;f.append(w)});c.replaceWith(f)}else if(c.nodeType===1)wrap(c)});wrap(h);
   /* faixa de frases depois dos números */
-  const L=["Sem pressa","Sem julgamento","No seu ritmo","Do sofá à academia","Primeira conversa grátis","Sem fidelidade","A mesmo professor do começo ao fim"];
+  const L=["Sem pressa","Sem julgamento","No seu ritmo","Do sofá à academia","Primeira conversa grátis","Sem fidelidade","O mesmo professor do começo ao fim"];
   const facts=$(".sitefx .facts");if(facts)facts.insertAdjacentHTML("afterend",`<div class="mq" aria-hidden="true"><div>${L.concat(L).map(x=>`<span>${x}</span><i></i>`).join("")}</div></div>`);
   /* números contam */
   const nums=[...root.querySelectorAll(".facts b")].map(b=>{const m=b.textContent.match(/^(\d+)(.*)$/);return m?{b,n:+m[1],suf:m[2]}:null}).filter(Boolean);
@@ -2086,7 +2086,7 @@ function moodBox(){
     const br=`<button class="btn btn-primary" data-act="breathe"><i data-lucide="wind"></i>Respirar por 2 minutos</button>`;
     if(m==="Sem energia")ans=`<p>Tudo bem ter dias assim. Hoje pode ser só respirar com calma por 2 minutos. Isso já conta como movimento.</p>${br}`;
     if(m==="Ansioso")ans=`<p>Vamos desacelerar juntos. Soltar o ar mais devagar do que puxa ajuda o corpo a sair do modo alerta.</p>${br}`;
-    if(m==="Mais ou menos")ans=w2?`<p>Um treino curto e tranquilo pode ajudar a virar o dia. Sugestão: <b>${light.t}</b>, ${light.min} min, dá para fazer sentado.</p><button class="btn btn-primary" data-w="${light.id}"><i data-lucide="play"></i>Começar ${light.t.toLowerCase()}</button>`:`<p>Sem problema. Que tal mandar uma mensagem para a ${PERSONAL.name.split(" ")[0]} contando como está? Ela responde sem pressa.</p><a class="btn btn-primary" href="#/app/mensagens"><i data-lucide="message-circle"></i>Mandar mensagem</a>`;
+    if(m==="Mais ou menos")ans=w2?`<p>Um treino curto e tranquilo pode ajudar a virar o dia. Sugestão: <b>${light.t}</b>, ${light.min} min, dá para fazer sentado.</p><button class="btn btn-primary" data-w="${light.id}"><i data-lucide="play"></i>Começar ${light.t.toLowerCase()}</button>`:`<p>Sem problema. Que tal mandar uma mensagem para a ${PERSONAL.name.split(" ")[0]} contando como está? Ele responde sem pressa.</p><a class="btn btn-primary" href="#/app/mensagens"><i data-lucide="message-circle"></i>Mandar mensagem</a>`;
     if(m==="Bem"){const w=suggest();ans=w2?`<p>Que bom! Aproveita a disposição: <b>${w.t}</b>, ${w.min} min.</p><button class="btn btn-primary" data-w="${w.id}"><i data-lucide="play"></i>Começar treino</button>`:nx?`<p>Que bom! Um bom dia para dar o próximo passo: ${nx.t.replace(/\s*\(.*\)/,"").toLowerCase()}.</p><a class="btn btn-primary" href="${nx.go}"><i data-lucide="arrow-right"></i>Ir agora</a>`:`<p>Que bom! Você já pode subir de nível quando quiser.</p>`}}
   return `<div class="mood"><h3>Como você está hoje?</h3><div class="row" role="group" aria-label="Como você está hoje">${MOODS.map(([t,ic])=>`<button aria-pressed="${m===t}" data-mood="${t}"><i data-lucide="${ic}"></i>${t}</button>`).join("")}</div>${ans?`<div class="ans">${ans}</div>`:""}</div>`;
 }
@@ -2131,7 +2131,7 @@ function greet(){const h=new Date().getHours();return h<12?"Bom dia":h<18?"Boa t
 function suggest(){const done=S.workouts.map(w=>w.id);return WORKOUTS.find(w=>!done.includes(w.id))||WORKOUTS[S.workouts.length%WORKOUTS.length]}
 function levelUp(){
   if(S.level>=4){sheet("trophy","Jornada concluída!","Você chegou à academia com autonomia. Esse primeiro passo virou um caminho inteiro.","Voltar ao início");return}
-  S.level++;if(!FB){S.messages.push({from:"them",text:`Parabéns, ${first()}! Você chegou ao nível ${S.level}: ${LEVELS[S.level-1].t}. Estou muito orgulhosa de você!`,t:nowT()});S.unread++}save();
+  S.level++;if(!FB){S.messages.push({from:"them",text:`Parabéns, ${first()}! Você chegou ao nível ${S.level}: ${LEVELS[S.level-1].t}. Estou muito orgulhoso de você!`,t:nowT()});S.unread++}save();
   confetti();sheet(LEVELS[S.level-1].icon,`Nível ${S.level}: ${LEVELS[S.level-1].t}`,LEVELS[S.level-1].desc,"Vamos lá");
 }
 function sheet(ic,t,p,btn,opt={}){const prev=document.activeElement;const m=document.createElement("div");m.className="modal";
@@ -2202,7 +2202,7 @@ function renderP(){
     <div class="pfoot"><div class="in"><button class="btn btn-primary" id="pdone" ${P.feel?"":"disabled"}>Salvar e voltar</button></div></div>`;
     el.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{P.feel=b.dataset.f;renderP()});
     $("#pdone").onclick=()=>{S.workouts.push({id:w.id,at:Date.now(),feel:P.feel});const n=S.workouts.length;
-      const resp=P.feel==="Difícil"?"Obrigada por me contar. Vou deixar o próximo treino mais leve para você.":P.feel==="Cansativo"?"Cansar é normal no começo! Descansa bem hoje.":"Que ótimo! Você está indo muito bem.";
+      const resp=P.feel==="Difícil"?"Obrigado por me contar. Vou deixar o próximo treino mais leve para você.":P.feel==="Cansativo"?"Cansar é normal no começo! Descansa bem hoje.":"Que ótimo! Você está indo muito bem.";
       S.messages.push({from:"me",text:`Terminei o treino "${w.t}" e achei ${P.feel.toLowerCase()}.`,t:nowT(),at:Date.now()});if(!FB){S.messages.push({from:"them",text:resp,t:nowT()});S.unread++}save();closeP();
       if(n===1)setTimeout(()=>{confetti();toast("Conquista: 1º treino!")},200);else if(n===8)setTimeout(()=>{confetti();toast("Conquista: 8 treinos!")},200);else toast("Treino salvo!")};
     icons();return}
@@ -2287,7 +2287,7 @@ function vChat(){
 function reply(t){t=t.toLowerCase();
   if(t.includes("vergonha")||t.includes("medo"))return"Isso é muito comum e faz total sentido. Por isso a gente começa em casa, sem ninguém olhando. Vamos no seu tempo, combinado?";
   if(t.includes("sentad")||t.includes("cadeira"))return"Pode sim! O treino \"Força na cadeira\" e o de mobilidade são feitos sentado. Posso adaptar outros também.";
-  if(t.includes("não estou bem")||t.includes("nao estou bem")||t.includes("triste"))return"Obrigada por me contar. Hoje pode ser só uma respiração de 5 minutos, ou descanso mesmo. Se estiver muito difícil, o CVV atende 24h pelo 188. Estou aqui.";
+  if(t.includes("não estou bem")||t.includes("nao estou bem")||t.includes("triste"))return"Obrigado por me contar. Hoje pode ser só uma respiração de 5 minutos, ou descanso mesmo. Se estiver muito difícil, o CVV atende 24h pelo 188. Estou aqui.";
   if(t.includes("horário")||t.includes("horario"))return"Claro! Pode escolher outro horário na aba Agenda e cancelar o antigo.";
   if(t.includes("dor"))return"Se sentir dor, pare o exercício. Me conta onde está doendo para eu ajustar o seu treino.";
   return"Anotado! Vou olhar com calma e te respondo por aqui.";
@@ -2774,7 +2774,7 @@ function pAgenda(p,cs){
   </div>`;
   document.querySelectorAll("[data-ck]").forEach(x=>x.onclick=()=>{const b=bookingsAll().find(y=>y.id===x.dataset.ck),c=DB.checkins[b.id]=DB.checkins[b.id]||{};
     if(x.dataset.v==="in"){c.in=Date.now();saveDB();pushMsg(b.cid,`Cheguei! O código do nosso encontro é ${meetCode(b)}. Confira antes de abrir a porta.`);toast("Check-in feito. A central foi avisada.")}
-    else{c.out=Date.now();saveDB();setBk(b,"feito");toast("Encontro encerrado. Obrigada!")}route(true)});
+    else{c.out=Date.now();saveDB();setBk(b,"feito");toast("Encontro encerrado. Obrigado!")}route(true)});
   document.querySelectorAll("[data-bk]").forEach(x=>x.onclick=()=>{const b=bookingsAll().find(y=>y.id===x.dataset.bk);setBk(b,x.dataset.s);if(x.dataset.s==="cancelado"&&!A(b.cid))pushMsg(b.cid,`Precisei cancelar nosso horário de ${dlabel(b.ts).toLowerCase()}. Vamos remarcar?`);toast(x.dataset.s==="feito"?"Encontro concluído":"Horário cancelado e aluno avisado");route(true)});
   bindBookingForm(p.id,()=>route(true));
 }
@@ -2851,11 +2851,11 @@ function aPersonais(bl){
   const cur=mkey(Date.now()),act=allClients().filter(c=>c.status==="ativo");
   $("#pv").innerHTML=`<div class="pgrid">${DB.personals.map(p=>{const n=act.filter(c=>c.pid===p.id).length,rev=bl.filter(b=>b.m===cur&&b.pid===p.id).reduce((s,b)=>s+b.amount,0);
     return`<article class="pcard"><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${p.status==="ativo"?pill("ok","circle-check","Ativa"):p.status==="pendente"?pill("warn","hourglass","Aguardando análise"):pill("mute","pause","Inativa")}${p.spec.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${p.status==="ativo"?pill("ok","circle-check","Ativo"):p.status==="pendente"?pill("warn","hourglass","Aguardando análise"):pill("mute","pause","Inativo")}${p.spec.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>
       <p class="dm" style="color:var(--muted);font-size:14.5px">${esc(p.bio||"")}</p>
       ${p.status==="ativo"?`<div><div style="display:flex;justify-content:space-between;font-size:14px"><span>Alunos</span><b>${n} de ${p.cap}</b></div><div class="prog mt" style="margin-top:6px"><i style="width:${Math.min(100,n/p.cap*100)}%"></i></div></div>
       <div class="kv"><div><span>Termo de parceria</span><b>${p.terms?`Aceito ${new Date(p.terms.at).toLocaleDateString("pt-BR")}`:`<span style="color:var(--red)">Pendente</span>`}</b></div><div><span>Faturado no mês</span><b>${money(rev)}</b></div><div><span>Repasse (${pctf(splitOf(p.id))})</span><b>${money(rev*splitOf(p.id))}</b></div><div><span>Avaliação (${ratingOf(p.id).n})</span><b>${ratingOf(p.id).n?ratingOf(p.id).avg.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ★":"—"}</b></div></div>
-      <div class="acts pc-foot"><button class="btn btn-ghost btn-sm" data-pfi="${p.id}"><i data-lucide="id-card"></i>Ficha completa</button><button class="btn btn-ghost btn-sm" data-asp="${p.id}"><i data-lucide="log-in"></i>Ver o painel dela</button><button class="btn btn-ghost btn-sm" data-pst="${p.id}" data-v="inativo"><i data-lucide="pause"></i>Desativar</button></div>`
+      <div class="acts pc-foot"><button class="btn btn-ghost btn-sm" data-pfi="${p.id}"><i data-lucide="id-card"></i>Ficha completa</button><button class="btn btn-ghost btn-sm" data-asp="${p.id}"><i data-lucide="log-in"></i>Ver o painel dele</button><button class="btn btn-ghost btn-sm" data-pst="${p.id}" data-v="inativo"><i data-lucide="pause"></i>Desativar</button></div>`
       :p.status==="pendente"?`<div class="acts pc-foot"><button class="btn btn-primary btn-sm" data-pst="${p.id}" data-v="ativo"><i data-lucide="check"></i>Aprovar</button><button class="btn btn-ghost btn-sm" data-pdel="${p.id}"><i data-lucide="x"></i>Recusar</button></div>`
       :`<div class="acts pc-foot"><button class="btn btn-ghost btn-sm" data-pst="${p.id}" data-v="ativo"><i data-lucide="play"></i>Reativar</button></div>`}</article>`}).join("")}</div>
   ${FB?`<div class="info mt" style="max-width:720px"><i data-lucide="info"></i><span>Novos professores criam a própria conta em <b style="color:var(--ink)">Entrar → Professor → Criar conta de professor</b>. O cadastro aparece aqui como “Aguardando análise” para você aprovar.</span></div>`:""}<form class="form mt" id="np" style="max-width:720px" ${FB?"hidden":""}><h3>Cadastrar professor</h3><div class="set">
@@ -2941,7 +2941,7 @@ function aLeads(){
   document.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{LF=b.dataset.lf;route(true)});
   document.querySelectorAll("[data-ls]").forEach(b=>b.onclick=()=>{DB.leads.find(l=>l.id===b.dataset.ls).status=b.dataset.v;saveDB();toast(b.dataset.v==="arquivado"?"Arquivado":"Marcado como em contato");route(true)});
   document.querySelectorAll("[data-conv]").forEach(b=>b.onclick=()=>{const l=DB.leads.find(x=>x.id===b.dataset.conv);l.status="convertido";
-    if(FB){saveDB();toast(l.type==="personal"?"Marcado. Peça para ela criar a conta em Entrar → Professor.":"Marcado como convertido. O cliente cria a conta em Começar.");route(true);return}
+    if(FB){saveDB();toast(l.type==="personal"?"Marcado. Peça para ele criar a conta em Entrar → Professor.":"Marcado como convertido. O cliente cria a conta em Começar.");route(true);return}
     if(l.type==="personal"){DB.personals.push({id:"p"+Date.now(),name:l.name,email:/@/.test(l.contact)?l.contact:mailOf(l.name),cref:l.cref||"CREF a confirmar",area:l.area||"A definir",bio:l.msg,spec:["A definir"],status:"pendente",cap:15,rating:null,since:Date.now()});toast("Enviado para análise em Professores")}
     else{const pid=DB.personals.find(p=>p.status==="ativo").id;DB.clients.push({id:"c"+Date.now(),name:l.name,level:1,pid,since:Date.now(),goals:["Me sentir melhor comigo"],barriers:["Não sei por onde começar"],contact:"Só mensagem",period:"Noite",days:["Seg","Qua"],medical:false,medOk:false,workouts:[],talked:false,outdoor:0,gym:0,status:"ativo",msgs:[{from:"me",text:l.msg,t:"",at:l.at}],phone:l.contact});toast("Cliente criado no nível 1")}
     saveDB();route(true)});
@@ -3048,7 +3048,7 @@ function seedPay(db){
   db.fees={pix:0.99,cartao:3.49,boleto:1.99};db.methodsOn={pix:true,cartao:true,boleto:true};db.payoutDay=5;db.payInfo={};
   Object.keys(db.paid).forEach(k=>{if(db.paid[k]){const x=rnd();db.payInfo[k]={m:x<.55?"pix":x<.85?"cartao":"boleto",at:null}}});
   db.personals.forEach((p,i)=>{if(!p.payout)p.payout={type:["CPF","E-mail","Celular"][i%3],key:["***.456.789-**","c***@exemplo.com","(11) 9****-1234"][i%3]}});
-  const now=Date.now(),R=[["p1","c1",5,["Paciente","Me sinto à vontade"],"Nunca pensei que ia gostar de treinar. Ela tem muita paciência.",false,6],["p1","c3",5,["Pontual","Explica bem"],"",false,12],
+  const now=Date.now(),R=[["p1","c1",5,["Paciente","Me sinto à vontade"],"Nunca pensei que ia gostar de treinar. Ele tem muita paciência.",false,6],["p1","c3",5,["Pontual","Explica bem"],"",false,12],
     ["p1","c9",4,["Adapta os treinos"],"Gosto muito, só às vezes demora a responder à noite.",true,3],["p1","c11",5,["Explica bem","Pontual"],"Hoje vou à academia sozinho. Obrigado!",false,20],["p1","c6",4,["Paciente","Poderia responder mais rápido"],"",true,9],
     ["p2","c5",5,["Pontual","Explica bem"],"Excelente profissional.",false,4],["p2","c4",3,["Poderia explicar melhor"],"Às vezes sinto que o treino está puxado demais para mim.",true,8],["p2","c8",5,["Me sinto à vontade"],"",false,15],["p2","c12",4,["Paciente"],"Muito atencioso.",false,2]];
   db.ratings=R.map(([pid,cid,stars,tags,text,anon,d],i)=>({id:"r"+i,pid,cid,name:(db.clients.find(c=>c.id===cid)||{}).name||"",stars,tags,text,anon,at:now-d*D1}));
@@ -3502,7 +3502,7 @@ function pExs(p){
 const TERMS_V="1.0";
 const TERMS={
  personal:{t:"Termo de parceria do professor",items:()=>[
-  ["Objeto","O professor atende, como profissional autônoma parceira, clientes que chegam pela plataforma Primeiro Passo."],
+  ["Objeto","O professor atende, como profissional autônomo parceiro, clientes que chegam pela plataforma Primeiro Passo."],
   ["Remuneração",`${pctf(DB.split/100)} de cada mensalidade paga (ou o percentual combinado e registrado no painel), repassado até o dia ${DB.payoutDay||5} do mês seguinte, na chave Pix cadastrada.`],
   ["Pagamentos só pela plataforma","É proibido receber qualquer valor diretamente de clientes da plataforma, em dinheiro, Pix, cartão ou outro meio."],
   ["Não aliciamento","Durante a parceria e por 12 meses depois do término, o professor não pode oferecer, aceitar ou prestar serviços por fora a clientes que conheceu pela plataforma, nem incentivá-los a sair dela."],
