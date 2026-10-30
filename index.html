@@ -8134,6 +8134,20 @@ async function fixOnce() {
     mark('crucifixo-2206-x4');
     if (n) { save(); msgs.push('Crucifixo: as cargas de 22/06 voltaram ao peso certo.'); }
   }
+  // 1j) Professor (30/10): não treina mais na Sky. Para de separar por academia: Evoque e Sky voltam a ser um
+  //     histórico só por exercício (compara com a última vez feita, em qualquer lugar). Nenhuma carga é apagada.
+  if (!done.has('academias-juntar')) {
+    await ensureFull(ME);
+    let n = 0;
+    db.exercises.forEach(e => {
+      if (e.profileId !== ME || !/^(evoque|sky)\|/.test(e.twin || '')) return;
+      const k = e.twin.slice(e.twin.indexOf('|') + 1);
+      if (k === twinKey({ name: e.name })) delete e.twin; else e.twin = k;
+      n++;
+    });
+    mark('academias-juntar');
+    if (n) { save(); msgs.push('Pronto: as cargas não são mais separadas por academia. Cada exercício compara com a última vez feita.'); }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -8908,7 +8922,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-10:30';
+const APP_VERSION = '30/10-10:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
