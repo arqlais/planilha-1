@@ -1274,6 +1274,8 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 #demopill{position:fixed;z-index:60;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#7A4E00;background:#FFF1CC;border:1px solid #D9A441;border-radius:99px;padding:8px 13px;box-shadow:0 4px 14px rgba(0,0,0,.15);text-decoration:none}
 #demopill svg{width:15px;height:15px}
 @media(min-width:900px){#demopill{bottom:18px}}
+.demo-steps{text-align:left;max-width:520px;margin:4px auto 18px;padding-left:22px;color:var(--muted);font-size:15px;display:grid;gap:4px}
+.demo-ps{display:grid;gap:10px;margin-top:14px}.demo-ps .btn{width:100%;justify-content:center;white-space:normal}
 .demo-more{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
 .lg-testbox{display:grid;justify-items:center;gap:6px;border-top:1px dashed var(--line);padding-top:12px;margin-top:4px;width:100%}
 .lg-testbox small{color:var(--muted);font-size:12.5px;max-width:34ch}
@@ -1418,7 +1420,7 @@ const FIREBASE_CONFIG={
 };
 /* DEMO: o link com ?demo (atalho em demo/) abre só com dados de exemplo, sem senha e sem tocar no banco de verdade.
    Guarda tudo em chaves próprias deste navegador, separadas do app real. */
-const DEMO=/[?&]demo\b/.test(location.search),DK=DEMO?":demo":"";
+const DEMO=/[?&]demo\b/.test(location.search),DK=DEMO?":demo2":"";
 const FB=!DEMO&&!!(window.firebase&&FIREBASE_CONFIG.apiKey);
 /* ME: id do aluno logado ("me" no modo demonstração). AL: outros alunos carregados nos painéis. */
 let ME=FB?null:"me",AL={};
@@ -2424,7 +2426,7 @@ function seedDB(){
   return seedInfo(seedTerms(seedSafety(seedPay(seedFin(db)))));
 }
 let DB=loadDB();
-function loadDB(){if(FB)return emptyDB();try{const r=localStorage.getItem(DBKEY);if(r)return JSON.parse(r)}catch(e){}return seedDB()}
+function loadDB(){if(FB)return emptyDB();try{const r=localStorage.getItem(DBKEY);if(r)return JSON.parse(r)}catch(e){}return DEMO?emptyDB():seedDB()}
 function saveDB(){if(FB){FBL.saveDB();return}try{localStorage.setItem(DBKEY,JSON.stringify(DB))}catch(e){}}
 function syncPrices(){LEVELS.forEach((l,i)=>{const v=DB.prices[i];l.price=money(v);l.per=i===0?"pagamento único":i===1?"por mês":`por mês · ${money(v/8)}/aula`})}
 syncPrices();
@@ -2511,7 +2513,7 @@ function login(){
            empresa:{ic:"building-2",t:"Entrar como empresa",d:"Visão geral, clientes, personais, financeiro, segurança e preços.",u:"E-mail",um:"email"}}[who];
   const top=`<header class="topbar"><div class="wrap"><a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
     <a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a><button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
-  if(who==="nova-personal"&&FB){
+  if(who==="nova-personal"&&(FB||DEMO)){
     $("#root").innerHTML=`${top}<main class="login-main lg-center"><form class="lg-card" id="npf" novalidate>
       <span class="ri"><i data-lucide="dumbbell"></i></span><h1>Criar conta de personal</h1><p class="lg-lead">Depois do cadastro, a empresa confere seu CREF e libera o seu painel.</p>
       <div class="field lg-f"><label for="npn">Nome completo</label><input id="npn" autocomplete="name"></div>
@@ -2519,31 +2521,34 @@ function login(){
       <div class="uf-row lg-f"><div class="field" style="margin:0"><label for="npu">Estado</label>${ufSelect("npu","")}</div><div class="field" style="margin:0"><label for="npa">Cidade</label><input id="npa" autocomplete="address-level2"></div></div>
       <div class="field lg-f"><label for="npt">Celular</label><input id="npt" type="tel" autocomplete="tel"></div>
       <div class="field lg-f"><label for="npe">E-mail</label><input id="npe" type="email" autocomplete="email" inputmode="email"></div>
-      <div class="field lg-f"><label for="npw">Senha</label><input id="npw" type="password" autocomplete="new-password" placeholder="Pelo menos 6 caracteres"></div>
+      ${DEMO?"":`<div class="field lg-f"><label for="npw">Senha</label><input id="npw" type="password" autocomplete="new-password" placeholder="Pelo menos 6 caracteres"></div>`}
       <small class="err" id="npx" role="alert"></small>
       <button class="btn btn-primary">Enviar cadastro<i data-lucide="arrow-right"></i></button>
-    </form><a class="lg-back" href="#/entrar/personal"><i data-lucide="arrow-left"></i>Já tenho conta</a></main>`;
+    </form><a class="lg-back" href="${DEMO?"#/entrar":"#/entrar/personal"}"><i data-lucide="arrow-left"></i>${DEMO?"Voltar":"Já tenho conta"}</a></main>`;
     $("#theme").onclick=toggleTheme;icons();
-    $("#npf").onsubmit=e=>{e.preventDefault();const f={name:$("#npn").value.trim(),cref:$("#npc").value.trim(),uf:$("#npu").value,city:$("#npa").value.trim(),tel:$("#npt").value.trim(),email:$("#npe").value.trim().toLowerCase(),pw:$("#npw").value};
+    $("#npf").onsubmit=e=>{e.preventDefault();const f={name:$("#npn").value.trim(),cref:$("#npc").value.trim(),uf:$("#npu").value,city:$("#npa").value.trim(),tel:$("#npt").value.trim(),email:$("#npe").value.trim().toLowerCase(),pw:DEMO?"teste123":$("#npw").value};
       const miss=[f.name.length<3&&"nome",f.cref.length<4&&"CREF",!f.uf&&"estado",f.city.length<2&&"cidade",!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)&&"e-mail",f.pw.length<6&&"senha com 6 caracteres"].filter(Boolean);
       if(miss.length){$("#npx").textContent="Falta: "+miss.join(", ")+".";return}
       const bt=$("#npf button.btn-primary");bt.disabled=true;$("#npx").textContent="";
+      if(!FB){const id="p"+(DB.personals.length+1);DB.personals.push({id,name:f.name,cref:"CREF "+f.cref,uf:f.uf,area:f.city+" / "+f.uf,bio:"",spec:["Iniciantes"],status:"pendente",cap:15,since:Date.now(),email:f.email,info:{name:f.name,email:f.email,tel:f.tel}});saveDB();
+        sheet("badge-check","Cadastro enviado","Agora entre como empresa e aprove esta personal em Personais. Depois ela já pode entrar.","Entendi",{onOk:()=>{location.hash="#/entrar"}});return}
       FBL.signupPersonal(f).then(()=>sheet("badge-check","Cadastro enviado","A empresa vai conferir seu CREF. Quando for aprovado, você entra com este e-mail e senha em Entrar → Personal.","Entendi",{onOk:()=>{location.hash="#/entrar/personal"}})).catch(x=>{bt.disabled=false;$("#npx").textContent=x.msg})};
     return}
   if(!R){
     $("#root").innerHTML=`${top}<main class="login-main lg-center">
-      ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Toque e entre direto, sem senha. Tudo aqui é de exemplo e fica só neste aparelho. Para trocar depois, use o botão "Trocar perfil".</p>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
+      ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Comece do zero, como no dia a dia. Tudo fica só neste aparelho e entra sem senha. Para trocar, use o botão "Trocar perfil".</p>
+      <ol class="demo-steps"><li>Crie a personal em "Sou personal".</li><li>Em "Sou da empresa", aprove a personal em Personais.</li><li>Em "Sou aluno", faça o cadastro do aluno.</li><li>Volte na personal para indicar os exercícios dele.</li></ol>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
       <div class="roles">
         <div class="role"><span class="ri"><i data-lucide="footprints"></i></span><h2>Sou aluno</h2><p>Seu caminho passo a passo, treinos, agenda e conversa com a sua personal.</p><a class="btn btn-primary" href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}">${has&&!S.loggedOut?"Abrir meu app":"Entrar no app"}<i data-lucide="arrow-right"></i></a></div>
         <div class="role"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Sou personal</h2><p>Seus alunos, alertas do dia, agenda, mensagens e seus ganhos.</p><a class="btn btn-primary" href="#/entrar/personal">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
         <div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, personais, financeiro e segurança.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
       </div>
-      ${DEMO?`<div class="demo-more"><a class="btn btn-ghost" href="#/" data-dsite><i data-lucide="globe"></i>Ver o site, como um visitante</a><a class="btn btn-ghost" href="#/comecar"><i data-lucide="user-plus"></i>Ver o cadastro de aluno novo</a><button class="btn btn-ghost" id="dreset"><i data-lucide="rotate-ccw"></i>Recomeçar o teste do zero</button></div>`
+      ${DEMO?`<div class="demo-more"><a class="btn btn-ghost" href="#/" data-dsite><i data-lucide="globe"></i>Ver o site, como um visitante</a><button class="btn btn-ghost" id="dreset"><i data-lucide="rotate-ccw"></i>Recomeçar o teste do zero</button></div>`
         :FB?"":`<p class="lg-note"><i data-lucide="info"></i>Versão de demonstração: os dados ficam salvos só neste navegador.</p>`}
     </main>`;
     if(DEMO){document.querySelectorAll(".role .btn").forEach((a,i)=>a.onclick=e=>{e.preventDefault();demoGo(["aluno","personal","empresa"][i])});
       $("[data-dsite]").onclick=()=>{DEMO_SITE=true};
-      $("#dreset").onclick=()=>sheet("rotate-ccw","Recomeçar o teste?","Tudo o que você mexeu no modo de teste volta ao exemplo inicial. O app de verdade não é afetado.","Recomeçar",{danger:true,cancel:"Cancelar",onOk:()=>{[KEY,DBKEY,SKEY].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.reload()}})}
+      $("#dreset").onclick=()=>sheet("rotate-ccw","Recomeçar o teste?","Apaga a personal, o aluno e tudo o que você fez no teste. O app de verdade não é afetado.","Recomeçar",{danger:true,cancel:"Cancelar",onOk:()=>{[KEY,DBKEY,SKEY].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.reload()}})}
     $("#theme").onclick=toggleTheme;icons();return}
   $("#root").innerHTML=`${top}<main class="login-main lg-center">
     <form class="lg-card" id="lgf" novalidate>
@@ -2586,8 +2591,19 @@ let DEMO_SITE=false,DEMO_GO=null;
 function demoPill(h){let b=$("#demopill");if(!DEMO||h==="#/entrar"){if(b)b.remove();return}
   if(!b){b=document.createElement("a");b.id="demopill";b.href="#/entrar";b.innerHTML=`<i data-lucide="repeat"></i>Trocar perfil`;document.body.appendChild(b)}}
 function demoGo(who){
-  if(who==="aluno"&&S.profile){S.loggedOut=false;save();location.hash="#/app";return}
+  if(who==="aluno"){if(S.profile){S.loggedOut=false;save();location.hash="#/app"}else location.hash="#/comecar";return}
+  if(who==="personal"){demoPersonal();return}
   DEMO_GO=who;location.hash="#/entrar/"+who}
+/* teste: escolher qual personal entrar, ou criar uma */
+function demoPersonal(){
+  const ps=DB.personals;if(!ps.length){location.hash="#/entrar/nova-personal";return}
+  const el=document.createElement("div");el.className="modal";el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Entrar como personal"><div class="big"><i data-lucide="dumbbell"></i></div><h3>Entrar como personal</h3>
+    <div class="demo-ps">${ps.map(p=>`<button class="btn ${p.status==="ativo"?"btn-primary":"btn-ghost"}" data-dp="${p.id}" ${p.status==="ativo"?"":"disabled"}>${esc(p.name)}${p.status==="ativo"?"":p.status==="pendente"?" · aguardando a empresa aprovar":" · desativada"}</button>`).join("")}
+    <a class="btn btn-ghost" href="#/entrar/nova-personal" data-dpn><i data-lucide="user-plus"></i>Criar outra personal</a></div></div>`;
+  document.body.appendChild(el);icons();const close=()=>el.remove();
+  el.onclick=e=>{if(e.target===el)close()};
+  el.querySelectorAll("[data-dp]").forEach(b=>b.onclick=()=>{close();setSess({role:"personal",pid:b.dataset.dp});location.hash="#/personal"});
+  el.querySelector("[data-dpn]").onclick=close}
 function logout(){if(FB){FBL.logout();return}setSess({});location.hash="#/entrar"}
 
 /* ================== MOLDURA DOS PAINÉIS ================== */
