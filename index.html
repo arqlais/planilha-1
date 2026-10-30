@@ -1193,6 +1193,13 @@ body.v2-done nav.bottom{display:none}
 .v2-brand .v2-wm.sm{font-size:17px}
 .v2-avbtn{overflow:hidden;padding:0;width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);font-weight:800;font-size:14px;flex:none}
 .v2-hello{font-family:'Outfit','Archivo',sans-serif;font-weight:600;font-size:26px;letter-spacing:-.02em;margin:6px 0 2px}
+.v2-verso{display:flex;gap:12px;align-items:flex-start;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:14px;background:rgba(255,255,255,.04)}
+.v2-verso .v2i{flex:none;width:22px;height:22px;color:var(--accent);margin-top:1px}
+.v2-verso blockquote{margin:0;font-style:italic;font-size:14px;line-height:1.45;font-weight:500}
+.v2-verso cite{display:block;margin-top:5px;font-style:normal;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.v2-greet+.v2-verso{margin-top:-6px}
+body.desk .v2-verso{width:auto;max-width:none;margin-left:0;margin-right:0}
+body.desk .v2-verso blockquote{font-size:16px}
 .v2-kpis{display:grid;grid-template-columns:1.2fr 1fr;grid-template-rows:auto auto;gap:10px;margin-bottom:6px}
 .v2-kpis .v2-tile:first-child{grid-row:span 2;text-align:left;border:1px solid var(--line)}
 .v2-tile.dk{background:rgba(6,12,34,.55);color:var(--text);border:1px solid var(--line);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
@@ -2862,7 +2869,7 @@ function v2HomeHtml(p, d, isToday) {
   const started = d.done > 0 || d.cmin > 0, show = d.exs.length || d.plan.includes(CARDIO);
   const ws = weekStart(today()), wk = new Set([...trainedDates(p.id), ...profCardio(p.id).filter(c => c.min > 0).map(c => c.date)].filter(x => x >= ws && x <= today())).size;
   const planned = Array.from({ length: 7 }, (_, i) => addDays(ws, i)).filter(x => dayPlan(p, x).some(w => w !== CARDIO)).length;
-  return `<h1 class="v2-greet">Oi, ${esc(firstName(p))},<br><b>${isToday ? 'bora treinar?' : `treino de ${fmtDate(ui.date)}`}</b></h1>
+  return `<h1 class="v2-greet">${p.id === ME ? v2Hello() : 'Oi'}, ${esc(firstName(p))},<br><b>${isToday ? 'bora treinar?' : `treino de ${fmtDate(ui.date)}`}</b></h1>${p.id === ME ? versoHtml() : ''}
     ${v2WeekHtml(p)}
     ${installTipHtml()}
     ${show ? `<section class="v2-hero">
@@ -3518,6 +3525,81 @@ function v2Status(p) {
 }
 const v2WeekDots = pid => { const ws = weekStart(today()), d = v2Days(pid); return `<div class="v2-dots">${Array.from({ length: 7 }, (_, i) => `<i class="${d.has(addDays(ws, i)) ? 'on' : ''}"></i>`).join('')}</div>`; };
 const v2Hello = () => { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; };
+// Versículo ao lado da saudação, só nas telas do professor. Um diferente a cada vez que o app abre.
+const VERSOS = [
+  ['Posso todas as coisas naquele que me fortalece.', 'Filipenses 4:13'],
+  ['O Senhor é o meu pastor; nada me faltará.', 'Salmos 23:1'],
+  ['Esforça-te e tem bom ânimo; não temas, nem te espantes, porque o Senhor, teu Deus, é contigo por onde quer que andares.', 'Josué 1:9'],
+  ['Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.', 'Salmos 37:5'],
+  ['Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento.', 'Provérbios 3:5'],
+  ['Os que esperam no Senhor renovarão as forças; subirão com asas como águias; correrão e não se cansarão; caminharão e não se fatigarão.', 'Isaías 40:31'],
+  ['Não temas, porque eu sou contigo; não te assombres, porque eu sou teu Deus; eu te fortaleço, e te ajudo.', 'Isaías 41:10'],
+  ['Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.', 'Mateus 11:28'],
+  ['Buscai primeiro o Reino de Deus, e a sua justiça, e todas estas coisas vos serão acrescentadas.', 'Mateus 6:33'],
+  ['Tudo quanto fizerdes, fazei-o de todo o coração, como ao Senhor e não aos homens.', 'Colossenses 3:23'],
+  ['Sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus.', 'Romanos 8:28'],
+  ['Se Deus é por nós, quem será contra nós?', 'Romanos 8:31'],
+  ['O choro pode durar uma noite, mas a alegria vem pela manhã.', 'Salmos 30:5'],
+  ['Este é o dia que fez o Senhor; regozijemo-nos e alegremo-nos nele.', 'Salmos 118:24'],
+  ['Lâmpada para os meus pés é a tua palavra e luz para o meu caminho.', 'Salmos 119:105'],
+  ['Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia.', 'Salmos 46:1'],
+  ['Elevo os meus olhos para os montes: de onde me virá o socorro? O meu socorro vem do Senhor, que fez o céu e a terra.', 'Salmos 121:1-2'],
+  ['Deleita-te também no Senhor, e ele te concederá o que deseja o teu coração.', 'Salmos 37:4'],
+  ['Não andeis ansiosos por coisa alguma; antes, as vossas petições sejam em tudo conhecidas diante de Deus.', 'Filipenses 4:6'],
+  ['A paz de Deus, que excede todo o entendimento, guardará os vossos corações e os vossos sentimentos em Cristo Jesus.', 'Filipenses 4:7'],
+  ['Aquele que em vós começou a boa obra a aperfeiçoará até ao Dia de Jesus Cristo.', 'Filipenses 1:6'],
+  ['Prossigo para o alvo, pelo prêmio da soberana vocação de Deus em Cristo Jesus.', 'Filipenses 3:14'],
+  ['Deus não nos deu o espírito de temor, mas de fortaleza, e de amor, e de moderação.', '2 Timóteo 1:7'],
+  ['Combati o bom combate, acabei a carreira, guardei a fé.', '2 Timóteo 4:7'],
+  ['Não nos cansemos de fazer o bem, porque a seu tempo ceifaremos, se não houvermos desfalecido.', 'Gálatas 6:9'],
+  ['A minha graça te basta, porque o meu poder se aperfeiçoa na fraqueza.', '2 Coríntios 12:9'],
+  ['Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.', '1 Pedro 5:7'],
+  ['Corramos, com paciência, a carreira que nos está proposta, olhando para Jesus, autor e consumador da fé.', 'Hebreus 12:1-2'],
+  ['A fé é o firme fundamento das coisas que se esperam e a prova das coisas que se não veem.', 'Hebreus 11:1'],
+  ['Eu sou o caminho, e a verdade, e a vida.', 'João 14:6'],
+  ['Deixo-vos a paz, a minha paz vos dou. Não se turbe o vosso coração, nem se atemorize.', 'João 14:27'],
+  ['No mundo tereis aflições, mas tende bom ânimo; eu venci o mundo.', 'João 16:33'],
+  ['Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna.', 'João 3:16'],
+  ['Eu vim para que tenham vida e a tenham com abundância.', 'João 10:10'],
+  ['Pedi, e dar-se-vos-á; buscai e encontrareis; batei, e abrir-se-vos-á.', 'Mateus 7:7'],
+  ['Eis que eu estou convosco todos os dias, até à consumação dos séculos.', 'Mateus 28:20'],
+  ['Para Deus nada é impossível.', 'Lucas 1:37'],
+  ['Tudo é possível ao que crê.', 'Marcos 9:23'],
+  ['As misericórdias do Senhor são a causa de não sermos consumidos; renovam-se cada manhã. Grande é a tua fidelidade.', 'Lamentações 3:22-23'],
+  ['Eu sei os pensamentos que penso de vós, diz o Senhor; pensamentos de paz e não de mal, para vos dar o fim que esperais.', 'Jeremias 29:11'],
+  ['O Senhor, teu Deus, está no meio de ti, poderoso para te salvar; ele se deleitará em ti com alegria.', 'Sofonias 3:17'],
+  ['A alegria do Senhor é a vossa força.', 'Neemias 8:10'],
+  ['O Senhor é a minha luz e a minha salvação; a quem temerei?', 'Salmos 27:1'],
+  ['Aquietai-vos e sabei que eu sou Deus.', 'Salmos 46:10'],
+  ['Cria em mim, ó Deus, um coração puro e renova em mim um espírito reto.', 'Salmos 51:10'],
+  ['Ensina-nos a contar os nossos dias, de tal maneira que alcancemos coração sábio.', 'Salmos 90:12'],
+  ['Aquele que habita no esconderijo do Altíssimo, à sombra do Onipotente descansará.', 'Salmos 91:1'],
+  ['Bendize, ó minha alma, ao Senhor, e não te esqueças de nenhum de seus benefícios.', 'Salmos 103:2'],
+  ['Consagra ao Senhor as tuas obras, e teus pensamentos serão estabelecidos.', 'Provérbios 16:3'],
+  ['O coração alegre é como o bom remédio.', 'Provérbios 17:22'],
+  ['Sobre tudo o que se deve guardar, guarda o teu coração, porque dele procedem as saídas da vida.', 'Provérbios 4:23'],
+  ['Tudo tem o seu tempo determinado, e há tempo para todo propósito debaixo do céu.', 'Eclesiastes 3:1'],
+  ['O amor é sofredor, é benigno; o amor não é invejoso, não trata com leviandade, não se ensoberbece.', '1 Coríntios 13:4'],
+  ['Não sabeis vós que o vosso corpo é o templo do Espírito Santo, que habita em vós?', '1 Coríntios 6:19'],
+  ['Portanto, quer comais, quer bebais ou façais outra qualquer coisa, fazei tudo para glória de Deus.', '1 Coríntios 10:31'],
+  ['Sede firmes e constantes, sempre abundantes na obra do Senhor, sabendo que o vosso trabalho não é vão no Senhor.', '1 Coríntios 15:58'],
+  ['Se alguém está em Cristo, nova criatura é: as coisas velhas já passaram; eis que tudo se fez novo.', '2 Coríntios 5:17'],
+  ['Andamos por fé e não por vista.', '2 Coríntios 5:7'],
+  ['O fruto do Espírito é: amor, gozo, paz, longanimidade, benignidade, bondade, fé, mansidão, temperança.', 'Gálatas 5:22-23'],
+  ['Sede uns para com os outros benignos, misericordiosos, perdoando-vos uns aos outros.', 'Efésios 4:32'],
+  ['Regozijai-vos sempre. Orai sem cessar. Em tudo dai graças.', '1 Tessalonicenses 5:16-18'],
+  ['O exercício corporal para pouco aproveita, mas a piedade para tudo é proveitosa.', '1 Timóteo 4:8'],
+  ['Chegai-vos a Deus, e ele se chegará a vós.', 'Tiago 4:8'],
+  ['Bem-aventurado o varão que sofre a tentação; porque, quando for provado, receberá a coroa da vida.', 'Tiago 1:12'],
+  ['Nós o amamos porque ele nos amou primeiro.', '1 João 4:19'],
+  ['Eis que estou à porta e bato; se alguém ouvir a minha voz e abrir a porta, entrarei em sua casa.', 'Apocalipse 3:20'],
+  ['O Senhor te abençoe e te guarde; o Senhor faça resplandecer o seu rosto sobre ti e tenha misericórdia de ti.', 'Números 6:24-25'],
+  ['Sê forte e corajoso; não temas, nem te espantes, porque o Senhor, teu Deus, é contigo.', 'Deuteronômio 31:6'],
+  ['Eu e a minha casa serviremos ao Senhor.', 'Josué 24:15'],
+  ['O Senhor não vê como vê o homem, pois o homem vê o que está diante dos olhos, porém o Senhor olha para o coração.', '1 Samuel 16:7'],
+];
+const VERSO = VERSOS[Math.floor(Math.random() * VERSOS.length)];
+const versoHtml = () => `<figure class="v2-verso">${v2Ico('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 6.5v7M9.5 9h5"/>')}<blockquote>${VERSO[0]}<cite>${VERSO[1]}</cite></blockquote></figure>`;
 function v2BrandHtml() {
   const inner = `<span class="v2-mk">${v2Mark()}</span><span><span class="v2-wm sm">passos<em>.fit</em></span><small>por ${esc(v2Coach())}</small></span>`;
   // Professor: tocar no logo abre a troca para o app do Primeiro Passo
@@ -3552,7 +3634,7 @@ function renderPainelV2() {
       <button class="v2-icbtn" data-view="ia" aria-label="Assistente">${v2Ico(V2PNAV.ia)}</button>
       <button class="v2-icbtn" data-view="acessos" aria-label="Acessos">${v2Ico('<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>')}${reqs ? '<span class="dot"></span>' : ''}</button>
       <button class="v2-avbtn" data-view="ajustes" aria-label="Ajustes e conta">${avIn(me)}</button></div>
-    <h2 class="v2-hello">${v2Hello()}, ${esc(firstName(me))}</h2><p class="v2-muted" style="margin:0 0 16px">${v2DayLabel(today())}</p>
+    <h2 class="v2-hello">${v2Hello()}, ${esc(firstName(me))}</h2><p class="v2-muted" style="margin:0 0 12px">${v2DayLabel(today())}</p>${versoHtml()}
     <div class="v2-kpis"><button class="v2-tile dk" data-view="alunos">${v2Ico(V2PNAV.alunos)}<b class="xl">${sts.length}</b><span>alunos</span></button>
       <div class="v2-tile acc"><b>${todayL.length}</b><span>treinaram hoje</span></div><div class="v2-tile lil"><b>${week.length}</b><span>ativos na semana</span></div></div>
     ${linkReviewHtml()}
@@ -8790,7 +8872,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '29/10-21:22';
+const APP_VERSION = '29/10-21:24';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
