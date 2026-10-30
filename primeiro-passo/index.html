@@ -2988,13 +2988,8 @@ function pGanhos(p){
   const pv=fin(bl.filter(b=>b.m===prev)),po=DB.payouts[payoutKey(p.id,prev)];
   const year=bl.filter(b=>b.paid).reduce((s,b)=>s+b.amount*sp,0);
   $("#pv").innerHTML=`<div class="kpis">${kpi("banknote","Recebido em "+mlabel(cur,1),money(now.rep),"sua parte do que já entrou")}${kpi("hourglass","A receber",money(now.open*sp),"previsto até o fim do mês")}${(()=>{const ps=payoutState(p.id,prev);return kpi("wallet","Repasse de "+mlabel(prev,1),money(pv.rep),ps.t)})()}${kpi("trending-up","Últimos 6 meses",money(year),`média de ${money(year/6)} por mês`)}</div>
-  <div class="grid2">
-    <section class="card"><div class="card-h"><h3>Seus ganhos por mês</h3></div>${vbars(ms.map(m=>({label:mlabel(m,1),short:mlabel(m),v:fin(bl.filter(b=>b.m===m)).rep})))}</section>
-    <section class="card"><div class="card-h"><h3>Como cada mensalidade se divide</h3><span class="pill info">Você fica com ${pctf(sp)}</span></div>
-      <p class="week-note" style="margin:0 0 12px">De cada ${money(100)} que um aluno paga:</p>
-      ${splitBar([{label:"Para você",v:100*sp,k:"k2"},{label:"Empresa",v:100*(1-sp-feeOf()),k:"k1"},{label:"Taxa de pagamento",v:100*feeOf(),k:"k0"}])}
-      <p class="week-note">A taxa do meio de pagamento (em média ${pctf(feeOf())}) fica por conta da empresa: sua parte é calculada sobre o valor cheio.</p></section>
-  </div>
+  <div class="info mt"><i data-lucide="percent"></i><span>Você fica com <b style="color:var(--ink)">${pctf(sp)}</b> de cada mensalidade dos seus alunos. ${pctf(1-sp)} fica com a empresa.</span></div>
+  <section class="card mt"><div class="card-h"><h3>Seus ganhos por mês</h3></div>${vbars(ms.map(m=>({label:mlabel(m,1),short:mlabel(m),v:fin(bl.filter(b=>b.m===m)).rep})))}</section>
   <section class="card mt"><div class="card-h"><h3>Seus repasses</h3></div><div class="rows">${ms.slice(0,5).reverse().map(m=>{const f=fin(bl.filter(b=>b.m===m)),d=DB.payouts[payoutKey(p.id,m)];return`<div class="rw"><span><b>${mlabel(m,1)} de ${m.slice(0,4)}</b><small>${f.paidN} ${f.paidN===1?"mensalidade paga":"mensalidades pagas"}</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(f.rep)}</b>${(()=>{const ps=payoutState(p.id,m);return pill(ps.k,ps.ic,ps.t)})()}</span></div>`}).join("")}</div></section>
   <a class="task mt" href="#/personal/dados" style="text-decoration:none;color:inherit"><span class="ti"><i data-lucide="landmark"></i></span><span><b>Onde você recebe</b><small>${p.payout&&p.payout.key?`Pix ${esc(p.payout.type)} ${esc(p.payout.key)}`:"Cadastre sua chave Pix"} · em Meus dados</small></span><i class="go" data-lucide="chevron-right"></i></a>`;
 }
