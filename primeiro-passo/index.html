@@ -2984,10 +2984,10 @@ async function copyText(t,okMsg){try{await navigator.clipboard.writeText(t);toas
 /* ---------- personal: ganhos ---------- */
 function pGanhos(p){
   const bl=bills().filter(b=>b.pid===p.id),ms=monthsBack(6),cur=mkey(Date.now()),prev=ms[4],sp=splitOf(p.id);
-  const now=fin(bl.filter(b=>b.m===cur)),mine=bl.filter(b=>b.m===cur);
+  const now=fin(bl.filter(b=>b.m===cur));
   const pv=fin(bl.filter(b=>b.m===prev)),po=DB.payouts[payoutKey(p.id,prev)];
   const year=bl.filter(b=>b.paid).reduce((s,b)=>s+b.amount*sp,0);
-  $("#pv").innerHTML=`<div class="kpis">${kpi("banknote","Recebido em "+mlabel(cur,1),money(now.rep),`${now.paidN} de ${now.n} alunos pagaram`)}${kpi("hourglass","A receber",money(now.open*sp),"se todos pagarem este mês")}${(()=>{const ps=payoutState(p.id,prev);return kpi("wallet","Repasse de "+mlabel(prev,1),money(pv.rep),ps.t)})()}${kpi("trending-up","Últimos 6 meses",money(year),`média de ${money(year/6)} por mês`)}</div>
+  $("#pv").innerHTML=`<div class="kpis">${kpi("banknote","Recebido em "+mlabel(cur,1),money(now.rep),"sua parte do que já entrou")}${kpi("hourglass","A receber",money(now.open*sp),"previsto até o fim do mês")}${(()=>{const ps=payoutState(p.id,prev);return kpi("wallet","Repasse de "+mlabel(prev,1),money(pv.rep),ps.t)})()}${kpi("trending-up","Últimos 6 meses",money(year),`média de ${money(year/6)} por mês`)}</div>
   <div class="grid2">
     <section class="card"><div class="card-h"><h3>Seus ganhos por mês</h3></div>${vbars(ms.map(m=>({label:mlabel(m,1),short:mlabel(m),v:fin(bl.filter(b=>b.m===m)).rep})))}</section>
     <section class="card"><div class="card-h"><h3>Como cada mensalidade se divide</h3><span class="pill info">Você fica com ${pctf(sp)}</span></div>
@@ -2995,8 +2995,7 @@ function pGanhos(p){
       ${splitBar([{label:"Para você",v:100*sp,k:"k2"},{label:"Empresa",v:100*(1-sp-feeOf()),k:"k1"},{label:"Taxa de pagamento",v:100*feeOf(),k:"k0"}])}
       <p class="week-note">A taxa do meio de pagamento (em média ${pctf(feeOf())}) fica por conta da empresa: sua parte é calculada sobre o valor cheio.</p></section>
   </div>
-  <section class="mt"><div class="card-h"><h3>Mensalidades de ${mlabel(cur,1)}</h3></div><div class="tbl"><table><thead><tr><th>Aluno</th><th class="hm">Nível</th><th class="num hm">Mensalidade</th><th class="num">Sua parte</th><th>Situação</th></tr></thead><tbody>${mine.map(b=>{const c=findC(b.cid);return`<tr data-open="${b.cid}"><td><span class="nm">${avatar(c)}<b>${esc(c.name)}</b></span></td><td class="hm">${lvb(b.lv)}</td><td class="num hm">${money(b.amount)}</td><td class="num"><b>${money(b.amount*sp)}</b></td><td>${pill(...BILL_PILL[b.status])}</td></tr>`}).join("")}</tbody></table></div></section>
-  <section class="card mt"><div class="card-h"><h3>Seus repasses</h3></div><div class="rows">${ms.slice(0,5).reverse().map(m=>{const f=fin(bl.filter(b=>b.m===m)),d=DB.payouts[payoutKey(p.id,m)];return`<div class="rw"><span><b>${mlabel(m,1)} de ${m.slice(0,4)}</b><small>${f.paidN} mensalidades pagas</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(f.rep)}</b>${(()=>{const ps=payoutState(p.id,m);return pill(ps.k,ps.ic,ps.t)})()}</span></div>`}).join("")}</div></section>
+  <section class="card mt"><div class="card-h"><h3>Seus repasses</h3></div><div class="rows">${ms.slice(0,5).reverse().map(m=>{const f=fin(bl.filter(b=>b.m===m)),d=DB.payouts[payoutKey(p.id,m)];return`<div class="rw"><span><b>${mlabel(m,1)} de ${m.slice(0,4)}</b><small>${f.paidN} ${f.paidN===1?"mensalidade paga":"mensalidades pagas"}</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(f.rep)}</b>${(()=>{const ps=payoutState(p.id,m);return pill(ps.k,ps.ic,ps.t)})()}</span></div>`}).join("")}</div></section>
   <a class="task mt" href="#/personal/dados" style="text-decoration:none;color:inherit"><span class="ti"><i data-lucide="landmark"></i></span><span><b>Onde você recebe</b><small>${p.payout&&p.payout.key?`Pix ${esc(p.payout.type)} ${esc(p.payout.key)}`:"Cadastre sua chave Pix"} · em Meus dados</small></span><i class="go" data-lucide="chevron-right"></i></a>`;
 }
 
