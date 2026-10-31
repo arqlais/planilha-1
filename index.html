@@ -5552,10 +5552,15 @@ function marcacoesHtml(p) {
 }
 // ---------- Medidas do corpo (aluno e professor) ----------
 const BODY_FIELDS = [['peso', 'Peso', 'kg'], ['altura', 'Altura', 'cm'], ['idade', 'Idade', 'anos'],
-  ['busto', 'Busto / peito', 'cm'], ['cintura', 'Cintura', 'cm'], ['abdomen', 'Abdômen', 'cm'], ['quadril', 'Quadril', 'cm'], ['dorsal', 'Dorsal', 'cm'],
-  ['bracoD', 'Braço direito', 'cm'], ['bracoE', 'Braço esquerdo', 'cm'], ['coxaD', 'Coxa direita', 'cm'], ['coxaE', 'Coxa esquerda', 'cm'],
+  ['busto', 'Busto / peito', 'cm'], ['peitoLev', 'Peito com braço levantado', 'cm'], ['ombros', 'Ombros (deltoide)', 'cm'],
+  ['cintura', 'Cintura', 'cm'], ['abdomen', 'Abdômen', 'cm'], ['quadril', 'Quadril', 'cm'], ['dorsal', 'Dorsal', 'cm'],
+  ['bracoD', 'Braço direito', 'cm'], ['bracoE', 'Braço esquerdo', 'cm'], ['antebD', 'Antebraço direito', 'cm'], ['antebE', 'Antebraço esquerdo', 'cm'],
+  ['coxaD', 'Coxa direita', 'cm'], ['coxaE', 'Coxa esquerda', 'cm'],
   ['pantD', 'Panturrilha direita', 'cm'], ['pantE', 'Panturrilha esquerda', 'cm']];
-const bodyOf = p => (p && p.body ? p.body.slice().sort((a, b) => a.date.localeCompare(b.date)) : []);
+// Altura anotada em metros (ex.: 1,8) vira centímetros (180) só na leitura: o que está salvo não muda
+const altCm = v => (v != null && v > 0 && v < 3 ? Math.round(v * 10000) / 100 : v);
+const bodyOf = p => (p && p.body ? p.body.map(e => (e.altura != null && e.altura < 3 ? { ...e, altura: altCm(e.altura) } : e)).sort((a, b) => a.date.localeCompare(b.date)) : []);
+const fmtDateY = s => `${fmtDate(s)}/${s.slice(0, 4)}`;
 const imc = e => e && e.peso && e.altura ? e.peso / ((e.altura / 100) ** 2) : null;
 // Último valor anotado de cada medida (a última avaliação pode ter só algumas)
 const latestBody = list => list.reduce((o, e) => { BODY_FIELDS.forEach(([k]) => { if (e[k] != null) o[k] = e[k]; }); return o; }, {});
@@ -5565,7 +5570,7 @@ function bodySummaryHtml(p) {
   const lb = latestBody(list);
   const bits = last ? BODY_FIELDS.filter(([k]) => lb[k] != null).slice(0, 4).map(([k, l, u]) => `<span class="pill eq">${l}: ${fmtMin(lb[k])} ${u}</span>`).join(' ') : '';
   return `<section class="card"><div class="card-h"><div class="grow"><h3>Medidas do corpo</h3>
-      <small>${last ? `Última avaliação: ${fmtDate(last.date)}/${last.date.slice(2, 4)}${imc(lb) ? ` · IMC ${fmt(imc(lb))}` : ''}` : 'Peso, altura, idade e medidas'}</small></div></div>
+      <small>${last ? `Última avaliação: ${fmtDateY(last.date)}${imc(lb) ? ` · IMC ${fmt(imc(lb))}` : ''}` : 'Peso, altura, idade e medidas'}</small></div></div>
     ${bits ? `<div class="tags" style="margin-bottom:6px">${bits}</div>` : ''}
     <button class="btn primary" data-act="open-medidas">${last ? 'Ver medidas' : 'Anotar medidas'}</button></section>`;
 }
@@ -5606,7 +5611,7 @@ function saveBody() {
   const p = profile(ui.profile), date = document.getElementById('bodyDate').value || today();
   const entry = { date };
   let any = false;
-  $main.querySelectorAll('[data-body]').forEach(i => { const v = parseNum(i.value); if (v != null && v > 0) { entry[i.dataset.body] = Math.round(v * 100) / 100; any = true; } });
+  $main.querySelectorAll('[data-body]').forEach(i => { const v = parseNum(i.value); if (v != null && v > 0) { entry[i.dataset.body] = i.dataset.body === 'altura' ? altCm(Math.round(v * 100) / 100) : Math.round(v * 100) / 100; any = true; } });
   if (!any) return toast('Preencha pelo menos uma medida.');
   const old = (p.body || []).find(e => e.date === date);
   p.body = (p.body || []).filter(e => e.date !== date);
@@ -7845,7 +7850,7 @@ function importHistory(file) {
       p.body = p.body || [];
       if (p.body.some(e => e.date === b.date)) return;
       const e = { id: uid(), date: b.date };
-      BODY_FIELDS.forEach(([k]) => { if (typeof b[k] === 'number') e[k] = b[k]; });
+      BODY_FIELDS.forEach(([k]) => { if (typeof b[k] === 'number') e[k] = k === 'altura' ? altCm(b[k]) : b[k]; });
       p.body.push(e); nB++;
     });
     save();
@@ -8296,6 +8301,16 @@ async function fixOnce() {
     }));
     mark('historico-antigo-religar');
     if (n) { save(); msgs.push(`${n} exercício${n === 1 ? '' : 's'} voltou a mostrar as cargas antigas.`); }
+  }
+  // 1l) (31/10) Avaliação de 27/06 que o professor tinha na planilha: entra nas medidas dele (junta com o que já houver nessa data)
+  if (!done.has('medidas-2706')) {
+    const me2 = profile(ME), add = { busto: 102, peitoLev: 96, ombros: 117, abdomen: 84, quadril: 99, bracoD: 34.5, bracoE: 35, antebD: 29, antebE: 29, coxaD: 60, coxaE: 60, pantD: 36, pantE: 36 };
+    me2.body = me2.body || [];
+    let e = me2.body.find(x => x.date === '2026-06-27');
+    if (!e) { e = { id: uid(), date: '2026-06-27' }; me2.body.push(e); }
+    Object.keys(add).forEach(k => { if (e[k] == null) e[k] = add[k]; });
+    mark('medidas-2706'); save();
+    msgs.push('Sua avaliação de 27/06 foi salva em Medidas do corpo.');
   }
   if (msgs.length) toast(msgs.join('<br>'));
 }
@@ -9076,7 +9091,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '31/10-00:54';
+const APP_VERSION = '31/10-10:30';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
