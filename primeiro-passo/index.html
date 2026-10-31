@@ -3230,7 +3230,7 @@ function vVerif(){
     <label class="chkline big"><input type="checkbox" id="c4" ${KV.ok.c4?"checked":""}> Entendo que aulas e pagamentos são sempre pelo app, e que contratar o professor por fora viola os <a href="#" data-terms-c style="color:var(--blue);font-weight:700">termos de uso</a>.</label>
     <div class="info"><i data-lucide="lock"></i><span>Seus dados ficam criptografados e só a equipe de segurança acessa. Professores veem apenas seu primeiro nome, a cidade e o código do encontro.</span></div>`;
   $("#view").innerHTML=`<div class="hello"><small>Segurança · passo ${st+1} de 4</small><h2>Verificar identidade</h2></div>${bar}<div class="vbody">${body}</div>
-    <div class="vfoot">${st?`<button class="btn btn-ghost" id="kbk"><i data-lucide="arrow-left"></i>Voltar</button>`:`<a class="btn btn-ghost" href="${TEST_MODE?"#/app":"#/"}">${TEST_MODE?"Pular (teste)":"Sair"}</a>`}<button class="btn btn-primary" id="knx">${st===3?"Enviar para análise":"Continuar"}<i data-lucide="arrow-right"></i></button></div>
+    <div class="vfoot">${st?`<button class="btn btn-ghost" id="kbk"><i data-lucide="arrow-left"></i>Voltar</button>`:`<a class="btn btn-ghost" href="${TEST_MODE?"#/app":"#/"}">${TEST_MODE?"Pular (teste)":"Sair"}</a>`}<button class="btn btn-primary" id="knx">${st===3?"Enviar para análise":TEST_MODE&&((st===1&&!(KV.doc&&KV.docB))||(st===2&&!KV.selfie))?"Pular (teste)":"Continuar"}<i data-lucide="arrow-right"></i></button></div>
     <p class="pay-demo"><i data-lucide="info"></i>Demonstração: as fotos aparecem só na sua tela e não são salvas nem enviadas. A leitura do documento e a comparação facial reais serão feitas por um serviço especializado.</p>`;
   icons();
   const save0=()=>{if(st!==0)return;["name:kn","cpf:kc","birth:kb","tel:kt","cep:kz","addr:ka","num:kq","city:ky","en:en","et:et","er:er"].forEach(x=>{const[k,id]=x.split(":");KV.d[k]=$("#"+id).value})};
@@ -3246,8 +3246,8 @@ function vVerif(){
       const miss=[!d.name.trim()&&"nome",!cpfOk(d.cpf)&&"CPF válido",!d.birth&&"data de nascimento",d.tel.replace(/\D/g,"").length<10&&"celular",!d.addr.trim()&&"endereço",!d.num.trim()&&"número",!d.city.trim()&&"cidade",!d.en.trim()&&"contato de emergência",d.et.replace(/\D/g,"").length<10&&"telefone de emergência"].filter(Boolean);
       if(miss.length){toast("Falta: "+miss.join(", "));return}
       if(age<18){toast("Menores de 18 anos precisam de um responsável. Fale com a gente pelo chat.");return}}
-    if(st===1&&!(KV.doc&&KV.docB)){toast("Envie a frente e o verso do documento");return}
-    if(st===2&&!(KV.selfie&&KV.ok.face)){toast(KV.selfie?"Aguarde a comparação terminar":"Tire ou envie sua selfie");return}
+    if(st===1&&!(KV.doc&&KV.docB)&&!TEST_MODE){toast("Envie a frente e o verso do documento");return}
+    if(st===2&&!(KV.selfie&&KV.ok.face)&&!TEST_MODE){toast(KV.selfie?"Aguarde a comparação terminar":"Tire ou envie sua selfie");return}
     if(st===3){if(!(KV.ok.c1&&KV.ok.c2&&KV.ok.c3&&KV.ok.c4)){toast("Marque as quatro autorizações para continuar");return}
       [KV.doc,KV.docB,KV.selfie].forEach(u=>{try{u&&URL.revokeObjectURL(u)}catch(e){}});
       S.termsAt=Date.now();S.info=Object.assign(S.info||{},{name:KV.d.name,birth:KV.d.birth,tel:KV.d.tel,cep:KV.d.cep,addr:KV.d.addr,num:KV.d.num,city:KV.d.city,en:KV.d.en,et:KV.d.et,er:KV.d.er});S.kyc={status:"analise",at:Date.now(),cpf:maskCpf(KV.d.cpf),city:KV.d.city.trim(),emerg:`${KV.d.en.trim()} (${KV.d.er})`,emergTel:KV.d.et,doc:KV.d.dt||"RG"};save();
