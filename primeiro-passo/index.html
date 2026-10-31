@@ -2651,7 +2651,7 @@ function demoGo(who,direct){
   DEMO_GO=who;location.hash="#/entrar/"+who}
 /* teste: escolher qual professor entrar, ou criar uma */
 function demoPersonal(direct){
-  const ps=DB.personals;if(!ps.length){location.hash="#/entrar/nova-personal";return}
+  const ps=DB.personals.filter(p=>p.status!=="inativo");if(!ps.length){location.hash="#/entrar/nova-personal";return}
   if(direct&&ps.length===1){const p=ps[0];if(p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:p.id});location.hash="#/personal";return}
   const el=document.createElement("div");el.className="modal";el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Entrar como professor"><div class="big"><i data-lucide="dumbbell"></i></div><h3>Entrar como professor</h3>
     <div class="demo-ps">${ps.map(p=>`<button class="btn btn-primary" data-dp="${p.id}">${esc(p.name)}</button>`).join("")}
@@ -2923,8 +2923,8 @@ function aPersonais(bl){
     <button class="btn btn-primary" style="justify-self:start"><i data-lucide="user-plus"></i>Cadastrar</button></form>${ratingsBlock()}`;
   $("#rf").onchange=e=>{RF=e.target.value;route(true)};
   document.querySelectorAll("[data-pst]").forEach(b=>b.onclick=()=>{const p=findP(b.dataset.pst),v=b.dataset.v;
-    if(v==="inativo"&&allClients().some(c=>c.pid===p.id&&c.status==="ativo")){toast("Transfira os alunos dela antes de desativar");return}
-    p.status=v;if(v==="ativo"&&!p.rating)p.rating=null;saveDB();toast(v==="ativo"?`${p.name.split(" ")[0]} está ativa`:"Personal desativada");route(true)});
+    if(v==="inativo"&&allClients().some(c=>c.pid===p.id&&c.status==="ativo")){toast("Transfira os alunos dele antes de desativar");return}
+    p.status=v;if(v==="ativo"&&!p.rating)p.rating=null;saveDB();toast(v==="ativo"?`${p.name.split(" ")[0]} está ativo`:"Professor desativado");route(true)});
   document.querySelectorAll("[data-pdel]").forEach(b=>b.onclick=()=>{DB.personals=DB.personals.filter(p=>p.id!==b.dataset.pdel);saveDB();toast("Cadastro recusado");route(true)});
   document.querySelectorAll("[data-pfi]").forEach(b=>b.onclick=()=>openPFicha(b.dataset.pfi));
   document.querySelectorAll("[data-asp]").forEach(b=>b.onclick=()=>{setSess({role:"personal",pid:b.dataset.asp,back:"admin"});location.hash="#/personal"});
