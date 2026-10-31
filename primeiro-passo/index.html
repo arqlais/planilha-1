@@ -360,6 +360,24 @@ body.ux .role:hover::after{opacity:1}
 .opt .ck{margin-left:auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
 .opt .ck svg{width:14px;height:14px;opacity:0}
 .opt[aria-pressed="true"]{border-color:var(--navy);background:var(--mist)}
+.vits{display:grid;gap:12px}
+.vit{display:grid;gap:10px;border:1.5px solid var(--line);border-radius:18px;padding:16px;text-align:left;background:var(--surface);width:100%;color:inherit;font:inherit}
+.vit .top{display:flex;gap:12px;align-items:center}
+.vit .top .av{width:48px;height:48px;font-size:17px;flex:none}
+.vit .top div{min-width:0}
+.vit h3{font-size:18px;margin:0}
+.vit .top small{color:var(--muted)}
+.vit p{margin:0;color:var(--ink);font-size:15px;line-height:1.5}
+.vit .chips{display:flex;gap:6px;flex-wrap:wrap}
+.vit .ck{margin-left:auto;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
+.vit .ck svg{width:15px;height:15px;opacity:0}
+.vit[aria-pressed="true"]{border-color:var(--navy);background:var(--mist)}
+.vit[aria-pressed="true"] .chip{background:var(--surface)}
+.vit[aria-pressed="true"] .ck{background:var(--navy);border-color:var(--navy);color:#fff}
+.vit[aria-pressed="true"] .ck svg{opacity:1}
+.spec-pick{display:flex;gap:8px;flex-wrap:wrap}
+.spec-pick button{border:1.5px solid var(--line);border-radius:99px;padding:7px 13px;background:var(--surface);font:inherit;font-size:14px;font-weight:600;color:var(--ink)}
+.spec-pick button[aria-pressed="true"]{border-color:var(--navy);background:var(--navy);color:#fff}
 .opt[aria-pressed="true"] .ck{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
 .opt[aria-pressed="true"] .ck svg{opacity:1}
 .parq{display:grid;gap:10px}
@@ -501,7 +519,8 @@ body.ux .role:hover::after{opacity:1}
 .plist b{text-align:right}
 
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabbar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.tabbar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:400px){.tabbar a{font-size:10.5px}}
 .tabbar a{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:grid;justify-items:center;gap:3px;padding:10px 0 12px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;position:relative}
 .tabbar a.on{color:var(--navy)}
 .tabbar a.on::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
@@ -513,7 +532,7 @@ body.ux .role:hover::after{opacity:1}
 .modal{position:fixed;inset:0;z-index:80;background:rgba(15,23,32,.55);display:grid;place-items:end center;padding:0}
 .sheet{background:var(--bg);width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:26px 22px calc(22px + env(safe-area-inset-bottom,0px));animation:up .3s ease;text-align:center}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
-.sheet .big{width:84px;height:84px;border-radius:24px;background:#E0A93B;color:#1B3A5C;display:grid;place-items:center;margin:0 auto 14px}
+.sheet .big:not(.chkline){width:84px;height:84px;border-radius:24px;background:#E0A93B;color:#1B3A5C;display:grid;place-items:center;margin:0 auto 14px}
 .sheet .big svg{width:42px;height:42px}
 .sheet h3{font-size:26px}
 .sheet p{color:var(--muted);margin:8px 0 18px}
@@ -626,6 +645,7 @@ body.ux .role:hover::after{opacity:1}
 .login-main h1{font-size:clamp(34px,5vw,52px);font-weight:800}
 .login-main > p{color:var(--muted);font-size:18px;margin-top:10px}
 .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.roles.two{grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px;margin-inline:auto}
 .role{border:1.5px solid var(--line);border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
 .role .ri{width:52px;height:52px;border-radius:16px;background:var(--gold-soft);color:var(--navy);display:grid;place-items:center}
 .role .ri svg{width:26px;height:26px}
@@ -847,7 +867,7 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
   .facts{grid-template-columns:1fr 1fr}
   .facts div:nth-child(2){border-right:0}
   .facts div:nth-child(-n+2){border-bottom:1px solid var(--line)}
-  .split,.roles{grid-template-columns:1fr}
+  .split,.roles,.roles.two{grid-template-columns:1fr}
   .pn{grid-template-columns:1fr}
   .pn-side{display:none}
   .pn-mtop{display:flex;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 18px;margin:0 -18px 18px}
@@ -1274,6 +1294,8 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 #demopill{position:fixed;z-index:60;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#7A4E00;background:#FFF1CC;border:1px solid #D9A441;border-radius:99px;padding:8px 13px;box-shadow:0 4px 14px rgba(0,0,0,.15);text-decoration:none}
 #demopill svg{width:15px;height:15px}
 @media(min-width:900px){#demopill{bottom:18px}}
+.demo-steps{text-align:left;max-width:520px;margin:4px auto 18px;padding-left:22px;color:var(--muted);font-size:15px;display:grid;gap:4px}
+.demo-ps{display:grid;gap:10px;margin-top:14px}.demo-ps .btn{width:100%;justify-content:center;white-space:normal}
 .demo-more{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
 .lg-testbox{display:grid;justify-items:center;gap:6px;border-top:1px dashed var(--line);padding-top:12px;margin-top:4px;width:100%}
 .lg-testbox small{color:var(--muted);font-size:12.5px;max-width:34ch}
@@ -1405,7 +1427,7 @@ img,video,canvas{max-width:100%}
 <script>
 /* ================== FIREBASE ==================
    Login de verdade (e-mail e senha) e dados guardados no Firestore, compartilhados entre
-   aluno, personal e empresa. Sem a biblioteca do Firebase (ou sem configuração), o site
+   aluno, professor e empresa. Sem a biblioteca do Firebase (ou sem configuração), o site
    volta ao modo demonstração, com tudo salvo só no navegador.
    As permissões de cada tipo de conta ficam em firestore.rules. */
 const FIREBASE_CONFIG={
@@ -1418,7 +1440,7 @@ const FIREBASE_CONFIG={
 };
 /* DEMO: o link com ?demo (atalho em demo/) abre só com dados de exemplo, sem senha e sem tocar no banco de verdade.
    Guarda tudo em chaves próprias deste navegador, separadas do app real. */
-const DEMO=/[?&]demo\b/.test(location.search),DK=DEMO?":demo":"";
+const DEMO=/[?&]demo\b/.test(location.search),DK=DEMO?":demo2":"";
 const FB=!DEMO&&!!(window.firebase&&FIREBASE_CONFIG.apiKey);
 /* ME: id do aluno logado ("me" no modo demonstração). AL: outros alunos carregados nos painéis. */
 let ME=FB?null:"me",AL={};
@@ -1434,7 +1456,7 @@ const FBL=(()=>{
   const J=v=>JSON.stringify(v===undefined?null:v);
   const clean=o=>JSON.parse(JSON.stringify(o));
   const PUB=["name","cref","uf","area","bio","spec","status","cap","since"],PRIV=["email","split","safety","terms","payout","info"];
-  const CFG=["prices","disc","fees","methodsOn","payoutDay","teste"],CFGI=["split"]; /* CFGI: só empresa e personais leem (config/interno) */
+  const CFG=["prices","disc","fees","methodsOn","payoutDay","teste"],CFGI=["split"]; /* CFGI: só empresa e professores leem (config/interno) */
   const COLS={leads:"contatos",ratings:"avaliacoes",incidents:"relatos",flags:"alertas"};
   const pick=(o,ks)=>{const r={};ks.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
   const warn=(what,e)=>console.warn("[firebase]",what,e&&e.code||e);
@@ -1556,11 +1578,11 @@ const FBL=(()=>{
     "auth/operation-not-allowed":"O login por e-mail ainda não foi ativado no Firebase (Authentication > Método de login > E-mail/senha)."};
   F.err=e=>MSG[e&&e.code]||"Não deu certo agora. Tente de novo em instantes.";
   F.boot=()=>{auth.onAuthStateChanged(async u=>{if(F.busy)return;await loadFor(u);if(!F.booted){F.booted=true;route()}else route(true)})};
-  /* entra e confere se a conta é do tipo pedido (aluno, personal ou empresa) */
+  /* entra e confere se a conta é do tipo pedido (aluno, professor ou empresa) */
   F.login=async(email,pw,who)=>{F.busy=true;try{
       const cr=await auth.signInWithEmailAndPassword(email,pw);await loadFor(cr.user);
       const want={aluno:"aluno",personal:"personal",empresa:"admin"}[who];
-      if(F.role!==want){const t=F.role==="admin"?"Esta é uma conta da empresa. Entre pela área da empresa.":F.role==="personal"?"Esta é uma conta de personal. Entre pela área da personal.":F.role==="aluno"?"Esta é uma conta de aluno. Entre pela área do aluno.":"Esta conta ainda não tem acesso. Fale com a empresa.";
+      if(F.role!==want){const t=F.role==="admin"?"Esta é uma conta da empresa. Entre pela área da empresa.":F.role==="personal"?"Esta é uma conta de professor. Entre pela área do professor.":F.role==="aluno"?"Esta é uma conta de aluno. Entre pela área do aluno.":"Esta conta ainda não tem acesso. Fale com a empresa.";
         await auth.signOut();await loadFor(null);throw{msg:t}}
       if(who==="personal"){const p=findP(F.uid);if(!p||p.status!=="ativo"){await auth.signOut();await loadFor(null);throw{msg:p&&p.status==="inativo"?"Este acesso está desativado. Fale com a empresa.":"Seu cadastro ainda está em análise. Avisamos quando for aprovado."}}}
       if(who==="aluno"&&!S.profile){await auth.signOut();await loadFor(null);throw{msg:"Não encontramos os dados deste aluno. Fale com a empresa."}}
@@ -1571,13 +1593,13 @@ const FBL=(()=>{
   F.signupAluno=async(email,pw,build)=>{F.busy=true;try{
       const cr=await auth.createUserWithEmailAndPassword(email,pw),uid=cr.user.uid;
       await loadFor(cr.user);ME=uid;F.role="aluno";build();
-      const act=DB.personals.find(p=>p.status==="ativo");S.pid=act?act.id:null;
+      if(!DB.personals.some(p=>p.id===S.pid&&p.status==="ativo"))S.pid=null;
       await db.collection("usuarios").doc(uid).set({role:"aluno",email,nome:S.profile.name,criadoEm:Date.now()});
       const d=alunoDoc(S);await db.collection("alunos").doc(uid).set(d);SYNC[uid]=snap(d);
       subs.push(db.collection("alunos").doc(uid).onSnapshot(x=>{if(x.exists){remote(uid,x.data(),x.metadata.hasPendingWrites);rerender()}},e=>warn("aluno",e)));
       setSess({});
     }catch(e){throw{msg:F.err(e)}}finally{F.busy=false}};
-  /* personal cria a conta; fica "pendente" até a empresa aprovar */
+  /* professor cria a conta; fica "pendente" até a empresa aprovar */
   F.signupPersonal=async(f)=>{F.busy=true;try{
       const cr=await auth.createUserWithEmailAndPassword(f.email,f.pw),uid=cr.user.uid;
       await db.collection("usuarios").doc(uid).set({role:"personal",email:f.email,nome:f.name,criadoEm:Date.now()});
@@ -1596,19 +1618,19 @@ function emptyDB(){return{v:1,personals:[],clients:[],bookings:[],leads:[],price
 /* ================== DATA ================== */
 const LEVELS=[
  {n:1,t:"Conhecer",icon:"message-circle",price:"R$ 100",per:"pagamento único",short:"Conversa online no seu tempo",
-  desc:"Uma conversa por mensagem ou vídeo, sem precisar ligar a câmera se não quiser. O personal entende sua rotina, seus medos e o que você quer, e monta o plano com você.",
-  when:"Plano definido e você à vontade com o personal",
+  desc:"Uma conversa por mensagem ou vídeo, sem precisar ligar a câmera se não quiser. O professor entende sua rotina, seus medos e o que você quer, e monta o plano com você.",
+  when:"Plano definido e você à vontade com o professor",
   inc:["Conversa por mensagem, áudio ou vídeo","Anamnese e questionário de saúde","Plano de treino feito para você"]},
  {n:2,t:"Em casa",icon:"house",price:"R$ 180",per:"por mês",short:"Treinos em vídeo, sem exposição",
-  desc:"Treinos curtos em vídeo para fazer no seu espaço, com acompanhamento do personal pelo WhatsApp. O objetivo é criar o hábito sem ninguém olhando.",
+  desc:"Treinos curtos em vídeo para fazer no seu espaço, com acompanhamento do professor pelo WhatsApp. O objetivo é criar o hábito sem ninguém olhando.",
   when:"Você treina com regularidade por algumas semanas",
   inc:["Treinos em vídeo de 8 a 15 minutos","Ajustes semanais pelo WhatsApp","Opções sentadas e adaptadas"]},
  {n:3,t:"Ao ar livre",icon:"trees",price:"R$ 480",per:"por mês · R$ 60/aula",short:"Encontros presenciais perto de você",
   desc:"Os primeiros encontros presenciais, na sua casa ou em uma praça tranquila, 2 vezes por semana. É o momento de ganhar confiança fora de casa.",
   when:"Você treina fora de casa sem desconforto",
-  inc:["2 aulas por semana","Na sua casa ou em uma praça","Material levado pelo personal"]},
+  inc:["2 aulas por semana","Na sua casa ou em uma praça","Material levado pelo professor"]},
  {n:4,t:"Academia",icon:"dumbbell",price:"R$ 560",per:"por mês · R$ 70/aula",short:"Autonomia com alguém do seu lado",
-  desc:"O personal vai com você até a academia e acompanha os treinos até você se sentir seguro para treinar lá por conta própria.",
+  desc:"O professor vai com você até a academia e acompanha os treinos até você se sentir seguro para treinar lá por conta própria.",
   when:"Você frequenta a academia com segurança",
   inc:["2 aulas por semana na academia","Apresentação dos aparelhos","Plano para seguir sozinho depois"]}
 ];
@@ -1624,10 +1646,15 @@ const BARRIERS=[["Vergonha do corpo","eye-off"],["Medo de ser julgado","users"],
 const GOALS=[["Me sentir melhor comigo","smile"],["Ter mais disposição","zap"],["Perder peso com saúde","scale"],["Cuidar da saúde mental","brain"],["Ganhar força e mobilidade","activity"],["Conseguir ir à academia","dumbbell"]];
 const CONTACT=[["Só mensagem","message-square","Sem câmera e sem áudio"],["Áudio","mic","Conversa por voz"],["Vídeo-chamada","video","Com câmera"]];
 const PARQ=["Algum médico já disse que você tem problema no coração e só deve fazer atividade física com orientação?","Você sente dor no peito quando faz atividade física?","No último mês, sentiu dor no peito sem estar fazendo atividade física?","Você perde o equilíbrio por tontura ou já desmaiou?","Tem algum problema nos ossos ou articulações que pode piorar com exercício?","Toma remédio para pressão arterial ou para o coração?","Sabe de algum outro motivo pelo qual não deveria fazer atividade física?"];
-const NOP={id:null,name:"Sua personal",cref:"CREF a confirmar",bio:"Profissional de educação física parceira",status:"ativo",spec:[]};
-const myP=()=>DB.personals.find(p=>p.id===(S.pid||(FB?null:"p1")))||DB.personals.find(p=>p.status==="ativo")||DB.personals[0]||NOP;
+/* vitrine do professor: o aluno vê isto para escolher com quem treinar */
+const SPECS=["Iniciantes","Emagrecimento","Idosos","Mobilidade","Força","Saúde mental","Gestantes","Postura","Corrida","Reabilitação"];
+const vitHtml=(p,sel,tag="div")=>`<${tag} class="vit" ${tag==="button"?`type="button" data-vit="${esc(p.id)}" aria-pressed="${!!sel}"`:""}><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3>${p.area?`<small>${esc(p.area)}</small>`:""}</div>${tag==="button"?`<span class="ck"><i data-lucide="check"></i></span>`:""}</div>
+  ${(p.spec||[]).filter(x=>x&&x!=="A definir").length?`<div class="chips">${p.spec.filter(x=>x&&x!=="A definir").map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</div>`:""}
+  <p>${p.bio?esc(p.bio):`<span style="color:var(--muted)">Ainda sem apresentação.</span>`}</p></${tag}>`;
+const NOP={id:null,name:"Seu professor",cref:"CREF a confirmar",bio:"Profissional de educação física parceiro",status:"ativo",spec:[]};
+const myP=()=>(S.pid&&DB.personals.find(p=>p.id===S.pid))||NOP;
 const PERSONAL={get name(){return myP().name},get cref(){return myP().cref},get bio(){return myP().bio||""},get initials(){return initials(myP().name)}};
-const BADGES=[["Primeiro passo","footprints","Criou seu plano"],["Primeira conversa","message-circle","Conversou com o personal"],["1º treino","flame","Concluiu o primeiro treino"],["Semana firme","calendar-check","3 treinos em uma semana"],["Nível 2","house","Chegou aos treinos em casa"],["8 treinos","award","Completou 8 treinos"],["Nível 3","trees","Primeiro encontro ao ar livre"],["Nível 4","dumbbell","Chegou à academia"]];
+const BADGES=[["Primeiro passo","footprints","Criou seu plano"],["Primeira conversa","message-circle","Conversou com o professor"],["1º treino","flame","Concluiu o primeiro treino"],["Semana firme","calendar-check","3 treinos em uma semana"],["Nível 2","house","Chegou aos treinos em casa"],["8 treinos","award","Completou 8 treinos"],["Nível 3","trees","Primeiro encontro ao ar livre"],["Nível 4","dumbbell","Chegou à academia"]];
 
 /* ================== STATE ================== */
 const KEY="primeiropasso:v1"+DK;
@@ -1672,10 +1699,10 @@ function weekCount(){const w=Date.now()-7*864e5;return S.workouts.filter(x=>x.at
 /* level criteria */
 function criteria(){
   const lv=S.level;
-  if(lv===1)return[{t:"Responder o questionário",d:!!S.profile,go:"#/app"},{t:"Verificar sua identidade",d:kycOf(ME).status==="verificado",go:"#/app/verificacao"},{t:"Agendar a conversa gratuita de 15 min",d:S.talked||S.bookings.some(b=>b.type==="Primeira conversa"),go:"#/app/agenda"},{t:"Conversar com a personal",d:S.talked,go:"#/app/mensagens"},{t:"Pagar o nível 1 e receber seu plano",d:lv1Paid(),go:"#/app/perfil"}];
+  if(lv===1)return[{t:"Responder o questionário",d:!!S.profile,go:"#/app"},{t:"Verificar sua identidade",d:kycOf(ME).status==="verificado",go:"#/app/verificacao"},{t:"Agendar a conversa gratuita de 15 min",d:S.talked||S.bookings.some(b=>b.type==="Primeira conversa"),go:"#/app/agenda"},{t:"Conversar com o professor",d:S.talked,go:"#/app/mensagens"},{t:"Pagar o nível 1 e receber seu plano",d:lv1Paid(),go:"#/app/perfil"}];
   if(lv===2){const n=S.workouts.length;return[{t:"Fazer o primeiro treino em casa",d:n>=1,go:"#/app/treinos"},{t:"Treinar 3 vezes em uma semana",d:weekCount()>=3||n>=3,go:"#/app/treinos"},{t:`Completar 8 treinos (${Math.min(n,8)}/8)`,d:n>=8,go:"#/app/treinos"}]}
   if(lv===3)return[{t:"Agendar o primeiro encontro ao ar livre",d:S.bookings.some(b=>b.type==="Ao ar livre"),go:"#/app/agenda"},{t:`Participar de 4 encontros (${Math.min(S.outdoor,4)}/4)`,d:S.outdoor>=4,go:"#/app/agenda"}];
-  return[{t:"Agendar a primeira aula na academia",d:S.bookings.some(b=>b.type==="Academia"),go:"#/app/agenda"},{t:`Treinar 4 vezes na academia com o personal (${Math.min(S.gymsessions,4)}/4)`,d:S.gymsessions>=4,go:"#/app/agenda"},{t:"Montar seu plano para seguir sozinho",d:S.gymsessions>=4,go:"#/app/mensagens"}];
+  return[{t:"Agendar a primeira aula na academia",d:S.bookings.some(b=>b.type==="Academia"),go:"#/app/agenda"},{t:`Treinar 4 vezes na academia com o professor (${Math.min(S.gymsessions,4)}/4)`,d:S.gymsessions>=4,go:"#/app/agenda"},{t:"Montar seu plano para seguir sozinho",d:S.gymsessions>=4,go:"#/app/mensagens"}];
 }
 const lv1Paid=()=>bills().some(b=>b.cid===ME&&b.lv===1&&b.paid);
 const pct=()=>{const c=criteria();return Math.round(c.filter(x=>x.d).length/c.length*100)};
@@ -1684,6 +1711,7 @@ function earned(){const n=S.workouts.length;return[!!S.profile,S.talked,n>=1,wee
 /* ================== ROUTER ================== */
 function route(keep){
   if(FB&&!FBL.booted)return;
+  if(DEMO_AS){const w=DEMO_AS;DEMO_AS=null;history.replaceState(null,"",location.pathname+"?demo#/entrar");demoGo(w,true);return}
   if(DEMO&&(!location.hash||location.hash==="#/"&&!DEMO_SITE)){location.replace("#/entrar");return}
   const h=location.hash||"#/";
   const y=scrollY;demoPill(h);
@@ -1708,30 +1736,29 @@ function site(){
   $("#root").innerHTML=`<div class="sitefx"><div class="prog" aria-hidden="true"></div>
 <header class="topbar"><div class="wrap">
   <a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
-  <nav class="topnav" aria-label="Seções"><a href="#como" data-scroll>Como funciona</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>A personal</a><a href="#planos" data-scroll>Planos</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="trabalho/">Trabalho</a></nav>
+  <nav class="topnav" aria-label="Seções"><a href="#como" data-scroll>Como funciona</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>O professor</a><a href="#planos" data-scroll>Planos</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="trabalho/">Trabalho</a></nav>
   <div class="acc">
     <button class="btn btn-ghost acc-btn" id="accb" aria-haspopup="true" aria-expanded="false" aria-controls="accm"><i data-lucide="circle-user-round"></i><span>Entrar</span><i data-lucide="chevron-down" class="acc-ch"></i></button>
     <div class="acc-menu" id="accm" hidden>
       <a href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}"><span class="ai"><i data-lucide="footprints"></i></span><span><b>Área do aluno</b><small>${has&&!S.loggedOut?"Abrir meu app":"Entrar ou criar conta"}</small></span></a>
-      <a href="#/entrar/personal"><span class="ai"><i data-lucide="dumbbell"></i></span><span><b>Área da personal</b><small>Alunos, agenda e ganhos</small></span></a>
-      <a href="#/entrar/empresa"><span class="ai"><i data-lucide="building-2"></i></span><span><b>Área da empresa</b><small>Gestão completa</small></span></a>
+      <a href="#/entrar/personal"><span class="ai"><i data-lucide="dumbbell"></i></span><span><b>Área do professor</b><small>Alunos, agenda e ganhos</small></span></a>
     </div>
   </div>
   <a class="btn btn-primary tb-cta" href="${has&&!S.loggedOut?"#/app":"#/comecar"}">${has&&!S.loggedOut?"Meu app":"Começar"}</a>
   <button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button>
   <button class="rbtn menu-btn" id="menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="mnav"><i data-lucide="menu"></i></button>
-</div><nav class="mnav wrap" id="mnav" aria-label="Seções" hidden><a href="#como" data-scroll>Como funciona</a><a href="#combinados" data-scroll>Nossos combinados</a><a href="#pra-quem" data-scroll>Para quem</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>A personal</a><a href="#planos" data-scroll>Planos</a><a href="#parceiros" data-scroll>Seja parceiro</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="#contato" data-scroll>Contato</a><a href="trabalho/">Trabalho da faculdade</a><a href="#/entrar">Entrar (cliente, personal ou empresa)</a></nav></header>
+</div><nav class="mnav wrap" id="mnav" aria-label="Seções" hidden><a href="#como" data-scroll>Como funciona</a><a href="#combinados" data-scroll>Nossos combinados</a><a href="#pra-quem" data-scroll>Para quem</a><a href="#seguranca" data-scroll>Segurança</a><a href="#personal" data-scroll>O professor</a><a href="#planos" data-scroll>Planos</a><a href="#parceiros" data-scroll>Seja parceiro</a><a href="#duvidas" data-scroll>Dúvidas</a><a href="#contato" data-scroll>Contato</a><a href="trabalho/">Trabalho da faculdade</a><a href="#/entrar">Entrar (aluno ou professor)</a></nav></header>
 
 <section class="hero"><div class="wrap">
   <div>
     <span class="tag"><i data-lucide="heart-handshake"></i>Para quem ainda não teve coragem de começar</span>
     <h1>Seu primeiro passo, <em>no seu tempo.</em></h1>
-    <p class="lead">Um personal que começa com você pela tela, vai até a sua casa e só te leva para a academia quando você estiver pronto.</p>
+    <p class="lead">Um professor que começa com você pela tela, vai até a sua casa e só te leva para a academia quando você estiver pronto.</p>
     <div class="ctas">
       <a class="btn btn-primary" href="${has?"#/app":"#/comecar"}"><i data-lucide="arrow-right"></i>${has?"Continuar minha jornada":"Começar sem compromisso"}</a>
       <a class="btn btn-ghost" href="#como" data-scroll>Ver como funciona</a>
     </div>
-    <div class="assure"><span><i data-lucide="check"></i>Sem câmera, se preferir</span><span><i data-lucide="check"></i>Personal com CREF</span><span><i data-lucide="check"></i>Primeira conversa gratuita</span><span><i data-lucide="check"></i>Em todo o Brasil</span></div>
+    <div class="assure"><span><i data-lucide="check"></i>Sem câmera, se preferir</span><span><i data-lucide="check"></i>Professor com CREF</span><span><i data-lucide="check"></i>Primeira conversa gratuita</span><span><i data-lucide="check"></i>Em todo o Brasil</span></div>
   </div>
   <div class="phone-wrap"><div class="phone" role="group" aria-label="Prévia do app. Toque nas tarefas para experimentar."><div class="scr">
     <div class="ph"><small>Olá, Ana</small><b id="phT">Nível 2 · Em casa</b><div class="pbar"><i id="phB"></i></div></div>
@@ -1739,7 +1766,7 @@ function site(){
       <button class="pc done" data-pt><span class="ic"><i data-lucide="check"></i></span><span><b>Conversa com a Camila</b><small>Plano pronto</small></span></button>
       <button class="pc" data-pt><span class="ic"><i data-lucide="play"></i></span><span><b>Força na cadeira</b><small>12 min · toque quando fizer</small></span></button>
       <button class="pc" data-pt><span class="ic"><i data-lucide="play"></i></span><span><b>Despertar suave</b><small>8 min · toque quando fizer</small></span></button>
-      <button class="pc msg" id="phM"><span class="ic"><i data-lucide="message-circle"></i></span><span><b id="phMt">“Como você se sentiu hoje?”</b><small>Camila · personal</small></span></button>
+      <button class="pc msg" id="phM"><span class="ic"><i data-lucide="message-circle"></i></span><span><b id="phMt">“Como você se sentiu hoje?”</b><small>Camila · professor</small></span></button>
     </div>
   </div></div><p class="phone-hint"><i data-lucide="pointer"></i>Toque nas tarefas para experimentar</p></div>
 </div></section>
@@ -1748,11 +1775,11 @@ function site(){
   <div><b>4</b><span>níveis, do online até a academia</span></div>
   <div><b>15 min</b><span>de primeira conversa, grátis</span></div>
   <div><b>0</b><span>fidelidade ou multa para sair</span></div>
-  <div><b>100%</b><span>dos personais com registro no CREF</span></div>
+  <div><b>100%</b><span>dos professores com registro no CREF</span></div>
 </div></div>
 
 <section class="sec" id="como" style="border-top:0"><div class="wrap">
-  <div class="sec-h"><span class="kicker">Como funciona</span><h2>Quatro níveis. Você só sobe quando se sentir pronto.</h2><p>O mesmo personal acompanha você do começo ao fim. Nada de pular etapas. Os níveis 1 e 2 são online, de qualquer lugar do Brasil. Os presenciais acontecem onde já temos personais parceiras, e a rede cresce a cada mês.</p></div>
+  <div class="sec-h"><span class="kicker">Como funciona</span><h2>Quatro níveis. Você só sobe quando se sentir pronto.</h2><p>O mesmo professor acompanha você do começo ao fim. Nada de pular etapas. Os níveis 1 e 2 são online, de qualquer lugar do Brasil. Os presenciais acontecem onde já temos professores parceiros, e a rede cresce a cada mês.</p></div>
   <div class="steps">${LEVELS.map(l=>`<div class="stp"><div class="bar"></div><span class="n">Nível ${l.n}</span><h3><i data-lucide="${l.icon}"></i>${l.t}</h3><p class="om">${l.short}</p><p class="dm">${l.desc}</p><p class="when dm"><i data-lucide="arrow-up-right"></i>Avança quando: ${l.when.toLowerCase()}</p></div>`).join("")}</div>
 </div></section>
 
@@ -1764,16 +1791,16 @@ function site(){
     <div><span class="pi"><i data-lucide="users-round"></i></span><b>Comparar você com alguém</b><p>Sem ranking e sem grupo. Seu ritmo é a única referência.</p></div>
     <div><span class="pi"><i data-lucide="megaphone-off"></i></span><b>Gritar ou pressionar</b><p>Nada de “sem dor, sem ganho”. Desconforto leve é sinal para ajustar.</p></div>
     <div><span class="pi"><i data-lucide="arrow-down-up"></i></span><b>Empurrar de nível</b><p>Quem decide subir é você. E voltar um nível também é permitido.</p></div>
-    <div><span class="pi"><i data-lucide="shield-check"></i></span><b>Compartilhar suas respostas</b><p>O que você conta fica entre você e a sua personal.</p></div>
+    <div><span class="pi"><i data-lucide="shield-check"></i></span><b>Compartilhar suas respostas</b><p>O que você conta fica entre você e o seu professor.</p></div>
   </div>
 </div></section>
 
 <section class="sec" id="seguranca"><div class="wrap">
-  <div class="sec-h"><span class="kicker">Segurança</span><h2>Todo mundo é verificado. Todo encontro é acompanhado.</h2><p class="dm">Clientes e personais passam pela mesma checagem, porque os encontros acontecem em casa, na praça e na academia.</p></div>
+  <div class="sec-h"><span class="kicker">Segurança</span><h2>Todo mundo é verificado. Todo encontro é acompanhado.</h2><p class="dm">Clientes e professores passam pela mesma checagem, porque os encontros acontecem em casa, na praça e na academia.</p></div>
   <div class="safe">
-    <div><span class="pi"><i data-lucide="scan-face"></i></span><b>Identidade verificada</b><p>Documento com foto, selfie comparada ao documento e CPF conferido. Para clientes e personais.</p></div>
-    <div><span class="pi"><i data-lucide="file-check"></i></span><b>Personais checadas</b><p>CREF ativo e certidão de antecedentes criminais antes do primeiro aluno.</p></div>
-    <div><span class="pi"><i data-lucide="key-round"></i></span><b>Código do encontro</b><p>A personal diz um código ao chegar. Sem o código certo, não abra a porta.</p></div>
+    <div><span class="pi"><i data-lucide="scan-face"></i></span><b>Identidade verificada</b><p>Documento com foto, selfie comparada ao documento e CPF conferido. Para clientes e professores.</p></div>
+    <div><span class="pi"><i data-lucide="file-check"></i></span><b>Professores checados</b><p>CREF ativo e certidão de antecedentes criminais antes do primeiro aluno.</p></div>
+    <div><span class="pi"><i data-lucide="key-round"></i></span><b>Código do encontro</b><p>O professor diz um código ao chegar. Sem o código certo, não abra a porta.</p></div>
     <div><span class="pi"><i data-lucide="map-pin-check"></i></span><b>Check-in e emergência</b><p>A central acompanha chegada e saída. Botão de emergência no app durante o encontro.</p></div>
     <div><span class="pi"><i data-lucide="message-square-warning"></i></span><b>Relato confidencial</b><p>Qualquer desconforto chega só para a equipe, sem expor quem relatou.</p></div>
     <div><span class="pi"><i data-lucide="lock"></i></span><b>Dados protegidos (LGPD)</b><p>Usamos seus dados só para a sua segurança e você pode pedir a exclusão quando quiser.</p></div>
@@ -1811,7 +1838,7 @@ function site(){
 </div></section>
 
 <section class="sec" id="parceiros"><div class="wrap split">
-  <div class="sec-h" style="margin:0"><span class="kicker">Para profissionais</span><h2>É personal e gosta de começar do zero com as pessoas?</h2>
+  <div class="sec-h" style="margin:0"><span class="kicker">Para profissionais</span><h2>É professor e gosta de começar do zero com as pessoas?</h2>
     <p>Procuramos profissionais de educação física que tenham paciência, escutem sem julgar e queiram trabalhar com iniciantes.</p>
     <ul class="dm"><li><i data-lucide="check"></i><span>Alunos chegam já com questionário de saúde e objetivos respondidos</span></li><li><i data-lucide="check"></i><span>Painel próprio com alertas, agenda, mensagens e ganhos</span></li><li><i data-lucide="check"></i><span>Repasse de ${DB.split}% de cada mensalidade paga</span></li><li><i data-lucide="check"></i><span>Termo de parceria claro: alunos da plataforma são atendidos só pela plataforma, com repasse garantido</span></li><li><i data-lucide="check"></i><span>Formação em comunicação sem julgamento e atividade física adaptada</span></li></ul></div>
   <button class="btn btn-primary om-btn" data-reveal="fp"><i data-lucide="badge-check"></i>Quero ser parceiro</button>
@@ -1828,11 +1855,11 @@ function site(){
   <div class="sec-h"><span class="kicker">Dúvidas</span><h2>Perguntas que todo mundo faz (e tem vergonha de perguntar).</h2></div>
   <div class="faq clip">
     ${[["Preciso ligar a câmera?","Não. No nível 1 você pode conversar só por mensagem ou áudio. A câmera é opcional em todos os níveis online."],
-       ["E se eu não conseguir fazer os exercícios?","Todos os treinos têm versões mais leves e adaptadas, inclusive sentado. O personal ajusta tudo com você."],
+       ["E se eu não conseguir fazer os exercícios?","Todos os treinos têm versões mais leves e adaptadas, inclusive sentado. O professor ajusta tudo com você."],
        ["Preciso de atestado médico?","Você responde um questionário de saúde (PAR-Q) antes de começar. Se alguma resposta indicar risco, pedimos a liberação de um médico antes dos treinos."],
        ["Os personals são formados?","Sim. Todos os personals parceiros têm registro no CREF e passam por formação em comunicação sem julgamento e atividade física adaptada."],
        ["Tenho depressão. Isso substitui terapia?","Não. A atividade física ajuda, mas não substitui o acompanhamento psicológico. Se precisar, indicamos profissionais parceiros."],
-       ["Posso contratar a personal por fora?","Não. Aulas e pagamentos são sempre pela plataforma, e isso protege você: fora dela não existe verificação de identidade, código do encontro, central de apoio nem garantia do serviço."],
+       ["Posso contratar o professor por fora?","Não. Aulas e pagamentos são sempre pela plataforma, e isso protege você: fora dela não existe verificação de identidade, código do encontro, central de apoio nem garantia do serviço."],
        ["Posso parar ou voltar um nível?","Pode. Não existe fidelidade e você pode voltar para um nível anterior sempre que precisar."]
       ].map(([q,a])=>`<details><summary>${q}<i data-lucide="plus"></i></summary><p>${a}</p></details>`).join("")}
   </div>
@@ -1858,7 +1885,7 @@ function site(){
 </div></section>
 
 <footer class="foot"><div class="wrap">
-  <div><b style="color:var(--navy)">Primeiro Passo</b><br>Acompanhamento físico humanizado.<div class="foot-links"><a href="${has?"#/app":"#/comecar"}">Área do cliente</a><a href="#/entrar">Área do personal</a><a href="#/entrar">Área da empresa</a><a href="trabalho/">Trabalho da faculdade</a></div></div>
+  <div><b style="color:var(--navy)">Primeiro Passo</b><br>Acompanhamento físico humanizado.<div class="foot-links"><a href="${has?"#/app":"#/comecar"}">Área do cliente</a><a href="#/entrar">Área do professor</a><a href="#/entrar">Área da empresa</a><a href="trabalho/">Trabalho da faculdade</a></div></div>
   <p class="care"><i data-lucide="heart"></i><span>Se você estiver passando por um momento muito difícil, não precisa enfrentar sozinho. O CVV atende 24 horas pelo telefone 188 ou pelo site cvv.org.br.</span></p>
 </div></footer></div>`;
   const mn=$("#mnav"),mb=$("#menu");
@@ -1895,7 +1922,7 @@ function siteFx(){
   /* título palavra por palavra */
   const h=hero.querySelector("h1");let k=0;const wrap=n=>[...n.childNodes].forEach(c=>{if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.append(t);return}const w=document.createElement("span");w.className="w";w.style.setProperty("--i",k++);w.textContent=t;f.append(w)});c.replaceWith(f)}else if(c.nodeType===1)wrap(c)});wrap(h);
   /* faixa de frases depois dos números */
-  const L=["Sem pressa","Sem julgamento","No seu ritmo","Do sofá à academia","Primeira conversa grátis","Sem fidelidade","A mesma personal do começo ao fim"];
+  const L=["Sem pressa","Sem julgamento","No seu ritmo","Do sofá à academia","Primeira conversa grátis","Sem fidelidade","O mesmo professor do começo ao fim"];
   const facts=$(".sitefx .facts");if(facts)facts.insertAdjacentHTML("afterend",`<div class="mq" aria-hidden="true"><div>${L.concat(L).map(x=>`<span>${x}</span><i></i>`).join("")}</div></div>`);
   /* números contam */
   const nums=[...root.querySelectorAll(".facts b")].map(b=>{const m=b.textContent.match(/^(\d+)(.*)$/);return m?{b,n:+m[1],suf:m[2]}:null}).filter(Boolean);
@@ -1969,9 +1996,9 @@ function onboarding(){
   const optBtns=(list,sel,key,multi)=>list.map(([t,ic,sub])=>`<button class="opt" aria-pressed="${sel.includes(t)}" data-k="${key}" data-v="${esc(t)}" data-m="${multi?1:0}"><span class="oi"><i data-lucide="${ic}"></i></span><span><b>${t}</b>${sub?`<small>${sub}</small>`:""}</span><span class="ck"><i data-lucide="check"></i></span></button>`).join("");
   if(st==="nome"){body=`<h2>Oi! Como você gostaria de ser chamado?</h2><p class="sub">Pode ser seu nome ou apelido. Não precisa de mais nada agora.</p>
     <div class="field"><label for="nm">Seu nome</label><input id="nm" autocomplete="given-name" value="${esc(OB.name)}" placeholder="Ex.: Ana"></div>
-    <div class="alert ok"><i data-lucide="lock"></i><span>Suas respostas ficam só entre você e o seu personal.</span></div>`;canNext=OB.name.trim().length>1}
+    <div class="alert ok"><i data-lucide="lock"></i><span>Suas respostas ficam só entre você e o seu professor.</span></div>`;canNext=OB.name.trim().length>1}
   if(st==="objetivo"){body=`<h2>O que você gostaria de conquistar?</h2><p class="sub">Escolha quantas quiser.</p><div class="opts two">${optBtns(GOALS,OB.goals,"goals",1)}</div>`;canNext=OB.goals.length>0}
-  if(st==="barreiras"){body=`<h2>O que mais te impede de começar?</h2><p class="sub">Não existe resposta errada. Isso ajuda o personal a entender você.</p><div class="opts two">${optBtns(BARRIERS,OB.barriers,"barriers",1)}</div>`;canNext=OB.barriers.length>0}
+  if(st==="barreiras"){body=`<h2>O que mais te impede de começar?</h2><p class="sub">Não existe resposta errada. Isso ajuda o professor a entender você.</p><div class="opts two">${optBtns(BARRIERS,OB.barriers,"barriers",1)}</div>`;canNext=OB.barriers.length>0}
   if(st==="rotina"){const D=["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];body=`<h2>Como é sua rotina?</h2>
     <p style="font-weight:700;margin:0 0 10px">Onde você mora?</p>
     <div class="uf-row"><div class="field" style="margin:0"><label for="obu" class="sr-only">Estado</label>${ufSelect("obu",OB.uf||"")}</div><div class="field" style="margin:0"><label for="obc" class="sr-only">Cidade</label><input id="obc" placeholder="Sua cidade" autocomplete="address-level2" value="${esc(OB.city||"")}"></div></div>
@@ -1980,10 +2007,10 @@ function onboarding(){
     <div class="days" role="group" aria-label="Dias">${D.map(d=>`<button class="day" aria-pressed="${OB.days.includes(d)}" data-day="${d}"><small>dia</small><b>${d}</b></button>`).join("")}</div>
     <p style="font-weight:700;margin:22px 0 10px">Melhor período</p>
     <div class="opts">${optBtns([["Manhã","sunrise"],["Tarde","sun"],["Noite","moon"]],[OB.period],"period",0)}</div>`;canNext=OB.days.length>0&&!!OB.period&&!!OB.uf&&(OB.city||"").trim().length>1}
-  if(st==="contato"){body=`<h2>Como você prefere conversar com o personal?</h2><p class="sub">Você pode mudar isso quando quiser.</p><div class="opts">${optBtns(CONTACT,[OB.contact],"contact",0)}</div>`;canNext=!!OB.contact}
+  if(st==="contato"){body=`<h2>Como você prefere conversar com o professor?</h2><p class="sub">Você pode mudar isso quando quiser.</p><div class="opts">${optBtns(CONTACT,[OB.contact],"contact",0)}</div>`;canNext=!!OB.contact}
   if(st==="saude"){const any=OB.parq.some(x=>x===true);body=`<h2>Algumas perguntas sobre sua saúde</h2><p class="sub">É o questionário PAR-Q, usado por profissionais de educação física antes de qualquer treino.</p>
     <div class="parq">${PARQ.map((q,i)=>`<div class="pq"><p>${i+1}. ${q}</p><div class="yn"><button data-pq="${i}" data-a="1" aria-pressed="${OB.parq[i]===true}">Sim</button><button data-pq="${i}" data-a="0" aria-pressed="${OB.parq[i]===false}">Não</button></div></div>`).join("")}</div>
-    ${any?`<div class="alert warn"><i data-lucide="stethoscope"></i><span>Tudo bem! Você pode continuar. Antes dos treinos, o personal vai pedir uma liberação do seu médico, para você treinar com segurança.</span></div>`:""}`;
+    ${any?`<div class="alert warn"><i data-lucide="stethoscope"></i><span>Tudo bem! Você pode continuar. Antes dos treinos, o professor vai pedir uma liberação do seu médico, para você treinar com segurança.</span></div>`:""}`;
     canNext=OB.parq.every(x=>x!==null)}
   if(st==="acesso"){body=`<h2>Crie seu acesso</h2><p class="sub">Com ele você entra no app de qualquer celular ou computador.</p>
     <div class="field"><label for="obe">E-mail</label><input id="obe" type="email" autocomplete="email" inputmode="email" value="${esc(OB.email||"")}" placeholder="voce@exemplo.com"></div>
@@ -1994,8 +2021,8 @@ function onboarding(){
     canNext=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(OB.email||"")&&(OB.pw||"").length>=6&&OB.pw===OB.pw2;nextLabel="Ver meu plano"}
   if(st==="resultado"){const any=OB.parq.some(x=>x===true);body=`<h2>Pronto, ${esc(OB.name.split(" ")[0])}! Seu caminho começa aqui.</h2><p class="sub">Com base nas suas respostas, preparamos seu começo.</p>
     <div class="result"><div class="rh"><small>Você começa no</small><b>Nível 1 · Conhecer</b></div><div class="rb">
-      <div class="rr"><i data-lucide="user-round-check"></i><span>Personal sugerida: <b>${PERSONAL.name}</b>, ${PERSONAL.bio.toLowerCase()}</span></div>
-      <div class="rr"><i data-lucide="map-pin"></i><span>Você está em <b>${esc(OB.city||"")} / ${OB.uf||""}</b>. Os níveis 1 e 2 são online. Quando chegar aos encontros presenciais, indicamos uma personal parceira perto de você.</span></div>
+      <div class="rr"><i data-lucide="user-round-search"></i><span>No app, na aba <b>Professores</b>, você conhece cada professor e escolhe o seu.</span></div>
+      <div class="rr"><i data-lucide="map-pin"></i><span>Você está em <b>${esc(OB.city||"")} / ${OB.uf||""}</b>. Os níveis 1 e 2 são online, de qualquer lugar.</span></div>
       <div class="rr"><i data-lucide="${OB.contact==="Só mensagem"?"message-square":OB.contact==="Áudio"?"mic":"video"}"></i><span>Primeira conversa por <b>${OB.contact.toLowerCase()}</b>, de 15 minutos e gratuita.</span></div>
       ${OB.plan?`<div class="rr"><i data-lucide="tag"></i><span>Plano escolhido: <b>${planLabel(OB.plan)}</b>. Você só paga depois da primeira conversa.</span></div>`:""}
       <div class="rr"><i data-lucide="calendar"></i><span>Disponível: <b>${OB.days.join(", ")}</b>, de ${OB.period.toLowerCase()}.</span></div>
@@ -2018,9 +2045,9 @@ function onboarding(){
   $("#next").onclick=next;icons();
   async function next(){if(OB.step<OB_STEPS.length-1){OB.step++;onboarding();scrollTo(0,0);return}
     const acc={email:(OB.email||"").toLowerCase(),h:FB?null:await hashPw(OB.pw||"")};
-    const build=()=>{S=fresh();if(!FB)S.account=acc;S.info={name:OB.name.trim(),email:acc.email};S.plan=OB.plan||null;S.profile={uf:OB.uf,city:(OB.city||"").trim(),name:OB.name.trim(),goals:OB.goals,barriers:OB.barriers,days:OB.days,period:OB.period,contact:OB.contact,medical:OB.parq.some(x=>x===true),since:Date.now()};
-    S.messages=[{from:"them",text:FB?`Oi, ${OB.name.trim().split(" ")[0]}! Que bom ter você aqui. Sua personal vai ler suas respostas e falar com você por esta conversa.`:`Oi, ${OB.name.trim().split(" ")[0]}! Eu sou a ${PERSONAL.name.split(" ")[0]}, sua personal. Li suas respostas e fico feliz que você esteja aqui.`,t:nowT()},{from:"them",text:"Quando quiser, agende nossa primeira conversa na aba Agenda. Pode ser só por mensagem, sem pressa nenhuma.",t:nowT()}];
-    S.unread=2};
+    const build=()=>{S=fresh();if(!FB)S.account=acc;S.pid=null;S.info={name:OB.name.trim(),email:acc.email};S.plan=OB.plan||null;S.profile={uf:OB.uf,city:(OB.city||"").trim(),name:OB.name.trim(),goals:OB.goals,barriers:OB.barriers,days:OB.days,period:OB.period,contact:OB.contact,medical:OB.parq.some(x=>x===true),since:Date.now()};
+    S.messages=[{from:"them",text:`Oi, ${OB.name.trim().split(" ")[0]}! Que bom ter você aqui. Agora é só escolher o seu professor na aba Professores. Ele vai ler suas respostas e falar com você por esta conversa.`,t:nowT()}];
+    S.unread=1};
     if(FB){const bt=$("#next");bt.disabled=true;try{await FBL.signupAluno(acc.email,OB.pw,build)}catch(x){bt.disabled=false;toast(x.msg);if(/e-mail|senha/i.test(x.msg)){OB.step=OB_STEPS.indexOf("acesso");onboarding()}return}}
     else{build();save()}
     OB.step=0;OB.pw=OB.pw2="";location.hash=TEST_MODE?"#/app":"#/app/verificacao";setTimeout(()=>{confetti();toast("Conquista: Primeiro passo!")},300)}
@@ -2028,8 +2055,8 @@ function onboarding(){
 
 /* ================== APP ================== */
 function app(tab){
-  const tabs=[["inicio","house","Início"],["treinos","circle-play","Treinos"],["agenda","calendar-days","Agenda"],["mensagens","message-circle","Conversa"],["perfil","user-round","Perfil"]];
-  const v={inicio:vHome,treinos:vTreinos,agenda:vAgenda,mensagens:vChat,perfil:vPerfil,verificacao:vVerif,dados:vDados}[tab]||vHome;
+  const tabs=[["inicio","house","Início"],["treinos","circle-play","Treinos"],["agenda","calendar-days","Agenda"],["professores","user-round-search","Professores"],["mensagens","message-circle","Conversa"],["perfil","user-round","Perfil"]];
+  const v={inicio:vHome,treinos:vTreinos,agenda:vAgenda,professores:vProfs,mensagens:vChat,perfil:vPerfil,verificacao:vVerif,dados:vDados}[tab]||vHome;
   if(tab==="mensagens")S.unread=0,save();
   $("#root").innerHTML=`<div class="app">
     <header class="app-top"><div class="in"><a class="brand" href="#/" aria-label="Site"><span class="mk"><i data-lucide="footprints"></i></span></a><div><small style="color:var(--muted);font-weight:600;font-size:13px">Nível ${S.level}</small><div style="font-weight:700;line-height:1.1">${LEVELS[S.level-1].t}</div></div>
@@ -2064,7 +2091,7 @@ function vHome(){
   </div>
   <div class="block"><div class="block-h"><h3>Sua semana</h3><button class="link" id="br2">Respirar 2 min</button></div>${weekStrip()}</div>
   ${S.level>=2?`<div class="block"><div class="block-h"><h3>Treino sugerido</h3><a href="#/app/treinos">Ver todos</a></div>${wcard(suggest())}</div>`:""}
-  <div class="block"><div class="block-h"><h3>Sua personal</h3></div>
+  <div class="block"><div class="block-h"><h3>Seu professor</h3></div>
     <a class="task" href="#/app/mensagens" style="text-decoration:none;color:inherit"><span class="avatar" style="background:var(--navy);color:var(--on-navy)">${PERSONAL.initials}</span><span><b>${PERSONAL.name}</b><small>${PERSONAL.cref}</small></span><i class="go" data-lucide="message-circle"></i></a>
   </div>
   ${demoBox()}`;
@@ -2084,7 +2111,7 @@ function moodBox(){
     const br=`<button class="btn btn-primary" data-act="breathe"><i data-lucide="wind"></i>Respirar por 2 minutos</button>`;
     if(m==="Sem energia")ans=`<p>Tudo bem ter dias assim. Hoje pode ser só respirar com calma por 2 minutos. Isso já conta como movimento.</p>${br}`;
     if(m==="Ansioso")ans=`<p>Vamos desacelerar juntos. Soltar o ar mais devagar do que puxa ajuda o corpo a sair do modo alerta.</p>${br}`;
-    if(m==="Mais ou menos")ans=w2?`<p>Um treino curto e tranquilo pode ajudar a virar o dia. Sugestão: <b>${light.t}</b>, ${light.min} min, dá para fazer sentado.</p><button class="btn btn-primary" data-w="${light.id}"><i data-lucide="play"></i>Começar ${light.t.toLowerCase()}</button>`:`<p>Sem problema. Que tal mandar uma mensagem para a ${PERSONAL.name.split(" ")[0]} contando como está? Ela responde sem pressa.</p><a class="btn btn-primary" href="#/app/mensagens"><i data-lucide="message-circle"></i>Mandar mensagem</a>`;
+    if(m==="Mais ou menos")ans=w2?`<p>Um treino curto e tranquilo pode ajudar a virar o dia. Sugestão: <b>${light.t}</b>, ${light.min} min, dá para fazer sentado.</p><button class="btn btn-primary" data-w="${light.id}"><i data-lucide="play"></i>Começar ${light.t.toLowerCase()}</button>`:`<p>Sem problema. Que tal mandar uma mensagem para a ${PERSONAL.name.split(" ")[0]} contando como está? Ele responde sem pressa.</p><a class="btn btn-primary" href="#/app/mensagens"><i data-lucide="message-circle"></i>Mandar mensagem</a>`;
     if(m==="Bem"){const w=suggest();ans=w2?`<p>Que bom! Aproveita a disposição: <b>${w.t}</b>, ${w.min} min.</p><button class="btn btn-primary" data-w="${w.id}"><i data-lucide="play"></i>Começar treino</button>`:nx?`<p>Que bom! Um bom dia para dar o próximo passo: ${nx.t.replace(/\s*\(.*\)/,"").toLowerCase()}.</p><a class="btn btn-primary" href="${nx.go}"><i data-lucide="arrow-right"></i>Ir agora</a>`:`<p>Que bom! Você já pode subir de nível quando quiser.</p>`}}
   return `<div class="mood"><h3>Como você está hoje?</h3><div class="row" role="group" aria-label="Como você está hoje">${MOODS.map(([t,ic])=>`<button aria-pressed="${m===t}" data-mood="${t}"><i data-lucide="${ic}"></i>${t}</button>`).join("")}</div>${ans?`<div class="ans">${ans}</div>`:""}</div>`;
 }
@@ -2129,7 +2156,7 @@ function greet(){const h=new Date().getHours();return h<12?"Bom dia":h<18?"Boa t
 function suggest(){const done=S.workouts.map(w=>w.id);return WORKOUTS.find(w=>!done.includes(w.id))||WORKOUTS[S.workouts.length%WORKOUTS.length]}
 function levelUp(){
   if(S.level>=4){sheet("trophy","Jornada concluída!","Você chegou à academia com autonomia. Esse primeiro passo virou um caminho inteiro.","Voltar ao início");return}
-  S.level++;if(!FB){S.messages.push({from:"them",text:`Parabéns, ${first()}! Você chegou ao nível ${S.level}: ${LEVELS[S.level-1].t}. Estou muito orgulhosa de você!`,t:nowT()});S.unread++}save();
+  S.level++;if(!FB){S.messages.push({from:"them",text:`Parabéns, ${first()}! Você chegou ao nível ${S.level}: ${LEVELS[S.level-1].t}. Estou muito orgulhoso de você!`,t:nowT()});S.unread++}save();
   confetti();sheet(LEVELS[S.level-1].icon,`Nível ${S.level}: ${LEVELS[S.level-1].t}`,LEVELS[S.level-1].desc,"Vamos lá");
 }
 function sheet(ic,t,p,btn,opt={}){const prev=document.activeElement;const m=document.createElement("div");m.className="modal";
@@ -2161,22 +2188,22 @@ function vTreinos(){
     const note=TEST_MODE&&!(S.level>=2||lv1Paid())?`<div class="alert warn" style="margin:0 0 14px"><i data-lucide="lock"></i><span>Os exercícios liberam depois da conversa e do plano.<br>${testTag()}</span></div>`:"";
     const L=TV==="indicados"?rx.map(r=>({e:exById(r.id),r})).filter(x=>x.e):EXS.filter(e=>(TEST_MODE||e.lv<=S.level||rx.some(x=>x.id===e.id))&&(!XF||e.cat===XF||(XF==="Sentado"&&e.seat))).map(e=>({e,r:rx.find(x=>x.id===e.id)}));
     $("#view").innerHTML=`<div class="hello"><small>Treinos</small><h2>${TV==="indicados"?"Escolhidos para você.":"Biblioteca de exercícios."}</h2></div>${tabs}${note}
-    ${TV==="indicados"?(rx.length?`<p class="week-note" style="margin:0 0 12px">A ${esc(PERSONAL.name.split(" ")[0])} escolheu estes exercícios pelo que você contou. Toque para ver a demonstração.</p>`:`<div class="empty">Sua personal indica os exercícios depois da conversa gratuita. Enquanto isso, dê uma olhada na biblioteca.</div>`)
+    ${TV==="indicados"?(rx.length?`<p class="week-note" style="margin:0 0 12px">A ${esc(PERSONAL.name.split(" ")[0])} escolheu estes exercícios pelo que você contou. Toque para ver a demonstração.</p>`:`<div class="empty">Seu professor indica os exercícios depois da conversa gratuita. Enquanto isso, dê uma olhada na biblioteca.</div>`)
       :`<div class="filters" role="group" aria-label="Categoria">${["","Sentado",...EXCATS].map(c=>`<button aria-pressed="${XF===c}" data-xf="${c}">${c||"Todos"}</button>`).join("")}</div>`}
     <div class="exgrid">${L.map(({e,r})=>exCard(e,r,false)).join("")}</div>
     ${TV==="biblioteca"?`<p class="week-note">Para o aluno, aparecem só os exercícios do nível dele. Novos exercícios liberam quando ele sobe de nível.</p>`:""}
-    <p class="note"><i data-lucide="heart-pulse"></i>Se sentir dor, tontura ou falta de ar, pare e avise sua personal.</p>`;
+    <p class="note"><i data-lucide="heart-pulse"></i>Se sentir dor, tontura ou falta de ar, pare e avise seu professor.</p>`;
     document.querySelectorAll("[data-tv]").forEach(b=>b.onclick=()=>{TV=b.dataset.tv;vTreinos();icons()});
     document.querySelectorAll("[data-xf]").forEach(b=>b.onclick=()=>{XF=b.dataset.xf;vTreinos();icons()});
     document.querySelectorAll(".exc[data-ex]").forEach(b=>b.onclick=()=>exDetail(b.dataset.ex,{role:"cliente",rx:rx.find(x=>x.id===b.dataset.ex)}));
     return}
   $("#view").innerHTML=`<div class="hello"><small>Treinos em casa</small><h2>No seu espaço, no seu ritmo.</h2></div>${tabs}
-  ${S.level<2?`<div class="alert warn" style="margin:0 0 16px"><i data-lucide="lock"></i><span>Os treinos em vídeo liberam no nível 2, depois da primeira conversa com a sua personal.${TEST_MODE?`<br>${testTag()}`:" Você já pode dar uma olhada."}</span></div>`:""}
-  ${S.profile.medical&&!S.profile.medOk?`<div class="alert warn" style="margin:0 0 16px"><i data-lucide="stethoscope"></i><span>Lembre de enviar a liberação médica para a sua personal antes de treinar.</span></div>`:""}
+  ${S.level<2?`<div class="alert warn" style="margin:0 0 16px"><i data-lucide="lock"></i><span>Os treinos em vídeo liberam no nível 2, depois da primeira conversa com o seu professor.${TEST_MODE?`<br>${testTag()}`:" Você já pode dar uma olhada."}</span></div>`:""}
+  ${S.profile.medical&&!S.profile.medOk?`<div class="alert warn" style="margin:0 0 16px"><i data-lucide="stethoscope"></i><span>Lembre de enviar a liberação médica para o seu professor antes de treinar.</span></div>`:""}
   <div class="filters" role="group" aria-label="Filtrar treinos">${Object.keys(TFILTERS).map(k=>`<button aria-pressed="${TF===k}" data-tf="${k}">${k}</button>`).join("")}</div>
   <div class="wk">${list.length?list.map(wcard).join(""):`<div class="empty">Você já fez todos os treinos pelo menos uma vez. Pode repetir o que mais gostou!</div>`}</div>
   <button class="task" id="brt" style="margin-top:10px"><span class="ti"><i data-lucide="wind"></i></span><span><b>Pausa para respirar</b><small>2 min · liberado em todos os níveis</small></span><i class="go" data-lucide="chevron-right"></i></button>
-  <p class="note"><i data-lucide="heart-pulse"></i>Se sentir dor, tontura ou falta de ar, pare o treino e avise sua personal.</p>`;
+  <p class="note"><i data-lucide="heart-pulse"></i>Se sentir dor, tontura ou falta de ar, pare o treino e avise seu professor.</p>`;
   document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf;vTreinos();icons()});
   document.querySelectorAll("[data-tv]").forEach(b=>b.onclick=()=>{TV=b.dataset.tv;vTreinos();icons()});
   $("#brt").onclick=()=>breathe();
@@ -2200,7 +2227,7 @@ function renderP(){
     <div class="pfoot"><div class="in"><button class="btn btn-primary" id="pdone" ${P.feel?"":"disabled"}>Salvar e voltar</button></div></div>`;
     el.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{P.feel=b.dataset.f;renderP()});
     $("#pdone").onclick=()=>{S.workouts.push({id:w.id,at:Date.now(),feel:P.feel});const n=S.workouts.length;
-      const resp=P.feel==="Difícil"?"Obrigada por me contar. Vou deixar o próximo treino mais leve para você.":P.feel==="Cansativo"?"Cansar é normal no começo! Descansa bem hoje.":"Que ótimo! Você está indo muito bem.";
+      const resp=P.feel==="Difícil"?"Obrigado por me contar. Vou deixar o próximo treino mais leve para você.":P.feel==="Cansativo"?"Cansar é normal no começo! Descansa bem hoje.":"Que ótimo! Você está indo muito bem.";
       S.messages.push({from:"me",text:`Terminei o treino "${w.t}" e achei ${P.feel.toLowerCase()}.`,t:nowT(),at:Date.now()});if(!FB){S.messages.push({from:"them",text:resp,t:nowT()});S.unread++}save();closeP();
       if(n===1)setTimeout(()=>{confetti();toast("Conquista: 1º treino!")},200);else if(n===8)setTimeout(()=>{confetti();toast("Conquista: 8 treinos!")},200);else toast("Treino salvo!")};
     icons();return}
@@ -2208,11 +2235,11 @@ function renderP(){
   const prog=Math.round((P.i+(P.rest?1:1-P.left/sec))/w.ex.length*100);
   el.innerHTML=`<div class="ph"><button class="rbtn" id="pclose" aria-label="Fechar"><i data-lucide="x"></i></button><div style="flex:1"><b>${w.t}</b><div style="font-size:13px;color:var(--muted)">Exercício ${P.i+1} de ${w.ex.length}</div></div><button class="rbtn" id="psnd" aria-label="${S.sound?"Desligar":"Ligar"} aviso sonoro" aria-pressed="${S.sound}"><i data-lucide="${S.sound?"volume-2":"volume-x"}"></i></button></div>
   <div class="ptrack"><i id="ptr" style="width:${prog}%"></i></div>
-  <div class="pbody">${P.rest?"":`<div class="video"><div><i data-lucide="circle-play"></i><div style="font-weight:700;margin-top:8px">${name}</div><small>Vídeo demonstrativo gravado pelo personal</small></div></div>`}
+  <div class="pbody">${P.rest?"":`<div class="video"><div><i data-lucide="circle-play"></i><div style="font-weight:700;margin-top:8px">${name}</div><small>Vídeo demonstrativo gravado pelo professor</small></div></div>`}
     <div class="ring ${P.rest?"rest":""}"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="bg" cx="100" cy="100" r="90"/><circle class="fg" id="rfg" cx="100" cy="100" r="90" stroke-dasharray="${RC}" stroke-dashoffset="${ringOff()}"/></svg><div class="timer" id="ptm">${fmt(P.left)}</div></div>
     ${P.rest?`<p class="restnote">Descanse. A seguir:</p><div class="exname">${nxt[0]}</div><p class="exhint">${nxt[2]}</p>`:`<div class="exname">${name}</div><p class="exhint">${hint}</p>`}
     <div class="exlist">${w.ex.map((e,i)=>`<div class="ex ${i===P.i&&!P.rest?"cur":i<P.i||(i===P.i&&P.rest)?"ok":""}"><i data-lucide="${i<P.i||(i===P.i&&P.rest)?"check":i===P.i?"play":"circle"}"></i>${e[0]}<span class="t">${e[1]<60?e[1]+" s":Math.round(e[1]/60*10)/10+" min"}</span></div>`).join("")}</div>
-    <p class="note"><i data-lucide="heart-pulse"></i>Sentiu dor, tontura ou falta de ar? Pare e avise sua personal.</p></div>
+    <p class="note"><i data-lucide="heart-pulse"></i>Sentiu dor, tontura ou falta de ar? Pare e avise seu professor.</p></div>
   <div class="pfoot"><div class="in"><button class="btn btn-ghost" id="pskip">${P.rest?"Pular descanso":"Próximo"}</button><button class="btn btn-primary" id="pplay"><i data-lucide="${P.run?"pause":"play"}"></i>${P.run?"Pausar":P.started?"Continuar":"Começar"}</button></div></div>`;
   $("#pclose").onclick=closeP;$("#pskip").onclick=()=>advance(true);
   $("#psnd").onclick=()=>{S.sound=!S.sound;save();renderP()};
@@ -2242,7 +2269,7 @@ function vAgenda(){
   const slots=S.profile.period==="Manhã"?["07:00","08:00","09:00","10:00","11:00"]:S.profile.period==="Tarde"?["13:00","14:00","15:00","16:00","17:00"]:["18:00","19:00","20:00","21:00"];
   const list=[...S.bookings].sort((a,b)=>a.ts-b.ts);
   $("#view").innerHTML=`<div class="hello"><small>Agenda</small><h2>Marque no horário que for bom para você.</h2></div>
-  ${list.length?`<div class="block" style="margin-top:0"><div class="block-h"><h3>Seus agendamentos</h3></div><div class="tasks">${list.map((b,i)=>{const d=new Date(b.ts);const past=b.done;return `<div class="booking" style="${past?"opacity:.6":""}"><span class="d"><b>${d.getDate()}</b><small>${d.toLocaleDateString("pt-BR",{month:"short"}).replace(".","")}</small></span><span><b>${b.type}</b><br><small style="color:var(--muted)">${d.toLocaleDateString("pt-BR",{weekday:"long"})} · ${b.time} · ${b.mode}</small>${PRESENCIAL(b.type)&&!past?`<br><small class="code">Código de segurança: <b>${meetCode({ts:b.ts,cid:ME})}</b> · a personal diz ao chegar</small>`:""}</span>${past?`<span class="chip ok" style="margin-left:auto"><i data-lucide="check"></i>Feito</span>`:`<button class="x" data-cancel="${b.ts}" aria-label="Cancelar"><i data-lucide="x"></i></button>`}</div>`}).join("")}</div></div>`:""}
+  ${list.length?`<div class="block" style="margin-top:0"><div class="block-h"><h3>Seus agendamentos</h3></div><div class="tasks">${list.map((b,i)=>{const d=new Date(b.ts);const past=b.done;return `<div class="booking" style="${past?"opacity:.6":""}"><span class="d"><b>${d.getDate()}</b><small>${d.toLocaleDateString("pt-BR",{month:"short"}).replace(".","")}</small></span><span><b>${b.type}</b><br><small style="color:var(--muted)">${d.toLocaleDateString("pt-BR",{weekday:"long"})} · ${b.time} · ${b.mode}</small>${PRESENCIAL(b.type)&&!past?`<br><small class="code">Código de segurança: <b>${meetCode({ts:b.ts,cid:ME})}</b> · o professor diz ao chegar</small>`:""}</span>${past?`<span class="chip ok" style="margin-left:auto"><i data-lucide="check"></i>Feito</span>`:`<button class="x" data-cancel="${b.ts}" aria-label="Cancelar"><i data-lucide="x"></i></button>`}</div>`}).join("")}</div></div>`:""}
   ${(()=>{const fc=S.bookings.find(b=>b.type==="Primeira conversa");return S.level===1&&(fc||S.talked)?`<div class="block"><div class="alert ok" style="margin:0"><i data-lucide="calendar-check"></i><span>${S.talked?"Você já fez sua conversa gratuita. Os próximos agendamentos liberam no nível 2.":`Sua conversa gratuita está marcada para ${new Date(fc.ts).toLocaleDateString("pt-BR",{weekday:"long",day:"numeric"})} às ${fc.time}. Ela é uma só: para mudar o horário, cancele acima e marque de novo.`}</span></div></div>`:""})()}
   <div class="block" ${S.level===1&&(S.talked||S.bookings.some(b=>b.type==="Primeira conversa"))?"hidden":""}><div class="block-h"><h3>Novo agendamento</h3></div>
     <div class="seg" style="grid-template-columns:repeat(${types.length},1fr)">${types.map(([t,ic,s])=>`<button aria-pressed="${AG.type===t}" data-type="${t}"><i data-lucide="${ic}"></i>${t}<small style="font-size:11px;color:var(--muted);font-weight:500">${s}</small></button>`).join("")}</div>
@@ -2262,11 +2289,24 @@ function vAgenda(){
     const mode=AG.type==="Ao ar livre"?"presencial":AG.type==="Academia"?"na academia":S.profile.contact.toLowerCase();
     S.bookings.push({ts:d.getTime(),time:AG.slot,type:AG.type,mode,done:false});
     if(!FB){S.messages.push({from:"them",text:`Recebi seu agendamento de ${AG.type.toLowerCase()} para ${d.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric"})} às ${AG.slot}. Até lá!`,t:nowT()});S.unread++}
-    AG.slot="";save();toast("Agendado! Sua personal foi avisada.");vAgenda();icons()};
+    AG.slot="";save();toast("Agendado! Seu professor foi avisado.");vAgenda();icons()};
   bindDemo();
 }
 
 /* chat */
+/* ---------- professores: o aluno conhece cada um pela vitrine e escolhe o seu ---------- */
+function vProfs(){
+  const mine=S.pid&&findP(S.pid),ps=DB.personals.filter(p=>p.status==="ativo"&&p.id!==S.pid).sort((a,b)=>(b.uf===S.profile.uf)-(a.uf===S.profile.uf));
+  $("#view").innerHTML=`<div class="hello"><small>Professores</small><h2>${mine?"Seu professor":"Escolha seu professor"}</h2></div>
+  ${mine?`<div class="vits">${vitHtml(mine)}</div><p class="week-note" style="margin:10px 0 22px">Quer trocar de professor? Fale com a gente pela central de ajuda.</p>`:`<p class="sub">Leia a apresentação de cada um e escolha com quem você se sente mais à vontade. Ele vai ler suas respostas e falar com você pela Conversa.</p>`}
+  ${!mine?(ps.length?`<div class="vits">${ps.map(p=>`<div>${vitHtml(p)}<button class="btn btn-primary" data-pick="${esc(p.id)}" style="width:100%;margin-top:8px"><i data-lucide="user-round-check"></i>Escolher ${esc(p.name.split(" ")[0])}</button></div>`).join("")}</div>`:`<div class="alert ok"><i data-lucide="user-round-search"></i><span>Nosso time de professores está sendo montado. Assim que tiver alguém, ele aparece aqui.</span></div>`)
+   :(ps.length?`<div class="block-h"><h3>Outros professores</h3></div><div class="vits">${ps.map(p=>vitHtml(p)).join("")}</div>`:"")}`;
+  icons();
+  document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const p=findP(b.dataset.pick);if(!p)return;
+    sheet("user-round-check",`Escolher ${p.name}?`,"Ele passa a ser o seu professor: vê suas respostas, monta seus treinos e conversa com você.","Escolher",{cancel:"Agora não",onOk:()=>{S.pid=p.id;
+      if(!FB){S.messages.push({from:"them",text:`Oi, ${first()}! Eu sou o ${p.name.split(" ")[0]}, seu professor. Li suas respostas e fico feliz que você esteja aqui. Quando quiser, agende nossa primeira conversa na aba Agenda.`,t:nowT()});S.unread++}
+      save();toast(`Pronto! ${p.name.split(" ")[0]} é o seu professor.`);route(true)}})});
+}
 function vChat(){
   const quick=["Estou com vergonha de começar","Posso treinar sentado?","Hoje não estou bem","Quero mudar meu horário"];
   $("#view").innerHTML=`<div class="chat">
@@ -2285,7 +2325,7 @@ function vChat(){
 function reply(t){t=t.toLowerCase();
   if(t.includes("vergonha")||t.includes("medo"))return"Isso é muito comum e faz total sentido. Por isso a gente começa em casa, sem ninguém olhando. Vamos no seu tempo, combinado?";
   if(t.includes("sentad")||t.includes("cadeira"))return"Pode sim! O treino \"Força na cadeira\" e o de mobilidade são feitos sentado. Posso adaptar outros também.";
-  if(t.includes("não estou bem")||t.includes("nao estou bem")||t.includes("triste"))return"Obrigada por me contar. Hoje pode ser só uma respiração de 5 minutos, ou descanso mesmo. Se estiver muito difícil, o CVV atende 24h pelo 188. Estou aqui.";
+  if(t.includes("não estou bem")||t.includes("nao estou bem")||t.includes("triste"))return"Obrigado por me contar. Hoje pode ser só uma respiração de 5 minutos, ou descanso mesmo. Se estiver muito difícil, o CVV atende 24h pelo 188. Estou aqui.";
   if(t.includes("horário")||t.includes("horario"))return"Claro! Pode escolher outro horário na aba Agenda e cancelar o antigo.";
   if(t.includes("dor"))return"Se sentir dor, pare o exercício. Me conta onde está doendo para eu ajustar o seu treino.";
   return"Anotado! Vou olhar com calma e te respondo por aqui.";
@@ -2300,7 +2340,7 @@ function vPerfil(){
   <details class="fold block"><summary><h3>Sua jornada</h3><span class="fs">Nível ${S.level} de 4</span><i data-lucide="chevron-down"></i></summary>
     <div class="tasks">${LEVELS.map(l=>`<div class="task ${l.n<S.level?"done":""}" style="${l.n>S.level?"opacity:.55":""}"><span class="ti"><i data-lucide="${l.n<S.level?"check":l.icon}"></i></span><span><b>Nível ${l.n} · ${l.t}</b><small>${l.price} ${l.per}</small></span>${l.n===S.level?`<span class="chip ok" style="margin-left:auto">Atual</span>`:""}</div>`).join("")}</div></details>
   <details class="fold block"><summary><h3>Suas respostas</h3><span class="fs">Questionário</span><i data-lucide="chevron-down"></i></summary>
-    <div class="plist"><div><span>Objetivos</span><b>${p.goals.join(", ")}</b></div><div><span>O que te trava</span><b>${p.barriers.join(", ")}</b></div><div><span>Disponibilidade</span><b>${p.days.join(", ")} · ${p.period}</b></div>${S.plan?`<div><span>Plano escolhido</span><b>${planLabel(S.plan)}</b></div>`:""}<div><span>Contato preferido</span><b>${p.contact}</b></div><div><span>Liberação médica</span><b>${p.medical?(p.medOk?"Recebida pela personal":"Pendente"):"Não necessária"}</b></div></div></details>
+    <div class="plist"><div><span>Objetivos</span><b>${p.goals.join(", ")}</b></div><div><span>O que te trava</span><b>${p.barriers.join(", ")}</b></div><div><span>Disponibilidade</span><b>${p.days.join(", ")} · ${p.period}</b></div>${S.plan?`<div><span>Plano escolhido</span><b>${planLabel(S.plan)}</b></div>`:""}<div><span>Contato preferido</span><b>${p.contact}</b></div><div><span>Liberação médica</span><b>${p.medical?(p.medOk?"Recebida pelo professor":"Pendente"):"Não necessária"}</b></div></div></details>
   <div class="block"><div class="block-h"><h3>Treinos por semana</h3></div><div class="card" style="padding:14px">${weeksChart()}</div></div>
   <div class="block"><div class="block-h"><h3>Como você tem se sentido</h3></div>${feelHist()}</div>
   <div class="block"><div class="block-h"><h3>Pagamentos</h3></div>${myBills()}</div>
@@ -2342,11 +2382,11 @@ function weeksChart(){const w0=sod()-((new Date().getDay()+6)%7)*D1,data=[];
 function feelHist(){
   const FI={"Leve":"smile","Bom":"thumbs-up","Cansativo":"wind","Difícil":"frown"};
   const items=[...S.workouts.map(w=>({at:w.at,t:(WORKOUTS.find(x=>x.id===w.id)||{}).t,f:w.feel})),...(S.breaths||[]).map(b=>({at:b,t:"Pausa para respirar",f:null}))].sort((a,b)=>b.at-a.at).slice(0,4);
-  if(!items.length)return`<div class="empty">Depois de cada treino você conta como se sentiu, e isso aparece aqui para você e sua personal acompanharem.</div>`;
+  if(!items.length)return`<div class="empty">Depois de cada treino você conta como se sentiu, e isso aparece aqui para você e seu professor acompanharem.</div>`;
   return`<div class="hist">${items.map(x=>`<div><i data-lucide="${x.f?FI[x.f]:"wind"}"></i><span><b>${x.t}</b>${x.f?` · ${x.f.toLowerCase()}`:""}</span><small>${new Date(x.at).toLocaleDateString("pt-BR",{day:"numeric",month:"short"}).replace(".","")}</small></div>`).join("")}</div>`;
 }
 
-/* demo controls (simulate what the personal does) */
+/* demo controls (simulate what the professor does) */
 function demoBox(){
   if(FB)return"";const b=[];
   if(S.level===1&&S.bookings.length&&!S.talked)b.push(["talk","Marcar conversa como realizada"]);
@@ -2356,7 +2396,7 @@ function demoBox(){
   if(TEST_MODE&&S.level<4)b.push(["lvup",`Ir para o nível ${S.level+1} (teste)`]);
   if(TEST_MODE&&kycOf(ME).status!=="verificado")b.push(["kyc","Marcar identidade como verificada (teste)"]);
   if(!b.length)return"";
-  return `<div class="demo"><span><b>Modo demonstração.</b> No app real, estas etapas são confirmadas pelo personal.</span><div class="row">${b.map(([k,t])=>`<button data-demo="${k}">${t}</button>`).join("")}</div></div>`;
+  return `<div class="demo"><span><b>Modo demonstração.</b> No app real, estas etapas são confirmadas pelo professor.</span><div class="row">${b.map(([k,t])=>`<button data-demo="${k}">${t}</button>`).join("")}</div></div>`;
 }
 function bindDemo(){document.querySelectorAll("[data-demo]").forEach(x=>x.onclick=()=>{const k=x.dataset.demo;
   if(k==="lvup"){S.level=Math.min(4,S.level+1);S.talked=true;autoRx();S.messages.push({from:"them",text:`Modo de teste: você foi para o nível ${S.level}.`,t:nowT()})}
@@ -2392,7 +2432,7 @@ function seedDB(){
     {id:"p1",name:"Camila Rocha",cref:"CREF 000000-G/SP",uf:"SP",area:"São Paulo / SP",bio:"Especialista em atividade física adaptada e em iniciantes. Atende online em todo o Brasil e presencial em São Paulo.",spec:["Atividade física adaptada","Iniciantes"],status:"ativo",cap:20,rating:4.9,since:now-420*D1},
     {id:"p2",name:"Rafael Nunes",cref:"CREF 000001-G/RJ",uf:"RJ",area:"Rio de Janeiro / RJ",bio:"Trabalha com saúde mental e emagrecimento sem dietas radicais.",spec:["Saúde mental","Emagrecimento"],status:"ativo",cap:15,rating:4.8,since:now-230*D1},
     {id:"p3",name:"Júlia Martins",cref:"CREF 000002-G/MG",uf:"MG",area:"Belo Horizonte / MG",bio:"Pós-graduada em envelhecimento ativo. Foco em mobilidade e equilíbrio.",spec:["Idosos","Mobilidade"],status:"pendente",cap:12,rating:null,since:now-3*D1}];
-  // nome, nível, personal, cliente há (dias), última atividade (dias), treinos, saúde (0 ok, 1 aguardando liberação, 2 liberado), última sensação, situação
+  // nome, nível, professor, cliente há (dias), última atividade (dias), treinos, saúde (0 ok, 1 aguardando liberação, 2 liberado), última sensação, situação
   const CL=[["Marina Alves",2,"p1",40,1,6,0,"Bom"],["João Pedro Lima",1,"p1",5,2,0,1,""],["Beatriz Souza",3,"p1",130,0,24,0,"Leve"],["Carlos Eduardo Santos",2,"p2",33,9,3,1,"Difícil"],
     ["Fernanda Reis",4,"p2",210,1,41,0,"Bom"],["Luana Costa",2,"p1",26,3,4,0,"Cansativo"],["Roberto Dias",1,"p2",2,1,0,0,""],["Patrícia Gomes",3,"p2",96,12,18,2,"Bom"],
     ["Thiago Martins",2,"p1",19,0,7,0,"Leve"],["Sônia Ferreira",2,"p2",64,23,5,0,"Difícil","pausado"],["André Oliveira",4,"p1",265,2,57,0,"Bom"],["Helena Prado",2,"p2",12,1,2,2,"Leve"]];
@@ -2424,7 +2464,7 @@ function seedDB(){
   return seedInfo(seedTerms(seedSafety(seedPay(seedFin(db)))));
 }
 let DB=loadDB();
-function loadDB(){if(FB)return emptyDB();try{const r=localStorage.getItem(DBKEY);if(r)return JSON.parse(r)}catch(e){}return seedDB()}
+function loadDB(){if(FB)return emptyDB();try{const r=localStorage.getItem(DBKEY);if(r)return JSON.parse(r)}catch(e){}return DEMO?emptyDB():seedDB()}
 function saveDB(){if(FB){FBL.saveDB();return}try{localStorage.setItem(DBKEY,JSON.stringify(DB))}catch(e){}}
 function syncPrices(){LEVELS.forEach((l,i)=>{const v=DB.prices[i];l.price=money(v);l.per=i===0?"pagamento único":i===1?"por mês":`por mês · ${money(v/8)}/aula`})}
 syncPrices();
@@ -2432,13 +2472,13 @@ syncPrices();
 /* o cliente deste aparelho visto pelos painéis */
 /* cada aluno (o deste aparelho ou os carregados do banco) visto como cliente pelos painéis */
 function toC(id){const a=A(id);if(!a||!a.profile)return null;const p=a.profile;
-  return{id,you:id===ME,uf:p.uf||(FB?"":"SP"),city:p.city||"",name:p.name,level:a.level,pid:a.pid||(FB?null:"p1"),since:p.since,goals:p.goals||[],barriers:p.barriers||[],contact:p.contact||"Só mensagem",period:p.period||"Manhã",days:p.days||[],
+  return{id,you:id===ME,uf:p.uf||(FB?"":"SP"),city:p.city||"",name:p.name,level:a.level,pid:a.pid||null,since:p.since,goals:p.goals||[],barriers:p.barriers||[],contact:p.contact||"Só mensagem",period:p.period||"Manhã",days:p.days||[],
     medical:!!p.medical,medOk:!!p.medOk,workouts:a.workouts||[],talked:!!a.talked,outdoor:a.outdoor||0,gym:a.gymsessions||0,status:a.status||"ativo",msgs:a.messages||[],phone:FB?((a.info||{}).tel||"—"):"este aparelho"}}
 const meC=()=>toC(ME);
 const allClients=()=>DB.clients.concat(alIds().map(toC).filter(Boolean));
 const findC=id=>allClients().find(c=>c.id===id);
 const findP=id=>DB.personals.find(p=>p.id===id);
-function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||(FB?null:"p1"),ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
+function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||null,ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
 function updC(id,patch){
   const a=A(id);if(a){const map={level:"level",talked:"talked",outdoor:"outdoor",gym:"gymsessions",status:"status",pid:"pid"};
     for(const k in patch){if(k==="medOk")a.profile.medOk=patch[k];else a[map[k]||k]=patch[k]}if(patch.talked)autoRx(a);saveA(id)}
@@ -2507,43 +2547,48 @@ if(!FB)DB.personals.forEach(p=>{if(!p.email)p.email=mailOf(p.name)});
 function login(){
   if(!FB)DB.personals.forEach(p=>{if(!p.email)p.email=mailOf(p.name)});
   const has=!!S.profile,who=(location.hash.split("/")[2]||"");
-  const R={aluno:{ic:"footprints",t:"Entrar como aluno",d:"Seu caminho, treinos, agenda e conversa com a sua personal.",u:"E-mail",um:"email"},personal:{ic:"dumbbell",t:"Entrar como personal",d:"Seus alunos, alertas do dia, agenda, mensagens e ganhos.",u:FB?"E-mail":"E-mail ou CREF",um:"email"},
-           empresa:{ic:"building-2",t:"Entrar como empresa",d:"Visão geral, clientes, personais, financeiro, segurança e preços.",u:"E-mail",um:"email"}}[who];
+  const R={aluno:{ic:"footprints",t:"Entrar como aluno",d:"Seu caminho, treinos, agenda e conversa com o seu professor.",u:"E-mail",um:"email"},personal:{ic:"dumbbell",t:"Entrar como professor",d:"Seus alunos, alertas do dia, agenda, mensagens e ganhos.",u:FB?"E-mail":"E-mail ou CREF",um:"email"},
+           empresa:{ic:"building-2",t:"Entrar como empresa",d:"Visão geral, clientes, professores, financeiro, segurança e preços.",u:"E-mail",um:"email"}}[who];
   const top=`<header class="topbar"><div class="wrap"><a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
     <a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a><button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
-  if(who==="nova-personal"&&FB){
+  if(who==="nova-personal"&&(FB||DEMO)){
     $("#root").innerHTML=`${top}<main class="login-main lg-center"><form class="lg-card" id="npf" novalidate>
-      <span class="ri"><i data-lucide="dumbbell"></i></span><h1>Criar conta de personal</h1><p class="lg-lead">Depois do cadastro, a empresa confere seu CREF e libera o seu painel.</p>
+      <span class="ri"><i data-lucide="dumbbell"></i></span><h1>Criar conta de professor</h1><p class="lg-lead">${DEMO?"Modo de teste: só o nome, e você já entra no painel.":"Depois do cadastro, a empresa confere seu CREF e libera o seu painel."}</p>
       <div class="field lg-f"><label for="npn">Nome completo</label><input id="npn" autocomplete="name"></div>
-      <div class="field lg-f"><label for="npc">Número do CREF</label><input id="npc" placeholder="000000-G/SP"></div>
+      ${DEMO?"":`<div class="field lg-f"><label for="npc">Número do CREF</label><input id="npc" placeholder="000000-G/SP"></div>
       <div class="uf-row lg-f"><div class="field" style="margin:0"><label for="npu">Estado</label>${ufSelect("npu","")}</div><div class="field" style="margin:0"><label for="npa">Cidade</label><input id="npa" autocomplete="address-level2"></div></div>
       <div class="field lg-f"><label for="npt">Celular</label><input id="npt" type="tel" autocomplete="tel"></div>
-      <div class="field lg-f"><label for="npe">E-mail</label><input id="npe" type="email" autocomplete="email" inputmode="email"></div>
-      <div class="field lg-f"><label for="npw">Senha</label><input id="npw" type="password" autocomplete="new-password" placeholder="Pelo menos 6 caracteres"></div>
+      <div class="field lg-f"><label for="npe">E-mail</label><input id="npe" type="email" autocomplete="email" inputmode="email"></div>`}
+      ${DEMO?"":`<div class="field lg-f"><label for="npw">Senha</label><input id="npw" type="password" autocomplete="new-password" placeholder="Pelo menos 6 caracteres"></div>`}
       <small class="err" id="npx" role="alert"></small>
-      <button class="btn btn-primary">Enviar cadastro<i data-lucide="arrow-right"></i></button>
-    </form><a class="lg-back" href="#/entrar/personal"><i data-lucide="arrow-left"></i>Já tenho conta</a></main>`;
+      <button class="btn btn-primary">${DEMO?"Entrar como professor":"Enviar cadastro"}<i data-lucide="arrow-right"></i></button>
+    </form><a class="lg-back" href="${DEMO?"#/entrar":"#/entrar/personal"}"><i data-lucide="arrow-left"></i>${DEMO?"Voltar":"Já tenho conta"}</a></main>`;
     $("#theme").onclick=toggleTheme;icons();
-    $("#npf").onsubmit=e=>{e.preventDefault();const f={name:$("#npn").value.trim(),cref:$("#npc").value.trim(),uf:$("#npu").value,city:$("#npa").value.trim(),tel:$("#npt").value.trim(),email:$("#npe").value.trim().toLowerCase(),pw:$("#npw").value};
+    $("#npf").onsubmit=e=>{e.preventDefault();const v=id=>{const x=$("#"+id);return x?x.value.trim():""},n=v("npn");
+      const f=DEMO?{name:n,cref:"000000-G/SP",uf:"SP",city:"São Paulo",tel:"",email:"professor"+(DB.personals.length+1)+"@teste.com",pw:"teste123"}:{name:n,cref:v("npc"),uf:v("npu"),city:v("npa"),tel:v("npt"),email:v("npe").toLowerCase(),pw:$("#npw").value};
       const miss=[f.name.length<3&&"nome",f.cref.length<4&&"CREF",!f.uf&&"estado",f.city.length<2&&"cidade",!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)&&"e-mail",f.pw.length<6&&"senha com 6 caracteres"].filter(Boolean);
       if(miss.length){$("#npx").textContent="Falta: "+miss.join(", ")+".";return}
       const bt=$("#npf button.btn-primary");bt.disabled=true;$("#npx").textContent="";
-      FBL.signupPersonal(f).then(()=>sheet("badge-check","Cadastro enviado","A empresa vai conferir seu CREF. Quando for aprovado, você entra com este e-mail e senha em Entrar → Personal.","Entendi",{onOk:()=>{location.hash="#/entrar/personal"}})).catch(x=>{bt.disabled=false;$("#npx").textContent=x.msg})};
+      if(!FB){const id="p"+(DB.personals.length+1);DB.personals.push({id,name:f.name,cref:"CREF "+f.cref,uf:f.uf,area:f.city+" / "+f.uf,bio:"",spec:["Iniciantes"],status:DEMO?"ativo":"pendente",cap:15,since:Date.now(),email:f.email,info:{name:f.name,email:f.email,tel:f.tel}});saveDB();
+        if(DEMO){setSess({role:"personal",pid:id});location.hash="#/personal";toast("Professor criado. Você já está no painel dele.");return}
+        sheet("badge-check","Cadastro enviado","Agora entre como empresa e aprove este professor em Professores. Depois ele já pode entrar.","Entendi",{onOk:()=>{location.hash="#/entrar"}});return}
+      FBL.signupPersonal(f).then(()=>sheet("badge-check","Cadastro enviado","A empresa vai conferir seu CREF. Quando for aprovado, você entra com este e-mail e senha em Entrar → Professor.","Entendi",{onOk:()=>{location.hash="#/entrar/personal"}})).catch(x=>{bt.disabled=false;$("#npx").textContent=x.msg})};
     return}
   if(!R){
     $("#root").innerHTML=`${top}<main class="login-main lg-center">
-      ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Toque e entre direto, sem senha. Tudo aqui é de exemplo e fica só neste aparelho. Para trocar depois, use o botão "Trocar perfil".</p>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
-      <div class="roles">
-        <div class="role"><span class="ri"><i data-lucide="footprints"></i></span><h2>Sou aluno</h2><p>Seu caminho passo a passo, treinos, agenda e conversa com a sua personal.</p><a class="btn btn-primary" href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}">${has&&!S.loggedOut?"Abrir meu app":"Entrar no app"}<i data-lucide="arrow-right"></i></a></div>
-        <div class="role"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Sou personal</h2><p>Seus alunos, alertas do dia, agenda, mensagens e seus ganhos.</p><a class="btn btn-primary" href="#/entrar/personal">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
-        <div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, personais, financeiro e segurança.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
+      ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Comece do zero, como no dia a dia. Tudo fica só neste aparelho e entra sem senha. Para trocar, use o botão "Trocar perfil".</p>
+      <ol class="demo-steps"><li>Crie o professor em "Sou professor". Ele já entra direto no painel.</li><li>Em "Sou aluno", faça o cadastro do aluno.</li><li>Volte no professor para indicar os exercícios dele.</li></ol>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
+      <div class="roles${DEMO?"":" two"}">
+        <div class="role"><span class="ri"><i data-lucide="footprints"></i></span><h2>Sou aluno</h2><p>Seu caminho passo a passo, treinos, agenda e conversa com o seu professor.</p><a class="btn btn-primary" href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}">${has&&!S.loggedOut?"Abrir meu app":"Entrar no app"}<i data-lucide="arrow-right"></i></a></div>
+        <div class="role"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Sou professor</h2><p>Seus alunos, alertas do dia, agenda, mensagens e seus ganhos.</p><a class="btn btn-primary" href="#/entrar/personal">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
+        ${DEMO?`<div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, professores, financeiro e segurança.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>`:""}
       </div>
-      ${DEMO?`<div class="demo-more"><a class="btn btn-ghost" href="#/" data-dsite><i data-lucide="globe"></i>Ver o site, como um visitante</a><a class="btn btn-ghost" href="#/comecar"><i data-lucide="user-plus"></i>Ver o cadastro de aluno novo</a><button class="btn btn-ghost" id="dreset"><i data-lucide="rotate-ccw"></i>Recomeçar o teste do zero</button></div>`
+      ${DEMO?`<div class="demo-more"><a class="btn btn-ghost" href="#/" data-dsite><i data-lucide="globe"></i>Ver o site, como um visitante</a><button class="btn btn-ghost" id="dreset"><i data-lucide="rotate-ccw"></i>Recomeçar o teste do zero</button></div>`
         :FB?"":`<p class="lg-note"><i data-lucide="info"></i>Versão de demonstração: os dados ficam salvos só neste navegador.</p>`}
     </main>`;
     if(DEMO){document.querySelectorAll(".role .btn").forEach((a,i)=>a.onclick=e=>{e.preventDefault();demoGo(["aluno","personal","empresa"][i])});
       $("[data-dsite]").onclick=()=>{DEMO_SITE=true};
-      $("#dreset").onclick=()=>sheet("rotate-ccw","Recomeçar o teste?","Tudo o que você mexeu no modo de teste volta ao exemplo inicial. O app de verdade não é afetado.","Recomeçar",{danger:true,cancel:"Cancelar",onOk:()=>{[KEY,DBKEY,SKEY].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.reload()}})}
+      $("#dreset").onclick=()=>sheet("rotate-ccw","Recomeçar o teste?","Apaga o professor, o aluno e tudo o que você fez no teste. O app de verdade não é afetado.","Recomeçar",{danger:true,cancel:"Cancelar",onOk:()=>{[KEY,DBKEY,SKEY].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.reload()}})}
     $("#theme").onclick=toggleTheme;icons();return}
   $("#root").innerHTML=`${top}<main class="login-main lg-center">
     <form class="lg-card" id="lgf" novalidate>
@@ -2554,7 +2599,7 @@ function login(){
       <button class="btn btn-primary">Entrar<i data-lucide="arrow-right"></i></button>
       <a href="#" data-forgot class="lg-forgot">Esqueci minha senha</a>
       ${who==="aluno"?`<p class="lg-new">Ainda não tem conta? <a href="#/comecar">Criar meu plano</a></p>`:""}
-      ${who==="personal"&&FB?`<p class="lg-new">Ainda não tem conta? <a href="#/entrar/nova-personal">Criar conta de personal</a></p>`:""}
+      ${who==="personal"&&FB?`<p class="lg-new">Ainda não tem conta? <a href="#/entrar/nova-personal">Criar conta de professor</a></p>`:""}
       ${(TEST_MODE||DEMO)&&!FB?`<div class="lg-testbox"><button type="button" class="lg-test" id="lgt"><i data-lucide="flask-conical"></i>Usar conta de teste</button><small>O login de verdade, com senha protegida e recuperação por e-mail, entra junto com o servidor.</small></div>`:""}
     </form>
     <a class="lg-back" href="#/entrar"><i data-lucide="arrow-left"></i>Escolher outro acesso</a>
@@ -2583,11 +2628,25 @@ function login(){
 }
 /* modo demonstração: botão fixo para trocar de perfil e entrada direta, sem senha */
 let DEMO_SITE=false,DEMO_GO=null;
+/* link direto de teste: ?demo&como=aluno|professor|empresa abre já naquela área */
+let DEMO_AS=DEMO?({aluno:"aluno",professor:"personal",empresa:"empresa"})[(location.search.match(/[?&]como=(\w+)/)||[])[1]]||null:null;
 function demoPill(h){let b=$("#demopill");if(!DEMO||h==="#/entrar"){if(b)b.remove();return}
   if(!b){b=document.createElement("a");b.id="demopill";b.href="#/entrar";b.innerHTML=`<i data-lucide="repeat"></i>Trocar perfil`;document.body.appendChild(b)}}
-function demoGo(who){
-  if(who==="aluno"&&S.profile){S.loggedOut=false;save();location.hash="#/app";return}
+function demoGo(who,direct){
+  if(who==="aluno"){if(S.profile){S.loggedOut=false;save();location.hash="#/app"}else location.hash="#/comecar";return}
+  if(who==="personal"){demoPersonal(direct);return}
   DEMO_GO=who;location.hash="#/entrar/"+who}
+/* teste: escolher qual professor entrar, ou criar uma */
+function demoPersonal(direct){
+  const ps=DB.personals;if(!ps.length){location.hash="#/entrar/nova-personal";return}
+  if(direct&&ps.length===1){const p=ps[0];if(p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:p.id});location.hash="#/personal";return}
+  const el=document.createElement("div");el.className="modal";el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Entrar como professor"><div class="big"><i data-lucide="dumbbell"></i></div><h3>Entrar como professor</h3>
+    <div class="demo-ps">${ps.map(p=>`<button class="btn btn-primary" data-dp="${p.id}">${esc(p.name)}</button>`).join("")}
+    <a class="btn btn-ghost" href="#/entrar/nova-personal" data-dpn><i data-lucide="user-plus"></i>Criar outro professor</a></div></div>`;
+  document.body.appendChild(el);icons();const close=()=>el.remove();
+  el.onclick=e=>{if(e.target===el)close()};
+  el.querySelectorAll("[data-dp]").forEach(b=>b.onclick=()=>{close();const p=findP(b.dataset.dp);if(p&&p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:b.dataset.dp});location.hash="#/personal"});
+  el.querySelector("[data-dpn]").onclick=close}
 function logout(){if(FB){FBL.logout();return}setSess({});location.hash="#/entrar"}
 
 /* ================== MOLDURA DOS PAINÉIS ================== */
@@ -2650,10 +2709,10 @@ function openClient(id,role){
       <div style="display:flex;flex-wrap:wrap;gap:6px">${c.status==="pausado"?pill("mute","pause","Pausado"):pill("ok","circle-check","Ativo")}${al.map(a=>pill(a[2],a[0],a[1])).join("")}</div>
       <div class="minis mt"><div><b>${c.workouts.length}</b><small>treinos em casa</small></div><div><b>${rel(lastAct(c))}</b><small>última atividade</small></div><div><b>${daysAgo(c.since)}d</b><small>de acompanhamento</small></div></div>
       <div class="sec2"><h3>Ações</h3><div class="acts">${acts.map(([k,ic,t])=>`<button class="btn ${k==="up"?"btn-gold":"btn-ghost"} btn-sm" data-a="${k}"><i data-lucide="${ic}"></i>${t}</button>`).join("")}</div></div>
-      ${role==="admin"?`<div class="sec2"><h3>Personal responsável</h3><div class="toolbar" style="margin:0"><select id="dpp" aria-label="Personal responsável">${DB.personals.filter(x=>x.status==="ativo").map(x=>`<option value="${x.id}" ${x.id===c.pid?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>`:""}
+      ${role==="admin"?`<div class="sec2"><h3>Professor responsável</h3><div class="toolbar" style="margin:0"><select id="dpp" aria-label="Personal responsável">${DB.personals.filter(x=>x.status==="ativo").map(x=>`<option value="${x.id}" ${x.id===c.pid?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>`:""}
       <div class="sec2"><h3>Exercícios indicados</h3>${rxOf(c.id).length?`<div class="rxl">${rxOf(c.id).map(r=>{const e=exById(r.id);return e?`<div>${fig(e,"xs")}<span><b>${e.n}</b><small>${esc(r.dose)}${r.note?` · ${esc(r.note)}`:""}</small></span></div>`:""}).join("")}</div>`:`<p class="empty-s">Nenhum exercício indicado ainda.</p>`}</div>
       <div class="sec2"><h3>Para subir de nível</h3><div class="chk">${cr.map(([t,d])=>`<div class="${d?"y":""}"><i data-lucide="${d?"circle-check":"circle-dashed"}"></i>${esc(t)}</div>`).join("")}</div><div class="prog mt"><i style="width:${pctFor(c)}%"></i></div></div>
-      <details class="fold sec2"><summary><h3>Questionário</h3><i data-lucide="chevron-down"></i></summary><div class="plist"><div><span>Objetivos</span><b>${esc(c.goals.join(", "))}</b></div><div><span>O que trava</span><b>${esc(c.barriers.join(", "))}</b></div><div><span>Contato preferido</span><b>${esc(c.contact)}</b></div><div><span>Disponibilidade</span><b>${esc((c.days||[]).join(", "))} · ${esc(c.period)}</b></div><div><span>Liberação médica</span><b>${c.medical?(c.medOk?"Recebida":"Pendente"):"Não necessária"}</b></div>${role==="admin"?`<div><span>Contato</span><b>${esc(c.phone)}</b></div><div><span>Personal</span><b>${esc(p?p.name:"-")}</b></div>`:""}</div></details>
+      <details class="fold sec2"><summary><h3>Questionário</h3><i data-lucide="chevron-down"></i></summary><div class="plist"><div><span>Objetivos</span><b>${esc(c.goals.join(", "))}</b></div><div><span>O que trava</span><b>${esc(c.barriers.join(", "))}</b></div><div><span>Contato preferido</span><b>${esc(c.contact)}</b></div><div><span>Disponibilidade</span><b>${esc((c.days||[]).join(", "))} · ${esc(c.period)}</b></div><div><span>Liberação médica</span><b>${c.medical?(c.medOk?"Recebida":"Pendente"):"Não necessária"}</b></div>${role==="admin"?`<div><span>Contato</span><b>${esc(c.phone)}</b></div><div><span>Professor</span><b>${esc(p?p.name:"-")}</b></div>`:""}</div></details>
       <details class="fold sec2"><summary><h3>Últimos treinos</h3><span class="fs">${c.workouts.length}</span><i data-lucide="chevron-down"></i></summary>${c.workouts.length?`<div class="hist">${c.workouts.slice(-5).reverse().map(w=>{const W=WORKOUTS.find(x=>x.id===w.id)||WORKOUTS[0];return`<div><i data-lucide="${FEEL_IC[w.feel]||"circle"}"></i><span><b>${W.t}</b> · ${(w.feel||"").toLowerCase()}</span><small>${rel(w.at)}</small></div>`}).join("")}</div>`:`<p class="empty-s">Nenhum treino ainda.</p>`}</details>
       ${role==="admin"?`<details class="fold sec2"><summary><h3>Dados e contrato</h3><i data-lucide="chevron-down"></i></summary><div class="plist">${(()=>{const inf=c.you?(S.info||{}):{};const k=kycOf(c.id);return dline("Identidade",KYC_PILL[k.status][2])+dline("CPF",esc(k.cpf||"—"))+dline("Celular",esc(inf.tel||c.phone||"—"))+dline("Cidade",esc(inf.city||k.city||"—"))+dline("Emergência",esc(inf.en?`${inf.en} (${inf.er}) ${inf.et}`:k.emerg||"—"))+dline("Plano",esc(c.you&&S.plan?planLabel(S.plan):`Nível ${c.level} · ${LEVELS[c.level-1].t}`))+dline("Termos de uso",c.you?(S.termsAt?`Aceitos ${new Date(S.termsAt).toLocaleDateString("pt-BR")}`:k.status!=="pendente"?"Aceitos na verificação":"Pendente"):(k.status!=="pendente"?"Aceitos na verificação":"Pendente"))})()}</div></details>`:""}
       ${role==="admin"?`<details class="fold sec2"><summary><h3>Pagamentos</h3><i data-lucide="chevron-down"></i></summary>${cb.length?`<div class="hist">${cb.map(b=>{const[k,ic,t]=BILL_PILL[b.status];return`<div><span><b>${mlabel(b.m,1)}</b> · ${money(b.amount)}</span><small>${pill(k,ic,t)}</small></div>`}).join("")}</div>`:`<p class="empty-s">Sem cobranças.</p>`}</details>`:""}
@@ -2692,8 +2751,8 @@ function panelPersonal(tab){
   if(SESS.role!=="personal"&&SESS.role!=="admin"){location.hash="#/entrar";return}
   const p=curP(),cs=myClients(p),unr=cs.filter(needsReply).length;
   const tabs=[{k:"hoje",ic:"layout-dashboard",l:"Hoje"},{k:"alunos",ic:"users",l:"Alunos"},{k:"agenda",ic:"calendar-days",l:"Agenda"},{k:"mensagens",ic:"message-circle",l:"Mensagens",s:"Conversas",cnt:unr},{k:"exercicios",ic:"dumbbell",l:"Exercícios"},{k:"ganhos",ic:"wallet",l:"Ganhos"},{k:"dados",ic:"id-card",l:"Meus dados"}];
-  const T={hoje:["Painel da personal",`${greet()}, ${p.name.split(" ")[0]}`],alunos:["Seus alunos","Alunos"],agenda:["Encontros e check-ins","Agenda"],mensagens:["Conversas com alunos","Mensagens"],exercicios:["Biblioteca com demonstração","Exercícios"],dados:["Dados pessoais, contrato e documentos","Meus dados"],ganhos:["Mensalidades e repasses","Ganhos"]}[tab]||["",""];
-  shell({role:"Personal",tabs,tab,base:"#/personal",me:{name:p.name,sub:p.cref},title:T[1],kick:T[0],acts:(SESS.back==="admin"?`<a class="btn btn-ghost btn-sm" href="#/admin" id="bk2"><i data-lucide="arrow-left"></i>Voltar à empresa</a>`:"")+`<button class="btn btn-ghost btn-sm sos-btn" data-sos><i data-lucide="siren"></i>Emergência</button>`});
+  const T={hoje:["Painel do professor",`${greet()}, ${p.name.split(" ")[0]}`],alunos:["Seus alunos","Alunos"],agenda:["Encontros e check-ins","Agenda"],mensagens:["Conversas com alunos","Mensagens"],exercicios:["Biblioteca com demonstração","Exercícios"],dados:["Dados pessoais, contrato e documentos","Meus dados"],ganhos:["Mensalidades e repasses","Ganhos"]}[tab]||["",""];
+  shell({role:"Professor",tabs,tab,base:"#/personal",me:{name:p.name,sub:p.cref},title:T[1],kick:T[0],acts:(SESS.back==="admin"?`<a class="btn btn-ghost btn-sm" href="#/admin" id="bk2"><i data-lucide="arrow-left"></i>Voltar à empresa</a>`:"")+`<button class="btn btn-ghost btn-sm sos-btn" data-sos><i data-lucide="siren"></i>Emergência</button>`});
   document.querySelectorAll("[data-sos]").forEach(b=>b.onclick=()=>openSOS("personal"));
   const b2=$("#bk2");if(b2)b2.onclick=()=>setSess({role:"admin"});
   ({hoje:pHoje,alunos:pAlunos,agenda:pAgenda,mensagens:pMsgs,exercicios:pExs,ganhos:pGanhos,dados:pDados}[tab]||pHoje)(p,cs);
@@ -2721,7 +2780,7 @@ let PF={q:"",lv:"0",st:"ativo"};
 function clientTable(list,role){
   if(!list.length)return`<div class="empty">Nenhum aluno encontrado com esses filtros.</div>`;
   const bl=bills(),cur=mkey(Date.now());
-  return`<div class="tbl"><table class="fit"><thead><tr><th>Aluno</th><th>Nível</th><th class="hm hx">Progresso</th><th class="hm">Última atividade</th><th class="hm hx">Último treino</th>${role==="admin"?`<th class="hm hx">Personal</th><th class="hm">Mensalidade</th>`:""}<th>Situação</th></tr></thead><tbody>${list.map(c=>{const lw=c.workouts[c.workouts.length-1],al=alertsFor(c),b=bl.find(x=>x.cid===c.id&&x.m===cur);
+  return`<div class="tbl"><table class="fit"><thead><tr><th>Aluno</th><th>Nível</th><th class="hm hx">Progresso</th><th class="hm">Última atividade</th><th class="hm hx">Último treino</th>${role==="admin"?`<th class="hm hx">Professor</th><th class="hm">Mensalidade</th>`:""}<th>Situação</th></tr></thead><tbody>${list.map(c=>{const lw=c.workouts[c.workouts.length-1],al=alertsFor(c),b=bl.find(x=>x.cid===c.id&&x.m===cur);
     return`<tr data-open="${c.id}"><td><span class="nm">${avatar(c)}<span><b>${esc(c.name)}</b><small class="om">${c.uf?c.uf+" · ":""}Ativo ${rel(lastAct(c))}${c.you?" · este aparelho":""}</small>${c.uf&&role==="admin"?`<small class="dm" style="color:var(--muted)">${esc(c.city||"")} / ${c.uf}</small>`:""}${c.you?`<small class="dm" style="color:var(--muted)">neste aparelho</small>`:""}</span></span></td><td>${lvb(c.level)}</td><td class="hm hx"><div class="prog" title="${pctFor(c)}%"><i style="width:${pctFor(c)}%"></i></div></td><td class="hm">${rel(lastAct(c))}</td><td class="hm hx">${lw?`${pill("mute",FEEL_IC[lw.feel],lw.feel)}`:"—"}</td>${role==="admin"?`<td class="hm hx">${esc((findP(c.pid)||{}).name||"—")}</td><td class="hm">${b?pill(...BILL_PILL[b.status]):"—"}</td>`:""}<td>${c.status==="pausado"?pill("mute","pause","Pausado"):al.length?pill(al[0][2],al[0][0],al[0][1]):pill("ok","check","Em dia")}</td></tr>`}).join("")}</tbody></table></div>`}
 function filterClients(list){const q=PF.q.trim().toLowerCase();return list.filter(c=>(PF.lv==="0"||c.level===+PF.lv)&&(PF.st==="todos"||c.status===PF.st)&&(!q||c.name.toLowerCase().includes(q))).sort((a,b)=>(b.you?1:0)-(a.you?1:0)||alertsFor(b).length-alertsFor(a).length)}
 function clientFilters(extra=""){return`<div class="toolbar"><input id="fq" type="search" placeholder="Buscar pelo nome" value="${esc(PF.q)}" aria-label="Buscar aluno">
@@ -2751,14 +2810,14 @@ function pAgenda(p,cs){
   const t0=sod(),all=bookingsAll().filter(b=>b.pid===p.id&&b.status!=="cancelado");
   const up=all.filter(b=>b.ts>=t0).sort((a,b)=>a.ts-b.ts),past=all.filter(b=>b.ts<t0).sort((a,b)=>b.ts-a.ts).slice(0,6);
   const groups={};up.forEach(b=>{const k=dlabel(b.ts);(groups[k]=groups[k]||[]).push(b)});
-  const row=b=>{const c=findC(b.cid);if(!c)return"";return`<div class="rw"><span class="time">${hm(b.ts)}</span>${avatar(c)}<span><b>${esc(c.name)}</b><small>${b.type} · ${b.mode}${PRESENCIAL(b.type)?` · <b class="code">código ${meetCode(b)}</b>`:""}</small></span><span class="end">${b.status==="feito"?pill("ok","check","Feito"):PRESENCIAL(b.type)?((DB.checkins[b.id]||{}).in?`${pill("info","map-pin-check","Chegou "+hm(DB.checkins[b.id].in))}<button class="btn btn-primary btn-sm" data-ck="${b.id}" data-v="out"><i data-lucide="log-out"></i>Encerrar</button>`:`<button class="btn btn-primary btn-sm" data-ck="${b.id}" data-v="in" ${!TEST_MODE&&(kycOf(c.id).status!=="verificado"||!pSafe(p))?"disabled title='Cliente ou personal sem verificação'":""}><i data-lucide="map-pin-check"></i>Cheguei</button>`):`<button class="btn btn-ghost btn-sm" data-bk="${b.id}" data-s="feito"><i data-lucide="check"></i>Concluir</button><button class="btn btn-ghost btn-sm" data-bk="${b.id}" data-s="cancelado" aria-label="Cancelar"><i data-lucide="x"></i></button>`}</span></div>`};
+  const row=b=>{const c=findC(b.cid);if(!c)return"";return`<div class="rw"><span class="time">${hm(b.ts)}</span>${avatar(c)}<span><b>${esc(c.name)}</b><small>${b.type} · ${b.mode}${PRESENCIAL(b.type)?` · <b class="code">código ${meetCode(b)}</b>`:""}</small></span><span class="end">${b.status==="feito"?pill("ok","check","Feito"):PRESENCIAL(b.type)?((DB.checkins[b.id]||{}).in?`${pill("info","map-pin-check","Chegou "+hm(DB.checkins[b.id].in))}<button class="btn btn-primary btn-sm" data-ck="${b.id}" data-v="out"><i data-lucide="log-out"></i>Encerrar</button>`:`<button class="btn btn-primary btn-sm" data-ck="${b.id}" data-v="in" ${!TEST_MODE&&(kycOf(c.id).status!=="verificado"||!pSafe(p))?"disabled title='Cliente ou professor sem verificação'":""}><i data-lucide="map-pin-check"></i>Cheguei</button>`):`<button class="btn btn-ghost btn-sm" data-bk="${b.id}" data-s="feito"><i data-lucide="check"></i>Concluir</button><button class="btn btn-ghost btn-sm" data-bk="${b.id}" data-s="cancelado" aria-label="Cancelar"><i data-lucide="x"></i></button>`}</span></div>`};
   $("#pv").innerHTML=`<div class="grid2 wide" style="margin-top:0">
     <section class="card"><div class="card-h"><h3>Próximos encontros</h3><span class="pill mute">${up.length}</span></div>${up.length?Object.entries(groups).map(([k,l])=>`<p style="font-weight:700;margin:10px 0 2px;text-transform:capitalize">${k}</p><div class="rows">${l.map(row).join("")}</div>`).join(""):`<p class="empty-s">Nada marcado. Use o formulário ao lado.</p>`}</section>
     <div style="display:grid;gap:14px;align-content:start">${bookingForm(cs)}<section class="card dm"><div class="card-h"><h3>Realizados recentemente</h3></div><div class="rows">${past.length?past.map(row).join(""):`<p class="empty-s">Nenhum ainda.</p>`}</div></section></div>
   </div>`;
   document.querySelectorAll("[data-ck]").forEach(x=>x.onclick=()=>{const b=bookingsAll().find(y=>y.id===x.dataset.ck),c=DB.checkins[b.id]=DB.checkins[b.id]||{};
     if(x.dataset.v==="in"){c.in=Date.now();saveDB();pushMsg(b.cid,`Cheguei! O código do nosso encontro é ${meetCode(b)}. Confira antes de abrir a porta.`);toast("Check-in feito. A central foi avisada.")}
-    else{c.out=Date.now();saveDB();setBk(b,"feito");toast("Encontro encerrado. Obrigada!")}route(true)});
+    else{c.out=Date.now();saveDB();setBk(b,"feito");toast("Encontro encerrado. Obrigado!")}route(true)});
   document.querySelectorAll("[data-bk]").forEach(x=>x.onclick=()=>{const b=bookingsAll().find(y=>y.id===x.dataset.bk);setBk(b,x.dataset.s);if(x.dataset.s==="cancelado"&&!A(b.cid))pushMsg(b.cid,`Precisei cancelar nosso horário de ${dlabel(b.ts).toLowerCase()}. Vamos remarcar?`);toast(x.dataset.s==="feito"?"Encontro concluído":"Horário cancelado e aluno avisado");route(true)});
   bindBookingForm(p.id,()=>route(true));
 }
@@ -2790,10 +2849,10 @@ function pMsgs(p,cs){
 }
 /* ================== PAINEL DA EMPRESA ================== */
 function panelAdmin(tab){
-  if(SESS.role!=="admin"){location.hash="#/entrar";return}
+  if(SESS.role!=="admin"){location.hash="#/entrar/empresa";return}
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
-  const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Personais",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
-  const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Personais"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Trabalho da faculdade","Apresentação"]}[tab]||["",""];
+  const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Professores",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
+  const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Professores"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Trabalho da faculdade","Apresentação"]}[tab]||["",""];
   shell({role:"Empresa",tabs,tab,base:"#/admin",me:{name:"Administração",sub:"Primeiro Passo"},title:T[1],kick:T[0]});
   ({geral:aGeral,clientes:aClientes,personais:aPersonais,financeiro:aFin,seguranca:aSeg,leads:aLeads,ajustes:aAjustes,apresentacao:aApres}[tab]||aGeral)(bl);
   bindOpen("admin");icons();
@@ -2802,7 +2861,7 @@ function aGeral(bl){
   const cs=allClients(),act=cs.filter(c=>c.status==="ativo"),cur=mkey(Date.now()),ms=monthsBack(6);
   const mb=bl.filter(b=>b.m===cur),fat=mb.reduce((s,b)=>s+b.amount,0),rec=mb.filter(b=>b.paid).reduce((s,b)=>s+b.amount,0),late=bl.filter(b=>b.status==="atrasado");
   const novos=cs.filter(c=>mkey(c.since)===cur).length,idle=act.filter(c=>c.level>=2&&daysAgo(lastAct(c))>=14);
-  const pend=[...DB.personals.filter(p=>p.status==="pendente").map(p=>["badge-check",`${p.name} quer ser personal parceira`,"#/admin/personais","warn","Analisar"]),
+  const pend=[...DB.personals.filter(p=>p.status==="pendente").map(p=>["badge-check",`${p.name} quer ser professor parceiro`,"#/admin/personais","warn","Analisar"]),
     ...(late.length?[["circle-alert",`${late.length} mensalidades atrasadas (${money(late.reduce((s,b)=>s+b.amount,0))})`,"#/admin/financeiro","bad","Ver"]]:[]),
     ...(DB.flags||[]).filter(f=>f.status==="aberto").map(f=>["shield-alert",`Possível contato por fora: ${f.pname.split(" ")[0]} e ${f.cname.split(" ")[0]}`,"#/admin/seguranca",f.from==="personal"?"bad":"warn","Ver"]),
     ...DB.incidents.filter(i=>i.status==="aberto").map(i=>["message-square-warning",`Relato: ${i.type.toLowerCase()} (${i.who})`,"#/admin/seguranca",i.sev==="alta"?"bad":"warn","Ver"]),
@@ -2814,19 +2873,19 @@ function aGeral(bl){
   const up=act.filter(c=>c.level>=2).length;
   $("#pv").innerHTML=`<div class="kpis">${kpi("users","Clientes ativos",act.length,`${novos} novos em ${mlabel(cur,1)}`)}${kpi("banknote","Faturamento do mês",money(fat),`${money(rec)} já recebidos`)}${kpi("receipt","Ticket médio",money(mb.length?fat/mb.length:0),"por cliente no mês")}${kpi("building-2","Fica com a empresa",money(fin(mb).emp),"depois de repasses e taxas")}${kpi("circle-alert","Inadimplência",late.length,money(late.reduce((s,b)=>s+b.amount,0))+" em atraso")}${kpi("trending-up","Passaram do nível 1",act.length?Math.round(up/act.length*100)+"%":"—","dos clientes ativos")}</div>
   <div class="grid2">
-    <section class="card"><div class="card-h"><h3>Recebido por mês</h3><a href="#/admin/financeiro">Financeiro</a></div>${sbars(ms.map(m=>{const f=fin(bl.filter(b=>b.m===m));return{label:mlabel(m,1),short:mlabel(m),a:Math.round(f.emp),b:Math.round(f.rep)}}),["Empresa (líquido)","Personais"])}</section>
+    <section class="card"><div class="card-h"><h3>Recebido por mês</h3><a href="#/admin/financeiro">Financeiro</a></div>${sbars(ms.map(m=>{const f=fin(bl.filter(b=>b.m===m));return{label:mlabel(m,1),short:mlabel(m),a:Math.round(f.emp),b:Math.round(f.rep)}}),["Empresa (líquido)","Professores"])}</section>
     <section class="card"><div class="card-h"><h3>Clientes ativos por nível</h3><a href="#/admin/clientes">Ver todos</a></div>${hbars(LEVELS.map(l=>({label:`${l.n} · ${l.t}`,v:act.filter(c=>c.level===l.n).length})))}<p class="week-note">Cada nível é uma etapa da jornada: o funil mostra quantos clientes estão em cada uma.</p>
       <div class="card-h" style="margin:18px 0 10px"><h3>Clientes por estado</h3></div>${(()=>{const m={};act.forEach(c=>{const u=c.uf||"—";m[u]=(m[u]||0)+1});const L=Object.entries(m).sort((a,b)=>b[1]-a[1]);return hbars(L.slice(0,6).map(([u,v])=>({label:u,v})).concat(L.length>6?[{label:"Outros",v:L.slice(6).reduce((s,x)=>s+x[1],0)}]:[]))})()}
-      <p class="week-note">Personais parceiras em ${[...new Set(DB.personals.filter(p=>p.status==="ativo").map(p=>p.uf).filter(Boolean))].join(", ")||"—"}. Onde ainda não há personal, o atendimento presencial fica em espera e o online segue normal.</p></section>
+      <p class="week-note">Professores parceiros em ${[...new Set(DB.personals.filter(p=>p.status==="ativo").map(p=>p.uf).filter(Boolean))].join(", ")||"—"}. Onde ainda não há professor, o atendimento presencial fica em espera e o online segue normal.</p></section>
   </div>
   <div class="grid2">
     <section class="card"><div class="card-h"><h3>Pendências</h3><span class="pill mute">${pend.length}</span></div><div class="rows clip">${pend.length?pend.slice(0,8).map(([ic,t,href,k,btn,cid])=>`<div class="rw"><span class="pill ${k}" style="padding:7px"><i data-lucide="${ic}"></i></span><span><b style="font-weight:600">${esc(t)}</b></span><span class="end">${href?`<a class="btn btn-ghost btn-sm" href="${href}">${btn}</a>`:`<button class="btn btn-ghost btn-sm" data-open="${cid}">${btn}</button>`}</span></div>`).join(""):`<p class="empty-s">Nenhuma pendência.</p>`}</div></section>
-    <section class="card"><div class="card-h"><h3>Faturado por personal</h3><a href="#/admin/personais">Equipe</a></div><div class="rows">${byP.map(x=>`<div class="rw"><span class="av">${esc(initials(x.p.name))}</span><span><b>${esc(x.p.name)}</b><small>${x.n} de ${x.p.cap} vagas · ${x.idle} com alerta</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(x.rev)}</b></span></div>`).join("")}</div></section>
+    <section class="card"><div class="card-h"><h3>Faturado por professor</h3><a href="#/admin/personais">Equipe</a></div><div class="rows">${byP.map(x=>`<div class="rw"><span class="av">${esc(initials(x.p.name))}</span><span><b>${esc(x.p.name)}</b><small>${x.n} de ${x.p.cap} vagas · ${x.idle} com alerta</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(x.rev)}</b></span></div>`).join("")}</div></section>
   </div>`;
 }
 function aClientes(){
   const uf=`<select id="fuf" aria-label="Estado"><option value="">Todos os estados</option>${[...new Set(allClients().map(c=>c.uf).filter(Boolean))].sort().map(u=>`<option ${PF.uf===u?"selected":""}>${u}</option>`).join("")}</select>`;
-  const pf=uf+`<select id="fpp" aria-label="Personal"><option value="">Todas as personais</option>${DB.personals.filter(p=>p.status==="ativo").map(p=>`<option value="${p.id}" ${PF.pid===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`;
+  const pf=uf+`<select id="fpp" aria-label="Professor"><option value="">Todos os professores</option>${DB.personals.filter(p=>p.status==="ativo").map(p=>`<option value="${p.id}" ${PF.pid===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`;
   $("#pv").innerHTML=`${clientFilters(pf)}<div id="tb"></div>`;
   const draw=()=>{$("#tb").innerHTML=clientTable(filterClients(allClients()).filter(c=>(!PF.pid||c.pid===PF.pid)&&(!PF.uf||c.uf===PF.uf)),"admin");bindOpen("admin");icons()};
   bindFilters(draw);$("#fpp").onchange=e=>{PF.pid=e.target.value;draw()};$("#fuf").onchange=e=>{PF.uf=e.target.value;draw()};draw();
@@ -2835,14 +2894,14 @@ function aPersonais(bl){
   const cur=mkey(Date.now()),act=allClients().filter(c=>c.status==="ativo");
   $("#pv").innerHTML=`<div class="pgrid">${DB.personals.map(p=>{const n=act.filter(c=>c.pid===p.id).length,rev=bl.filter(b=>b.m===cur&&b.pid===p.id).reduce((s,b)=>s+b.amount,0);
     return`<article class="pcard"><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${p.status==="ativo"?pill("ok","circle-check","Ativa"):p.status==="pendente"?pill("warn","hourglass","Aguardando análise"):pill("mute","pause","Inativa")}${p.spec.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${p.status==="ativo"?pill("ok","circle-check","Ativo"):p.status==="pendente"?pill("warn","hourglass","Aguardando análise"):pill("mute","pause","Inativo")}${p.spec.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>
       <p class="dm" style="color:var(--muted);font-size:14.5px">${esc(p.bio||"")}</p>
       ${p.status==="ativo"?`<div><div style="display:flex;justify-content:space-between;font-size:14px"><span>Alunos</span><b>${n} de ${p.cap}</b></div><div class="prog mt" style="margin-top:6px"><i style="width:${Math.min(100,n/p.cap*100)}%"></i></div></div>
       <div class="kv"><div><span>Termo de parceria</span><b>${p.terms?`Aceito ${new Date(p.terms.at).toLocaleDateString("pt-BR")}`:`<span style="color:var(--red)">Pendente</span>`}</b></div><div><span>Faturado no mês</span><b>${money(rev)}</b></div><div><span>Repasse (${pctf(splitOf(p.id))})</span><b>${money(rev*splitOf(p.id))}</b></div><div><span>Avaliação (${ratingOf(p.id).n})</span><b>${ratingOf(p.id).n?ratingOf(p.id).avg.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ★":"—"}</b></div></div>
-      <div class="acts pc-foot"><button class="btn btn-ghost btn-sm" data-pfi="${p.id}"><i data-lucide="id-card"></i>Ficha completa</button><button class="btn btn-ghost btn-sm" data-asp="${p.id}"><i data-lucide="log-in"></i>Ver o painel dela</button><button class="btn btn-ghost btn-sm" data-pst="${p.id}" data-v="inativo"><i data-lucide="pause"></i>Desativar</button></div>`
+      <div class="acts pc-foot"><button class="btn btn-ghost btn-sm" data-pfi="${p.id}"><i data-lucide="id-card"></i>Ficha completa</button><button class="btn btn-ghost btn-sm" data-asp="${p.id}"><i data-lucide="log-in"></i>Ver o painel dele</button><button class="btn btn-ghost btn-sm" data-pst="${p.id}" data-v="inativo"><i data-lucide="pause"></i>Desativar</button></div>`
       :p.status==="pendente"?`<div class="acts pc-foot"><button class="btn btn-primary btn-sm" data-pst="${p.id}" data-v="ativo"><i data-lucide="check"></i>Aprovar</button><button class="btn btn-ghost btn-sm" data-pdel="${p.id}"><i data-lucide="x"></i>Recusar</button></div>`
       :`<div class="acts pc-foot"><button class="btn btn-ghost btn-sm" data-pst="${p.id}" data-v="ativo"><i data-lucide="play"></i>Reativar</button></div>`}</article>`}).join("")}</div>
-  ${FB?`<div class="info mt" style="max-width:720px"><i data-lucide="info"></i><span>Novas personais criam a própria conta em <b style="color:var(--ink)">Entrar → Personal → Criar conta de personal</b>. O cadastro aparece aqui como “Aguardando análise” para você aprovar.</span></div>`:""}<form class="form mt" id="np" style="max-width:720px" ${FB?"hidden":""}><h3>Cadastrar personal</h3><div class="set">
+  ${FB?`<div class="info mt" style="max-width:720px"><i data-lucide="info"></i><span>Novos professores criam a própria conta em <b style="color:var(--ink)">Entrar → Professor → Criar conta de professor</b>. O cadastro aparece aqui como “Aguardando análise” para você aprovar.</span></div>`:""}<form class="form mt" id="np" style="max-width:720px" ${FB?"hidden":""}><h3>Cadastrar professor</h3><div class="set">
     <div class="field"><label for="npn">Nome</label><input id="npn" required placeholder="Nome completo"></div>
     <div class="field"><label for="npc">CREF</label><input id="npc" required placeholder="000000-G/SP"></div>
     <div class="field"><label for="npu">Estado</label>${ufSelect("npu","",true)}</div>
@@ -2895,7 +2954,7 @@ function aApres(){
   <h2 class="ap-sec" id="ap-painel"><span>3</span>Painel com alunos de exemplo</h2>
   <div class="info" style="margin-bottom:16px"><i data-lucide="presentation"></i><span><b style="color:var(--ink)">Modo apresentação:</b> tudo aqui é exemplo, com os mesmos números do trabalho. Seus clientes e valores reais não mudam.</span></div>
   <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:520px;margin-bottom:16px" role="group" aria-label="Quantidade de alunos">${[15,30,50].map(n=>`<button aria-pressed="${AP===n}" data-ap="${n}"><i data-lucide="users"></i>${n} alunos</button>`).join("")}</div>
-  <div class="kpis">${kpi("users","Alunos ativos",AP,`${S.np} personais parceiras`)}${kpi("banknote","Alunos pagam no mês",money(pay),"soma das mensalidades")}${kpi("hand-coins","Vai para as personais",money(rep),"70% do total")}${kpi("building-2","Parte da empresa",money(emp),"30% do total")}${kpi("piggy-bank","Lucro do mês",m2(lucro),"depois de todos os custos")}${kpi("calendar-range","Movimento no ano",money(pay*12),"12 meses de mensalidades")}</div>
+  <div class="kpis">${kpi("users","Alunos ativos",AP,`${S.np} professores parceiros`)}${kpi("banknote","Alunos pagam no mês",money(pay),"soma das mensalidades")}${kpi("hand-coins","Vai para os professores",money(rep),"70% do total")}${kpi("building-2","Parte da empresa",money(emp),"30% do total")}${kpi("piggy-bank","Lucro do mês",m2(lucro),"depois de todos os custos")}${kpi("calendar-range","Movimento no ano",money(pay*12),"12 meses de mensalidades")}</div>
   <div class="grid2">
     <section class="card"><div class="card-h"><h3>Alunos por nível</h3><span class="pill mute">${AP} alunos</span></div>${hbars(LEVELS.map((l,i)=>({label:`${l.n} · ${l.t}`,v:S.lv[i]})))}<p class="week-note">Mensalidade por nível: R$ 100, R$ 180, R$ 480 e R$ 560.</p>
       <div class="card-h" style="margin:18px 0 10px"><h3>Quanto cada nível traz</h3></div>${hbars(LEVELS.map((l,i)=>({label:`${l.n} · ${l.t}`,v:S.lv[i]*PR[i]})),money)}</section>
@@ -2906,7 +2965,7 @@ function aApres(){
   </div>
   <div class="grid2">
     <section class="card"><div class="card-h"><h3>Ponto de equilíbrio</h3><span class="pill ok">cerca de 9 alunos</span></div><p>Os custos fixos são cerca de <b>R$ 738 por mês</b> (INSS, contador, divulgação e domínio). Cada aluno deixa em média <b>cerca de R$ 88</b> para a empresa.</p><p class="week-note">R$ 738 ÷ R$ 88 ≈ 9 alunos. Do 10º aluno em diante, é lucro.</p>
-      <div class="card-h" style="margin:18px 0 10px"><h3>Personais parceiras</h3></div><div class="rows">${Array.from({length:S.np},(_,i)=>`<div class="rw"><span class="av">${String.fromCharCode(65+i)}</span><span><b>Personal ${String.fromCharCode(65+i)}</b><small>cerca de ${Math.round(AP/S.np)} alunos</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(rep/S.np)}</b></span></div>`).join("")}</div></section>
+      <div class="card-h" style="margin:18px 0 10px"><h3>Professores parceiros</h3></div><div class="rows">${Array.from({length:S.np},(_,i)=>`<div class="rw"><span class="av">${String.fromCharCode(65+i)}</span><span><b>Professor ${String.fromCharCode(65+i)}</b><small>cerca de ${Math.round(AP/S.np)} alunos</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(rep/S.np)}</b></span></div>`).join("")}</div></section>
     <section class="card"><div class="card-h"><h3>${AP===15?"Os 15 alunos do exemplo":`15 dos ${AP} alunos do exemplo`}</h3><span class="pill mute">fictícios</span></div><div class="rows clip">${NM.map((n,i)=>`<div class="rw"><span class="av">${n[0]}</span><span><b>${n}</b><small>Nível ${LV15[i]} · ${LEVELS[LV15[i]-1].t} · ${PN[i%2]}</small></span><span class="end" style="font-variant-numeric:tabular-nums">${money(PR[LV15[i]-1])}</span></div>`).join("")}</div></section>
   </div>`;
   document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{const y=scrollY;AP=+b.dataset.ap;aApres();icons();scrollTo(0,y);document.querySelectorAll("#pv .hb").forEach(h=>h.classList.add("grow"))});
@@ -2918,24 +2977,24 @@ function aLeads(){
   const L=DB.leads.filter(l=>LF==="todos"||l.status===LF).sort((a,b)=>b.at-a.at);
   const ST={novo:["info","sparkles","Novo"],contatado:["warn","phone","Em contato"],convertido:["ok","circle-check","Convertido"],arquivado:["mute","archive","Arquivado"]};
   $("#pv").innerHTML=`<div class="filters" role="group" aria-label="Filtrar contatos">${[["novo","Novos"],["contatado","Em contato"],["convertido","Convertidos"],["todos","Todos"]].map(([k,t])=>`<button aria-pressed="${LF===k}" data-lf="${k}">${t} (${k==="todos"?DB.leads.length:DB.leads.filter(l=>l.status===k).length})</button>`).join("")}</div>
-  <div class="pgrid">${L.length?L.map(l=>`<article class="lead"><div class="top">${pill(...ST[l.status])}${pill(l.type==="personal"?"warn":"mute",l.type==="personal"?"dumbbell":"user-round",l.type==="personal"?"Quer ser personal":"Quer começar")}<small style="margin-left:auto">${rel(l.at)}</small></div>
+  <div class="pgrid">${L.length?L.map(l=>`<article class="lead"><div class="top">${pill(...ST[l.status])}${pill(l.type==="personal"?"warn":"mute",l.type==="personal"?"dumbbell":"user-round",l.type==="personal"?"Quer ser professor":"Quer começar")}<small style="margin-left:auto">${rel(l.at)}</small></div>
     <b style="font-size:17px">${esc(l.name)}</b><small>${esc(l.contact)}${l.cref?" · "+esc(l.cref):""}${l.area?" · "+esc(l.area):""}</small><p>“${esc(l.msg)}”</p>
     <div class="pc-foot">${l.status==="novo"?`<button class="btn btn-ghost btn-sm" data-ls="${l.id}" data-v="contatado"><i data-lucide="phone"></i>Marcar em contato</button>`:""}${l.status!=="convertido"&&l.status!=="arquivado"?`<button class="btn btn-primary btn-sm" data-conv="${l.id}"><i data-lucide="${l.type==="personal"?"badge-check":"user-plus"}"></i>${l.type==="personal"?"Enviar para análise":"Virar cliente"}</button><button class="btn btn-ghost btn-sm" data-ls="${l.id}" data-v="arquivado" aria-label="Arquivar"><i data-lucide="archive"></i></button>`:""}</div></article>`).join(""):`<div class="empty">Nenhum contato aqui.</div>`}</div>
-  <div class="info mt"><i data-lucide="info"></i><span>Os contatos chegam pelos formulários do site (“Fale com a gente” e “Seja personal parceiro”).</span></div>`;
+  <div class="info mt"><i data-lucide="info"></i><span>Os contatos chegam pelos formulários do site (“Fale com a gente” e “Seja professor parceiro”).</span></div>`;
   document.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{LF=b.dataset.lf;route(true)});
   document.querySelectorAll("[data-ls]").forEach(b=>b.onclick=()=>{DB.leads.find(l=>l.id===b.dataset.ls).status=b.dataset.v;saveDB();toast(b.dataset.v==="arquivado"?"Arquivado":"Marcado como em contato");route(true)});
   document.querySelectorAll("[data-conv]").forEach(b=>b.onclick=()=>{const l=DB.leads.find(x=>x.id===b.dataset.conv);l.status="convertido";
-    if(FB){saveDB();toast(l.type==="personal"?"Marcado. Peça para ela criar a conta em Entrar → Personal.":"Marcado como convertido. O cliente cria a conta em Começar.");route(true);return}
-    if(l.type==="personal"){DB.personals.push({id:"p"+Date.now(),name:l.name,email:/@/.test(l.contact)?l.contact:mailOf(l.name),cref:l.cref||"CREF a confirmar",area:l.area||"A definir",bio:l.msg,spec:["A definir"],status:"pendente",cap:15,rating:null,since:Date.now()});toast("Enviado para análise em Personais")}
+    if(FB){saveDB();toast(l.type==="personal"?"Marcado. Peça para ele criar a conta em Entrar → Professor.":"Marcado como convertido. O cliente cria a conta em Começar.");route(true);return}
+    if(l.type==="personal"){DB.personals.push({id:"p"+Date.now(),name:l.name,email:/@/.test(l.contact)?l.contact:mailOf(l.name),cref:l.cref||"CREF a confirmar",area:l.area||"A definir",bio:l.msg,spec:["A definir"],status:"pendente",cap:15,rating:null,since:Date.now()});toast("Enviado para análise em Professores")}
     else{const pid=DB.personals.find(p=>p.status==="ativo").id;DB.clients.push({id:"c"+Date.now(),name:l.name,level:1,pid,since:Date.now(),goals:["Me sentir melhor comigo"],barriers:["Não sei por onde começar"],contact:"Só mensagem",period:"Noite",days:["Seg","Qua"],medical:false,medOk:false,workouts:[],talked:false,outdoor:0,gym:0,status:"ativo",msgs:[{from:"me",text:l.msg,t:"",at:l.at}],phone:l.contact});toast("Cliente criado no nível 1")}
     saveDB();route(true)});
 }
 function aAjustes(){
   $("#pv").innerHTML=`<form class="card" id="pr" style="max-width:760px"><div class="card-h"><h3>Preços por nível</h3></div><p style="color:var(--muted);margin-bottom:14px">Os valores aparecem no site, no app do cliente e nas cobranças do mês.</p>
     <div class="set">${LEVELS.map((l,i)=>`<div class="field" style="margin:0"><label for="pr${i}">Nível ${l.n} · ${l.t}</label><input id="pr${i}" type="number" min="0" step="1" value="${DB.prices[i]}" inputmode="numeric"><small style="color:var(--muted)">${i===0?"pagamento único":"por mês"}</small></div>`).join("")}</div>
-    <div class="card-h" style="margin:22px 0 6px"><h3>Divisão entre empresa e personal</h3></div><p style="color:var(--muted);margin-bottom:14px">Percentual de cada mensalidade paga que vai para a personal. O resto, menos a taxa de pagamento, fica com a empresa.</p>
-    <div class="set">${DB.personals.map(x=>`<div class="field" style="margin:0"><label for="sp-${x.id}">${esc(x.name)}</label><input id="sp-${x.id}" data-sp="${x.id}" type="number" min="0" max="100" step="0.5" value="${x.split!=null?x.split:DB.split}" inputmode="decimal"><small style="color:var(--muted)">% para a personal</small></div>`).join("")}
-      <div class="field" style="margin:0"><label for="spl">Padrão para novas personais</label><input id="spl" type="number" min="0" max="100" step="0.5" value="${DB.split}" inputmode="decimal"><small style="color:var(--muted)">%</small></div>
+    <div class="card-h" style="margin:22px 0 6px"><h3>Divisão entre empresa e professor</h3></div><p style="color:var(--muted);margin-bottom:14px">Percentual de cada mensalidade paga que vai para o professor. O resto, menos a taxa de pagamento, fica com a empresa.</p>
+    <div class="set">${DB.personals.map(x=>`<div class="field" style="margin:0"><label for="sp-${x.id}">${esc(x.name)}</label><input id="sp-${x.id}" data-sp="${x.id}" type="number" min="0" max="100" step="0.5" value="${x.split!=null?x.split:DB.split}" inputmode="decimal"><small style="color:var(--muted)">% para o professor</small></div>`).join("")}
+      <div class="field" style="margin:0"><label for="spl">Padrão para novos professores</label><input id="spl" type="number" min="0" max="100" step="0.5" value="${DB.split}" inputmode="decimal"><small style="color:var(--muted)">%</small></div>
       <div class="field" style="margin:0"><label for="d3">Desconto trimestral</label><input id="d3" type="number" min="0" max="50" step="0.5" value="${(DB.disc||{3:10})[3]}" inputmode="decimal"><small style="color:var(--muted)">% no plano de 3 meses</small></div>
       <div class="field" style="margin:0"><label for="d6">Desconto semestral</label><input id="d6" type="number" min="0" max="50" step="0.5" value="${(DB.disc||{6:15})[6]}" inputmode="decimal"><small style="color:var(--muted)">% no plano de 6 meses</small></div>
       <div class="field" style="margin:0"><label for="pday">Prazo do repasse</label><input id="pday" type="number" min="1" max="28" value="${DB.payoutDay||5}" inputmode="numeric"><small style="color:var(--muted)">dia do mês seguinte</small></div></div>
@@ -2945,18 +3004,18 @@ function aAjustes(){
     <button class="btn btn-primary mt"><i data-lucide="save"></i>Salvar preços e divisão</button></form>
   <section class="card mt" style="max-width:760px"><div class="card-h"><h3>Modo de teste</h3></div><p style="color:var(--muted)">Ligado, todo mundo pode pular as etapas obrigatórias (verificação, conversa e pagamento) para ver o app inteiro. Desligue quando começar a receber clientes de verdade: as travas passam a valer para todos.</p>
     <label class="chkline big mt"><input type="checkbox" id="tmsw" ${TEST_MODE?"checked":""}> Modo de teste ligado</label></section>
-  <section class="card mt" style="max-width:760px" ${FB?"hidden":""}><div class="card-h"><h3>Dados de demonstração</h3></div><p style="color:var(--muted)">Volta os clientes, personais, agenda, pagamentos e contatos de exemplo ao estado inicial. O app do cliente deste aparelho não é apagado.</p><button class="btn btn-ghost mt" id="rs" style="color:var(--red)"><i data-lucide="rotate-ccw"></i>Restaurar dados de exemplo</button></section>
+  <section class="card mt" style="max-width:760px" ${FB?"hidden":""}><div class="card-h"><h3>Dados de demonstração</h3></div><p style="color:var(--muted)">Volta os clientes, professores, agenda, pagamentos e contatos de exemplo ao estado inicial. O app do cliente deste aparelho não é apagado.</p><button class="btn btn-ghost mt" id="rs" style="color:var(--red)"><i data-lucide="rotate-ccw"></i>Restaurar dados de exemplo</button></section>
   <div class="info mt" style="max-width:760px"><i data-lucide="server"></i><span>${FB?`<b style="color:var(--ink)">Login e dados no Firebase.</b> Contas, alunos, agenda, conversas e financeiro ficam guardados no banco e aparecem em qualquer aparelho. O pagamento online ainda não está ligado: a empresa confirma cada pagamento aqui.`:`<b style="color:var(--ink)">Para usar com clientes reais</b>, este site precisa de um servidor com login, banco de dados e pagamento online (por exemplo Pix). Hoje tudo fica salvo só no navegador de quem usa.`}</span></div>`;
   $("#pr").onsubmit=e=>{e.preventDefault();DB.prices=LEVELS.map((_,i)=>Math.max(0,Math.round(+$("#pr"+i).value||0)));DB.split=Math.min(100,Math.max(0,+$("#spl").value||0));DB.payoutDay=Math.min(28,Math.max(1,Math.round(+$("#pday").value||5)));DB.disc={1:0,3:Math.min(50,Math.max(0,+$("#d3").value||0)),6:Math.min(50,Math.max(0,+$("#d6").value||0))};document.querySelectorAll("[data-fee]").forEach(i=>{DB.fees[i.dataset.fee]=Math.min(20,Math.max(0,+i.value||0))});document.querySelectorAll("[data-mon]").forEach(i=>{DB.methodsOn[i.dataset.mon]=i.checked});if(!Object.values(DB.methodsOn).some(Boolean))DB.methodsOn.pix=true;document.querySelectorAll("[data-sp]").forEach(i=>{findP(i.dataset.sp).split=Math.min(100,Math.max(0,+i.value||0))});saveDB();syncPrices();toast("Preços e divisão salvos");route(true)};
-  const prev=()=>{const v=DB.prices[1],fe=(+$("#fee-pix").value||0)/100,x=DB.personals.find(p=>p.status==="ativo")||{id:"",name:"a personal"},sp=(+(($("#sp-"+x.id)||$("#spl")).value)||0)/100;
-    $("#spprev").innerHTML=`<p class="week-note" style="margin:0 0 8px">Exemplo com a mensalidade do nível 2 (${money(v)}) de ${esc(x.name.split(" ")[0])}, paga via Pix:</p>${splitBar([{label:"Personal",v:v*sp,k:"k2"},{label:"Empresa",v:Math.max(0,v*(1-sp-fe)),k:"k1"},{label:"Taxa",v:v*fe,k:"k0"}])}`};
+  const prev=()=>{const v=DB.prices[1],fe=(+$("#fee-pix").value||0)/100,x=DB.personals.find(p=>p.status==="ativo")||{id:"",name:"o professor"},sp=(+(($("#sp-"+x.id)||$("#spl")).value)||0)/100;
+    $("#spprev").innerHTML=`<p class="week-note" style="margin:0 0 8px">Exemplo com a mensalidade do nível 2 (${money(v)}) de ${esc(x.name.split(" ")[0])}, paga via Pix:</p>${splitBar([{label:"Professor",v:v*sp,k:"k2"},{label:"Empresa",v:Math.max(0,v*(1-sp-fe)),k:"k1"},{label:"Taxa",v:v*fe,k:"k0"}])}`};
   document.querySelectorAll("#pr input").forEach(i=>i.addEventListener("input",prev));prev();
   $("#tmsw").onchange=e=>{DB.teste=e.target.checked;saveDB();toast(DB.teste?"Modo de teste ligado":"Modo de teste desligado: as travas valem para todos")};
   $("#rs").onclick=()=>sheet("rotate-ccw","Restaurar dados de exemplo?","Todas as alterações feitas nos painéis serão perdidas.","Restaurar",{danger:true,cancel:"Cancelar",onOk:()=>{DB=seedDB();saveDB();syncPrices();FM=null;toast("Dados de exemplo restaurados");route(true)}});
 }
 
 /* ================== FINANCEIRO ==================
-   Cada mensalidade paga se divide em: parte da personal (% dela), taxa de pagamento e o que fica com a empresa. */
+   Cada mensalidade paga se divide em: parte do professor (% dele), taxa de pagamento e o que fica com a empresa. */
 const splitOf=pid=>{const p=findP(pid);return((p&&p.split!=null?p.split:DB.split))/100};
 /* taxa média ponderada pelas formas usadas nas mensalidades pagas */
 const feeOf=()=>{const pb=bills().filter(b=>b.paid);return pb.length?pb.reduce((s,b)=>s+feeFor(b),0)/pb.length:(DB.fees?DB.fees.pix:0.99)/100};
@@ -3003,22 +3062,22 @@ function aFin(bl){
   const rep=DB.personals.map(p=>{const x=mb.filter(b=>b.pid===p.id);return{p,sp:splitOf(p.id),x,f:fin(x)}}).filter(r=>r.x.length);
   const byLv=LEVELS.map(l=>({label:`${l.n} · ${l.t}`,v:Math.round(mb.filter(b=>b.lv===l.n).reduce((s,b)=>s+b.amount,0))}));
   $("#pv").innerHTML=`<div class="toolbar"><select id="fm" aria-label="Mês">${ms.map(m=>`<option value="${m}" ${m===FM?"selected":""}>${mlabel(m,1)} de ${m.slice(0,4)}</option>`).join("")}</select><button class="btn btn-ghost btn-sm" id="cprel"><i data-lucide="clipboard-copy"></i>Copiar relatório</button></div>
-  <div class="kpis">${kpi("receipt","Faturado",money(F.fat),`${F.n} mensalidades`)}${kpi("circle-check","Recebido",money(F.rec),`${F.paidN} pagas`)}${kpi("hourglass","A receber",money(F.open),F.late?`${money(F.late)} em atraso`:"nada em atraso")}${kpi("users","Repasse às personais",money(F.rep),`${F.rec?pctf(F.rep/F.rec):"—"} do recebido`)}${kpi("percent","Taxas de pagamento",money(F.tax),pctf(feeOf())+" por pagamento")}${kpi("building-2","Fica com a empresa",money(F.emp),`margem de ${pctf(F.margin)}`)}</div>
+  <div class="kpis">${kpi("receipt","Faturado",money(F.fat),`${F.n} mensalidades`)}${kpi("circle-check","Recebido",money(F.rec),`${F.paidN} pagas`)}${kpi("hourglass","A receber",money(F.open),F.late?`${money(F.late)} em atraso`:"nada em atraso")}${kpi("users","Repasse aos professores",money(F.rep),`${F.rec?pctf(F.rep/F.rec):"—"} do recebido`)}${kpi("percent","Taxas de pagamento",money(F.tax),pctf(feeOf())+" por pagamento")}${kpi("building-2","Fica com a empresa",money(F.emp),`margem de ${pctf(F.margin)}`)}</div>
   <div class="grid2">
-    <section class="card"><div class="card-h"><h3>Para onde vai o dinheiro recebido</h3></div>${sbars(series.map(({m,f})=>({label:mlabel(m,1),short:mlabel(m),a:Math.round(f.emp),b:Math.round(f.rep)})),["Empresa (líquido)","Personais"])}<p class="week-note">Taxas de pagamento já descontadas da parte da empresa. Repasse às personais todo dia ${DB.payoutDay||5} do mês seguinte.</p></section>
-    <section class="card"><div class="card-h"><h3>Divisão de ${mlabel(FM,1)}</h3></div>${splitBar([{label:"Personais",v:F.rep,k:"k2"},{label:"Empresa",v:F.emp,k:"k1"},{label:"Taxas",v:F.tax,k:"k0"}])}
+    <section class="card"><div class="card-h"><h3>Para onde vai o dinheiro recebido</h3></div>${sbars(series.map(({m,f})=>({label:mlabel(m,1),short:mlabel(m),a:Math.round(f.emp),b:Math.round(f.rep)})),["Empresa (líquido)","Professores"])}<p class="week-note">Taxas de pagamento já descontadas da parte da empresa. Repasse aos professores todo dia ${DB.payoutDay||5} do mês seguinte.</p></section>
+    <section class="card"><div class="card-h"><h3>Divisão de ${mlabel(FM,1)}</h3></div>${splitBar([{label:"Professores",v:F.rep,k:"k2"},{label:"Empresa",v:F.emp,k:"k1"},{label:"Taxas",v:F.tax,k:"k0"}])}
       <div class="card-h" style="margin:18px 0 10px"><h3>Por forma de pagamento</h3></div>${hbars(Object.keys(METHODS).map(k=>({label:METHODS[k].l.replace(" de crédito",""),v:Math.round(mb.filter(b=>b.paid&&methodOf(b)===k).reduce((s,b)=>s+b.amount,0))})),money)}
       <p class="week-note">Taxas: ${Object.keys(METHODS).map(k=>`${METHODS[k].l.replace(" de crédito","")} ${String(DB.fees[k]).replace(".",",")}%`).join(" · ")}</p>
       <div class="card-h" style="margin:18px 0 10px"><h3>Faturado por nível</h3></div>${hbars(byLv,money)}</section>
   </div>
-  <section class="mt"><div class="card-h"><h3>Repasse por personal · ${mlabel(FM,1)}</h3></div><div class="tbl"><table><thead><tr><th>Personal</th><th class="num">Percentual</th><th class="num hm hx">Recebido dos alunos</th><th class="num">Repasse</th><th class="num hm hx">Fica com a empresa</th><th>Situação</th><th></th></tr></thead><tbody>${rep.map(r=>{const k=payoutKey(r.p.id,FM),d=DB.payouts[k];return`<tr style="cursor:default"><td><span class="nm"><span class="av">${esc(initials(r.p.name))}</span><b>${esc(r.p.name)}</b></span></td><td class="num">${pctf(r.sp)}</td><td class="num hm hx">${money(r.f.rec)}</td><td class="num"><b>${money(r.f.rep)}</b></td><td class="num hm hx">${money(r.f.emp)}</td><td>${(()=>{const ps=payoutState(r.p.id,FM);return pill(ps.k,ps.ic,ps.t)})()}<br><small style="color:var(--muted)">Pix ${esc((r.p.payout||{}).type||"")} ${esc((r.p.payout||{}).key||"não cadastrado")}</small></td><td data-stop>${d?`<button class="btn btn-ghost btn-sm" data-po="${k}" data-v="0">Desfazer</button>`:`<button class="btn btn-primary btn-sm" data-po="${k}" data-v="1" ${r.f.rep?"":"disabled"}>Registrar repasse</button>`}</td></tr>`}).join("")}</tbody></table></div></section>
+  <section class="mt"><div class="card-h"><h3>Repasse por professor · ${mlabel(FM,1)}</h3></div><div class="tbl"><table><thead><tr><th>Professor</th><th class="num">Percentual</th><th class="num hm hx">Recebido dos alunos</th><th class="num">Repasse</th><th class="num hm hx">Fica com a empresa</th><th>Situação</th><th></th></tr></thead><tbody>${rep.map(r=>{const k=payoutKey(r.p.id,FM),d=DB.payouts[k];return`<tr style="cursor:default"><td><span class="nm"><span class="av">${esc(initials(r.p.name))}</span><b>${esc(r.p.name)}</b></span></td><td class="num">${pctf(r.sp)}</td><td class="num hm hx">${money(r.f.rec)}</td><td class="num"><b>${money(r.f.rep)}</b></td><td class="num hm hx">${money(r.f.emp)}</td><td>${(()=>{const ps=payoutState(r.p.id,FM);return pill(ps.k,ps.ic,ps.t)})()}<br><small style="color:var(--muted)">Pix ${esc((r.p.payout||{}).type||"")} ${esc((r.p.payout||{}).key||"não cadastrado")}</small></td><td data-stop>${d?`<button class="btn btn-ghost btn-sm" data-po="${k}" data-v="0">Desfazer</button>`:`<button class="btn btn-primary btn-sm" data-po="${k}" data-v="1" ${r.f.rep?"":"disabled"}>Registrar repasse</button>`}</td></tr>`}).join("")}</tbody></table></div></section>
   <section class="mt"><div class="card-h"><h3>Resultado dos últimos 6 meses</h3></div><div class="tbl"><table><thead><tr><th>Mês</th><th class="num hm">Faturado</th><th class="num">Recebido</th><th class="num hm">Repasse</th><th class="num hm">Taxas</th><th class="num">Empresa</th><th class="num">Margem</th></tr></thead><tbody>${series.slice().reverse().map(({m,f})=>`<tr style="cursor:default"><td><b style="text-transform:capitalize">${mlabel(m,1)}</b></td><td class="num hm">${money(f.fat)}</td><td class="num">${money(f.rec)}</td><td class="num hm">${money(f.rep)}</td><td class="num hm">${money(f.tax)}</td><td class="num"><b>${money(f.emp)}</b></td><td class="num">${pctf(f.margin)}</td></tr>`).join("")}</tbody></table></div></section>
-  <section class="mt"><div class="card-h"><h3>Mensalidades de ${mlabel(FM,1)}</h3></div><div class="tbl"><table><thead><tr><th>Cliente</th><th class="hm">Nível</th><th class="num">Valor</th><th class="num hm hx">Personal</th><th class="num hm hx">Empresa</th><th>Situação</th><th></th></tr></thead><tbody>${mb.map(b=>{const c=findC(b.cid),p=findP(b.pid),sp=splitOf(b.pid);return`<tr data-open="${b.cid}"><td><span class="nm">${avatar(c)}<b>${esc(c.name)}</b></span></td><td class="hm">${lvb(b.lv)}</td><td class="num">${money(b.amount)}</td><td class="num hm hx" title="${esc(p?p.name:"")}">${money(b.amount*sp)}</td><td class="num hm hx">${money(b.amount*(1-sp-(b.paid?feeFor(b):feeOf())))}</td><td>${pill(...BILL_PILL[b.status])}${b.paid?`<br><small style="color:var(--muted)">${METHODS[methodOf(b)].l.replace(" de crédito","")}</small>`:""}</td><td data-stop style="white-space:nowrap;text-align:right">${b.paid?`<button class="btn btn-ghost btn-sm" data-pay="${b.key}" data-v="0">Desfazer</button>`:`<button class="btn btn-ghost btn-sm" data-remind="${b.cid}" aria-label="Lembrar ${esc(c.name)}"><i data-lucide="bell"></i></button> <button class="btn btn-primary btn-sm" data-pay="${b.key}" data-v="1">Marcar pago</button>`}</td></tr>`}).join("")}</tbody></table></div></section>`;
+  <section class="mt"><div class="card-h"><h3>Mensalidades de ${mlabel(FM,1)}</h3></div><div class="tbl"><table><thead><tr><th>Cliente</th><th class="hm">Nível</th><th class="num">Valor</th><th class="num hm hx">Professor</th><th class="num hm hx">Empresa</th><th>Situação</th><th></th></tr></thead><tbody>${mb.map(b=>{const c=findC(b.cid),p=findP(b.pid),sp=splitOf(b.pid);return`<tr data-open="${b.cid}"><td><span class="nm">${avatar(c)}<b>${esc(c.name)}</b></span></td><td class="hm">${lvb(b.lv)}</td><td class="num">${money(b.amount)}</td><td class="num hm hx" title="${esc(p?p.name:"")}">${money(b.amount*sp)}</td><td class="num hm hx">${money(b.amount*(1-sp-(b.paid?feeFor(b):feeOf())))}</td><td>${pill(...BILL_PILL[b.status])}${b.paid?`<br><small style="color:var(--muted)">${METHODS[methodOf(b)].l.replace(" de crédito","")}</small>`:""}</td><td data-stop style="white-space:nowrap;text-align:right">${b.paid?`<button class="btn btn-ghost btn-sm" data-pay="${b.key}" data-v="0">Desfazer</button>`:`<button class="btn btn-ghost btn-sm" data-remind="${b.cid}" aria-label="Lembrar ${esc(c.name)}"><i data-lucide="bell"></i></button> <button class="btn btn-primary btn-sm" data-pay="${b.key}" data-v="1">Marcar pago</button>`}</td></tr>`}).join("")}</tbody></table></div></section>`;
   $("#fm").onchange=e=>{FM=e.target.value;route(true)};
   document.querySelectorAll("[data-pay]").forEach(b=>b.onclick=()=>{if(b.dataset.v==="1")markPaid(b.dataset.pay,"pix");else{DB.paid[b.dataset.pay]=false;delete DB.payInfo[b.dataset.pay]}saveDB();toast(b.dataset.v==="1"?"Pagamento registrado":"Pagamento desfeito");route(true)});
-  document.querySelectorAll("[data-po]").forEach(b=>b.onclick=()=>{if(b.dataset.v==="1")DB.payouts[b.dataset.po]=Date.now();else delete DB.payouts[b.dataset.po];saveDB();toast(b.dataset.v==="1"?"Repasse registrado. A personal já vê no painel dela.":"Repasse desfeito");route(true)});
+  document.querySelectorAll("[data-po]").forEach(b=>b.onclick=()=>{if(b.dataset.v==="1")DB.payouts[b.dataset.po]=Date.now();else delete DB.payouts[b.dataset.po];saveDB();toast(b.dataset.v==="1"?"Repasse registrado. O professor já vê no painel dele.":"Repasse desfeito");route(true)});
   document.querySelectorAll("[data-remind]").forEach(b=>b.onclick=()=>{pushMsg(b.dataset.remind,"Oi! Passando para lembrar da mensalidade deste mês. Se precisar de mais prazo, é só falar.");toast("Lembrete enviado no app do cliente")});
-  $("#cprel").onclick=()=>{const L=[`Primeiro Passo · Relatório de ${mlabel(FM,1)} de ${FM.slice(0,4)}`,"",`Faturado\t${money(F.fat)}`,`Recebido\t${money(F.rec)}`,`A receber\t${money(F.open)}`,`Em atraso\t${money(F.late)}`,`Repasse às personais\t${money(F.rep)}`,`Taxas de pagamento\t${money(F.tax)}`,`Fica com a empresa\t${money(F.emp)}`,`Margem\t${pctf(F.margin)}`,"","Personal\tPercentual\tRecebido\tRepasse\tEmpresa\tSituação",...rep.map(r=>`${r.p.name}\t${pctf(r.sp)}\t${money(r.f.rec)}\t${money(r.f.rep)}\t${money(r.f.emp)}\t${DB.payouts[payoutKey(r.p.id,FM)]?"Pago":"A pagar"}`),"","Cliente\tPersonal\tValor\tSituação",...mb.map(b=>`${findC(b.cid).name}\t${(findP(b.pid)||{}).name||""}\t${money(b.amount)}\t${b.status}`)];
+  $("#cprel").onclick=()=>{const L=[`Primeiro Passo · Relatório de ${mlabel(FM,1)} de ${FM.slice(0,4)}`,"",`Faturado\t${money(F.fat)}`,`Recebido\t${money(F.rec)}`,`A receber\t${money(F.open)}`,`Em atraso\t${money(F.late)}`,`Repasse aos professores\t${money(F.rep)}`,`Taxas de pagamento\t${money(F.tax)}`,`Fica com a empresa\t${money(F.emp)}`,`Margem\t${pctf(F.margin)}`,"","Professor\tPercentual\tRecebido\tRepasse\tEmpresa\tSituação",...rep.map(r=>`${r.p.name}\t${pctf(r.sp)}\t${money(r.f.rec)}\t${money(r.f.rep)}\t${money(r.f.emp)}\t${DB.payouts[payoutKey(r.p.id,FM)]?"Pago":"A pagar"}`),"","Cliente\tProfessor\tValor\tSituação",...mb.map(b=>`${findC(b.cid).name}\t${(findP(b.pid)||{}).name||""}\t${money(b.amount)}\t${b.status}`)];
     copyText(L.join("\n"),"Relatório copiado. Cole numa planilha ou mensagem.")};
 }
 
@@ -3032,7 +3091,7 @@ function seedPay(db){
   db.fees={pix:0.99,cartao:3.49,boleto:1.99};db.methodsOn={pix:true,cartao:true,boleto:true};db.payoutDay=5;db.payInfo={};
   Object.keys(db.paid).forEach(k=>{if(db.paid[k]){const x=rnd();db.payInfo[k]={m:x<.55?"pix":x<.85?"cartao":"boleto",at:null}}});
   db.personals.forEach((p,i)=>{if(!p.payout)p.payout={type:["CPF","E-mail","Celular"][i%3],key:["***.456.789-**","c***@exemplo.com","(11) 9****-1234"][i%3]}});
-  const now=Date.now(),R=[["p1","c1",5,["Paciente","Me sinto à vontade"],"Nunca pensei que ia gostar de treinar. Ela tem muita paciência.",false,6],["p1","c3",5,["Pontual","Explica bem"],"",false,12],
+  const now=Date.now(),R=[["p1","c1",5,["Paciente","Me sinto à vontade"],"Nunca pensei que ia gostar de treinar. Ele tem muita paciência.",false,6],["p1","c3",5,["Pontual","Explica bem"],"",false,12],
     ["p1","c9",4,["Adapta os treinos"],"Gosto muito, só às vezes demora a responder à noite.",true,3],["p1","c11",5,["Explica bem","Pontual"],"Hoje vou à academia sozinho. Obrigado!",false,20],["p1","c6",4,["Paciente","Poderia responder mais rápido"],"",true,9],
     ["p2","c5",5,["Pontual","Explica bem"],"Excelente profissional.",false,4],["p2","c4",3,["Poderia explicar melhor"],"Às vezes sinto que o treino está puxado demais para mim.",true,8],["p2","c8",5,["Me sinto à vontade"],"",false,15],["p2","c12",4,["Paciente"],"Muito atencioso.",false,2]];
   db.ratings=R.map(([pid,cid,stars,tags,text,anon,d],i)=>({id:"r"+i,pid,cid,name:(db.clients.find(c=>c.id===cid)||{}).name||"",stars,tags,text,anon,at:now-d*D1}));
@@ -3088,7 +3147,7 @@ function fakeQR(seed){let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;c
   const f=[...finder(0,0),...finder(n-7,0),...finder(0,n-7)].map(([x,y,w,hh,on])=>`<rect x="${x}" y="${y}" width="${w}" height="${hh}" fill="${on?"#1E2733":"#fff"}"/>`).join("");
   return`<svg viewBox="-2 -2 ${n+4} ${n+4}"><rect x="-2" y="-2" width="${n+4}" height="${n+4}" fill="#fff"/><g fill="#1E2733">${cells.join("")}</g>${f}</svg>`}
 
-/* ---------- avaliação confidencial da personal ---------- */
+/* ---------- avaliação confidencial do professor ---------- */
 function openRating(){
   const p=myP(),pid=p.id,mk=mkey(Date.now()),old=DB.ratings.find(x=>x.cid===ME&&x.pid===pid&&mkey(x.at)===mk);
   let st=old?old.stars:0,tags=old?[...old.tags]:[],anon=old?old.anon:false;
@@ -3123,8 +3182,8 @@ function ratingsBlock(){
   const act=DB.personals.filter(p=>p.status==="ativo"),L=DB.ratings.filter(r=>!RF||r.pid===RF).sort((a,b)=>b.at-a.at);
   const dist=[5,4,3,2,1].map(n=>({label:n+" estrela"+(n>1?"s":""),v:L.filter(r=>r.stars===n).length}));
   const avg=L.length?L.reduce((s,r)=>s+r.stars,0)/L.length:0;
-  return`<section class="mt"><div class="card-h"><h3>Avaliações dos alunos</h3>${pill("info","shield-check","Confidencial: as personais não veem")}</div>
-    <div class="toolbar"><select id="rf" aria-label="Filtrar por personal"><option value="">Todas as personais</option>${act.map(p=>`<option value="${p.id}" ${RF===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select></div>
+  return`<section class="mt"><div class="card-h"><h3>Avaliações dos alunos</h3>${pill("info","shield-check","Confidencial: os professores não veem")}</div>
+    <div class="toolbar"><select id="rf" aria-label="Filtrar por professor"><option value="">Todos os professores</option>${act.map(p=>`<option value="${p.id}" ${RF===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select></div>
     <div class="grid2" style="margin-top:0"><section class="card"><div class="card-h"><h3>Média</h3><span class="pill mute">${L.length} avaliações</span></div>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px"><b style="font-family:var(--display);font-size:44px;color:var(--navy);line-height:1">${avg?avg.toLocaleString("pt-BR",{maximumFractionDigits:1}):"—"}</b>${stars(avg)}</div>${hbars(dist)}</section>
     <section class="card"><div class="card-h"><h3>O que os alunos mais citam</h3></div>${hbars(RTAGS.map(t=>({label:t,v:L.filter(r=>r.tags.includes(t)).length})).filter(x=>x.v).sort((a,b)=>b.v-a.v).slice(0,6))}</section></div>
@@ -3149,15 +3208,15 @@ const CENTRAL="(11) 4000-0000";
 function cpfOk(v){const c=String(v).replace(/\D/g,"");if(c.length!==11||/^(\d)\1+$/.test(c))return false;
   const d=n=>{let s=0;for(let i=0;i<n;i++)s+=+c[i]*(n+1-i);const r=(s*10)%11;return r===10?0:r};return d(9)===+c[9]&&d(10)===+c[10]}
 const maskCpf=v=>{const c=String(v).replace(/\D/g,"");return c.length===11?`***.${c.slice(3,6)}.${c.slice(6,9)}-**`:"—"};
-/* CEP: ao digitar os 8 números, busca a rua, o bairro e a cidade (ViaCEP, grátis) e deixa o cursor no lugar do número */
+/* CEP: ao digitar os 8 números, busca a rua, o bairro e a cidade (ViaCEP, grátis) e deixa o cursor no campo Número */
 const fmtCep=v=>{const c=String(v).replace(/\D/g,"").slice(0,8);return c.length>5?c.slice(0,5)+"-"+c.slice(5):c};
 document.addEventListener("input",e=>{const z=e.target;if(!z.matches||!z.matches('#kz,[data-inf="cep"]'))return;
   z.value=fmtCep(z.value);const n=z.value.replace(/\D/g,"");if(n.length!==8||z.dataset.cepOk===n)return;z.dataset.cepOk=n;
-  const box=z.closest(".set")||document,ad=z.id==="kz"?$("#ka"):box.querySelector('[data-inf="addr"]'),ci=z.id==="kz"?$("#ky"):box.querySelector('[data-inf="city"]');
+  const box=z.closest(".set")||document,ad=z.id==="kz"?$("#ka"):box.querySelector('[data-inf="addr"]'),nu=z.id==="kz"?$("#kq"):box.querySelector('[data-inf="num"]'),ci=z.id==="kz"?$("#ky"):box.querySelector('[data-inf="city"]');
   fetch("https://viacep.com.br/ws/"+n+"/json/").then(r=>r.json()).then(d=>{
     if(d.erro){z.dataset.cepOk="";toast("CEP não encontrado. Confira os números ou preencha o endereço.");return}
     if(ci&&d.localidade)ci.value=d.localidade+(d.uf?" - "+d.uf:"");
-    if(ad&&d.logradouro){const ini=d.logradouro+", ";ad.value=ini+(d.bairro?" - "+d.bairro:"");ad.focus();try{ad.setSelectionRange(ini.length,ini.length)}catch(er){}}
+    if(ad&&d.logradouro){ad.value=d.logradouro+(d.bairro?" - "+d.bairro:"");(nu||ad).focus()}
     else if(ad)ad.focus();
   }).catch(()=>{z.dataset.cepOk=""})});
 const fmtCpf=v=>{const c=String(v).replace(/\D/g,"").slice(0,11);return c.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})\.(\d{3})(\d)/,"$1.$2.$3").replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/,"$1.$2.$3-$4")};
@@ -3188,14 +3247,15 @@ function vVerif(){
   const bar=`<div class="vsteps">${steps.map((t,i)=>`<div class="${i<st?"done":i===st?"cur":""}"><i>${i<st?"✓":i+1}</i><span>${t}</span></div>`).join("")}</div>`;
   let body="";
   if(st===0)body=`<div class="alert warn" style="margin:0 0 14px"><i data-lucide="shield-check"></i><span><b>Obrigatório para continuar.</b> Sem a verificação, o app não libera agenda, conversa nem treinos.${TEST_MODE?`<br>${testTag("Nesta versão de teste você pode sair e explorar")}`:""}</span></div>
-    <p class="sub">Pedimos isso de todo mundo, clientes e personais, porque existem encontros presenciais. É a mesma proteção para os dois lados.</p>
+    <p class="sub">Pedimos isso de todo mundo, clientes e professores, porque existem encontros presenciais. É a mesma proteção para os dois lados.</p>
     <div class="set">
       <div class="field"><label for="kn">Nome completo</label><input id="kn" autocomplete="name" value="${esc(KV.d.name||S.profile.name)}"></div>
       <div class="field"><label for="kc">CPF</label><input id="kc" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" value="${esc(KV.d.cpf||"")}"><small class="err" id="kce"></small></div>
       <div class="field"><label for="kb">Data de nascimento</label><input id="kb" type="date" value="${esc(KV.d.birth||"")}"></div>
       <div class="field"><label for="kt">Celular</label><input id="kt" type="tel" autocomplete="tel" placeholder="(11) 90000-0000" value="${esc(KV.d.tel||"")}"></div>
       <div class="field"><label for="kz">CEP</label><input id="kz" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" value="${esc(KV.d.cep||"")}"></div>
-      <div class="field"><label for="ka">Endereço e número</label><input id="ka" autocomplete="street-address" placeholder="Preenche sozinho pelo CEP" value="${esc(KV.d.addr||"")}"></div>
+      <div class="field"><label for="ka">Endereço</label><input id="ka" autocomplete="address-line1" placeholder="Preenche sozinho pelo CEP" value="${esc(KV.d.addr||"")}"></div>
+      <div class="field"><label for="kq">Número</label><input id="kq" autocomplete="off" placeholder="Ex.: 120 ou s/n" value="${esc(KV.d.num||"")}"></div>
       <div class="field"><label for="ky">Cidade</label><input id="ky" autocomplete="address-level2" value="${esc(KV.d.city||"")}"></div>
     </div>
     <div class="card-h" style="margin:8px 0 10px"><h3 style="font-size:18px">Contato de emergência</h3></div>
@@ -3210,13 +3270,13 @@ function vVerif(){
     <label class="chkline big"><input type="checkbox" id="c1" ${KV.ok.c1?"checked":""}> Autorizo o uso dos meus dados pessoais para verificar minha identidade e proteger os encontros presenciais.</label>
     <label class="chkline big"><input type="checkbox" id="c2" ${KV.ok.c2?"checked":""}> Autorizo o tratamento da minha biometria facial (dado sensível, LGPD art. 11) só para confirmar que sou eu.</label>
     <label class="chkline big"><input type="checkbox" id="c3" ${KV.ok.c3?"checked":""}> Li e concordo com o código de conduta: respeito, sem assédio, sem discriminação, e uso do código de segurança nos encontros.</label>
-    <label class="chkline big"><input type="checkbox" id="c4" ${KV.ok.c4?"checked":""}> Entendo que aulas e pagamentos são sempre pelo app, e que contratar a personal por fora viola os <a href="#" data-terms-c style="color:var(--blue);font-weight:700">termos de uso</a>.</label>
-    <div class="info"><i data-lucide="lock"></i><span>Seus dados ficam criptografados e só a equipe de segurança acessa. Personais veem apenas seu primeiro nome, a cidade e o código do encontro.</span></div>`;
+    <label class="chkline big"><input type="checkbox" id="c4" ${KV.ok.c4?"checked":""}> Entendo que aulas e pagamentos são sempre pelo app, e que contratar o professor por fora viola os <a href="#" data-terms-c style="color:var(--blue);font-weight:700">termos de uso</a>.</label>
+    <div class="info"><i data-lucide="lock"></i><span>Seus dados ficam criptografados e só a equipe de segurança acessa. Professores veem apenas seu primeiro nome, a cidade e o código do encontro.</span></div>`;
   $("#view").innerHTML=`<div class="hello"><small>Segurança · passo ${st+1} de 4</small><h2>Verificar identidade</h2></div>${bar}<div class="vbody">${body}</div>
-    <div class="vfoot">${st?`<button class="btn btn-ghost" id="kbk"><i data-lucide="arrow-left"></i>Voltar</button>`:`<a class="btn btn-ghost" href="${TEST_MODE?"#/app":"#/"}">${TEST_MODE?"Pular (teste)":"Sair"}</a>`}<button class="btn btn-primary" id="knx">${st===3?"Enviar para análise":"Continuar"}<i data-lucide="arrow-right"></i></button></div>
+    <div class="vfoot">${st?`<button class="btn btn-ghost" id="kbk"><i data-lucide="arrow-left"></i>Voltar</button>`:`<a class="btn btn-ghost" href="${TEST_MODE?"#/app":"#/"}">${TEST_MODE?"Pular (teste)":"Sair"}</a>`}<button class="btn btn-primary" id="knx">${st===3?"Enviar para análise":TEST_MODE&&((st===1&&!(KV.doc&&KV.docB))||(st===2&&!KV.selfie))?"Pular (teste)":"Continuar"}<i data-lucide="arrow-right"></i></button></div>
     <p class="pay-demo"><i data-lucide="info"></i>Demonstração: as fotos aparecem só na sua tela e não são salvas nem enviadas. A leitura do documento e a comparação facial reais serão feitas por um serviço especializado.</p>`;
   icons();
-  const save0=()=>{if(st!==0)return;["name:kn","cpf:kc","birth:kb","tel:kt","cep:kz","addr:ka","city:ky","en:en","et:et","er:er"].forEach(x=>{const[k,id]=x.split(":");KV.d[k]=$("#"+id).value})};
+  const save0=()=>{if(st!==0)return;["name:kn","cpf:kc","birth:kb","tel:kt","cep:kz","addr:ka","num:kq","city:ky","en:en","et:et","er:er"].forEach(x=>{const[k,id]=x.split(":");KV.d[k]=$("#"+id).value})};
   if(st===0){const c=$("#kc");c.oninput=()=>{c.value=fmtCpf(c.value);$("#kce").textContent=c.value.replace(/\D/g,"").length===11&&!cpfOk(c.value)?"Este CPF não é válido. Confira os números.":""}}
   document.querySelectorAll("[data-dt]").forEach(b=>b.onclick=()=>{KV.d.dt=b.dataset.dt;vVerif()});
   document.querySelectorAll("input[type=file]").forEach(inp=>inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;const u=URL.createObjectURL(f);
@@ -3226,25 +3286,25 @@ function vVerif(){
   const bk=$("#kbk");if(bk)bk.onclick=()=>{save0();KV.step--;vVerif();scrollTo(0,0)};
   $("#knx").onclick=()=>{
     if(st===0){save0();const d=KV.d,age=d.birth?(Date.now()-new Date(d.birth))/(365.25*D1):0;
-      const miss=[!d.name.trim()&&"nome",!cpfOk(d.cpf)&&"CPF válido",!d.birth&&"data de nascimento",d.tel.replace(/\D/g,"").length<10&&"celular",!d.addr.trim()&&"endereço",!d.city.trim()&&"cidade",!d.en.trim()&&"contato de emergência",d.et.replace(/\D/g,"").length<10&&"telefone de emergência"].filter(Boolean);
+      const miss=[!d.name.trim()&&"nome",!cpfOk(d.cpf)&&"CPF válido",!d.birth&&"data de nascimento",d.tel.replace(/\D/g,"").length<10&&"celular",!d.addr.trim()&&"endereço",!d.num.trim()&&"número",!d.city.trim()&&"cidade",!d.en.trim()&&"contato de emergência",d.et.replace(/\D/g,"").length<10&&"telefone de emergência"].filter(Boolean);
       if(miss.length){toast("Falta: "+miss.join(", "));return}
       if(age<18){toast("Menores de 18 anos precisam de um responsável. Fale com a gente pelo chat.");return}}
-    if(st===1&&!(KV.doc&&KV.docB)){toast("Envie a frente e o verso do documento");return}
-    if(st===2&&!(KV.selfie&&KV.ok.face)){toast(KV.selfie?"Aguarde a comparação terminar":"Tire ou envie sua selfie");return}
+    if(st===1&&!(KV.doc&&KV.docB)&&!TEST_MODE){toast("Envie a frente e o verso do documento");return}
+    if(st===2&&!(KV.selfie&&KV.ok.face)&&!TEST_MODE){toast(KV.selfie?"Aguarde a comparação terminar":"Tire ou envie sua selfie");return}
     if(st===3){if(!(KV.ok.c1&&KV.ok.c2&&KV.ok.c3&&KV.ok.c4)){toast("Marque as quatro autorizações para continuar");return}
       [KV.doc,KV.docB,KV.selfie].forEach(u=>{try{u&&URL.revokeObjectURL(u)}catch(e){}});
-      S.termsAt=Date.now();S.info=Object.assign(S.info||{},{name:KV.d.name,birth:KV.d.birth,tel:KV.d.tel,cep:KV.d.cep,addr:KV.d.addr,city:KV.d.city,en:KV.d.en,et:KV.d.et,er:KV.d.er});S.kyc={status:"analise",at:Date.now(),cpf:maskCpf(KV.d.cpf),city:KV.d.city.trim(),emerg:`${KV.d.en.trim()} (${KV.d.er})`,emergTel:KV.d.et,doc:KV.d.dt||"RG"};save();
+      S.termsAt=Date.now();S.info=Object.assign(S.info||{},{name:KV.d.name,birth:KV.d.birth,tel:KV.d.tel,cep:KV.d.cep,addr:KV.d.addr,num:KV.d.num,city:KV.d.city,en:KV.d.en,et:KV.d.et,er:KV.d.er});S.kyc={status:"analise",at:Date.now(),cpf:maskCpf(KV.d.cpf),city:KV.d.city.trim(),emerg:`${KV.d.en.trim()} (${KV.d.er})`,emergTel:KV.d.et,doc:KV.d.dt||"RG"};save();
       KV={step:0,d:{},doc:null,docB:null,selfie:null,ok:{}};toast("Enviado! A equipe confere em até 1 dia útil.");vVerif();icons();return}
     KV.step++;vVerif();scrollTo(0,0)};
 }
 function upl(id,label,ic,url,cap,round){return`<label class="shot ${url?"has":""} ${round?"round":""}" for="${id}">${url?`<img src="${url}" alt="${label}">`:`<i data-lucide="${ic}"></i>`}<b>${url?"Trocar foto":label}</b><small>${url?label:"Tirar foto ou escolher arquivo"}</small><input id="${id}" type="file" accept="image/*" capture="${cap}" class="sr-only"></label>`}
 function safetyTips(){return`<div class="block"><div class="block-h"><h3>Nos encontros presenciais</h3></div><div class="tips">
-  <div><i data-lucide="key-round"></i><span><b>Código do encontro</b>A personal diz o código ao chegar. Se não disser o código certo, não abra a porta.</span></div>
+  <div><i data-lucide="key-round"></i><span><b>Código do encontro</b>O professor diz o código ao chegar. Se não disser o código certo, não abra a porta.</span></div>
   <div><i data-lucide="map-pin-check"></i><span><b>Check-in</b>A central recebe o aviso de chegada e de saída de cada encontro.</span></div>
   <div><i data-lucide="siren"></i><span><b>Emergência</b>O botão de emergência fica no app durante todo encontro.</span></div>
   <div><i data-lucide="message-square-warning"></i><span><b>Relato confidencial</b>Qualquer desconforto pode ser contado só para a empresa.</span></div></div></div>`}
 
-/* ---------- emergência e relato (cliente e personal) ---------- */
+/* ---------- emergência e relato (cliente e professor) ---------- */
 function openSOS(role){
   const md=document.createElement("div");md.className="modal";document.body.appendChild(md);document.body.style.overflow="hidden";
   const close=()=>{removeEventListener("keydown",k);md.remove();document.body.style.overflow="";route(true)};const k=e=>{if(e.key==="Escape")close()};addEventListener("keydown",k);md.onclick=e=>{if(e.target===md)close()};
@@ -3272,7 +3332,7 @@ function openReport(role){
     <div class="field" style="text-align:left;margin:0"><label for="rty">Assunto</label><select id="rty">${types.map(t=>`<option>${t}</option>`).join("")}</select></div>
     <div class="field" style="text-align:left;margin:0"><label for="rtx2">O que aconteceu</label><textarea id="rtx2" rows="4" required placeholder="Escreva do seu jeito. Pode ser curto."></textarea></div>
     <label class="chkline"><input type="checkbox" id="rur"> É urgente: quero que me liguem hoje</label>
-    <p class="pay-demo" style="text-align:left"><i data-lucide="shield-check"></i>${role==="cliente"?"A personal não é avisada do seu relato.":"O aluno não é avisado do seu relato."} A equipe responde em até 24 horas, ou no mesmo dia se for urgente.</p>
+    <p class="pay-demo" style="text-align:left"><i data-lucide="shield-check"></i>${role==="cliente"?"O professor não é avisado do seu relato.":"O aluno não é avisado do seu relato."} A equipe responde em até 24 horas, ou no mesmo dia se for urgente.</p>
     <button class="btn btn-primary"><i data-lucide="send"></i>Enviar relato</button></form>`;
   icons();$("#rx").onclick=close;
   $("#repf").onsubmit=e=>{e.preventDefault();const who=role==="cliente"?S.profile.name:curP().name,about=role==="cliente"?myP().name:"—";
@@ -3296,12 +3356,12 @@ function aSeg(){
     <b>${esc(i.type)}</b><small>De ${i.from==="cliente"?"cliente":"personal"}: ${esc(i.who)}${i.about&&i.about!=="—"?` · sobre ${esc(i.about)}`:""}</small><p>“${esc(i.text)}”</p>
     <div class="pc-foot">${i.status==="aberto"?`<button class="btn btn-primary btn-sm" data-inc="${i.id}"><i data-lucide="check"></i>Marcar resolvido</button>`:`<button class="btn btn-ghost btn-sm" data-inc="${i.id}">Reabrir</button>`}</div></article>`).join(""):`<div class="empty">Nenhum relato.</div>`}</div></section>
   <section class="mt"><div class="card-h"><h3>Alertas de conduta</h3>${pill("info","shield-check","Contato ou pagamento fora da plataforma")}</div>
-    ${(DB.flags||[]).length?`<div class="pgrid">${DB.flags.slice().sort((a,b)=>(a.status==="aberto"?0:1)-(b.status==="aberto"?0:1)||b.at-a.at).map(f=>`<article class="lead"><div class="top">${f.from==="personal"?pill("bad","user-round-x","Enviado pela personal"):pill("warn","user-round","Enviado pelo aluno")}${f.status==="aberto"?pill("warn","clock","Aberto"):pill("ok","check","Tratado")}<small style="margin-left:auto">${rel(f.at)}</small></div>
+    ${(DB.flags||[]).length?`<div class="pgrid">${DB.flags.slice().sort((a,b)=>(a.status==="aberto"?0:1)-(b.status==="aberto"?0:1)||b.at-a.at).map(f=>`<article class="lead"><div class="top">${f.from==="personal"?pill("bad","user-round-x","Enviado pelo professor"):pill("warn","user-round","Enviado pelo aluno")}${f.status==="aberto"?pill("warn","clock","Aberto"):pill("ok","check","Tratado")}<small style="margin-left:auto">${rel(f.at)}</small></div>
       <small>${esc(f.pname)} ↔ ${esc(f.cname)}</small><p>“${esc(f.text)}”</p>
-      <div class="pc-foot">${f.status==="aberto"?`<button class="btn btn-primary btn-sm" data-flag="${f.id}" data-v="tratado"><i data-lucide="check"></i>Marcar tratado</button>${f.from==="personal"?`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="adv"><i data-lucide="file-warning"></i>Advertir personal</button>`:""}`:`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="aberto">Reabrir</button>`}</div></article>`).join("")}</div>`:`<div class="empty">Nenhum alerta. As mensagens do chat são checadas automaticamente.</div>`}
+      <div class="pc-foot">${f.status==="aberto"?`<button class="btn btn-primary btn-sm" data-flag="${f.id}" data-v="tratado"><i data-lucide="check"></i>Marcar tratado</button>${f.from==="personal"?`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="adv"><i data-lucide="file-warning"></i>Advertir professor</button>`:""}`:`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="aberto">Reabrir</button>`}</div></article>`).join("")}</div>`:`<div class="empty">Nenhum alerta. As mensagens do chat são checadas automaticamente.</div>`}
     <p class="week-note">O chat avisa antes de enviar mensagens com telefone, redes sociais ou pagamento por fora. Se a pessoa enviar mesmo assim, o alerta aparece aqui. Termo de parceria, item 4: não aliciamento por 12 meses.</p></section>
-  <section class="card mt"><div class="card-h"><h3>Verificação das personais</h3></div><div class="rows">${DB.personals.filter(p=>p.status!=="inativo").map(p=>{const s=p.safety||{};return`<div class="rw"><span class="av">${esc(initials(p.name))}</span><span><b>${esc(p.name)}</b><small>${esc(p.cref)}</small></span><span class="end">${[["doc","Documento"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes"]].map(([k,t])=>`<button class="pill ${s[k]?"ok":"mute"} tog" data-ps="${p.id}" data-k="${k}" aria-pressed="${!!s[k]}"><i data-lucide="${s[k]?"check":"circle-dashed"}"></i>${t}</button>`).join("")}</span></div>`}).join("")}</div>
-    <p class="week-note">Uma personal só recebe alunos para encontros presenciais com os quatro itens conferidos. Toque para marcar ou desmarcar.</p></section>`;
+  <section class="card mt"><div class="card-h"><h3>Verificação dos professores</h3></div><div class="rows">${DB.personals.filter(p=>p.status!=="inativo").map(p=>{const s=p.safety||{};return`<div class="rw"><span class="av">${esc(initials(p.name))}</span><span><b>${esc(p.name)}</b><small>${esc(p.cref)}</small></span><span class="end">${[["doc","Documento"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes"]].map(([k,t])=>`<button class="pill ${s[k]?"ok":"mute"} tog" data-ps="${p.id}" data-k="${k}" aria-pressed="${!!s[k]}"><i data-lucide="${s[k]?"check":"circle-dashed"}"></i>${t}</button>`).join("")}</span></div>`}).join("")}</div>
+    <p class="week-note">Um professor só recebe alunos para encontros presenciais com os quatro itens conferidos. Toque para marcar ou desmarcar.</p></section>`;
   document.querySelectorAll("[data-kyc]").forEach(b=>b.onclick=()=>{const id=b.dataset.kyc,v=b.dataset.v;
     const ak=A(id);if(ak){ak.kyc=Object.assign(ak.kyc||{},{status:v,at:Date.now()});saveA(id);ak.messages.push({from:"them",text:v==="verificado"?"Sua identidade foi verificada. Agora podemos marcar encontros presenciais com segurança.":"Não conseguimos confirmar sua identidade com as fotos enviadas. Pode tentar de novo pelo seu perfil?",t:nowT()});ak.unread++;saveA(id)}
     else{DB.kyc[id]=Object.assign(DB.kyc[id]||{},{status:v});saveDB()}
@@ -3356,7 +3416,7 @@ function planLabel(pl){if(!pl)return"";if(pl.combo)return"Combo jornada completa
 
 /* ================== EXERCÍCIOS COM DEMONSTRAÇÃO ==================
    Cada exercício tem poses (posições das articulações) e o boneco anima entre elas.
-   A personal indica exercícios para cada aluno; o aluno vê primeiro os indicados. */
+   O professor indica exercícios para cada aluno; o aluno vê primeiro os indicados. */
 const ST={h:[60,20],n:[60,33],p:[60,72],el:[50,52],hl:[48,70],er:[70,52],hr:[72,70],kl:[55,100],fl:[54,127],kr:[65,100],fr:[66,127]};
 const PZ=o=>Object.assign({},ST,o);
 const SEAT={h:[52,40],n:[54,52],p:[44,90],el:[60,68],hl:[70,82],er:[62,68],hr:[72,82],kl:[68,92],fl:[68,127],kr:[70,92],fr:[72,127]};
@@ -3430,7 +3490,7 @@ function exDetail(id,opts={}){
   md.innerHTML=`<div class="sheet pay" role="dialog" aria-modal="true" aria-labelledby="exh">
     <div class="pay-h"><div><small>${ex.cat}${ex.seat?" · dá para fazer sentado":""}</small><h3 id="exh">${ex.n}</h3></div><button class="rbtn" id="exx" aria-label="Fechar"><i data-lucide="x"></i></button></div>
     <div class="seg exmode" role="tablist" aria-label="Formato da demonstração"><button role="tab" aria-pressed="true" data-exm="fig"><i data-lucide="person-standing"></i>Boneco</button><button role="tab" aria-pressed="false" data-exm="vid"><i data-lucide="video"></i>Vídeo</button></div>
-    <div class="ex-vid" id="exvid" hidden>${ex.video?`<video src="${esc(ex.video)}" controls playsinline preload="metadata"></video>`:`<div class="vid-soon"><i data-lucide="clapperboard"></i><b>Vídeo em breve</b><span>Aqui vai entrar o vídeo gravado pela personal ensinando este exercício. Enquanto isso, o boneco mostra o movimento para você não ficar parado nos dias sem acompanhamento.</span></div>`}</div>
+    <div class="ex-vid" id="exvid" hidden>${ex.video?`<video src="${esc(ex.video)}" controls playsinline preload="metadata"></video>`:`<div class="vid-soon"><i data-lucide="clapperboard"></i><b>Vídeo em breve</b><span>Aqui vai entrar o vídeo gravado pelo professor ensinando este exercício. Enquanto isso, o boneco mostra o movimento para você não ficar parado nos dias sem acompanhamento.</span></div>`}</div>
     <div class="ex-stage" id="exstage"><div id="exfig">${fig(ex,"lg")}</div>
       <p class="ex-cap" id="excap" aria-live="polite">1 · ${esc(ex.steps[0])}</p>
       <div class="ex-ctl"><button class="btn btn-ghost btn-sm" id="expp"><i data-lucide="pause"></i>Pausar</button><button class="btn btn-ghost btn-sm" id="exsl" aria-pressed="false"><i data-lucide="turtle"></i>Mais devagar</button></div></div>
@@ -3452,7 +3512,7 @@ function exDetail(id,opts={}){
   const d=$("#exdo");if(d)d.onclick=()=>{S.exlog=S.exlog||[];S.exlog.push({id,at:Date.now()});save();close();toast("Registrado! Cada movimento conta.")};
   const r=$("#exrx");if(r)r.onclick=()=>{const cid=$("#exto").value,l=rxOf(cid).filter(x=>x.id!==id);l.push({id,dose:ex.dose,note:"",at:Date.now()});setRx(cid,l);pushMsg(cid,`Indiquei um exercício novo para você: ${ex.n}. Tem demonstração em Treinos → Indicados.`);close();toast("Exercício indicado")};
 }
-/* personal monta a lista de exercícios do aluno */
+/* professor monta a lista de exercícios do aluno */
 function openRxEditor(cid){
   const c=findC(cid);let sel=Object.fromEntries(rxOf(cid).map(r=>[r.id,{dose:r.dose,note:r.note||""}]));
   const md=document.createElement("div");md.className="modal";document.body.appendChild(md);
@@ -3485,11 +3545,11 @@ function pExs(p){
    Modelos ilustrativos: o texto final deve ser revisado por um advogado. */
 const TERMS_V="1.0";
 const TERMS={
- personal:{t:"Termo de parceria da personal",items:()=>[
-  ["Objeto","A personal atende, como profissional autônoma parceira, clientes que chegam pela plataforma Primeiro Passo."],
+ personal:{t:"Termo de parceria do professor",items:()=>[
+  ["Objeto","O professor atende, como profissional autônomo parceiro, clientes que chegam pela plataforma Primeiro Passo."],
   ["Remuneração",`${pctf(DB.split/100)} de cada mensalidade paga (ou o percentual combinado e registrado no painel), repassado até o dia ${DB.payoutDay||5} do mês seguinte, na chave Pix cadastrada.`],
   ["Pagamentos só pela plataforma","É proibido receber qualquer valor diretamente de clientes da plataforma, em dinheiro, Pix, cartão ou outro meio."],
-  ["Não aliciamento","Durante a parceria e por 12 meses depois do término, a personal não pode oferecer, aceitar ou prestar serviços por fora a clientes que conheceu pela plataforma, nem incentivá-los a sair dela."],
+  ["Não aliciamento","Durante a parceria e por 12 meses depois do término, o professor não pode oferecer, aceitar ou prestar serviços por fora a clientes que conheceu pela plataforma, nem incentivá-los a sair dela."],
   ["Contato pelo app","A comunicação com os alunos acontece pelo app. Não é permitido passar telefone, redes sociais ou convidar para outros canais com o objetivo de contratar por fora."],
   ["Confidencialidade e LGPD","Os dados dos alunos servem só para o atendimento. É proibido copiar, exportar ou usar para outros fins."],
   ["Conduta e segurança","Respeito sempre, sem assédio nem discriminação. Código do encontro e check-in são obrigatórios nos encontros presenciais."],
@@ -3497,9 +3557,9 @@ const TERMS={
   ["Vigência","Prazo indeterminado. Qualquer parte pode encerrar com 30 dias de aviso. Os itens 4 e 6 continuam valendo depois do fim."]]},
  cliente:{t:"Termos de uso do aluno",items:()=>[
   ["Contratação pela plataforma","Planos, aulas e pagamentos acontecem sempre pelo app."],
-  ["Sem contratação por fora","Contratar a personal diretamente, fora da plataforma, durante o acompanhamento ou em até 12 meses depois, viola estes termos e encerra o acesso ao app."],
+  ["Sem contratação por fora","Contratar o professor diretamente, fora da plataforma, durante o acompanhamento ou em até 12 meses depois, viola estes termos e encerra o acesso ao app."],
   ["Por que isso protege você","Fora da plataforma não existe verificação de identidade, código do encontro, check-in, central de apoio nem garantia do serviço."],
-  ["Respeito","Vale o mesmo código de conduta para alunos e personais."],
+  ["Respeito","Vale o mesmo código de conduta para alunos e professores."],
   ["Seus dados","Tratados conforme a LGPD. Você pode pedir a exclusão quando quiser."]]}
 };
 function openTerms(kind,opts={}){
@@ -3530,9 +3590,9 @@ function offCheck(text,from,cid,pid,send,keep){
 function seedTerms(db){db.flags=[{id:"f0",from:"personal",cid:"c4",pid:"p2",cname:"Carlos Eduardo Santos",pname:"Rafael Nunes",text:"Se quiser, me chama no zap que faço um valor melhor por fora.",at:Date.now()-3*D1,status:"aberto"}];db.personals.forEach(p=>{if(p.status==="ativo"&&!p.terms)p.terms={v:"1.0",at:p.since+2*D1}});return db}
 if(!DB.flags){seedTerms(DB);saveDB()}
 
-/* ================== MEUS DADOS (aluno e personal) ==================
+/* ================== MEUS DADOS (aluno e professor) ==================
    Dados pessoais, contrato, documentos e privacidade (LGPD). CPF só aparece mascarado. */
-const INFO_FIELDS=[["name","Nome completo","text","name"],["email","E-mail","email","email"],["tel","Celular","tel","tel"],["birth","Data de nascimento","date","bday"],["cep","CEP","text","postal-code"],["addr","Endereço e número","text","street-address"],["city","Cidade","text","address-level2"]];
+const INFO_FIELDS=[["name","Nome completo","text","name"],["email","E-mail","email","email"],["tel","Celular","tel","tel"],["birth","Data de nascimento","date","bday"],["cep","CEP","text","postal-code"],["addr","Endereço","text","address-line1"],["num","Número","text",""],["city","Cidade","text","address-level2"]];
 const EMERG_FIELDS=[["en","Nome","text",""],["et","Telefone","tel","tel"],["er","Relação","text",""]];
 function infoForm(id,info,fields){return`<div class="set">${fields.map(([k,l,t,ac])=>`<div class="field" style="margin:0"><label for="${id}-${k}">${l}</label><input id="${id}-${k}" data-inf="${k}" type="${t}" ${ac?`autocomplete="${ac}"`:""} value="${esc(info[k]||"")}"></div>`).join("")}</div>`}
 const readInfo=(root,into)=>{root.querySelectorAll("[data-inf]").forEach(i=>{into[i.dataset.inf]=i.value.trim()});return into};
@@ -3552,9 +3612,9 @@ function vDados(){
     <div class="card-h" style="margin:18px 0 10px"><h3 style="font-size:16px">Contato de emergência</h3></div>${infoForm("me",inf,EMERG_FIELDS)}
     <button class="btn btn-primary mt"><i data-lucide="save"></i>Salvar alterações</button></form>
   <section class="card mt"><div class="card-h"><h3>Meu contrato</h3><button type="button" class="link" data-termsc>Ver termos de uso</button></div>
-    <div class="plist">${dline("Plano",esc(plan))}${dline("Nível atual",`${S.level} · ${LEVELS[S.level-1].t}`)}${dline("Valor",`${LEVELS[S.level-1].price} ${LEVELS[S.level-1].per}`)}${dline("Forma de pagamento",METHODS[S.payMethod||"pix"].l+(S.autopay?" · automático":""))}${dline("Personal",esc(per.name))}${dline("Cliente desde",new Date(p.since).toLocaleDateString("pt-BR"))}${dline("Termos de uso",S.termsAt?`Aceitos em ${new Date(S.termsAt).toLocaleDateString("pt-BR")} · v${TERMS_V}`:(k.status!=="pendente"?"Aceitos na verificação":`<span style="color:var(--red)">Pendente</span>`))}${dline("Fidelidade","Não há. O que sobrar de planos longos vira crédito.")}</div>
+    <div class="plist">${dline("Plano",esc(plan))}${dline("Nível atual",`${S.level} · ${LEVELS[S.level-1].t}`)}${dline("Valor",`${LEVELS[S.level-1].price} ${LEVELS[S.level-1].per}`)}${dline("Forma de pagamento",METHODS[S.payMethod||"pix"].l+(S.autopay?" · automático":""))}${dline("Professor",esc(per.name))}${dline("Cliente desde",new Date(p.since).toLocaleDateString("pt-BR"))}${dline("Termos de uso",S.termsAt?`Aceitos em ${new Date(S.termsAt).toLocaleDateString("pt-BR")} · v${TERMS_V}`:(k.status!=="pendente"?"Aceitos na verificação":`<span style="color:var(--red)">Pendente</span>`))}${dline("Fidelidade","Não há. O que sobrar de planos longos vira crédito.")}</div>
     <p class="week-note">${bl.filter(b=>b.paid).length} mensalidades pagas · ${bl.filter(b=>!b.paid).length} em aberto. Detalhes em Perfil → Pagamentos.</p></section>
-  <section class="card mt"><div class="card-h"><h3>Documentos</h3></div><div class="plist">${dline("Identidade",KYC_PILL[k.status][2])}${dline("Documento enviado",k.doc||(k.status==="pendente"?"—":"RG"))}${dline("Selfie",k.status==="pendente"?"—":"Comparada ao documento")}${dline("Liberação médica",p.medical?(p.medOk?"Recebida pela personal":"Pendente"):"Não necessária")}</div>
+  <section class="card mt"><div class="card-h"><h3>Documentos</h3></div><div class="plist">${dline("Identidade",KYC_PILL[k.status][2])}${dline("Documento enviado",k.doc||(k.status==="pendente"?"—":"RG"))}${dline("Selfie",k.status==="pendente"?"—":"Comparada ao documento")}${dline("Liberação médica",p.medical?(p.medOk?"Recebida pelo professor":"Pendente"):"Não necessária")}</div>
     ${k.status==="pendente"?`<a class="btn btn-primary mt" href="#/app/verificacao"><i data-lucide="shield-check"></i>Verificar identidade</a>`:""}</section>
   ${privacyBlock()}`;
   $("#dfm").onsubmit=e=>{e.preventDefault();readInfo($("#dfm"),inf);if(inf.name){p.name=inf.name}if(inf.email&&S.account)S.account.email=inf.email.toLowerCase();save();toast("Dados salvos")};
@@ -3563,7 +3623,7 @@ function vDados(){
   $("[data-delme]").onclick=()=>sheet("trash-2","Pedir exclusão dos dados?","A equipe confirma por e-mail em até 15 dias e apaga seus dados pessoais. Registros financeiros ficam guardados pelo prazo que a lei exige.","Enviar pedido",{danger:true,cancel:"Cancelar",onOk:()=>{DB.leads.push({id:"l"+Date.now(),type:"cliente",name:p.name,contact:inf.email||inf.tel||"app",msg:"Pedido de exclusão de dados (LGPD).",at:Date.now(),status:"novo"});saveDB();toast("Pedido enviado. A empresa foi avisada.");route(true)}});
 }
 
-/* ---------- personal ---------- */
+/* ---------- professor ---------- */
 function pDados(p){
   const inf=p.info=p.info||{name:p.name,email:p.email},s=p.safety||{},po=p.payout||{};
   $("#pv").innerHTML=`<div class="grid2" style="margin-top:0">
@@ -3571,7 +3631,8 @@ function pDados(p){
     ${infoForm("pi",inf,INFO_FIELDS)}
     <div class="set mt"><div class="field" style="margin:0"><label>CPF</label><input value="${esc(inf.cpf||"***.***.***-**")}" disabled></div><div class="field" style="margin:0"><label>CREF</label><input value="${esc(p.cref)}" disabled></div></div>
     <div class="field mt" style="margin-bottom:0"><label for="pi-area">Região onde atende</label><input id="pi-area" value="${esc(p.area||"")}"></div>
-    <div class="field mt" style="margin-bottom:0"><label for="pi-bio">Sobre você (aparece para os alunos)</label><textarea id="pi-bio" rows="3">${esc(p.bio||"")}</textarea></div>
+    <div class="field mt" style="margin-bottom:0"><label for="pi-bio">Sua apresentação (o aluno lê isto para escolher você)</label><textarea id="pi-bio" rows="4" maxlength="400" placeholder="Ex.: Trabalho com iniciantes há 5 anos. Gosto de ir no seu ritmo, sem pressa e sem julgamento.">${esc(p.bio||"")}</textarea></div>
+    <div class="field mt" style="margin-bottom:0"><label>Especialidades</label><div class="spec-pick" id="pi-spec">${SPECS.map(x=>`<button type="button" data-spec="${esc(x)}" aria-pressed="${(p.spec||[]).includes(x)}">${esc(x)}</button>`).join("")}</div></div>
     <button class="btn btn-primary mt"><i data-lucide="save"></i>Salvar alterações</button></form>
   <div style="display:grid;gap:14px;align-content:start">
     <section class="card"><div class="card-h"><h3>Meu contrato</h3><button type="button" class="link" data-termsp>Ver termo</button></div>
@@ -3579,25 +3640,27 @@ function pDados(p){
     <section class="card"><div class="card-h"><h3>Documentos</h3></div><div class="chk">${[["doc","Documento com foto"],["selfie","Selfie comparada ao documento"],["cref","CREF ativo no conselho"],["crim","Certidão de antecedentes criminais"]].map(([k,t])=>`<div class="${s[k]?"y":""}"><i data-lucide="${s[k]?"circle-check":"circle-dashed"}"></i>${t}</div>`).join("")}</div>
       <p class="week-note">Para atualizar um documento, envie pela central. A empresa confere e marca aqui.</p></section>
   </div></div>
+  <section class="card mt"><div class="card-h"><h3>Sua vitrine</h3></div><p class="week-note" style="margin:0 0 12px">É assim que o aluno vê você na hora de escolher o professor. Mude a apresentação e as especialidades acima e toque em Salvar.</p>${vitHtml(p)}</section>
   ${payoutForm(p)}
   ${privacyBlock()}`;
-  $("#pdf").onsubmit=e=>{e.preventDefault();readInfo($("#pdf"),inf);if(inf.name)p.name=inf.name;if(inf.email)p.email=inf.email;p.area=$("#pi-area").value.trim();p.bio=$("#pi-bio").value.trim();saveDB();toast("Dados salvos");route(true)};
+  document.querySelectorAll("#pi-spec [data-spec]").forEach(b=>b.onclick=()=>b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true"));
+  $("#pdf").onsubmit=e=>{e.preventDefault();readInfo($("#pdf"),inf);if(inf.name)p.name=inf.name;if(inf.email)p.email=inf.email;p.area=$("#pi-area").value.trim();p.bio=$("#pi-bio").value.trim();p.spec=[...document.querySelectorAll('#pi-spec [aria-pressed="true"]')].map(b=>b.dataset.spec);saveDB();toast("Dados salvos");route(true)};
   $("#pof").onsubmit=e=>{e.preventDefault();p.payout={type:$("#pot").value,key:$("#pok").value.trim()};saveDB();toast("Dados de recebimento salvos")};
   $("[data-termsp]").onclick=()=>openTerms("personal");
   $("[data-copyme]").onclick=()=>copyText(JSON.stringify({dados:Object.assign({},inf,{cref:p.cref,area:p.area}),contrato:{termo:p.terms,percentual:splitOf(p.id),repasse_dia:DB.payoutDay},recebimento:{tipo:po.type,chave:po.key}},null,2),"Seus dados foram copiados");
   $("[data-delme]").onclick=()=>sheet("trash-2","Pedir exclusão dos dados?","Para excluir seus dados, a parceria precisa ser encerrada (aviso de 30 dias). Registros financeiros e o termo ficam guardados pelo prazo que a lei exige.","Enviar pedido",{danger:true,cancel:"Cancelar",onOk:()=>{DB.leads.push({id:"l"+Date.now(),type:"personal",name:p.name,contact:p.email,msg:"Pedido de exclusão de dados e encerramento da parceria (LGPD).",at:Date.now(),status:"novo"});saveDB();toast("Pedido enviado à empresa");route(true)}});
 }
-/* empresa: ficha completa da personal */
+/* empresa: ficha completa do professor */
 function openPFicha(id){const p=findP(id),inf=p.info||{},s=p.safety||{},po=p.payout||{},r=ratingOf(p.id),n=allClients().filter(c=>c.pid===p.id&&c.status==="ativo").length;
   const m=document.createElement("div");m.className="drawer";document.body.appendChild(m);document.body.style.overflow="hidden";
   const close=()=>{removeEventListener("keydown",k);m.remove();document.body.style.overflow="";route(true)};const k=e=>{if(e.key==="Escape")close()};addEventListener("keydown",k);m.onclick=e=>{if(e.target===m)close()};
   m.innerHTML=`<div class="dp" role="dialog" aria-modal="true" aria-labelledby="pfh"><div class="dp-h"><span class="av">${esc(initials(p.name))}</span><div><h2 id="pfh">${esc(p.name)}</h2><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div><button class="rbtn" id="pfx" aria-label="Fechar"><i data-lucide="x"></i></button></div>
-    <div class="sec2"><h3>Dados pessoais</h3><div class="plist">${dline("E-mail",esc(p.email||"—"))}${dline("Celular",esc(inf.tel||"—"))}${dline("CPF",esc(inf.cpf||"***.***.***-**"))}${dline("Nascimento",inf.birth?new Date(inf.birth+"T12:00").toLocaleDateString("pt-BR"):"—")}${dline("Endereço",esc([inf.addr,inf.city].filter(Boolean).join(", ")||"—"))}</div></div>
+    <div class="sec2"><h3>Dados pessoais</h3><div class="plist">${dline("E-mail",esc(p.email||"—"))}${dline("Celular",esc(inf.tel||"—"))}${dline("CPF",esc(inf.cpf||"***.***.***-**"))}${dline("Nascimento",inf.birth?new Date(inf.birth+"T12:00").toLocaleDateString("pt-BR"):"—")}${dline("Endereço",esc([inf.addr,inf.num&&"nº "+inf.num,inf.city].filter(Boolean).join(", ")||"—"))}</div></div>
     <div class="sec2"><h3>Contrato</h3><div class="plist">${dline("Termo de parceria",p.terms?`Aceito ${new Date(p.terms.at).toLocaleDateString("pt-BR")} · v${p.terms.v}`:"Pendente")}${dline("Percentual",pctf(splitOf(p.id)))}${dline("Recebimento",`Pix ${esc(po.type||"")} ${esc(po.key||"não cadastrado")}`)}${dline("Alunos ativos",`${n} de ${p.cap}`)}${dline("Avaliação (confidencial)",r.n?`${r.avg.toLocaleString("pt-BR",{maximumFractionDigits:1})} ★ · ${r.n} avaliações`:"—")}</div></div>
     <div class="sec2"><h3>Documentos</h3><div class="chk">${[["doc","Documento com foto"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes criminais"]].map(([k2,t])=>`<div class="${s[k2]?"y":""}"><i data-lucide="${s[k2]?"circle-check":"circle-dashed"}"></i>${t}</div>`).join("")}</div></div>
     <div class="sec2"><button class="btn btn-ghost btn-sm" id="pft"><i data-lucide="file-text"></i>Ver termo de parceria</button></div></div>`;
   icons();$("#pfx").onclick=close;$("#pft").onclick=()=>openTerms("personal",{onClose:()=>{}});}
-function seedInfo(db){const I={p1:{tel:"(11) 90000-0101",cpf:"***.321.654-**",birth:"1989-03-14",addr:"Rua das Flores, 120",city:"São Paulo"},p2:{tel:"(11) 90000-0202",cpf:"***.987.123-**",birth:"1992-08-02",addr:"Rua Voluntários da Pátria, 850",city:"Rio de Janeiro"},p3:{tel:"(11) 90000-0303",cpf:"***.555.222-**",birth:"1985-11-20",addr:"Av. Afonso Pena, 45",city:"Belo Horizonte"}};
+function seedInfo(db){const I={p1:{tel:"(11) 90000-0101",cpf:"***.321.654-**",birth:"1989-03-14",addr:"Rua das Flores",num:"120",city:"São Paulo"},p2:{tel:"(11) 90000-0202",cpf:"***.987.123-**",birth:"1992-08-02",addr:"Rua Voluntários da Pátria",num:"850",city:"Rio de Janeiro"},p3:{tel:"(11) 90000-0303",cpf:"***.555.222-**",birth:"1985-11-20",addr:"Av. Afonso Pena",num:"45",city:"Belo Horizonte"}};
   db.personals.forEach(p=>{if(!p.info)p.info=Object.assign({name:p.name,email:p.email||mailOf(p.name)},I[p.id]||{})});return db}
 if(!DB.personals.some(p=>p.info)){seedInfo(DB);saveDB()}
 /* dados de exemplo antigos (só São Paulo) passam a ser nacionais */
@@ -3609,7 +3672,7 @@ if(!DB.personals.some(p=>p.info)){seedInfo(DB);saveDB()}
 /* formulários do site → contatos da empresa */
 function bindSiteForms(){
   const f1=$("#fc");if(f1)f1.onsubmit=e=>{e.preventDefault();DB.leads.push({id:"l"+Date.now(),type:"cliente",name:$("#fcn").value.trim(),contact:$("#fcc").value.trim(),msg:$("#fcm").value.trim()||"Quero saber mais.",at:Date.now(),status:"novo"});saveDB();f1.reset();toast("Mensagem enviada! Vamos responder em até 1 dia útil.")};
-  const f2=$("#fp");if(f2)f2.onsubmit=e=>{e.preventDefault();DB.leads.push({id:"l"+Date.now(),type:"personal",name:$("#fpn").value.trim(),contact:$("#fpc").value.trim(),cref:"CREF "+$("#fpr").value.trim(),area:$("#fpa").value.trim()+" / "+$("#fpu").value,uf:$("#fpu").value,msg:"Quero ser personal parceiro.",at:Date.now(),status:"novo"});saveDB();f2.reset();toast("Cadastro recebido! Vamos analisar seu CREF e entrar em contato.")};
+  const f2=$("#fp");if(f2)f2.onsubmit=e=>{e.preventDefault();DB.leads.push({id:"l"+Date.now(),type:"personal",name:$("#fpn").value.trim(),contact:$("#fpc").value.trim(),cref:"CREF "+$("#fpr").value.trim(),area:$("#fpa").value.trim()+" / "+$("#fpu").value,uf:$("#fpu").value,msg:"Quero ser professor parceiro.",at:Date.now(),status:"novo"});saveDB();f2.reset();toast("Cadastro recebido! Vamos analisar seu CREF e entrar em contato.")};
 }
 
 (()=>{const mq=matchMedia("(min-width:901px)"),f=()=>{if(/^#\/(personal|admin)/.test(location.hash)&&!document.querySelector(".drawer,.modal"))route(true)};mq.addEventListener?mq.addEventListener("change",f):mq.addListener(f)})();

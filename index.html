@@ -6051,6 +6051,9 @@ function weekHtml(pid) {
     <div class="wk-save"><button class="btn primary" data-act="wk-save">✓ Salvar semana</button>
       ${ui.wkSaved && ui.wkSaved.pid === pid ? `<small class="ok">✓ Semana salva às ${ui.wkSaved.hora}. Ela já aparece em Hoje, em cada dia.</small>` : '<small>Cada mudança já fica guardada sozinha. O botão confere se está tudo salvo na nuvem.</small>'}</div>
     ${(old => old.length ? `<div class="wk-old"><span class="grow"><b>${old.length} treino${old.length === 1 ? '' : 's'} antigo${old.length === 1 ? '' : 's'}</b> (${old.map(w => esc(w.name)).join(', ')}). Arquive para limpar a tela: as cargas e o histórico continuam valendo.</span><button class="btn" data-act="wk-arch">Arquivar antigos</button></div>` : '')(workoutsOf(pid).filter(w => w.day == null && !w.arch))}
+    ${(() => { const has = WEEK.filter(([d]) => wkExs(pid, d).length); if (!has.length) return '';
+      if (!has.some(([d]) => d === W.mm)) W.mm = has[0][0];
+      return `<h4 class="mm-h">Músculos que o dia trabalha</h4><div class="mm-pick wk-mmd">${has.map(([d, nm]) => `<button class="${W.mm === d ? 'on' : ''}" data-act="wk-mm" data-d="${d}">${nm}</button>`).join('')}</div>${muscleMapHtml(wkExs(pid, W.mm), pid)}`; })()}
     <h4 class="mm-h" id="wkLib">Exercícios</h4>
     <input class="search" id="wkSearch" placeholder="Buscar exercício" value="${esc(W.q || '')}" autocomplete="off">
     ${W.q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === W.g ? 'on' : ''}" data-act="wk-g" data-g="${x}">${x}</button>`).join('')}</div>`}
@@ -6214,6 +6217,7 @@ function wkAct(act, b) {
     case 'wk-mv': { if (!ex) return; const list = letterExs(ex.letter, pid), i = list.indexOf(ex), j = i + +b.dataset.d; if (j < 0 || j >= list.length) return;
       [list[i], list[j]] = [list[j], list[i]]; list.forEach((e, k) => { e.order = k + 1; }); save(); return re(); }
     case 'wk-del': if (ex) wkRemove(pid, ex); return re();
+    case 'wk-mm': W.mm = +b.dataset.d; ui.mmPick = []; ui.mmSel = null; return re();
     case 'wk-save': return saveWeekNow(pid, b);
     case 'wk-arch': { const old = workoutsOf(pid).filter(w => w.day == null && !w.arch);
       confirmAsk(`Arquivar ${old.length} treino${old.length === 1 ? '' : 's'} antigo${old.length === 1 ? '' : 's'}?`, `${old.map(w => w.name).join(', ')}. Eles somem das listas e do app, ficando só a semana do Montar por dia. Nada é apagado: as cargas e o histórico continuam valendo para a comparação. Dá para desarquivar em Treinos (tabela).`, 'Arquivar').then(ok => {
@@ -6976,7 +6980,7 @@ $main.addEventListener('click', e => {
       const id = b.dataset.id, cur = ui.mmPick || [];
       ui.mmPick = !id ? [] : cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; return render();
     }
-    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-nolink': case 'wk-unalso': case 'wk-save': case 'wk-arch': return wkAct(act, b);
+    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-nolink': case 'wk-unalso': case 'wk-save': case 'wk-arch': case 'wk-mm': return wkAct(act, b);
     case 'b-mode': ui.bMode = b.dataset.v; try { localStorage.setItem('pf-montar-modo', ui.bMode); } catch (e) {} ui.wk = null; return render();
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
     case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
@@ -9072,7 +9076,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '31/10-00:53';
+const APP_VERSION = '31/10-00:54';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
