@@ -1174,11 +1174,21 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 
 /* ---------- exercícios, jornada ---------- */
 .fig{display:block;width:100%;height:auto;max-width:100%}
-.fig .limb{stroke:var(--navy);stroke-width:5.5;stroke-linecap:round}
-.fig .head{fill:var(--navy)}
 .fig .ground{stroke:var(--line);stroke-width:2}
-.fig .prop{stroke:var(--muted);stroke-width:3;fill:none;stroke-linecap:round;opacity:.55}
-.fig .band{stroke:var(--gold);stroke-width:3;stroke-linecap:round}
+.fig .shadow{fill:var(--navy);opacity:.1}
+.fig .ghost path{fill:var(--navy);opacity:.08}
+.fig .sk{fill:#F0C29F}.fig .sk2{fill:#D7A07B}
+.fig .sh{fill:#2F6DB0}.fig .sh2{fill:#24578E}
+.fig .pt{fill:#1B3A5C}.fig .pt2{fill:#132B45}
+.fig .tor{fill:#2F6DB0;stroke:#2F6DB0;stroke-width:5;stroke-linejoin:round}.fig .sht{fill:#1B3A5C;stroke:#1B3A5C;stroke-width:3;stroke-linejoin:round}
+.fig .sho{fill:#E0A93B}.fig .sho2{fill:#B8862A}
+.fig .hair,.fig .eye{fill:#3A2A22}
+.fig .band{fill:var(--gold)}
+.fig .chair{fill:#B98A5E}
+.fig .wall{fill:var(--sky)}.fig .wall-e{stroke:var(--muted);stroke-width:1.5;opacity:.5}
+.fig .mat{fill:var(--green);opacity:.55}
+:root[data-theme="dark"] .fig .pt{fill:#3F648E}:root[data-theme="dark"] .fig .sht{fill:#3F648E;stroke:#3F648E}:root[data-theme="dark"] .fig .pt2{fill:#2F5075}
+:root[data-theme="dark"] .fig .ghost path,:root[data-theme="dark"] .fig .shadow{fill:#9CC0E6;opacity:.1}
 .fig.sm{max-width:120px}.fig.lg{max-width:240px;margin:0 auto}.fig.xs{width:44px;flex:none}
 .exgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,100%),1fr));gap:10px}
 .exc{display:flex;flex-direction:column;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:18px;padding:12px;background:var(--surface);text-align:center;position:relative;width:100%}
@@ -3378,65 +3388,118 @@ function renderPlans(){const box=$("#plansBox");if(!box)return;const rec=recLeve
 function planLabel(pl){if(!pl)return"";if(pl.combo)return"Combo jornada completa (nível 1 + 3 meses do nível 2)";const L=LEVELS[pl.lv-1];return`Nível ${pl.lv} · ${L.t}${pl.lv>1?` · ${(PERIODS.find(x=>x[0]===pl.per)||[0,"Mensal"])[1].toLowerCase()}`:""}${pl.freq?` · ${pl.freq}x por semana`:""}`}
 
 /* ================== EXERCÍCIOS COM DEMONSTRAÇÃO ==================
-   Cada exercício tem poses (posições das articulações) e o boneco anima entre elas.
+   Cada exercício tem poses: onde ficam o quadril (p), o pescoço (n), as mãos (hl/hr) e os pés (fl/fr).
+   Cotovelos e joelhos são calculados para dobrar do jeito certo e o tamanho do corpo nunca muda,
+   então o boneco (pessoa ilustrada, com roupa) anima entre as poses sem esticar nem encolher.
+   v:"s" = visto de lado (olhando para a direita); sem v = visto de frente.
    O professor indica exercícios para cada aluno; o aluno vê primeiro os indicados. */
-const ST={h:[60,20],n:[60,33],p:[60,72],el:[50,52],hl:[48,70],er:[70,52],hr:[72,70],kl:[55,100],fl:[54,127],kr:[65,100],fr:[66,127]};
-const PZ=o=>Object.assign({},ST,o);
-const SEAT={h:[52,40],n:[54,52],p:[44,90],el:[60,68],hl:[70,82],er:[62,68],hr:[72,82],kl:[68,92],fl:[68,127],kr:[70,92],fr:[72,127]};
-const shift=(o,dx,dy,skip=[])=>Object.fromEntries(Object.entries(o).map(([k,[x,y]])=>[k,skip.includes(k)?[x,y]:[x+dx,y+dy]]));
+const FBD={T:32,UA:18,FA:16,TH:25,SH:24,FL:124};
+const FST={p:[60,74],n:[60,42],hl:[48,78],hr:[72,78],fl:[54,124],fr:[66,124]};
+const SST={p:[58,74],n:[59,42],hl:[55,76],hr:[61,76],fl:[58,124],fr:[61,124]};
+const FP=o=>Object.assign({},FST,o),SP=o=>Object.assign({},SST,o);
+const mv=(o,dx,dy=0)=>Object.fromEntries(Object.entries(o).map(([k,[x,y]])=>[k,[x+dx,y+dy]]));
+const SEATED={p:[44,95],n:[46,63],hl:[62,93],hr:[64,93],fl:[68,124],fr:[71,124]};
+const AFA={p:[54,80],n:[54,48],hl:[57,79],hr:[59,79],fl:[30,122],fr:[76,124]};
 const EXS=[
- {id:"resp",n:"Respiração com braços",cat:"Respiração",lv:1,seat:true,dur:8,poses:[ST,PZ({el:[50,18],hl:[54,2],er:[70,18],hr:[66,2]})],dose:"5 respirações",
+ {id:"resp",n:"Respiração com braços",cat:"Respiração",lv:1,seat:true,dur:8,poses:[FST,FP({hl:[50,11],hr:[70,11]})],dose:"5 respirações",
   steps:["Em pé ou sentado, braços soltos.","Puxe o ar pelo nariz subindo os braços devagar.","Solte o ar pela boca descendo os braços."],tip:"Se ficar tonto, pare e respire normalmente."},
- {id:"sentar",n:"Levantar e sentar da cadeira",cat:"Força",lv:2,seat:true,prop:"chair",dur:3.2,poses:[SEAT,{h:[60,20],n:[60,33],p:[58,72],el:[70,50],hl:[84,50],er:[72,50],hr:[86,50],kl:[62,100],fl:[68,127],kr:[64,100],fr:[72,127]}],dose:"2 séries de 8",
+ {id:"sentar",n:"Levantar e sentar da cadeira",cat:"Força",lv:2,seat:true,v:"s",prop:"chair",ep:[0,1],back:true,gh:2,dur:4.4,poses:[SEATED,{p:[52,90],n:[73,65],hl:[66,93],hr:[68,93],fl:[68,124],fr:[71,124]},{p:[64,75],n:[66,43],hl:[92,54],hr:[94,54],fl:[68,124],fr:[71,124]},{p:[52,90],n:[73,65],hl:[66,93],hr:[68,93],fl:[68,124],fr:[71,124]}],dose:"2 séries de 8",
   steps:["Sente na ponta de uma cadeira firme, pés no chão.","Incline o tronco para a frente e levante empurrando o chão.","Sente de novo devagar, controlando a descida."],tip:"Use as mãos na coxa ou na cadeira se precisar."},
- {id:"marcha",n:"Marcha parada",cat:"Cardio leve",lv:2,dur:1.6,poses:[PZ({kl:[68,86],fl:[64,108],el:[52,52],hl:[56,68],er:[74,46],hr:[80,36]}),PZ({kr:[70,86],fr:[66,108],er:[68,52],hr:[64,68],el:[46,46],hl:[40,36]})],dose:"2 minutos",
+ {id:"marcha",n:"Marcha parada",cat:"Cardio leve",lv:2,v:"s",ep:[-1,1],gh:-1,dur:1.8,poses:[SP({fl:[67,103],hl:[46,72],hr:[73,62]}),SP({fr:[68,103],hl:[73,62],hr:[46,72]})],dose:"2 minutos",
   steps:["Fique em pé, perto de uma parede se quiser apoio.","Levante um joelho de cada vez, no seu ritmo.","Balance os braços junto com as pernas."],tip:"Pode fazer sentado, só levantando os joelhos."},
- {id:"lateral",n:"Elevação lateral de braços",cat:"Força",lv:2,seat:true,dur:2.8,poses:[ST,PZ({el:[42,34],hl:[24,32],er:[78,34],hr:[96,32]})],dose:"2 séries de 10",
+ {id:"lateral",n:"Elevação lateral de braços",cat:"Força",lv:2,seat:true,dur:2.8,poses:[FST,FP({hl:[18,47],hr:[102,47]})],dose:"2 séries de 10",
   steps:["Braços ao lado do corpo, ombros relaxados.","Suba os braços pelos lados até a altura dos ombros.","Desça devagar."],tip:"Garrafas de água servem de peso. Sem peso também vale."},
- {id:"parede",n:"Flexão na parede",cat:"Força",lv:2,prop:"wall",dur:2.8,poses:[{h:[84,30],n:[80,40],p:[62,80],el:[92,46],hl:[103,46],er:[92,48],hr:[103,48],kl:[52,104],fl:[44,127],kr:[54,104],fr:[46,127]},{h:[92,36],n:[88,46],p:[66,82],el:[90,62],hl:[103,48],er:[90,64],hr:[103,50],kl:[54,105],fl:[44,127],kr:[56,105],fr:[46,127]}],dose:"2 séries de 8",
+ {id:"parede",n:"Flexão na parede",cat:"Força",lv:2,v:"s",prop:"wall",wx:104,ep:[0,1],dur:2.8,poses:[{p:[64.5,78],n:[72,47],hl:[100,52],hr:[100,54],fl:[52,124],fr:[54,124]},{p:[71,79],n:[83,49],hl:[100,52],hr:[100,54],fl:[52,124],fr:[54,124]}],dose:"2 séries de 8",
   steps:["Mãos na parede na altura do peito, um passo para trás.","Dobre os cotovelos aproximando o peito da parede.","Empurre a parede e volte, corpo reto."],tip:"Quanto mais perto da parede, mais fácil."},
- {id:"ponte",n:"Ponte no chão ou na cama",cat:"Força",lv:2,prop:"mat",dur:3,poses:[{h:[16,116],n:[26,118],p:[60,122],el:[36,124],hl:[48,126],er:[38,124],hr:[50,126],kl:[80,100],fl:[92,126],kr:[82,100],fr:[94,126]},{h:[16,116],n:[26,116],p:[60,100],el:[36,124],hl:[48,126],er:[38,124],hr:[50,126],kl:[82,92],fl:[92,126],kr:[84,92],fr:[94,126]}],dose:"2 séries de 10",
+ {id:"ponte",n:"Ponte no chão ou na cama",cat:"Força",lv:2,v:"s",prop:"mat",kp:[0,-1],ep:[0,-1],dur:3,poses:[{p:[60,119],n:[28,119],hl:[62,122],hr:[64,122],fl:[88,122],fr:[90,122]},{p:[60,101],n:[30,117],hl:[62,122],hr:[64,122],fl:[88,122],fr:[90,122]}],dose:"2 séries de 10",
   steps:["Deite de barriga para cima, joelhos dobrados.","Suba o quadril apertando o bumbum.","Segure 2 segundos e desça devagar."],tip:"Não force a lombar. Suba só até onde for confortável."},
- {id:"ombros",n:"Círculos com os braços",cat:"Mobilidade",lv:1,seat:true,dur:3.2,poses:[PZ({el:[40,40],hl:[24,34],er:[80,40],hr:[96,34]}),PZ({el:[40,40],hl:[20,44],er:[80,40],hr:[100,44]}),PZ({el:[40,40],hl:[26,50],er:[80,40],hr:[94,50]}),PZ({el:[40,40],hl:[30,40],er:[80,40],hr:[90,40]})],dose:"10 para cada lado",
+ {id:"ombros",n:"Círculos com os braços",cat:"Mobilidade",lv:1,seat:true,gh:-1,dur:3.2,poses:[FP({hl:[17,40],hr:[103,40]}),FP({hl:[11,47],hr:[109,47]}),FP({hl:[17,54],hr:[103,54]}),FP({hl:[23,47],hr:[97,47]})],dose:"10 para cada lado",
   steps:["Abra os braços na altura dos ombros.","Faça círculos pequenos com as mãos.","Troque o sentido na metade."],tip:"Círculos pequenos já bastam. Ombro não deve doer."},
- {id:"perna",n:"Extensão de perna sentado",cat:"Força",lv:2,seat:true,prop:"chair",dur:2.8,poses:[SEAT,Object.assign({},SEAT,{kr:[72,90],fr:[104,86]})],dose:"10 em cada perna",
+ {id:"perna",n:"Extensão de perna sentado",cat:"Força",lv:2,seat:true,v:"s",prop:"chair",ep:[0,1],dur:2.8,poses:[SEATED,Object.assign({},SEATED,{fr:[91,93]})],dose:"10 em cada perna",
   steps:["Sente com as costas apoiadas.","Estique uma perna até ficar reta.","Segure 2 segundos e desça. Troque de perna."],tip:"Se o joelho estalar com dor, faça menos amplitude."},
- {id:"remada",n:"Remada com toalha",cat:"Força",lv:2,seat:true,prop:"band",dur:2.6,poses:[PZ({el:[76,52],hl:[92,54],er:[78,54],hr:[94,56]}),PZ({el:[46,58],hl:[64,56],er:[48,60],hr:[66,58]})],dose:"2 séries de 12",
+ {id:"remada",n:"Remada com toalha",cat:"Força",lv:2,seat:true,v:"s",prop:"band",ep:[-1,.4],dur:2.6,poses:[SP({hl:[90,62],hr:[92,62]}),SP({hl:[70,70],hr:[72,70]})],dose:"2 séries de 12",
   steps:["Segure uma toalha esticada com as duas mãos.","Puxe em direção à barriga, cotovelos para trás.","Estique os braços de novo devagar."],tip:"Aperte as escápulas, como se fosse fechar um livro nas costas."},
- {id:"calcanhar",n:"Elevação de calcanhar",cat:"Força",lv:2,prop:"wall",dur:2.4,poses:[ST,Object.assign(shift(ST,0,-6,["fl","fr"]),{fl:[54,124],fr:[66,124]})],dose:"2 séries de 12",
+ {id:"calcanhar",n:"Elevação de calcanhar",cat:"Força",lv:2,v:"s",prop:"wall",wx:90,ep:[0,1],dur:2.4,poses:[SP({hl:[87,60],hr:[87,62]}),{p:[58,67],n:[59,35],hl:[87,60],hr:[87,62],fl:[58,117],fr:[61,117]}],dose:"2 séries de 12",
   steps:["Em pé, mãos apoiadas numa parede ou cadeira.","Suba na ponta dos pés.","Desça devagar."],tip:"Bom para circulação e equilíbrio."},
- {id:"passo",n:"Passo lateral",cat:"Cardio leve",lv:2,dur:2,poses:[Object.assign(shift(ST,-10,0),{fl:[40,127],kl:[42,100]}),Object.assign(shift(ST,10,0),{fr:[80,127],kr:[78,100]})],dose:"2 minutos",
+ {id:"passo",n:"Passo lateral",cat:"Cardio leve",lv:2,gh:-1,dur:3.2,poses:[mv(FST,-14),FP({p:[60,76],n:[60,44],hl:[44,80],hr:[76,80],fl:[40,124],fr:[80,124]}),mv(FST,14),FP({p:[60,76],n:[60,44],hl:[44,80],hr:[76,80],fl:[40,124],fr:[80,124]})],dose:"2 minutos",
   steps:["Dê um passo para o lado e junte os pés.","Volte para o outro lado.","Mantenha um ritmo confortável."],tip:"Aumente o ritmo só se estiver bem."},
- {id:"alonga",n:"Alongamento lateral",cat:"Mobilidade",lv:1,seat:true,dur:4,poses:[ST,PZ({h:[52,22],n:[56,34],er:[60,16],hr:[48,6],el:[48,52],hl:[46,70]})],dose:"3 vezes para cada lado",
+ {id:"alonga",n:"Alongamento lateral",cat:"Mobilidade",lv:1,seat:true,dur:4,poses:[FST,FP({n:[50,44],hl:[38,80],hr:[38,15]})],dose:"3 vezes para cada lado",
   steps:["Suba um braço por cima da cabeça.","Incline o tronco para o outro lado, devagar.","Segure 10 segundos respirando. Troque."],tip:"Estica, não dói. Se doer, diminua."},
- {id:"equil",n:"Equilíbrio com apoio",cat:"Equilíbrio",lv:2,prop:"wallL",dur:3,poses:[PZ({el:[40,48],hl:[20,48]}),PZ({el:[40,48],hl:[20,48],kr:[72,88],fr:[70,110]})],dose:"20 segundos em cada perna",
+ {id:"equil",n:"Equilíbrio com apoio",cat:"Equilíbrio",lv:2,v:"s",prop:"wall",wx:92,ep:[0,1],dur:3,poses:[SP({hl:[89,60],hr:[89,62]}),SP({hl:[89,60],hr:[89,62],fr:[44,102]})],dose:"20 segundos em cada perna",
   steps:["Fique de lado para uma parede, uma mão apoiada.","Levante um pé do chão.","Segure, respire e troque de perna."],tip:"Olhe para um ponto fixo à frente."},
- {id:"afundo",n:"Afundo (passada)",cat:"Força",lv:3,dur:3,poses:[PZ({kl:[48,100],fl:[40,127],kr:[70,100],fr:[80,127]}),{h:[60,34],n:[60,47],p:[60,86],el:[52,64],hl:[52,82],er:[68,64],hr:[68,82],kl:[44,104],fl:[40,127],kr:[72,118],fr:[84,127]}],dose:"2 séries de 8 por perna",
+ {id:"afundo",n:"Afundo (passada)",cat:"Força",lv:3,v:"s",ep:[-1,0],dur:3,poses:[AFA,Object.assign({},AFA,{p:[52,96],n:[53,64],hl:[56,95],hr:[58,95]})],dose:"2 séries de 8 por perna",
   steps:["Dê um passo grande à frente.","Desça o joelho de trás em direção ao chão.","Suba empurrando com a perna da frente."],tip:"O joelho da frente não passa da ponta do pé."},
- {id:"polichinelo",n:"Polichinelo sem pulo",cat:"Cardio leve",lv:3,dur:1.8,poses:[ST,PZ({el:[46,18],hl:[40,4],er:[74,18],hr:[80,4],kr:[74,100],fr:[84,127]})],dose:"3 séries de 30 segundos",
+ {id:"polichinelo",n:"Polichinelo sem pulo",cat:"Cardio leve",lv:3,gh:-1,dur:3.6,poses:[FST,{p:[66,75],n:[66,43],hl:[48,12],hr:[84,12],fl:[54,124],fr:[84,124]},FST,{p:[54,75],n:[54,43],hl:[36,12],hr:[72,12],fl:[36,124],fr:[66,124]}],dose:"3 séries de 30 segundos",
   steps:["Abra um pé para o lado e suba os braços.","Volte ao centro.","Alterne o lado."],tip:"Sem pular: mais seguro para joelhos e coluna."},
- {id:"agacha",n:"Agachamento livre",cat:"Força",lv:4,dur:3,poses:[PZ({el:[70,50],hl:[84,50],er:[72,50],hr:[86,50]}),{h:[56,42],n:[58,54],p:[46,92],el:[72,58],hl:[88,58],er:[74,58],hr:[90,58],kl:[66,100],fl:[58,127],kr:[70,100],fr:[64,127]}],dose:"3 séries de 10",
+ {id:"agacha",n:"Agachamento livre",cat:"Força",lv:4,v:"s",ep:[0,1],dur:3,poses:[{p:[58,74],n:[59,42],hl:[92,46],hr:[94,46],fl:[60,124],fr:[63,124]},{p:[42,98],n:[59,71],hl:[92,72],hr:[94,72],fl:[60,124],fr:[63,124]}],dose:"3 séries de 10",
   steps:["Pés na largura dos ombros.","Desça o quadril para trás, como se fosse sentar.","Suba empurrando o chão."],tip:"Calcanhares sempre no chão."}
 ];
 const EXCATS=["Força","Mobilidade","Cardio leve","Equilíbrio","Respiração"];
 const exById=id=>EXS.find(e=>e.id===id);
-/* desenha o boneco na pose inicial; o laço abaixo anima todos os bonecos da tela.
-   O movimento é o próprio conteúdo (ensina o exercício), então anima sempre e tem botão de pausar. */
-const FSEGS=[["n","p"],["n","el"],["el","hl"],["n","er"],["er","hr"],["p","kl"],["kl","fl"],["p","kr"],["kr","fr"]];
+/* desenha a pessoa na pose inicial; o laço abaixo anima todas as pessoas da tela.
+   O movimento é o próprio conteúdo (ensina o exercício), então anima sempre e tem botão de pausar.
+   A sombra clara atrás mostra até onde o movimento vai. */
 const figSeq=ex=>ex.poses.length>2?[...ex.poses,ex.poses[0]]:[ex.poses[0],ex.poses[1],ex.poses[0]];
-function fig(ex,cls="",speed=1){const P=ex.poses[0];
-  const props={chair:`<path class="prop" d="M30 92H60M32 92V127M58 92V127M30 92V58"/>`,wall:`<path class="prop" d="M106 20V127"/>`,wallL:`<path class="prop" d="M16 20V127"/>`,mat:`<path class="prop" d="M6 129H112" stroke-width="4"/>`}[ex.prop]||"";
-  return`<svg class="fig ${cls}" data-ex="${ex.id}" data-speed="${speed}" viewBox="0 0 120 136" role="img" aria-label="Demonstração animada: ${esc(ex.n)}"><line class="ground" x1="4" y1="130" x2="116" y2="130"/>${props}
-    ${FSEGS.map(([a,b])=>`<line class="limb" data-s="${a} ${b}" x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join("")}${ex.prop==="band"?`<line class="band" data-s="hl hr" x1="${P.hl[0]}" y1="${P.hl[1]}" x2="${P.hr[0]}" y2="${P.hr[1]}"/>`:""}
-    <circle class="head" cx="${P.h[0]}" cy="${P.h[1]}" r="9"/></svg>`}
+const fn1=v=>v.toFixed(1);
+/* parte do corpo: cápsula que afina de wa (em a) para wb (em b) */
+function fcap(a,b,wa,wb){const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||.01,px=-dy/L,py=dx/L,ra=wa/2,rb=wb/2;
+  return`M${fn1(a[0]+px*ra)} ${fn1(a[1]+py*ra)}L${fn1(b[0]+px*rb)} ${fn1(b[1]+py*rb)}A${fn1(rb)} ${fn1(rb)} 0 0 0 ${fn1(b[0]-px*rb)} ${fn1(b[1]-py*rb)}L${fn1(a[0]-px*ra)} ${fn1(a[1]-py*ra)}A${fn1(ra)} ${fn1(ra)} 0 0 0 ${fn1(a[0]+px*ra)} ${fn1(a[1]+py*ra)}Z`}
+const fcirc=(c,r)=>`M${fn1(c[0]-r)} ${fn1(c[1])}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0Z`;
+const fadd=(a,b,k=1)=>[a[0]+b[0]*k,a[1]+b[1]*k];
+/* cotovelo/joelho: dois ossos de a até o alvo t, dobrando para o lado de pref */
+function fik(a,t,l1,l2,pref){let dx=t[0]-a[0],dy=t[1]-a[1];const D=Math.hypot(dx,dy)||.01;dx/=D;dy/=D;const d=Math.min(D,l1+l2-.01);
+  const ca=Math.max(-1,Math.min(1,(l1*l1+d*d-l2*l2)/(2*l1*d))),sa=Math.sqrt(1-ca*ca);
+  const j1=[a[0]+l1*(dx*ca-dy*sa),a[1]+l1*(dy*ca+dx*sa)],j2=[a[0]+l1*(dx*ca+dy*sa),a[1]+l1*(dy*ca-dx*sa)];
+  const j=((j1[0]-j2[0])*pref[0]+(j1[1]-j2[1])*pref[1])>=0?j1:j2,ex=t[0]-j[0],ey=t[1]-j[1],E=Math.hypot(ex,ey)||.01;
+  return[j,[j[0]+ex/E*l2,j[1]+ey/E*l2]]}
+/* lista fixa de partes [classe, desenho]; a ordem nunca muda, só as posições */
+function figBody(P,ex){const side=ex.v==="s",out=[];
+  const p=P.p;let ux=P.n[0]-p[0],uy=P.n[1]-p[1];const L=Math.hypot(ux,uy)||1;ux/=L;uy/=L;
+  const u=[ux,uy],r=[-uy,ux],n=fadd(p,u,FBD.T),S=fadd(n,u,-3),W=side?0:1,fw=side?r:[0,0];
+  const sh={l:fadd(S,r,-9*W),r:fadd(S,r,9*W)},hp={l:fadd(p,r,-5.5*W),r:fadd(p,r,5.5*W)};
+  const arm=(s,dim)=>{const so=sh[s],[e,h]=fik(so,P["h"+s],FBD.UA,FBD.FA,ex.ep||(side?[-1,.6]:[s==="l"?-1:1,.3]));
+    out.push(["sk"+dim,fcap(so,e,7,6)],["sh"+dim,fcap(so,fadd(so,[e[0]-so[0],e[1]-so[1]],.42),9,8)],["sk"+dim,fcap(e,h,6,5)],["sk"+dim,fcirc(h,3.3)]);
+    if(ex.prop==="band"&&s==="r")out.push(["band",fcap([h[0]+1,h[1]-8],[h[0]+1,h[1]+8],5,5)],["sk",fcirc(h,3.3)])};
+  const leg=(s,dim)=>{const ho=hp[s],[k,a]=fik(ho,P["f"+s],FBD.TH,FBD.SH,ex.kp||(side?[1,0]:[s==="l"?-1:1,0]));
+    out.push(["sk"+dim,fcap(ho,k,10,7.5)],["sk"+dim,fcap(k,a,7.5,5.5)],["pt"+dim,fcap(ho,fadd(ho,[k[0]-ho[0],k[1]-ho[1]],.45),11,10)]);
+    let heel,toe;
+    if(!side){heel=[a[0]+(s==="l"?2:-2),a[1]+2];toe=[a[0]+(s==="l"?-3.5:3.5),a[1]+2.5]}
+    else if(a[1]>FBD.FL-10){heel=[a[0]-2,a[1]+2];toe=[a[0]+8.5,Math.max(a[1]+2,FBD.FL+2)]}
+    else{const sx=a[0]-k[0],sy=a[1]-k[1],sl=Math.hypot(sx,sy)||1,c1=[-sy/sl,sx/sl],q=(c1[0]-c1[1])>=0?c1:[-c1[0],-c1[1]];heel=fadd(a,[sx/sl,sy/sl],1.5);toe=fadd(a,q,9)}
+    out.push(["sho"+dim,fcap(heel,toe,6.5,6)])};
+  const quad=(c,pts)=>out.push([c,"M"+pts.map(q=>fn1(q[0])+" "+fn1(q[1])).join("L")+"Z"]);
+  const tw=side?7:10.5,hw=side?7.5:8.5,C=fadd(n,u,13);
+  if(side){arm("l","2");leg("l","2")}
+  out.push(["sk",fcap(fadd(n,u,-1),fadd(n,u,6),6.5,6)]);
+  quad("tor",[fadd(fadd(n,u,-1.5),r,-tw),fadd(fadd(n,u,-1.5),r,tw),fadd(p,r,hw),fadd(p,r,-hw)]);
+  if(!side){leg("l","");leg("r","")}
+  quad("sht",[fadd(fadd(p,u,5),r,-hw-.5),fadd(fadd(p,u,5),r,hw+.5),fadd(fadd(p,u,-5),r,hw+1),fadd(fadd(p,u,-5),r,-hw-1)]);
+  if(side)leg("r","");
+  out.push(["sk",fcirc(C,9)]);
+  /* cabelo: arco na parte de cima da cabeça (de lado, mais para trás) */
+  const hv=side?r:r,[t1,t2]=side?[55,235]:[8,172],pts=[];
+  for(let i=0;i<=10;i++){const t=(t1+(t2-t1)*i/10)*Math.PI/180;pts.push(fadd(fadd(C,hv,Math.cos(t)*9.8),u,Math.sin(t)*9.8))}
+  const ctl=side?fadd(fadd(C,u,2.5),hv,-1.5):fadd(C,u,5.5);
+  out.push(["hair",`M${pts.map(q=>fn1(q[0])+" "+fn1(q[1])).join("L")}Q${fn1(ctl[0])} ${fn1(ctl[1])} ${fn1(pts[0][0])} ${fn1(pts[0][1])}Z`]);
+  out.push(...(side?[fadd(fadd(C,fw,5),u,.8)]:[fadd(fadd(C,r,-3.3),u,-.5),fadd(fadd(C,r,3.3),u,-.5)]).map(q=>["eye",fcirc(q,1.2)]));
+  if(side)arm("r","");else{arm("l","");arm("r","")}
+  return out}
+function figShadow(P){const xs=[P.fl[0],P.fr[0]];[P.p,P.n].forEach(q=>{if(q[1]>100)xs.push(q[0])});const a=Math.min(...xs),b=Math.max(...xs);return[(a+b)/2,(b-a)/2+14]}
+function fig(ex,cls="",speed=1){const P=ex.poses[0],gi=ex.gh==null?1:ex.gh,[sx,sr]=figShadow(P);
+  const props={chair:`<g class="chair"><rect x="22" y="101" width="34" height="5" rx="2"/><rect x="22" y="64" width="5" height="42" rx="2"/><rect x="24" y="105" width="3.5" height="23"/><rect x="51" y="105" width="3.5" height="23"/></g>`,
+    wall:`<rect class="wall" x="${ex.wx||104}" y="6" width="${120-(ex.wx||104)}" height="122"/><line class="wall-e" x1="${ex.wx||104}" y1="6" x2="${ex.wx||104}" y2="128"/>`,
+    mat:`<rect class="mat" x="6" y="125" width="108" height="4" rx="2"/>`}[ex.prop]||"";
+  const ghost=gi>=0?`<g class="ghost">${figBody(ex.poses[gi],ex).map(([,d])=>`<path d="${d}"/>`).join("")}</g>`:"";
+  return`<svg class="fig ${cls}" data-ex="${ex.id}" data-speed="${speed}" viewBox="0 0 120 136" role="img" aria-label="Demonstração animada: ${esc(ex.n)}"><line class="ground" x1="4" y1="128.5" x2="116" y2="128.5"/>${props}
+    <ellipse class="shadow" cx="${fn1(sx)}" cy="129" rx="${fn1(sr)}" ry="2.6"/>${ghost}<g class="body">${figBody(P,ex).map(([c,d])=>`<path class="${c}" d="${d}"/>`).join("")}</g></svg>`}
 const easeIO=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 function figTick(now){
   document.querySelectorAll("svg.fig[data-ex]").forEach(sv=>{if(sv.dataset.paused==="1")return;
     const ex=exById(sv.dataset.ex);if(!ex)return;if(sv._t0==null)sv._t0=now;
     const seq=figSeq(ex),n=seq.length-1,D=ex.dur*(+sv.dataset.speed||1)*1000,f=((Math.max(0,now-sv._t0)%D)/D)*n,i=Math.max(0,Math.min(n-1,Math.floor(f))),t=easeIO(f-i),A=seq[i],B=seq[i+1];
-    sv._seg=i;const pt=k=>[A[k][0]+(B[k][0]-A[k][0])*t,A[k][1]+(B[k][1]-A[k][1])*t];
-    sv.querySelectorAll("line[data-s]").forEach(l=>{const[a,b]=l.dataset.s.split(" "),p1=pt(a),p2=pt(b);l.setAttribute("x1",p1[0].toFixed(1));l.setAttribute("y1",p1[1].toFixed(1));l.setAttribute("x2",p2[0].toFixed(1));l.setAttribute("y2",p2[1].toFixed(1))});
-    const h=pt("h"),c=sv.querySelector(".head");c.setAttribute("cx",h[0].toFixed(1));c.setAttribute("cy",h[1].toFixed(1))});
+    sv._seg=i;const P={};for(const k in A)P[k]=[A[k][0]+(B[k][0]-A[k][0])*t,A[k][1]+(B[k][1]-A[k][1])*t];
+    const parts=figBody(P,ex),els=sv._els||(sv._els=sv.querySelectorAll(".body path"));parts.forEach(([,d],j)=>{if(els[j])els[j].setAttribute("d",d)});
+    const sh=sv._sh||(sv._sh=sv.querySelector(".shadow")),[sx,sr]=figShadow(P);sh.setAttribute("cx",fn1(sx));sh.setAttribute("rx",fn1(sr))});
   requestAnimationFrame(figTick)}
 requestAnimationFrame(figTick);
 function figPause(sv,on){const now=performance.now();if(on){sv.dataset.paused="1";sv._pa=now}else{if(sv._pa!=null&&sv._t0!=null)sv._t0+=now-sv._pa;sv.dataset.paused="0"}}
@@ -3467,7 +3530,7 @@ function exDetail(id,opts={}){
   md.querySelectorAll("[data-exm]").forEach(b=>b.onclick=()=>{const v=b.dataset.exm==="vid";md.querySelectorAll("[data-exm]").forEach(x=>x.setAttribute("aria-pressed",x===b));$("#exvid").hidden=!v;$("#exstage").hidden=v;const vd=md.querySelector("#exvid video");if(vd&&!v)vd.pause()});
   /* legenda acompanha o boneco: posição inicial → movimento → volta */
   /* legenda acompanha o boneco: indo = passo 2 (o movimento), voltando = passo 3 */
-  let last=-1;const show=()=>{const sv=md.querySelector("#exfig svg");if(!sv||sv._seg==null)return;const nseg=figSeq(ex).length-1,step=nseg>2?1:(sv._seg===0?1:Math.min(2,ex.steps.length-1));if(step===last)return;last=step;
+  let last=-1;const show=()=>{const sv=md.querySelector("#exfig svg");if(!sv||sv._seg==null)return;const nseg=figSeq(ex).length-1,step=nseg>2&&!ex.back?1:(sv._seg<nseg/2?1:Math.min(2,ex.steps.length-1));if(step===last)return;last=step;
     $("#excap").textContent=`${step+1} · ${ex.steps[step]}`;md.querySelectorAll("#exst li").forEach((li,j)=>li.classList.toggle("on",j===step))};
   tick=setInterval(show,120);
   $("#expp").onclick=()=>{const sv=md.querySelector("#exfig svg");paused=!paused;figPause(sv,paused);$("#expp").innerHTML=paused?'<i data-lucide="play"></i>Continuar':'<i data-lucide="pause"></i>Pausar';icons()};
