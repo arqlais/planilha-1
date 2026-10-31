@@ -2,7 +2,7 @@
   "id": "./?teste",
   "name": "Primeiro Passo (teste)",
   "short_name": "PP Teste",
-  "description": "Modo de teste do Primeiro Passo: entre como aluno, personal ou empresa, sem senha.",
+  "description": "Modo de teste do Primeiro Passo: entre como aluno, professor ou empresa, sem senha.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "../",
