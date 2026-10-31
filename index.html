@@ -5552,8 +5552,10 @@ function marcacoesHtml(p) {
 }
 // ---------- Medidas do corpo (aluno e professor) ----------
 const BODY_FIELDS = [['peso', 'Peso', 'kg'], ['altura', 'Altura', 'cm'], ['idade', 'Idade', 'anos'],
-  ['busto', 'Busto / peito', 'cm'], ['cintura', 'Cintura', 'cm'], ['abdomen', 'Abdômen', 'cm'], ['quadril', 'Quadril', 'cm'], ['dorsal', 'Dorsal', 'cm'],
-  ['bracoD', 'Braço direito', 'cm'], ['bracoE', 'Braço esquerdo', 'cm'], ['coxaD', 'Coxa direita', 'cm'], ['coxaE', 'Coxa esquerda', 'cm'],
+  ['busto', 'Busto / peito', 'cm'], ['peitoLev', 'Peito com braço levantado', 'cm'], ['ombros', 'Ombros (deltoide)', 'cm'],
+  ['cintura', 'Cintura', 'cm'], ['abdomen', 'Abdômen', 'cm'], ['quadril', 'Quadril', 'cm'], ['dorsal', 'Dorsal', 'cm'],
+  ['bracoD', 'Braço direito', 'cm'], ['bracoE', 'Braço esquerdo', 'cm'], ['antebD', 'Antebraço direito', 'cm'], ['antebE', 'Antebraço esquerdo', 'cm'],
+  ['coxaD', 'Coxa direita', 'cm'], ['coxaE', 'Coxa esquerda', 'cm'],
   ['pantD', 'Panturrilha direita', 'cm'], ['pantE', 'Panturrilha esquerda', 'cm']];
 // Altura anotada em metros (ex.: 1,8) vira centímetros (180) só na leitura: o que está salvo não muda
 const altCm = v => (v != null && v > 0 && v < 3 ? Math.round(v * 10000) / 100 : v);
@@ -8300,6 +8302,16 @@ async function fixOnce() {
     mark('historico-antigo-religar');
     if (n) { save(); msgs.push(`${n} exercício${n === 1 ? '' : 's'} voltou a mostrar as cargas antigas.`); }
   }
+  // 1l) (31/10) Avaliação de 27/06 que o professor tinha na planilha: entra nas medidas dele (junta com o que já houver nessa data)
+  if (!done.has('medidas-2706')) {
+    const me2 = profile(ME), add = { busto: 102, peitoLev: 96, ombros: 117, abdomen: 84, quadril: 99, bracoD: 34.5, bracoE: 35, antebD: 29, antebE: 29, coxaD: 60, coxaE: 60, pantD: 36, pantE: 36 };
+    me2.body = me2.body || [];
+    let e = me2.body.find(x => x.date === '2026-06-27');
+    if (!e) { e = { id: uid(), date: '2026-06-27' }; me2.body.push(e); }
+    Object.keys(add).forEach(k => { if (e[k] == null) e[k] = add[k]; });
+    mark('medidas-2706'); save();
+    msgs.push('Sua avaliação de 27/06 foi salva em Medidas do corpo.');
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -9079,7 +9091,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '31/10-10:28';
+const APP_VERSION = '31/10-10:30';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
