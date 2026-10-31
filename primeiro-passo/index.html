@@ -360,6 +360,24 @@ body.ux .role:hover::after{opacity:1}
 .opt .ck{margin-left:auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
 .opt .ck svg{width:14px;height:14px;opacity:0}
 .opt[aria-pressed="true"]{border-color:var(--navy);background:var(--mist)}
+.vits{display:grid;gap:12px}
+.vit{display:grid;gap:10px;border:1.5px solid var(--line);border-radius:18px;padding:16px;text-align:left;background:var(--surface);width:100%;color:inherit;font:inherit}
+.vit .top{display:flex;gap:12px;align-items:center}
+.vit .top .av{width:48px;height:48px;font-size:17px;flex:none}
+.vit .top div{min-width:0}
+.vit h3{font-size:18px;margin:0}
+.vit .top small{color:var(--muted)}
+.vit p{margin:0;color:var(--ink);font-size:15px;line-height:1.5}
+.vit .chips{display:flex;gap:6px;flex-wrap:wrap}
+.vit .ck{margin-left:auto;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
+.vit .ck svg{width:15px;height:15px;opacity:0}
+.vit[aria-pressed="true"]{border-color:var(--navy);background:var(--mist)}
+.vit[aria-pressed="true"] .chip{background:var(--surface)}
+.vit[aria-pressed="true"] .ck{background:var(--navy);border-color:var(--navy);color:#fff}
+.vit[aria-pressed="true"] .ck svg{opacity:1}
+.spec-pick{display:flex;gap:8px;flex-wrap:wrap}
+.spec-pick button{border:1.5px solid var(--line);border-radius:99px;padding:7px 13px;background:var(--surface);font:inherit;font-size:14px;font-weight:600;color:var(--ink)}
+.spec-pick button[aria-pressed="true"]{border-color:var(--navy);background:var(--navy);color:#fff}
 .opt[aria-pressed="true"] .ck{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
 .opt[aria-pressed="true"] .ck svg{opacity:1}
 .parq{display:grid;gap:10px}
@@ -501,7 +519,8 @@ body.ux .role:hover::after{opacity:1}
 .plist b{text-align:right}
 
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabbar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.tabbar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:400px){.tabbar a{font-size:10.5px}}
 .tabbar a{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:grid;justify-items:center;gap:3px;padding:10px 0 12px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;position:relative}
 .tabbar a.on{color:var(--navy)}
 .tabbar a.on::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
@@ -1584,7 +1603,7 @@ const FBL=(()=>{
   F.signupAluno=async(email,pw,build)=>{F.busy=true;try{
       const cr=await auth.createUserWithEmailAndPassword(email,pw),uid=cr.user.uid;
       await loadFor(cr.user);ME=uid;F.role="aluno";build();
-      const act=DB.personals.find(p=>p.status==="ativo");S.pid=act?act.id:null;
+      if(!DB.personals.some(p=>p.id===S.pid&&p.status==="ativo"))S.pid=null;
       await db.collection("usuarios").doc(uid).set({role:"aluno",email,nome:S.profile.name,criadoEm:Date.now()});
       const d=alunoDoc(S);await db.collection("alunos").doc(uid).set(d);SYNC[uid]=snap(d);
       subs.push(db.collection("alunos").doc(uid).onSnapshot(x=>{if(x.exists){remote(uid,x.data(),x.metadata.hasPendingWrites);rerender()}},e=>warn("aluno",e)));
@@ -1637,8 +1656,13 @@ const BARRIERS=[["Vergonha do corpo","eye-off"],["Medo de ser julgado","users"],
 const GOALS=[["Me sentir melhor comigo","smile"],["Ter mais disposição","zap"],["Perder peso com saúde","scale"],["Cuidar da saúde mental","brain"],["Ganhar força e mobilidade","activity"],["Conseguir ir à academia","dumbbell"]];
 const CONTACT=[["Só mensagem","message-square","Sem câmera e sem áudio"],["Áudio","mic","Conversa por voz"],["Vídeo-chamada","video","Com câmera"]];
 const PARQ=["Algum médico já disse que você tem problema no coração e só deve fazer atividade física com orientação?","Você sente dor no peito quando faz atividade física?","No último mês, sentiu dor no peito sem estar fazendo atividade física?","Você perde o equilíbrio por tontura ou já desmaiou?","Tem algum problema nos ossos ou articulações que pode piorar com exercício?","Toma remédio para pressão arterial ou para o coração?","Sabe de algum outro motivo pelo qual não deveria fazer atividade física?"];
+/* vitrine do professor: o aluno vê isto para escolher com quem treinar */
+const SPECS=["Iniciantes","Emagrecimento","Idosos","Mobilidade","Força","Saúde mental","Gestantes","Postura","Corrida","Reabilitação"];
+const vitHtml=(p,sel,tag="div")=>`<${tag} class="vit" ${tag==="button"?`type="button" data-vit="${esc(p.id)}" aria-pressed="${!!sel}"`:""}><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3>${p.area?`<small>${esc(p.area)}</small>`:""}</div>${tag==="button"?`<span class="ck"><i data-lucide="check"></i></span>`:""}</div>
+  ${(p.spec||[]).filter(x=>x&&x!=="A definir").length?`<div class="chips">${p.spec.filter(x=>x&&x!=="A definir").map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</div>`:""}
+  <p>${p.bio?esc(p.bio):`<span style="color:var(--muted)">Ainda sem apresentação.</span>`}</p></${tag}>`;
 const NOP={id:null,name:"Seu professor",cref:"CREF a confirmar",bio:"Profissional de educação física parceiro",status:"ativo",spec:[]};
-const myP=()=>DB.personals.find(p=>p.id===(S.pid||(FB?null:"p1")))||DB.personals.find(p=>p.status==="ativo")||DB.personals[0]||NOP;
+const myP=()=>(S.pid&&DB.personals.find(p=>p.id===S.pid))||NOP;
 const PERSONAL={get name(){return myP().name},get cref(){return myP().cref},get bio(){return myP().bio||""},get initials(){return initials(myP().name)}};
 const BADGES=[["Primeiro passo","footprints","Criou seu plano"],["Primeira conversa","message-circle","Conversou com o professor"],["1º treino","flame","Concluiu o primeiro treino"],["Semana firme","calendar-check","3 treinos em uma semana"],["Nível 2","house","Chegou aos treinos em casa"],["8 treinos","award","Completou 8 treinos"],["Nível 3","trees","Primeiro encontro ao ar livre"],["Nível 4","dumbbell","Chegou à academia"]];
 
@@ -1697,7 +1721,7 @@ function earned(){const n=S.workouts.length;return[!!S.profile,S.talked,n>=1,wee
 /* ================== ROUTER ================== */
 function route(keep){
   if(FB&&!FBL.booted)return;
-  if(DEMO_AS){const w=DEMO_AS;DEMO_AS=null;history.replaceState(null,"",location.pathname+"?demo#/entrar");demoGo(w);return}
+  if(DEMO_AS){const w=DEMO_AS;DEMO_AS=null;history.replaceState(null,"",location.pathname+"?demo#/entrar");demoGo(w,true);return}
   if(DEMO&&(!location.hash||location.hash==="#/"&&!DEMO_SITE)){location.replace("#/entrar");return}
   const h=location.hash||"#/";
   const y=scrollY;demoPill(h);
@@ -2007,8 +2031,8 @@ function onboarding(){
     canNext=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(OB.email||"")&&(OB.pw||"").length>=6&&OB.pw===OB.pw2;nextLabel="Ver meu plano"}
   if(st==="resultado"){const any=OB.parq.some(x=>x===true);body=`<h2>Pronto, ${esc(OB.name.split(" ")[0])}! Seu caminho começa aqui.</h2><p class="sub">Com base nas suas respostas, preparamos seu começo.</p>
     <div class="result"><div class="rh"><small>Você começa no</small><b>Nível 1 · Conhecer</b></div><div class="rb">
-      <div class="rr"><i data-lucide="user-round-check"></i><span>Professor sugerido: <b>${PERSONAL.name}</b>, ${PERSONAL.bio.toLowerCase()}</span></div>
-      <div class="rr"><i data-lucide="map-pin"></i><span>Você está em <b>${esc(OB.city||"")} / ${OB.uf||""}</b>. Os níveis 1 e 2 são online. Quando chegar aos encontros presenciais, indicamos um professor parceiro perto de você.</span></div>
+      <div class="rr"><i data-lucide="user-round-search"></i><span>No app, na aba <b>Professores</b>, você conhece cada professor e escolhe o seu.</span></div>
+      <div class="rr"><i data-lucide="map-pin"></i><span>Você está em <b>${esc(OB.city||"")} / ${OB.uf||""}</b>. Os níveis 1 e 2 são online, de qualquer lugar.</span></div>
       <div class="rr"><i data-lucide="${OB.contact==="Só mensagem"?"message-square":OB.contact==="Áudio"?"mic":"video"}"></i><span>Primeira conversa por <b>${OB.contact.toLowerCase()}</b>, de 15 minutos e gratuita.</span></div>
       ${OB.plan?`<div class="rr"><i data-lucide="tag"></i><span>Plano escolhido: <b>${planLabel(OB.plan)}</b>. Você só paga depois da primeira conversa.</span></div>`:""}
       <div class="rr"><i data-lucide="calendar"></i><span>Disponível: <b>${OB.days.join(", ")}</b>, de ${OB.period.toLowerCase()}.</span></div>
@@ -2031,9 +2055,9 @@ function onboarding(){
   $("#next").onclick=next;icons();
   async function next(){if(OB.step<OB_STEPS.length-1){OB.step++;onboarding();scrollTo(0,0);return}
     const acc={email:(OB.email||"").toLowerCase(),h:FB?null:await hashPw(OB.pw||"")};
-    const build=()=>{S=fresh();if(!FB)S.account=acc;S.info={name:OB.name.trim(),email:acc.email};S.plan=OB.plan||null;S.profile={uf:OB.uf,city:(OB.city||"").trim(),name:OB.name.trim(),goals:OB.goals,barriers:OB.barriers,days:OB.days,period:OB.period,contact:OB.contact,medical:OB.parq.some(x=>x===true),since:Date.now()};
-    S.messages=[{from:"them",text:FB?`Oi, ${OB.name.trim().split(" ")[0]}! Que bom ter você aqui. Seu professor vai ler suas respostas e falar com você por esta conversa.`:`Oi, ${OB.name.trim().split(" ")[0]}! Eu sou a ${PERSONAL.name.split(" ")[0]}, seu professor. Li suas respostas e fico feliz que você esteja aqui.`,t:nowT()},{from:"them",text:"Quando quiser, agende nossa primeira conversa na aba Agenda. Pode ser só por mensagem, sem pressa nenhuma.",t:nowT()}];
-    S.unread=2};
+    const build=()=>{S=fresh();if(!FB)S.account=acc;S.pid=null;S.info={name:OB.name.trim(),email:acc.email};S.plan=OB.plan||null;S.profile={uf:OB.uf,city:(OB.city||"").trim(),name:OB.name.trim(),goals:OB.goals,barriers:OB.barriers,days:OB.days,period:OB.period,contact:OB.contact,medical:OB.parq.some(x=>x===true),since:Date.now()};
+    S.messages=[{from:"them",text:`Oi, ${OB.name.trim().split(" ")[0]}! Que bom ter você aqui. Agora é só escolher o seu professor na aba Professores. Ele vai ler suas respostas e falar com você por esta conversa.`,t:nowT()}];
+    S.unread=1};
     if(FB){const bt=$("#next");bt.disabled=true;try{await FBL.signupAluno(acc.email,OB.pw,build)}catch(x){bt.disabled=false;toast(x.msg);if(/e-mail|senha/i.test(x.msg)){OB.step=OB_STEPS.indexOf("acesso");onboarding()}return}}
     else{build();save()}
     OB.step=0;OB.pw=OB.pw2="";location.hash=TEST_MODE?"#/app":"#/app/verificacao";setTimeout(()=>{confetti();toast("Conquista: Primeiro passo!")},300)}
@@ -2041,8 +2065,8 @@ function onboarding(){
 
 /* ================== APP ================== */
 function app(tab){
-  const tabs=[["inicio","house","Início"],["treinos","circle-play","Treinos"],["agenda","calendar-days","Agenda"],["mensagens","message-circle","Conversa"],["perfil","user-round","Perfil"]];
-  const v={inicio:vHome,treinos:vTreinos,agenda:vAgenda,mensagens:vChat,perfil:vPerfil,verificacao:vVerif,dados:vDados}[tab]||vHome;
+  const tabs=[["inicio","house","Início"],["treinos","circle-play","Treinos"],["agenda","calendar-days","Agenda"],["professores","user-round-search","Professores"],["mensagens","message-circle","Conversa"],["perfil","user-round","Perfil"]];
+  const v={inicio:vHome,treinos:vTreinos,agenda:vAgenda,professores:vProfs,mensagens:vChat,perfil:vPerfil,verificacao:vVerif,dados:vDados}[tab]||vHome;
   if(tab==="mensagens")S.unread=0,save();
   $("#root").innerHTML=`<div class="app">
     <header class="app-top"><div class="in"><a class="brand" href="#/" aria-label="Site"><span class="mk"><i data-lucide="footprints"></i></span></a><div><small style="color:var(--muted);font-weight:600;font-size:13px">Nível ${S.level}</small><div style="font-weight:700;line-height:1.1">${LEVELS[S.level-1].t}</div></div>
@@ -2280,6 +2304,19 @@ function vAgenda(){
 }
 
 /* chat */
+/* ---------- professores: o aluno conhece cada um pela vitrine e escolhe o seu ---------- */
+function vProfs(){
+  const mine=S.pid&&findP(S.pid),ps=DB.personals.filter(p=>p.status==="ativo"&&p.id!==S.pid).sort((a,b)=>(b.uf===S.profile.uf)-(a.uf===S.profile.uf));
+  $("#view").innerHTML=`<div class="hello"><small>Professores</small><h2>${mine?"Seu professor":"Escolha seu professor"}</h2></div>
+  ${mine?`<div class="vits">${vitHtml(mine)}</div><p class="week-note" style="margin:10px 0 22px">Quer trocar de professor? Fale com a gente pela central de ajuda.</p>`:`<p class="sub">Leia a apresentação de cada um e escolha com quem você se sente mais à vontade. Ele vai ler suas respostas e falar com você pela Conversa.</p>`}
+  ${!mine?(ps.length?`<div class="vits">${ps.map(p=>`<div>${vitHtml(p)}<button class="btn btn-primary" data-pick="${esc(p.id)}" style="width:100%;margin-top:8px"><i data-lucide="user-round-check"></i>Escolher ${esc(p.name.split(" ")[0])}</button></div>`).join("")}</div>`:`<div class="alert ok"><i data-lucide="user-round-search"></i><span>Nosso time de professores está sendo montado. Assim que tiver alguém, ele aparece aqui.</span></div>`)
+   :(ps.length?`<div class="block-h"><h3>Outros professores</h3></div><div class="vits">${ps.map(p=>vitHtml(p)).join("")}</div>`:"")}`;
+  icons();
+  document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const p=findP(b.dataset.pick);if(!p)return;
+    sheet("user-round-check",`Escolher ${p.name}?`,"Ele passa a ser o seu professor: vê suas respostas, monta seus treinos e conversa com você.","Escolher",{cancel:"Agora não",onOk:()=>{S.pid=p.id;
+      if(!FB){S.messages.push({from:"them",text:`Oi, ${first()}! Eu sou o ${p.name.split(" ")[0]}, seu professor. Li suas respostas e fico feliz que você esteja aqui. Quando quiser, agende nossa primeira conversa na aba Agenda.`,t:nowT()});S.unread++}
+      save();toast(`Pronto! ${p.name.split(" ")[0]} é o seu professor.`);route(true)}})});
+}
 function vChat(){
   const quick=["Estou com vergonha de começar","Posso treinar sentado?","Hoje não estou bem","Quero mudar meu horário"];
   $("#view").innerHTML=`<div class="chat">
@@ -2445,13 +2482,13 @@ syncPrices();
 /* o cliente deste aparelho visto pelos painéis */
 /* cada aluno (o deste aparelho ou os carregados do banco) visto como cliente pelos painéis */
 function toC(id){const a=A(id);if(!a||!a.profile)return null;const p=a.profile;
-  return{id,you:id===ME,uf:p.uf||(FB?"":"SP"),city:p.city||"",name:p.name,level:a.level,pid:a.pid||(FB?null:"p1"),since:p.since,goals:p.goals||[],barriers:p.barriers||[],contact:p.contact||"Só mensagem",period:p.period||"Manhã",days:p.days||[],
+  return{id,you:id===ME,uf:p.uf||(FB?"":"SP"),city:p.city||"",name:p.name,level:a.level,pid:a.pid||null,since:p.since,goals:p.goals||[],barriers:p.barriers||[],contact:p.contact||"Só mensagem",period:p.period||"Manhã",days:p.days||[],
     medical:!!p.medical,medOk:!!p.medOk,workouts:a.workouts||[],talked:!!a.talked,outdoor:a.outdoor||0,gym:a.gymsessions||0,status:a.status||"ativo",msgs:a.messages||[],phone:FB?((a.info||{}).tel||"—"):"este aparelho"}}
 const meC=()=>toC(ME);
 const allClients=()=>DB.clients.concat(alIds().map(toC).filter(Boolean));
 const findC=id=>allClients().find(c=>c.id===id);
 const findP=id=>DB.personals.find(p=>p.id===id);
-function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||(FB?null:"p1"),ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
+function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||null,ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
 function updC(id,patch){
   const a=A(id);if(a){const map={level:"level",talked:"talked",outdoor:"outdoor",gym:"gymsessions",status:"status",pid:"pid"};
     for(const k in patch){if(k==="medOk")a.profile.medOk=patch[k];else a[map[k]||k]=patch[k]}if(patch.talked)autoRx(a);saveA(id)}
@@ -2605,14 +2642,14 @@ let DEMO_SITE=false,DEMO_GO=null;
 let DEMO_AS=DEMO?({aluno:"aluno",professor:"personal",empresa:"empresa"})[(location.search.match(/[?&]como=(\w+)/)||[])[1]]||null:null;
 function demoPill(h){let b=$("#demopill");if(!DEMO||h==="#/entrar"){if(b)b.remove();return}
   if(!b){b=document.createElement("a");b.id="demopill";b.href="#/entrar";b.innerHTML=`<i data-lucide="repeat"></i>Trocar perfil`;document.body.appendChild(b)}}
-function demoGo(who){
+function demoGo(who,direct){
   if(who==="aluno"){if(S.profile){S.loggedOut=false;save();location.hash="#/app"}else location.hash="#/comecar";return}
-  if(who==="personal"){demoPersonal();return}
+  if(who==="personal"){demoPersonal(direct);return}
   DEMO_GO=who;location.hash="#/entrar/"+who}
 /* teste: escolher qual professor entrar, ou criar uma */
-function demoPersonal(){
+function demoPersonal(direct){
   const ps=DB.personals;if(!ps.length){location.hash="#/entrar/nova-personal";return}
-  if(ps.length===1){const p=ps[0];if(p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:p.id});location.hash="#/personal";return}
+  if(direct&&ps.length===1){const p=ps[0];if(p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:p.id});location.hash="#/personal";return}
   const el=document.createElement("div");el.className="modal";el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Entrar como professor"><div class="big"><i data-lucide="dumbbell"></i></div><h3>Entrar como professor</h3>
     <div class="demo-ps">${ps.map(p=>`<button class="btn btn-primary" data-dp="${p.id}">${esc(p.name)}</button>`).join("")}
     <a class="btn btn-ghost" href="#/entrar/nova-personal" data-dpn><i data-lucide="user-plus"></i>Criar outro professor</a></div></div>`;
@@ -3657,7 +3694,8 @@ function pDados(p){
     ${infoForm("pi",inf,INFO_FIELDS)}
     <div class="set mt"><div class="field" style="margin:0"><label>CPF</label><input value="${esc(inf.cpf||"***.***.***-**")}" disabled></div><div class="field" style="margin:0"><label>CREF</label><input value="${esc(p.cref)}" disabled></div></div>
     <div class="field mt" style="margin-bottom:0"><label for="pi-area">Região onde atende</label><input id="pi-area" value="${esc(p.area||"")}"></div>
-    <div class="field mt" style="margin-bottom:0"><label for="pi-bio">Sobre você (aparece para os alunos)</label><textarea id="pi-bio" rows="3">${esc(p.bio||"")}</textarea></div>
+    <div class="field mt" style="margin-bottom:0"><label for="pi-bio">Sua apresentação (o aluno lê isto para escolher você)</label><textarea id="pi-bio" rows="4" maxlength="400" placeholder="Ex.: Trabalho com iniciantes há 5 anos. Gosto de ir no seu ritmo, sem pressa e sem julgamento.">${esc(p.bio||"")}</textarea></div>
+    <div class="field mt" style="margin-bottom:0"><label>Especialidades</label><div class="spec-pick" id="pi-spec">${SPECS.map(x=>`<button type="button" data-spec="${esc(x)}" aria-pressed="${(p.spec||[]).includes(x)}">${esc(x)}</button>`).join("")}</div></div>
     <button class="btn btn-primary mt"><i data-lucide="save"></i>Salvar alterações</button></form>
   <div style="display:grid;gap:14px;align-content:start">
     <section class="card"><div class="card-h"><h3>Meu contrato</h3><button type="button" class="link" data-termsp>Ver termo</button></div>
@@ -3665,9 +3703,11 @@ function pDados(p){
     <section class="card"><div class="card-h"><h3>Documentos</h3></div><div class="chk">${[["doc","Documento com foto"],["selfie","Selfie comparada ao documento"],["cref","CREF ativo no conselho"],["crim","Certidão de antecedentes criminais"]].map(([k,t])=>`<div class="${s[k]?"y":""}"><i data-lucide="${s[k]?"circle-check":"circle-dashed"}"></i>${t}</div>`).join("")}</div>
       <p class="week-note">Para atualizar um documento, envie pela central. A empresa confere e marca aqui.</p></section>
   </div></div>
+  <section class="card mt"><div class="card-h"><h3>Sua vitrine</h3></div><p class="week-note" style="margin:0 0 12px">É assim que o aluno vê você na hora de escolher o professor. Mude a apresentação e as especialidades acima e toque em Salvar.</p>${vitHtml(p)}</section>
   ${payoutForm(p)}
   ${privacyBlock()}`;
-  $("#pdf").onsubmit=e=>{e.preventDefault();readInfo($("#pdf"),inf);if(inf.name)p.name=inf.name;if(inf.email)p.email=inf.email;p.area=$("#pi-area").value.trim();p.bio=$("#pi-bio").value.trim();saveDB();toast("Dados salvos");route(true)};
+  document.querySelectorAll("#pi-spec [data-spec]").forEach(b=>b.onclick=()=>b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true"));
+  $("#pdf").onsubmit=e=>{e.preventDefault();readInfo($("#pdf"),inf);if(inf.name)p.name=inf.name;if(inf.email)p.email=inf.email;p.area=$("#pi-area").value.trim();p.bio=$("#pi-bio").value.trim();p.spec=[...document.querySelectorAll('#pi-spec [aria-pressed="true"]')].map(b=>b.dataset.spec);saveDB();toast("Dados salvos");route(true)};
   $("#pof").onsubmit=e=>{e.preventDefault();p.payout={type:$("#pot").value,key:$("#pok").value.trim()};saveDB();toast("Dados de recebimento salvos")};
   $("[data-termsp]").onclick=()=>openTerms("personal");
   $("[data-copyme]").onclick=()=>copyText(JSON.stringify({dados:Object.assign({},inf,{cref:p.cref,area:p.area}),contrato:{termo:p.terms,percentual:splitOf(p.id),repasse_dia:DB.payoutDay},recebimento:{tipo:po.type,chave:po.key}},null,2),"Seus dados foram copiados");
