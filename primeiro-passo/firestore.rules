@@ -80,9 +80,16 @@ service cloud.firestore {
 
       allow read: if eu(uid) || admin() || minhaAluna();
       // o próprio aluno nunca aprova a própria identidade
-      allow create: if eu(uid) && kycNovo() != 'verificado';
+      allow create: if eu(uid) && kycNovo() != 'verificado' && request.resource.data.get('pid', null) == null;
+      // o aluno escolhe o professor uma vez, só entre os ativos; para trocar, fala com a empresa
+      function escolheProfessor() {
+        return resource.data.get('pid', null) == null
+          && request.resource.data.pid is string
+          && exists(/databases/$(database)/documents/personais/$(request.resource.data.pid))
+          && get(/databases/$(database)/documents/personais/$(request.resource.data.pid)).data.status == 'ativo';
+      }
       allow update: if admin()
-        || (eu(uid) && !mudou(['pid']) && (kycNovo() != 'verificado' || kycVelho() == 'verificado'))
+        || (eu(uid) && (!mudou(['pid']) || escolheProfessor()) && (kycNovo() != 'verificado' || kycVelho() == 'verificado'))
         || (minhaAluna() && !mudou(['pid', 'kyc']));
       allow delete: if admin();
     }
