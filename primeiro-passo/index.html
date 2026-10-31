@@ -3165,15 +3165,15 @@ const CENTRAL="(11) 4000-0000";
 function cpfOk(v){const c=String(v).replace(/\D/g,"");if(c.length!==11||/^(\d)\1+$/.test(c))return false;
   const d=n=>{let s=0;for(let i=0;i<n;i++)s+=+c[i]*(n+1-i);const r=(s*10)%11;return r===10?0:r};return d(9)===+c[9]&&d(10)===+c[10]}
 const maskCpf=v=>{const c=String(v).replace(/\D/g,"");return c.length===11?`***.${c.slice(3,6)}.${c.slice(6,9)}-**`:"—"};
-/* CEP: ao digitar os 8 números, busca a rua, o bairro e a cidade (ViaCEP, grátis) e deixa o cursor no lugar do número */
+/* CEP: ao digitar os 8 números, busca a rua, o bairro e a cidade (ViaCEP, grátis) e deixa o cursor no campo Número */
 const fmtCep=v=>{const c=String(v).replace(/\D/g,"").slice(0,8);return c.length>5?c.slice(0,5)+"-"+c.slice(5):c};
 document.addEventListener("input",e=>{const z=e.target;if(!z.matches||!z.matches('#kz,[data-inf="cep"]'))return;
   z.value=fmtCep(z.value);const n=z.value.replace(/\D/g,"");if(n.length!==8||z.dataset.cepOk===n)return;z.dataset.cepOk=n;
-  const box=z.closest(".set")||document,ad=z.id==="kz"?$("#ka"):box.querySelector('[data-inf="addr"]'),ci=z.id==="kz"?$("#ky"):box.querySelector('[data-inf="city"]');
+  const box=z.closest(".set")||document,ad=z.id==="kz"?$("#ka"):box.querySelector('[data-inf="addr"]'),nu=z.id==="kz"?$("#kq"):box.querySelector('[data-inf="num"]'),ci=z.id==="kz"?$("#ky"):box.querySelector('[data-inf="city"]');
   fetch("https://viacep.com.br/ws/"+n+"/json/").then(r=>r.json()).then(d=>{
     if(d.erro){z.dataset.cepOk="";toast("CEP não encontrado. Confira os números ou preencha o endereço.");return}
     if(ci&&d.localidade)ci.value=d.localidade+(d.uf?" - "+d.uf:"");
-    if(ad&&d.logradouro){const ini=d.logradouro+", ";ad.value=ini+(d.bairro?" - "+d.bairro:"");ad.focus();try{ad.setSelectionRange(ini.length,ini.length)}catch(er){}}
+    if(ad&&d.logradouro){ad.value=d.logradouro+(d.bairro?" - "+d.bairro:"");(nu||ad).focus()}
     else if(ad)ad.focus();
   }).catch(()=>{z.dataset.cepOk=""})});
 const fmtCpf=v=>{const c=String(v).replace(/\D/g,"").slice(0,11);return c.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})\.(\d{3})(\d)/,"$1.$2.$3").replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/,"$1.$2.$3-$4")};
@@ -3211,7 +3211,8 @@ function vVerif(){
       <div class="field"><label for="kb">Data de nascimento</label><input id="kb" type="date" value="${esc(KV.d.birth||"")}"></div>
       <div class="field"><label for="kt">Celular</label><input id="kt" type="tel" autocomplete="tel" placeholder="(11) 90000-0000" value="${esc(KV.d.tel||"")}"></div>
       <div class="field"><label for="kz">CEP</label><input id="kz" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" value="${esc(KV.d.cep||"")}"></div>
-      <div class="field"><label for="ka">Endereço e número</label><input id="ka" autocomplete="street-address" placeholder="Preenche sozinho pelo CEP" value="${esc(KV.d.addr||"")}"></div>
+      <div class="field"><label for="ka">Endereço</label><input id="ka" autocomplete="address-line1" placeholder="Preenche sozinho pelo CEP" value="${esc(KV.d.addr||"")}"></div>
+      <div class="field"><label for="kq">Número</label><input id="kq" autocomplete="off" placeholder="Ex.: 120 ou s/n" value="${esc(KV.d.num||"")}"></div>
       <div class="field"><label for="ky">Cidade</label><input id="ky" autocomplete="address-level2" value="${esc(KV.d.city||"")}"></div>
     </div>
     <div class="card-h" style="margin:8px 0 10px"><h3 style="font-size:18px">Contato de emergência</h3></div>
@@ -3232,7 +3233,7 @@ function vVerif(){
     <div class="vfoot">${st?`<button class="btn btn-ghost" id="kbk"><i data-lucide="arrow-left"></i>Voltar</button>`:`<a class="btn btn-ghost" href="${TEST_MODE?"#/app":"#/"}">${TEST_MODE?"Pular (teste)":"Sair"}</a>`}<button class="btn btn-primary" id="knx">${st===3?"Enviar para análise":"Continuar"}<i data-lucide="arrow-right"></i></button></div>
     <p class="pay-demo"><i data-lucide="info"></i>Demonstração: as fotos aparecem só na sua tela e não são salvas nem enviadas. A leitura do documento e a comparação facial reais serão feitas por um serviço especializado.</p>`;
   icons();
-  const save0=()=>{if(st!==0)return;["name:kn","cpf:kc","birth:kb","tel:kt","cep:kz","addr:ka","city:ky","en:en","et:et","er:er"].forEach(x=>{const[k,id]=x.split(":");KV.d[k]=$("#"+id).value})};
+  const save0=()=>{if(st!==0)return;["name:kn","cpf:kc","birth:kb","tel:kt","cep:kz","addr:ka","num:kq","city:ky","en:en","et:et","er:er"].forEach(x=>{const[k,id]=x.split(":");KV.d[k]=$("#"+id).value})};
   if(st===0){const c=$("#kc");c.oninput=()=>{c.value=fmtCpf(c.value);$("#kce").textContent=c.value.replace(/\D/g,"").length===11&&!cpfOk(c.value)?"Este CPF não é válido. Confira os números.":""}}
   document.querySelectorAll("[data-dt]").forEach(b=>b.onclick=()=>{KV.d.dt=b.dataset.dt;vVerif()});
   document.querySelectorAll("input[type=file]").forEach(inp=>inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;const u=URL.createObjectURL(f);
@@ -3242,14 +3243,14 @@ function vVerif(){
   const bk=$("#kbk");if(bk)bk.onclick=()=>{save0();KV.step--;vVerif();scrollTo(0,0)};
   $("#knx").onclick=()=>{
     if(st===0){save0();const d=KV.d,age=d.birth?(Date.now()-new Date(d.birth))/(365.25*D1):0;
-      const miss=[!d.name.trim()&&"nome",!cpfOk(d.cpf)&&"CPF válido",!d.birth&&"data de nascimento",d.tel.replace(/\D/g,"").length<10&&"celular",!d.addr.trim()&&"endereço",!d.city.trim()&&"cidade",!d.en.trim()&&"contato de emergência",d.et.replace(/\D/g,"").length<10&&"telefone de emergência"].filter(Boolean);
+      const miss=[!d.name.trim()&&"nome",!cpfOk(d.cpf)&&"CPF válido",!d.birth&&"data de nascimento",d.tel.replace(/\D/g,"").length<10&&"celular",!d.addr.trim()&&"endereço",!d.num.trim()&&"número",!d.city.trim()&&"cidade",!d.en.trim()&&"contato de emergência",d.et.replace(/\D/g,"").length<10&&"telefone de emergência"].filter(Boolean);
       if(miss.length){toast("Falta: "+miss.join(", "));return}
       if(age<18){toast("Menores de 18 anos precisam de um responsável. Fale com a gente pelo chat.");return}}
     if(st===1&&!(KV.doc&&KV.docB)){toast("Envie a frente e o verso do documento");return}
     if(st===2&&!(KV.selfie&&KV.ok.face)){toast(KV.selfie?"Aguarde a comparação terminar":"Tire ou envie sua selfie");return}
     if(st===3){if(!(KV.ok.c1&&KV.ok.c2&&KV.ok.c3&&KV.ok.c4)){toast("Marque as quatro autorizações para continuar");return}
       [KV.doc,KV.docB,KV.selfie].forEach(u=>{try{u&&URL.revokeObjectURL(u)}catch(e){}});
-      S.termsAt=Date.now();S.info=Object.assign(S.info||{},{name:KV.d.name,birth:KV.d.birth,tel:KV.d.tel,cep:KV.d.cep,addr:KV.d.addr,city:KV.d.city,en:KV.d.en,et:KV.d.et,er:KV.d.er});S.kyc={status:"analise",at:Date.now(),cpf:maskCpf(KV.d.cpf),city:KV.d.city.trim(),emerg:`${KV.d.en.trim()} (${KV.d.er})`,emergTel:KV.d.et,doc:KV.d.dt||"RG"};save();
+      S.termsAt=Date.now();S.info=Object.assign(S.info||{},{name:KV.d.name,birth:KV.d.birth,tel:KV.d.tel,cep:KV.d.cep,addr:KV.d.addr,num:KV.d.num,city:KV.d.city,en:KV.d.en,et:KV.d.et,er:KV.d.er});S.kyc={status:"analise",at:Date.now(),cpf:maskCpf(KV.d.cpf),city:KV.d.city.trim(),emerg:`${KV.d.en.trim()} (${KV.d.er})`,emergTel:KV.d.et,doc:KV.d.dt||"RG"};save();
       KV={step:0,d:{},doc:null,docB:null,selfie:null,ok:{}};toast("Enviado! A equipe confere em até 1 dia útil.");vVerif();icons();return}
     KV.step++;vVerif();scrollTo(0,0)};
 }
@@ -3548,7 +3549,7 @@ if(!DB.flags){seedTerms(DB);saveDB()}
 
 /* ================== MEUS DADOS (aluno e professor) ==================
    Dados pessoais, contrato, documentos e privacidade (LGPD). CPF só aparece mascarado. */
-const INFO_FIELDS=[["name","Nome completo","text","name"],["email","E-mail","email","email"],["tel","Celular","tel","tel"],["birth","Data de nascimento","date","bday"],["cep","CEP","text","postal-code"],["addr","Endereço e número","text","street-address"],["city","Cidade","text","address-level2"]];
+const INFO_FIELDS=[["name","Nome completo","text","name"],["email","E-mail","email","email"],["tel","Celular","tel","tel"],["birth","Data de nascimento","date","bday"],["cep","CEP","text","postal-code"],["addr","Endereço","text","address-line1"],["num","Número","text",""],["city","Cidade","text","address-level2"]];
 const EMERG_FIELDS=[["en","Nome","text",""],["et","Telefone","tel","tel"],["er","Relação","text",""]];
 function infoForm(id,info,fields){return`<div class="set">${fields.map(([k,l,t,ac])=>`<div class="field" style="margin:0"><label for="${id}-${k}">${l}</label><input id="${id}-${k}" data-inf="${k}" type="${t}" ${ac?`autocomplete="${ac}"`:""} value="${esc(info[k]||"")}"></div>`).join("")}</div>`}
 const readInfo=(root,into)=>{root.querySelectorAll("[data-inf]").forEach(i=>{into[i.dataset.inf]=i.value.trim()});return into};
@@ -3608,12 +3609,12 @@ function openPFicha(id){const p=findP(id),inf=p.info||{},s=p.safety||{},po=p.pay
   const m=document.createElement("div");m.className="drawer";document.body.appendChild(m);document.body.style.overflow="hidden";
   const close=()=>{removeEventListener("keydown",k);m.remove();document.body.style.overflow="";route(true)};const k=e=>{if(e.key==="Escape")close()};addEventListener("keydown",k);m.onclick=e=>{if(e.target===m)close()};
   m.innerHTML=`<div class="dp" role="dialog" aria-modal="true" aria-labelledby="pfh"><div class="dp-h"><span class="av">${esc(initials(p.name))}</span><div><h2 id="pfh">${esc(p.name)}</h2><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div><button class="rbtn" id="pfx" aria-label="Fechar"><i data-lucide="x"></i></button></div>
-    <div class="sec2"><h3>Dados pessoais</h3><div class="plist">${dline("E-mail",esc(p.email||"—"))}${dline("Celular",esc(inf.tel||"—"))}${dline("CPF",esc(inf.cpf||"***.***.***-**"))}${dline("Nascimento",inf.birth?new Date(inf.birth+"T12:00").toLocaleDateString("pt-BR"):"—")}${dline("Endereço",esc([inf.addr,inf.city].filter(Boolean).join(", ")||"—"))}</div></div>
+    <div class="sec2"><h3>Dados pessoais</h3><div class="plist">${dline("E-mail",esc(p.email||"—"))}${dline("Celular",esc(inf.tel||"—"))}${dline("CPF",esc(inf.cpf||"***.***.***-**"))}${dline("Nascimento",inf.birth?new Date(inf.birth+"T12:00").toLocaleDateString("pt-BR"):"—")}${dline("Endereço",esc([inf.addr,inf.num&&"nº "+inf.num,inf.city].filter(Boolean).join(", ")||"—"))}</div></div>
     <div class="sec2"><h3>Contrato</h3><div class="plist">${dline("Termo de parceria",p.terms?`Aceito ${new Date(p.terms.at).toLocaleDateString("pt-BR")} · v${p.terms.v}`:"Pendente")}${dline("Percentual",pctf(splitOf(p.id)))}${dline("Recebimento",`Pix ${esc(po.type||"")} ${esc(po.key||"não cadastrado")}`)}${dline("Alunos ativos",`${n} de ${p.cap}`)}${dline("Avaliação (confidencial)",r.n?`${r.avg.toLocaleString("pt-BR",{maximumFractionDigits:1})} ★ · ${r.n} avaliações`:"—")}</div></div>
     <div class="sec2"><h3>Documentos</h3><div class="chk">${[["doc","Documento com foto"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes criminais"]].map(([k2,t])=>`<div class="${s[k2]?"y":""}"><i data-lucide="${s[k2]?"circle-check":"circle-dashed"}"></i>${t}</div>`).join("")}</div></div>
     <div class="sec2"><button class="btn btn-ghost btn-sm" id="pft"><i data-lucide="file-text"></i>Ver termo de parceria</button></div></div>`;
   icons();$("#pfx").onclick=close;$("#pft").onclick=()=>openTerms("personal",{onClose:()=>{}});}
-function seedInfo(db){const I={p1:{tel:"(11) 90000-0101",cpf:"***.321.654-**",birth:"1989-03-14",addr:"Rua das Flores, 120",city:"São Paulo"},p2:{tel:"(11) 90000-0202",cpf:"***.987.123-**",birth:"1992-08-02",addr:"Rua Voluntários da Pátria, 850",city:"Rio de Janeiro"},p3:{tel:"(11) 90000-0303",cpf:"***.555.222-**",birth:"1985-11-20",addr:"Av. Afonso Pena, 45",city:"Belo Horizonte"}};
+function seedInfo(db){const I={p1:{tel:"(11) 90000-0101",cpf:"***.321.654-**",birth:"1989-03-14",addr:"Rua das Flores",num:"120",city:"São Paulo"},p2:{tel:"(11) 90000-0202",cpf:"***.987.123-**",birth:"1992-08-02",addr:"Rua Voluntários da Pátria",num:"850",city:"Rio de Janeiro"},p3:{tel:"(11) 90000-0303",cpf:"***.555.222-**",birth:"1985-11-20",addr:"Av. Afonso Pena",num:"45",city:"Belo Horizonte"}};
   db.personals.forEach(p=>{if(!p.info)p.info=Object.assign({name:p.name,email:p.email||mailOf(p.name)},I[p.id]||{})});return db}
 if(!DB.personals.some(p=>p.info)){seedInfo(DB);saveDB()}
 /* dados de exemplo antigos (só São Paulo) passam a ser nacionais */
