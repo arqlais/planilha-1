@@ -1687,6 +1687,7 @@ function earned(){const n=S.workouts.length;return[!!S.profile,S.talked,n>=1,wee
 /* ================== ROUTER ================== */
 function route(keep){
   if(FB&&!FBL.booted)return;
+  if(DEMO_AS){const w=DEMO_AS;DEMO_AS=null;history.replaceState(null,"",location.pathname+"?demo#/entrar");demoGo(w);return}
   if(DEMO&&(!location.hash||location.hash==="#/"&&!DEMO_SITE)){location.replace("#/entrar");return}
   const h=location.hash||"#/";
   const y=scrollY;demoPill(h);
@@ -2589,6 +2590,8 @@ function login(){
 }
 /* modo demonstração: botão fixo para trocar de perfil e entrada direta, sem senha */
 let DEMO_SITE=false,DEMO_GO=null;
+/* link direto de teste: ?demo&como=aluno|professor|empresa abre já naquela área */
+let DEMO_AS=DEMO?({aluno:"aluno",professor:"personal",empresa:"empresa"})[(location.search.match(/[?&]como=(\w+)/)||[])[1]]||null:null;
 function demoPill(h){let b=$("#demopill");if(!DEMO||h==="#/entrar"){if(b)b.remove();return}
   if(!b){b=document.createElement("a");b.id="demopill";b.href="#/entrar";b.innerHTML=`<i data-lucide="repeat"></i>Trocar perfil`;document.body.appendChild(b)}}
 function demoGo(who){
@@ -2598,6 +2601,7 @@ function demoGo(who){
 /* teste: escolher qual professor entrar, ou criar uma */
 function demoPersonal(){
   const ps=DB.personals;if(!ps.length){location.hash="#/entrar/nova-personal";return}
+  if(ps.length===1){const p=ps[0];if(p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:p.id});location.hash="#/personal";return}
   const el=document.createElement("div");el.className="modal";el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Entrar como professor"><div class="big"><i data-lucide="dumbbell"></i></div><h3>Entrar como professor</h3>
     <div class="demo-ps">${ps.map(p=>`<button class="btn btn-primary" data-dp="${p.id}">${esc(p.name)}</button>`).join("")}
     <a class="btn btn-ghost" href="#/entrar/nova-personal" data-dpn><i data-lucide="user-plus"></i>Criar outro professor</a></div></div>`;
