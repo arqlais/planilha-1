@@ -2516,18 +2516,19 @@ function login(){
     <a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a><button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
   if(who==="nova-personal"&&(FB||DEMO)){
     $("#root").innerHTML=`${top}<main class="login-main lg-center"><form class="lg-card" id="npf" novalidate>
-      <span class="ri"><i data-lucide="dumbbell"></i></span><h1>Criar conta de professor</h1><p class="lg-lead">Depois do cadastro, a empresa confere seu CREF e libera o seu painel.</p>
+      <span class="ri"><i data-lucide="dumbbell"></i></span><h1>Criar conta de professor</h1><p class="lg-lead">${DEMO?"Modo de teste: só o nome, e você já entra no painel.":"Depois do cadastro, a empresa confere seu CREF e libera o seu painel."}</p>
       <div class="field lg-f"><label for="npn">Nome completo</label><input id="npn" autocomplete="name"></div>
-      <div class="field lg-f"><label for="npc">Número do CREF</label><input id="npc" placeholder="000000-G/SP"></div>
+      ${DEMO?"":`<div class="field lg-f"><label for="npc">Número do CREF</label><input id="npc" placeholder="000000-G/SP"></div>
       <div class="uf-row lg-f"><div class="field" style="margin:0"><label for="npu">Estado</label>${ufSelect("npu","")}</div><div class="field" style="margin:0"><label for="npa">Cidade</label><input id="npa" autocomplete="address-level2"></div></div>
       <div class="field lg-f"><label for="npt">Celular</label><input id="npt" type="tel" autocomplete="tel"></div>
-      <div class="field lg-f"><label for="npe">E-mail</label><input id="npe" type="email" autocomplete="email" inputmode="email"></div>
+      <div class="field lg-f"><label for="npe">E-mail</label><input id="npe" type="email" autocomplete="email" inputmode="email"></div>`}
       ${DEMO?"":`<div class="field lg-f"><label for="npw">Senha</label><input id="npw" type="password" autocomplete="new-password" placeholder="Pelo menos 6 caracteres"></div>`}
       <small class="err" id="npx" role="alert"></small>
-      <button class="btn btn-primary">Enviar cadastro<i data-lucide="arrow-right"></i></button>
+      <button class="btn btn-primary">${DEMO?"Entrar como professor":"Enviar cadastro"}<i data-lucide="arrow-right"></i></button>
     </form><a class="lg-back" href="${DEMO?"#/entrar":"#/entrar/personal"}"><i data-lucide="arrow-left"></i>${DEMO?"Voltar":"Já tenho conta"}</a></main>`;
     $("#theme").onclick=toggleTheme;icons();
-    $("#npf").onsubmit=e=>{e.preventDefault();const f={name:$("#npn").value.trim(),cref:$("#npc").value.trim(),uf:$("#npu").value,city:$("#npa").value.trim(),tel:$("#npt").value.trim(),email:$("#npe").value.trim().toLowerCase(),pw:DEMO?"teste123":$("#npw").value};
+    $("#npf").onsubmit=e=>{e.preventDefault();const v=id=>{const x=$("#"+id);return x?x.value.trim():""},n=v("npn");
+      const f=DEMO?{name:n,cref:"000000-G/SP",uf:"SP",city:"São Paulo",tel:"",email:"professor"+(DB.personals.length+1)+"@teste.com",pw:"teste123"}:{name:n,cref:v("npc"),uf:v("npu"),city:v("npa"),tel:v("npt"),email:v("npe").toLowerCase(),pw:$("#npw").value};
       const miss=[f.name.length<3&&"nome",f.cref.length<4&&"CREF",!f.uf&&"estado",f.city.length<2&&"cidade",!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)&&"e-mail",f.pw.length<6&&"senha com 6 caracteres"].filter(Boolean);
       if(miss.length){$("#npx").textContent="Falta: "+miss.join(", ")+".";return}
       const bt=$("#npf button.btn-primary");bt.disabled=true;$("#npx").textContent="";
