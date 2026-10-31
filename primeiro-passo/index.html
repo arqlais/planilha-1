@@ -513,7 +513,7 @@ body.ux .role:hover::after{opacity:1}
 .modal{position:fixed;inset:0;z-index:80;background:rgba(15,23,32,.55);display:grid;place-items:end center;padding:0}
 .sheet{background:var(--bg);width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:26px 22px calc(22px + env(safe-area-inset-bottom,0px));animation:up .3s ease;text-align:center}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
-.sheet .big{width:84px;height:84px;border-radius:24px;background:#E0A93B;color:#1B3A5C;display:grid;place-items:center;margin:0 auto 14px}
+.sheet .big:not(.chkline){width:84px;height:84px;border-radius:24px;background:#E0A93B;color:#1B3A5C;display:grid;place-items:center;margin:0 auto 14px}
 .sheet .big svg{width:42px;height:42px}
 .sheet h3{font-size:26px}
 .sheet p{color:var(--muted);margin:8px 0 18px}
