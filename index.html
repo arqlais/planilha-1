@@ -979,6 +979,11 @@ body.v2-full main{margin-top:0}
 .v2-howto{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border:0;border-radius:20px;padding:10px;width:100%;text-align:left;margin-bottom:12px;color:var(--text)}
 .v2-howto .grow{flex:1}.v2-howto b{display:block;font-weight:800}.v2-howto small{color:var(--muted);font-weight:600;font-size:12.5px}
 .v2-howto-anim{width:108px;height:84px;background:#1A2A5E;--halo:#1A2A5E}
+.v2-pull{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:rgba(255,255,255,.07);border:1px dashed var(--accent);border-radius:16px;padding:10px 12px;margin-bottom:12px;color:var(--text)}
+.v2-pull .ic{color:var(--accent);flex:none}.v2-pull .grow{flex:1;min-width:0}.v2-pull b{display:block;font-weight:800}.v2-pull small{display:block;color:var(--muted);font-weight:600;font-size:12.5px;line-height:1.35}
+.v2-pull.open{flex-direction:column;align-items:stretch;gap:8px;border-style:solid}
+.v2-pull.open>button{display:flex;width:100%;text-align:left;background:rgba(255,255,255,.08);border:0;border-radius:12px;padding:10px 12px;color:var(--text)}
+.v2-pull.open>.v2-pull-x{justify-content:center;background:none;color:var(--muted);font-weight:700}
 .v2-howto{align-items:flex-start;cursor:default}.v2-howto[role=button]{cursor:pointer}.v2-howto small{display:block;line-height:1.35;margin-top:2px}
 .v2-eq{display:inline-flex;margin-top:8px;background:rgba(255,255,255,.08);border-radius:99px;padding:3px;gap:2px}
 .v2-eq button{border:0;background:transparent;color:var(--text);font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:99px}
@@ -3005,6 +3010,7 @@ function cardHtmlV2(ex) {
   }).join('');
   return `<div class="v2ex open ${complete ? 'done' : ''}">${head}<div class="v2-exb">
     ${v2HowHtml(ex, lock)}
+    ${lock ? '' : prevPullHtml(ex)}
     ${exDetailHtml(ex)}
     ${tm ? '' : grid ? `<div class="v2-grid-h"><span>${nl ? 'reps' : 'peso · reps'} · antes</span>${V2_LAYOUT_BTN(true)}</div><div class="tiles v2-sqs">${rows}</div>`
       : `<div class="v2-sets-h"><span>#</span><span>${nl ? '' : 'Peso (kg)'}</span><span>Reps</span><span>${V2_LAYOUT_BTN(false)}</span></div>${rows}`}
@@ -6107,6 +6113,29 @@ function linkReviewHtml() {
         <button data-act="wk-nolink" data-id="${e.id}"><b>Não é o mesmo</b><small>deixar começar do zero</small></button></div></div>`).join('')}</div>`;
 }
 // etiqueta da academia (Evoque/Sky) só quando há mais de um histórico para escolher; com um só, a comparação continua sem etiqueta
+// Exercício sem "antes" (ex.: veio da lista com outro nome): o professor escolhe de qual exercício já feito puxar as cargas.
+// Primeiro os que têm uma palavra igual no nome (ex.: "Bíceps scott" e "Rosca Scott"), depois o mesmo grupo; os mais recentes antes.
+const PREV_COMMON = /^(rosca|biceps|triceps|supino|remada|puxada|cadeira|mesa|banco|barra|halter|halteres|maquina|polia|cabo|corda|livre|sentado|em|pe|reto|reta|alto|alta|baixo|baixa|unilateral|alternada|alternado|simultanea|articulado|articulada|aparelho|smith|exercicio)$/;
+const prevWords = n => nameCore(n) && normName(n).replace(/\(.*?\)/g, ' ').split(/[^a-z0-9]+/).filter(w => w.length > 2 && !PREV_COMMON.test(w));
+function prevCandidates(ex) {
+  const mine = twinIds(ex.id), words = new Set(prevWords(ex.name)), out = new Map();
+  db.exercises.filter(e => e.profileId === ex.profileId && !mine.has(e.id) && e.name).forEach(e => {
+    const last = db.sessions.filter(x => x.exId === e.id && hasDone(x) && x.date < ui.date).sort((a, b) => b.date.localeCompare(a.date))[0]; if (!last) return;
+    const word = prevWords(e.name).some(w => words.has(w)); if (!word && e.group !== ex.group) return;
+    const k = twinKey(e), cur = out.get(k);
+    if (!cur || last.date > cur.last.date) out.set(k, { key: k, ex: e, last, word });
+  });
+  return [...out.values()].sort((a, b) => (b.word - a.word) || b.last.date.localeCompare(a.last.date)).slice(0, 8);
+}
+const canPullPrev = () => !CLOUD || (cloud && cloud.role === 'admin');
+function prevPullHtml(ex) {
+  if (!canPullPrev() || prevSession(ex.id, ui.date)) return '';
+  const list = ui.v2find === ex.id ? prevCandidates(ex) : null;
+  if (!list) return `<button class="v2-pull" data-act="v2-find-prev"><i class="ic ic-up"></i><span class="grow"><b>Sem carga de antes</b><small>Já fez este exercício com outro nome? Toque para puxar as cargas.</small></span></button>`;
+  return `<div class="v2-pull open"><b>De qual exercício puxar as cargas?</b>${list.length ? list.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
+    return `<button data-act="v2-use-prev" data-k="${esc(x.key)}"><span class="grow"><b>${esc(x.ex.name)}</b><small>${fmtDate(x.last.date)}${top && top.carga != null ? ` · ${numVal(top.carga)} kg` : ''}${top && top.reps != null ? ` × ${numVal(top.reps)}` : ''}</small></span></button>`; }).join('')
+    : '<small>Nenhum exercício parecido feito antes.</small>'}<button class="v2-pull-x" data-act="v2-find-prev">Fechar</button></div>`;
+}
 const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') && wkSources(pid, ex).length > 1 ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
 function wkToggle(pid, d) {
   const W = ui.wk, P = profile(pid); if (!W.sel || !P) return;
@@ -7380,6 +7409,13 @@ $main.addEventListener('click', e => {
   if (!card) return;
   const ex = exById(card.dataset.ex);
   if (act === 'v2-open') { const was = ui.v2open; ui.v2open = was === ex.id ? null : ex.id; if (was && was !== ex.id) refreshCard(was); refreshCard(ex.id); PFA.start(); return; }
+  if (act === 'v2-find-prev') { ui.v2find = ui.v2find === ex.id ? null : ex.id; return refreshCard(ex.id); }
+  if (act === 'v2-use-prev') {
+    const x = prevCandidates(ex).find(y => y.key === b.dataset.k); if (!x) return;
+    wkLink(ex, x, false); ui.v2find = null; save();
+    toast(`<b>${esc(ex.name)}</b> agora mostra as cargas de <b>${esc(x.ex.name)}</b> (${fmtDate(x.last.date)}).`);
+    return refreshCard(ex.id);
+  }
   if (act === 'edit') return openDialog(ex);
   if (act === 'del-ex') { if (ui.studentMode) return; editing = ex; return deleteEditing(); }
   if (lockReason(ex.id)) return toast(LOCK_MSG[lockReason(ex.id)]);
@@ -9036,7 +9072,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '30/10-16:49';
+const APP_VERSION = '31/10-00:53';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
