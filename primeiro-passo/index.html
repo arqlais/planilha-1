@@ -1309,6 +1309,7 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 @media(min-width:900px){#demopill{bottom:18px}}
 .demo-steps{text-align:left;max-width:520px;margin:4px auto 18px;padding-left:22px;color:var(--muted);font-size:15px;display:grid;gap:4px}
 .demo-ps{display:grid;gap:10px;margin-top:14px}.demo-ps .btn{width:100%;justify-content:center;white-space:normal}
+.demo-pr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.demo-pr .btn-ghost{width:auto;padding-inline:14px}.demo-pr [data-dp]{flex-direction:column;gap:0}.demo-pr small{font-weight:500;opacity:.8;font-size:13px}
 .demo-more{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
 .lg-testbox{display:grid;justify-items:center;gap:6px;border-top:1px dashed var(--line);padding-top:12px;margin-top:4px;width:100%}
 .lg-testbox small{color:var(--muted);font-size:12.5px;max-width:34ch}
@@ -2654,11 +2655,13 @@ function demoPersonal(direct){
   const ps=DB.personals;if(!ps.length){location.hash="#/entrar/nova-personal";return}
   if(direct&&ps.length===1){const p=ps[0];if(p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:p.id});location.hash="#/personal";return}
   const el=document.createElement("div");el.className="modal";el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Entrar como professor"><div class="big"><i data-lucide="dumbbell"></i></div><h3>Entrar como professor</h3>
-    <div class="demo-ps">${ps.map(p=>`<button class="btn btn-primary" data-dp="${p.id}">${esc(p.name)}</button>`).join("")}
+    <div class="demo-ps">${ps.map(p=>{const n=allClients().filter(c=>c.pid===p.id).length;return`<div class="demo-pr"><button class="btn btn-primary" data-dp="${p.id}">${esc(p.name)}<small>${n?n+(n>1?" alunos":" aluno"):"sem alunos"}</small></button><button class="btn btn-ghost" data-dpx="${p.id}" aria-label="Apagar ${esc(p.name)}"><i data-lucide="trash-2"></i></button></div>`}).join("")}
     <a class="btn btn-ghost" href="#/entrar/nova-personal" data-dpn><i data-lucide="user-plus"></i>Criar outro professor</a></div></div>`;
   document.body.appendChild(el);icons();const close=()=>el.remove();
   el.onclick=e=>{if(e.target===el)close()};
   el.querySelectorAll("[data-dp]").forEach(b=>b.onclick=()=>{close();const p=findP(b.dataset.dp);if(p&&p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:b.dataset.dp});location.hash="#/personal"});
+  el.querySelectorAll("[data-dpx]").forEach(b=>b.onclick=()=>{const p=findP(b.dataset.dpx);if(!p)return;close();
+    sheet("trash-2",`Apagar ${p.name}?`,"Só no teste. Os alunos dele ficam sem professor e podem escolher outro na aba Professores.","Apagar",{danger:true,cancel:"Cancelar",onOk:()=>{DB.personals=DB.personals.filter(x=>x!==p);if(S.pid===p.id){S.pid=null;save()}if(SESS.pid===p.id)setSess({});saveDB();toast("Professor apagado");demoPersonal()}})});
   el.querySelector("[data-dpn]").onclick=close}
 function logout(){if(FB){FBL.logout();return}setSess({});location.hash="#/entrar"}
 
