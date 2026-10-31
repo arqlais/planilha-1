@@ -21,6 +21,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/personais/$(request.auth.uid))
         && get(/databases/$(database)/documents/personais/$(request.auth.uid)).data.status == 'ativo';
     }
+    // perfil de teste (só nome): e-mail @teste.passosfit.com.br e modo de teste ligado na empresa
+    function contaTeste() {
+      return logado() && request.auth.token.email is string
+        && request.auth.token.email.matches('.*@teste[.]passosfit[.]com[.]br')
+        && (!exists(/databases/$(database)/documents/config/empresa)
+            || get(/databases/$(database)/documents/config/empresa).data.get('teste', true) != false);
+    }
     function mudou(campos) {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny(campos);
     }
@@ -53,7 +60,7 @@ service cloud.firestore {
     // Toda personal começa "pendente"; só a empresa aprova.
     match /personais/{uid} {
       allow read: if resource.data.status == 'ativo' || eu(uid) || admin();
-      allow create: if eu(uid) && request.resource.data.status == 'pendente'
+      allow create: if eu(uid) && (request.resource.data.status == 'pendente' || (request.resource.data.status == 'ativo' && contaTeste()))
         && request.resource.data.keys().hasOnly(['name', 'cref', 'uf', 'area', 'bio', 'spec', 'status', 'cap', 'since'])
         && request.resource.data.get('cap', 15) == 15;
       allow update: if admin() || (eu(uid) && !mudou(['status', 'cap']));

@@ -15,9 +15,8 @@
 <meta name="color-scheme" content="only light">
 <title>Primeiro Passo</title>
 <script>/* modo de teste (?demo): o atalho salvo na tela inicial precisa abrir o teste, não o app normal */
-/* ícone de teste na tela inicial: cada ícone tem a própria memória; se este já abriu o teste, continua sempre no teste */
-(function(){var sa=navigator.standalone||matchMedia("(display-mode: standalone)").matches,dm=/[?&]demo\b/.test(location.search);
-  try{if(sa&&dm)localStorage.setItem("pp-teste","1");if(sa&&!dm&&localStorage.getItem("pp-teste")==="1")history.replaceState(null,"",location.pathname+"?demo"+location.hash)}catch(e){}})();
+/* o teste antigo (só no aparelho) foi trocado pelos perfis de teste na nuvem */
+if(/[?&]demo\b/.test(location.search))location.replace(location.pathname+"#/entrar/teste");
 if(/[?&]demo\b/.test(location.search)){document.querySelector('link[rel=manifest]').href="demo/manifest.webmanifest";document.querySelector('meta[name=apple-mobile-web-app-title]').content="PP Teste";document.title="Primeiro Passo (teste)"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1306,7 +1305,7 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 .lg-forgot{color:var(--blue);font-weight:600;text-decoration:none;font-size:14.5px}
 #demopill{position:fixed;z-index:60;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#7A4E00;background:#FFF1CC;border:1px solid #D9A441;border-radius:99px;padding:8px 13px;box-shadow:0 4px 14px rgba(0,0,0,.15);text-decoration:none}
 #demopill svg{width:15px;height:15px}
-@media(min-width:900px){#demopill{bottom:18px}}
+@media(min-width:900px){#demopill{bottom:18px;left:auto;right:18px}}
 .demo-steps{text-align:left;max-width:520px;margin:4px auto 18px;padding-left:22px;color:var(--muted);font-size:15px;display:grid;gap:4px}
 .demo-ps{display:grid;gap:10px;margin-top:14px}.demo-ps .btn{width:100%;justify-content:center;white-space:normal}
 .demo-more{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
@@ -1620,6 +1619,41 @@ const FBL=(()=>{
       await db.collection("personaisPriv").doc(uid).set({email:f.email,info:{name:f.name,email:f.email,tel:f.tel}});
       await auth.signOut();await loadFor(null);
     }catch(e){throw{msg:F.err(e)}}finally{F.busy=false}};
+  /* ---------- perfis de teste: só o nome, entra de qualquer aparelho ---------- */
+  const TDOM="@teste.passosfit.com.br",TPW="teste-pp-2026";
+  const slug=n=>n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+  F.isTest=()=>!!(auth.currentUser&&(auth.currentUser.email||"").endsWith(TDOM));
+  F.testEnter=async(role,name)=>{F.busy=true;try{
+      name=name.trim().replace(/\s+/g," ");const sl=slug(name);if(sl.length<2)throw{msg:"Escreva um nome."};
+      const email=(role==="personal"?"prof-":"aluno-")+sl+TDOM;let cr;
+      try{cr=await auth.signInWithEmailAndPassword(email,TPW)}
+      catch(e){if(!/user-not-found|invalid-credential|invalid-login-credentials/.test(e.code||""))throw e;cr=await auth.createUserWithEmailAndPassword(email,TPW)}
+      const uid=cr.user.uid;await loadFor(cr.user);
+      if(F.role&&F.role!==(role==="personal"?"personal":"aluno")){await auth.signOut();await loadFor(null);throw{msg:"Esse nome já é usado em outro tipo de perfil de teste."}}
+      if(!F.role){
+        const now=Date.now();
+        await db.collection("usuarios").doc(uid).set({role:role==="personal"?"personal":"aluno",email,nome:name,criadoEm:now});
+        if(role==="personal"){
+          await db.collection("personais").doc(uid).set({name,cref:"CREF de teste",uf:"SP",area:"São Paulo / SP",bio:"",spec:["Iniciantes"],status:"ativo",cap:15,since:now});
+          await db.collection("personaisPriv").doc(uid).set({email,info:{name,email}});
+        }else{
+          const a=fresh();a.pid=null;a.info={name,email};
+          a.profile={uf:"SP",city:"São Paulo",name,goals:["Ter mais disposição"],barriers:["Falta de tempo"],days:["Seg","Qua","Sex"],period:"Manhã",contact:"Só mensagem",medical:false,since:now};
+          a.messages=[{from:"them",text:`Oi, ${name.split(" ")[0]}! Que bom ter você aqui. Escolha o seu professor na aba Professores.`,t:nowT()}];a.unread=1;
+          await db.collection("alunos").doc(uid).set(alunoDoc(a));
+        }
+        await loadFor(cr.user);
+      }
+      setSess(role==="personal"?{role:"personal",pid:uid}:{});
+      return F.role;
+    }catch(e){throw e.msg?e:{msg:F.err(e)}}finally{F.busy=false}};
+  /* empresa apaga todos os alunos, professores e movimentos (contas de login continuam no Firebase, sem dados) */
+  F.wipe=async()=>{if(F.role!=="admin")throw{msg:"Só a empresa pode apagar."};F.busy=true;let n=0;try{
+      for(const c of ["alunos","personais","personaisPriv","usuarios","pagamentos","repasses","checkins","avaliacoes","relatos","alertas","contatos"]){
+        const ds=(await db.collection(c).get()).docs;
+        for(let i=0;i<ds.length;i+=400){const b=db.batch();ds.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit()}n+=ds.length}
+      await loadFor(auth.currentUser);return n;
+    }catch(e){throw e.msg?e:{msg:F.err(e)}}finally{F.busy=false}};
   F.saveAluno=saveAluno;F.saveDB=saveDB;
   return F;
 })();
@@ -2564,6 +2598,24 @@ function login(){
            empresa:{ic:"building-2",t:"Entrar como empresa",d:"Visão geral, clientes, professores, financeiro, segurança e preços.",u:"E-mail",um:"email"}}[who];
   const top=`<header class="topbar"><div class="wrap"><a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
     <a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a><button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
+  if(who==="teste"&&FB){
+    const me=FBL.uid?(FBL.role==="admin"?"a empresa":FBL.role==="personal"?(findP(FBL.uid)||{}).name:S.profile&&S.profile.name):null;
+    const go=r=>r==="admin"?"#/admin":r==="personal"?"#/personal":"#/app";
+    $("#root").innerHTML=`${top}<main class="login-main lg-center">
+      <span class="kicker">Modo de teste</span><h1>Perfis de teste</h1>
+      <p class="lg-lead">${TEST_MODE?"Digite só o nome. Se o perfil já existir, você entra nele. Funciona no celular e no computador, e a empresa vê tudo.":"O modo de teste está desligado. A empresa liga em Ajustes."}</p>
+      ${me?`<div class="info" style="max-width:520px;margin:0 auto 16px"><i data-lucide="user-round-check"></i><span>Você está como <b>${esc(me)}</b>. <a href="${go(FBL.role)}" style="color:var(--blue);font-weight:700">Continuar</a></span></div>`:""}
+      ${TEST_MODE?`<div class="roles">
+        <form class="role tst" data-r="personal"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Professor</h2><div class="field" style="margin:0"><label for="tn-personal" class="sr-only">Nome do professor</label><input id="tn-personal" placeholder="Nome do professor" autocomplete="off"></div><button class="btn btn-primary">Entrar como professor<i data-lucide="arrow-right"></i></button></form>
+        <form class="role tst" data-r="aluno"><span class="ri"><i data-lucide="footprints"></i></span><h2>Aluno</h2><div class="field" style="margin:0"><label for="tn-aluno" class="sr-only">Nome do aluno</label><input id="tn-aluno" placeholder="Nome do aluno" autocomplete="off"></div><button class="btn btn-primary">Entrar como aluno<i data-lucide="arrow-right"></i></button></form>
+        <div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Empresa</h2><p>Com o seu e-mail e senha de administrador. Vê todos os professores e alunos.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar como empresa<i data-lucide="arrow-right"></i></a></div>
+      </div><small class="err" id="tse" role="alert" style="display:block;text-align:center;margin-top:12px"></small>`:""}
+    </main>`;
+    $("#theme").onclick=toggleTheme;icons();
+    document.querySelectorAll("form.tst").forEach(f=>f.onsubmit=async e=>{e.preventDefault();const r=f.dataset.r,n=f.querySelector("input").value,bt=f.querySelector("button");
+      if(n.trim().length<2){$("#tse").textContent="Escreva o nome.";return}bt.disabled=true;$("#tse").textContent="";
+      try{const role=await FBL.testEnter(r,n);location.hash=go(role);route(true)}catch(x){bt.disabled=false;$("#tse").textContent=x.msg}});
+    return}
   if(who==="nova-personal"&&(FB||DEMO)){
     $("#root").innerHTML=`${top}<main class="login-main lg-center"><form class="lg-card" id="npf" novalidate>
       <span class="ri"><i data-lucide="dumbbell"></i></span><h1>Criar conta de professor</h1><p class="lg-lead">${DEMO?"Modo de teste: só o nome, e você já entra no painel.":"Depois do cadastro, a empresa confere seu CREF e libera o seu painel."}</p>
@@ -2643,8 +2695,10 @@ function login(){
 let DEMO_SITE=false,DEMO_GO=null;
 /* link direto de teste: ?demo&como=aluno|professor|empresa abre já naquela área */
 let DEMO_AS=DEMO?({aluno:"aluno",professor:"personal",empresa:"empresa"})[(location.search.match(/[?&]como=(\w+)/)||[])[1]]||null:null;
-function demoPill(h){let b=$("#demopill");if(!DEMO||h==="#/entrar"){if(b)b.remove();return}
-  if(!b){b=document.createElement("a");b.id="demopill";b.href="#/entrar";b.innerHTML=`<i data-lucide="repeat"></i>Trocar perfil`;document.body.appendChild(b)}}
+function demoPill(h){const tst=FB&&TEST_MODE&&FBL.uid&&(FBL.isTest()||FBL.role==="admin")&&!h.startsWith("#/entrar")&&h!=="#/"&&h!=="";
+  let b=$("#demopill");if(!(DEMO&&h!=="#/entrar")&&!tst){if(b)b.remove();return}
+  if(b)b.href=DEMO?"#/entrar":"#/entrar/teste";
+  if(!b){b=document.createElement("a");b.id="demopill";b.href=DEMO?"#/entrar":"#/entrar/teste";b.innerHTML=`<i data-lucide="repeat"></i>Trocar perfil`;document.body.appendChild(b)}}
 function demoGo(who,direct){
   if(who==="aluno"){if(S.profile){S.loggedOut=false;save();location.hash="#/app"}else location.hash="#/comecar";return}
   if(who==="personal"){demoPersonal(direct);return}
@@ -3016,13 +3070,16 @@ function aAjustes(){
     <div id="spprev" class="mt"></div>
     <button class="btn btn-primary mt"><i data-lucide="save"></i>Salvar preços e divisão</button></form>
   <section class="card mt" style="max-width:760px"><div class="card-h"><h3>Modo de teste</h3></div><p style="color:var(--muted)">Ligado, todo mundo pode pular as etapas obrigatórias (verificação, conversa e pagamento) para ver o app inteiro. Desligue quando começar a receber clientes de verdade: as travas passam a valer para todos.</p>
-    <label class="chkline big mt"><input type="checkbox" id="tmsw" ${TEST_MODE?"checked":""}> Modo de teste ligado</label></section>
+    <label class="chkline big mt"><input type="checkbox" id="tmsw" ${TEST_MODE?"checked":""}> Modo de teste ligado</label>
+    ${FB&&TEST_MODE?`<p style="color:var(--muted);margin:14px 0 10px">Perfis de teste (só com o nome, de qualquer aparelho): <a href="#/entrar/teste" style="color:var(--blue);font-weight:700">abrir</a>.</p>
+    <button type="button" class="btn btn-ghost" id="wipe" style="color:var(--red)"><i data-lucide="trash-2"></i>Apagar todos os dados de teste</button>`:""}</section>
   <section class="card mt" style="max-width:760px" ${FB?"hidden":""}><div class="card-h"><h3>Dados de demonstração</h3></div><p style="color:var(--muted)">Volta os clientes, professores, agenda, pagamentos e contatos de exemplo ao estado inicial. O app do cliente deste aparelho não é apagado.</p><button class="btn btn-ghost mt" id="rs" style="color:var(--red)"><i data-lucide="rotate-ccw"></i>Restaurar dados de exemplo</button></section>
   <div class="info mt" style="max-width:760px"><i data-lucide="server"></i><span>${FB?`<b style="color:var(--ink)">Login e dados no Firebase.</b> Contas, alunos, agenda, conversas e financeiro ficam guardados no banco e aparecem em qualquer aparelho. O pagamento online ainda não está ligado: a empresa confirma cada pagamento aqui.`:`<b style="color:var(--ink)">Para usar com clientes reais</b>, este site precisa de um servidor com login, banco de dados e pagamento online (por exemplo Pix). Hoje tudo fica salvo só no navegador de quem usa.`}</span></div>`;
   $("#pr").onsubmit=e=>{e.preventDefault();DB.prices=LEVELS.map((_,i)=>Math.max(0,Math.round(+$("#pr"+i).value||0)));DB.split=Math.min(100,Math.max(0,+$("#spl").value||0));DB.payoutDay=Math.min(28,Math.max(1,Math.round(+$("#pday").value||5)));DB.disc={1:0,3:Math.min(50,Math.max(0,+$("#d3").value||0)),6:Math.min(50,Math.max(0,+$("#d6").value||0))};document.querySelectorAll("[data-fee]").forEach(i=>{DB.fees[i.dataset.fee]=Math.min(20,Math.max(0,+i.value||0))});document.querySelectorAll("[data-mon]").forEach(i=>{DB.methodsOn[i.dataset.mon]=i.checked});if(!Object.values(DB.methodsOn).some(Boolean))DB.methodsOn.pix=true;document.querySelectorAll("[data-sp]").forEach(i=>{findP(i.dataset.sp).split=Math.min(100,Math.max(0,+i.value||0))});saveDB();syncPrices();toast("Preços e divisão salvos");route(true)};
   const prev=()=>{const v=DB.prices[1],fe=(+$("#fee-pix").value||0)/100,x=DB.personals.find(p=>p.status==="ativo")||{id:"",name:"o professor"},sp=(+(($("#sp-"+x.id)||$("#spl")).value)||0)/100;
     $("#spprev").innerHTML=`<p class="week-note" style="margin:0 0 8px">Exemplo com a mensalidade do nível 2 (${money(v)}) de ${esc(x.name.split(" ")[0])}, paga via Pix:</p>${splitBar([{label:"Professor",v:v*sp,k:"k2"},{label:"Empresa",v:Math.max(0,v*(1-sp-fe)),k:"k1"},{label:"Taxa",v:v*fe,k:"k0"}])}`};
   document.querySelectorAll("#pr input").forEach(i=>i.addEventListener("input",prev));prev();
+  const wp=$("#wipe");if(wp)wp.onclick=()=>sheet("trash-2","Apagar tudo e começar do zero?","Apaga todos os alunos, professores, pagamentos, mensagens e contatos do Primeiro Passo. A sua conta da empresa e os preços continuam. Não dá para desfazer.","Apagar tudo",{danger:true,cancel:"Cancelar",onOk:()=>{wp.disabled=true;toast("Apagando...");FBL.wipe().then(n=>{toast(`Pronto, ${n} registros apagados`);route(true)}).catch(x=>{wp.disabled=false;toast(x.msg)})}});
   $("#tmsw").onchange=e=>{DB.teste=e.target.checked;saveDB();toast(DB.teste?"Modo de teste ligado":"Modo de teste desligado: as travas valem para todos")};
   $("#rs").onclick=()=>sheet("rotate-ccw","Restaurar dados de exemplo?","Todas as alterações feitas nos painéis serão perdidas.","Restaurar",{danger:true,cancel:"Cancelar",onOk:()=>{DB=seedDB();saveDB();syncPrices();FM=null;toast("Dados de exemplo restaurados");route(true)}});
 }
