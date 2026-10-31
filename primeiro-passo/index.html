@@ -519,7 +519,8 @@ body.ux .role:hover::after{opacity:1}
 .plist b{text-align:right}
 
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabbar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.tabbar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:400px){.tabbar a{font-size:10.5px}}
 .tabbar a{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:grid;justify-items:center;gap:3px;padding:10px 0 12px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;position:relative}
 .tabbar a.on{color:var(--navy)}
 .tabbar a.on::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
@@ -1592,7 +1593,7 @@ const FBL=(()=>{
   F.signupAluno=async(email,pw,build)=>{F.busy=true;try{
       const cr=await auth.createUserWithEmailAndPassword(email,pw),uid=cr.user.uid;
       await loadFor(cr.user);ME=uid;F.role="aluno";build();
-      if(!DB.personals.some(p=>p.id===S.pid&&p.status==="ativo")){const act=DB.personals.find(p=>p.status==="ativo");S.pid=act?act.id:null}
+      if(!DB.personals.some(p=>p.id===S.pid&&p.status==="ativo"))S.pid=null;
       await db.collection("usuarios").doc(uid).set({role:"aluno",email,nome:S.profile.name,criadoEm:Date.now()});
       const d=alunoDoc(S);await db.collection("alunos").doc(uid).set(d);SYNC[uid]=snap(d);
       subs.push(db.collection("alunos").doc(uid).onSnapshot(x=>{if(x.exists){remote(uid,x.data(),x.metadata.hasPendingWrites);rerender()}},e=>warn("aluno",e)));
@@ -1651,7 +1652,7 @@ const vitHtml=(p,sel,tag="div")=>`<${tag} class="vit" ${tag==="button"?`type="bu
   ${(p.spec||[]).filter(x=>x&&x!=="A definir").length?`<div class="chips">${p.spec.filter(x=>x&&x!=="A definir").map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</div>`:""}
   <p>${p.bio?esc(p.bio):`<span style="color:var(--muted)">Ainda sem apresentação.</span>`}</p></${tag}>`;
 const NOP={id:null,name:"Seu professor",cref:"CREF a confirmar",bio:"Profissional de educação física parceiro",status:"ativo",spec:[]};
-const myP=()=>DB.personals.find(p=>p.id===(S.pid||(FB?null:"p1")))||DB.personals.find(p=>p.status==="ativo")||DB.personals[0]||NOP;
+const myP=()=>(S.pid&&DB.personals.find(p=>p.id===S.pid))||NOP;
 const PERSONAL={get name(){return myP().name},get cref(){return myP().cref},get bio(){return myP().bio||""},get initials(){return initials(myP().name)}};
 const BADGES=[["Primeiro passo","footprints","Criou seu plano"],["Primeira conversa","message-circle","Conversou com o professor"],["1º treino","flame","Concluiu o primeiro treino"],["Semana firme","calendar-check","3 treinos em uma semana"],["Nível 2","house","Chegou aos treinos em casa"],["8 treinos","award","Completou 8 treinos"],["Nível 3","trees","Primeiro encontro ao ar livre"],["Nível 4","dumbbell","Chegou à academia"]];
 
@@ -1988,7 +1989,7 @@ document.addEventListener("pointerdown",e=>{if(!document.body.classList.contains
 
 /* ================== ONBOARDING ================== */
 let OB={step:0,name:"",goals:[],barriers:[],days:[],period:"",contact:"",parq:Array(PARQ.length).fill(null),notes:""};
-const OB_STEPS=["nome","objetivo","barreiras","rotina","contato","professor","saude","acesso","resultado"];
+const OB_STEPS=["nome","objetivo","barreiras","rotina","contato","saude","acesso","resultado"];
 function onboarding(){
   const st=OB_STEPS[OB.step], total=OB_STEPS.length-1;
   let body="",canNext=true,nextLabel="Continuar";
@@ -2007,11 +2008,6 @@ function onboarding(){
     <p style="font-weight:700;margin:22px 0 10px">Melhor período</p>
     <div class="opts">${optBtns([["Manhã","sunrise"],["Tarde","sun"],["Noite","moon"]],[OB.period],"period",0)}</div>`;canNext=OB.days.length>0&&!!OB.period&&!!OB.uf&&(OB.city||"").trim().length>1}
   if(st==="contato"){body=`<h2>Como você prefere conversar com o professor?</h2><p class="sub">Você pode mudar isso quando quiser.</p><div class="opts">${optBtns(CONTACT,[OB.contact],"contact",0)}</div>`;canNext=!!OB.contact}
-  if(st==="professor"){const ps=DB.personals.filter(p=>p.status==="ativo").sort((a,b)=>(b.uf===OB.uf)-(a.uf===OB.uf));
-    if(OB.pid&&!ps.some(p=>p.id===OB.pid))OB.pid=null;
-    body=`<h2>Escolha seu professor</h2><p class="sub">Leia a apresentação de cada um e escolha com quem você se sente mais à vontade.</p>
-    ${ps.length?`<div class="vits">${ps.map(p=>vitHtml(p,OB.pid===p.id,"button")).join("")}</div>`:`<div class="alert ok"><i data-lucide="user-round-search"></i><span>Nosso time de professores está sendo montado. A gente indica um para você e avisa pela conversa.</span></div>`}`;
-    canNext=!!OB.pid||!ps.length}
   if(st==="saude"){const any=OB.parq.some(x=>x===true);body=`<h2>Algumas perguntas sobre sua saúde</h2><p class="sub">É o questionário PAR-Q, usado por profissionais de educação física antes de qualquer treino.</p>
     <div class="parq">${PARQ.map((q,i)=>`<div class="pq"><p>${i+1}. ${q}</p><div class="yn"><button data-pq="${i}" data-a="1" aria-pressed="${OB.parq[i]===true}">Sim</button><button data-pq="${i}" data-a="0" aria-pressed="${OB.parq[i]===false}">Não</button></div></div>`).join("")}</div>
     ${any?`<div class="alert warn"><i data-lucide="stethoscope"></i><span>Tudo bem! Você pode continuar. Antes dos treinos, o professor vai pedir uma liberação do seu médico, para você treinar com segurança.</span></div>`:""}`;
@@ -2025,7 +2021,7 @@ function onboarding(){
     canNext=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(OB.email||"")&&(OB.pw||"").length>=6&&OB.pw===OB.pw2;nextLabel="Ver meu plano"}
   if(st==="resultado"){const any=OB.parq.some(x=>x===true);body=`<h2>Pronto, ${esc(OB.name.split(" ")[0])}! Seu caminho começa aqui.</h2><p class="sub">Com base nas suas respostas, preparamos seu começo.</p>
     <div class="result"><div class="rh"><small>Você começa no</small><b>Nível 1 · Conhecer</b></div><div class="rb">
-      ${(()=>{const p=findP(OB.pid);return p?`<div class="rr"><i data-lucide="user-round-check"></i><span>Seu professor: <b>${esc(p.name)}</b>${p.area?", "+esc(p.area):""}</span></div>`:""})()}
+      <div class="rr"><i data-lucide="user-round-search"></i><span>No app, na aba <b>Professores</b>, você conhece cada professor e escolhe o seu.</span></div>
       <div class="rr"><i data-lucide="map-pin"></i><span>Você está em <b>${esc(OB.city||"")} / ${OB.uf||""}</b>. Os níveis 1 e 2 são online, de qualquer lugar.</span></div>
       <div class="rr"><i data-lucide="${OB.contact==="Só mensagem"?"message-square":OB.contact==="Áudio"?"mic":"video"}"></i><span>Primeira conversa por <b>${OB.contact.toLowerCase()}</b>, de 15 minutos e gratuita.</span></div>
       ${OB.plan?`<div class="rr"><i data-lucide="tag"></i><span>Plano escolhido: <b>${planLabel(OB.plan)}</b>. Você só paga depois da primeira conversa.</span></div>`:""}
@@ -2043,16 +2039,15 @@ function onboarding(){
   const obe=$("#obe");if(obe){const chk=()=>{OB.email=$("#obe").value.trim();OB.pw=$("#obp").value;OB.pw2=$("#obp2").value;const okE=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(OB.email),okP=OB.pw.length>=6,okM=OB.pw===OB.pw2;
     $("#obe-err").textContent=OB.email&&!okE?"Confira o e-mail.":OB.pw&&!okP?"A senha precisa de pelo menos 6 caracteres.":OB.pw2&&!okM?"As senhas não são iguais.":"";$("#next").disabled=!(okE&&okP&&okM)};["#obe","#obp","#obp2"].forEach(id=>$(id).oninput=chk)}
   const obu=$("#obu"),obc=$("#obc");if(obu){const upd=()=>{$("#next").disabled=!(OB.days.length>0&&!!OB.period&&!!OB.uf&&(OB.city||"").trim().length>1)};obu.onchange=()=>{OB.uf=obu.value;upd()};obc.oninput=()=>{OB.city=obc.value;upd()}}
-  document.querySelectorAll("[data-vit]").forEach(b=>b.onclick=()=>{OB.pid=b.dataset.vit;const y=scrollY;onboarding();scrollTo(0,y)});
   document.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{const d=b.dataset.day;OB.days=OB.days.includes(d)?OB.days.filter(x=>x!==d):[...OB.days,d];onboarding()});
   document.querySelectorAll("[data-pq]").forEach(b=>b.onclick=()=>{OB.parq[+b.dataset.pq]=b.dataset.a==="1";const y=scrollY;onboarding();scrollTo(0,y)});
   const bk=$("#back");if(bk)bk.onclick=()=>{OB.step--;onboarding();scrollTo(0,0)};
   $("#next").onclick=next;icons();
   async function next(){if(OB.step<OB_STEPS.length-1){OB.step++;onboarding();scrollTo(0,0);return}
     const acc={email:(OB.email||"").toLowerCase(),h:FB?null:await hashPw(OB.pw||"")};
-    const build=()=>{S=fresh();if(!FB)S.account=acc;S.pid=OB.pid||null;S.info={name:OB.name.trim(),email:acc.email};S.plan=OB.plan||null;S.profile={uf:OB.uf,city:(OB.city||"").trim(),name:OB.name.trim(),goals:OB.goals,barriers:OB.barriers,days:OB.days,period:OB.period,contact:OB.contact,medical:OB.parq.some(x=>x===true),since:Date.now()};
-    const pc=findP(OB.pid);S.messages=[{from:"them",text:FB||!pc?`Oi, ${OB.name.trim().split(" ")[0]}! Que bom ter você aqui. Seu professor vai ler suas respostas e falar com você por esta conversa.`:`Oi, ${OB.name.trim().split(" ")[0]}! Eu sou o ${pc.name.split(" ")[0]}, seu professor. Li suas respostas e fico feliz que você esteja aqui.`,t:nowT()},{from:"them",text:"Quando quiser, agende nossa primeira conversa na aba Agenda. Pode ser só por mensagem, sem pressa nenhuma.",t:nowT()}];
-    S.unread=2};
+    const build=()=>{S=fresh();if(!FB)S.account=acc;S.pid=null;S.info={name:OB.name.trim(),email:acc.email};S.plan=OB.plan||null;S.profile={uf:OB.uf,city:(OB.city||"").trim(),name:OB.name.trim(),goals:OB.goals,barriers:OB.barriers,days:OB.days,period:OB.period,contact:OB.contact,medical:OB.parq.some(x=>x===true),since:Date.now()};
+    S.messages=[{from:"them",text:`Oi, ${OB.name.trim().split(" ")[0]}! Que bom ter você aqui. Agora é só escolher o seu professor na aba Professores. Ele vai ler suas respostas e falar com você por esta conversa.`,t:nowT()}];
+    S.unread=1};
     if(FB){const bt=$("#next");bt.disabled=true;try{await FBL.signupAluno(acc.email,OB.pw,build)}catch(x){bt.disabled=false;toast(x.msg);if(/e-mail|senha/i.test(x.msg)){OB.step=OB_STEPS.indexOf("acesso");onboarding()}return}}
     else{build();save()}
     OB.step=0;OB.pw=OB.pw2="";location.hash=TEST_MODE?"#/app":"#/app/verificacao";setTimeout(()=>{confetti();toast("Conquista: Primeiro passo!")},300)}
@@ -2060,8 +2055,8 @@ function onboarding(){
 
 /* ================== APP ================== */
 function app(tab){
-  const tabs=[["inicio","house","Início"],["treinos","circle-play","Treinos"],["agenda","calendar-days","Agenda"],["mensagens","message-circle","Conversa"],["perfil","user-round","Perfil"]];
-  const v={inicio:vHome,treinos:vTreinos,agenda:vAgenda,mensagens:vChat,perfil:vPerfil,verificacao:vVerif,dados:vDados}[tab]||vHome;
+  const tabs=[["inicio","house","Início"],["treinos","circle-play","Treinos"],["agenda","calendar-days","Agenda"],["professores","user-round-search","Professores"],["mensagens","message-circle","Conversa"],["perfil","user-round","Perfil"]];
+  const v={inicio:vHome,treinos:vTreinos,agenda:vAgenda,professores:vProfs,mensagens:vChat,perfil:vPerfil,verificacao:vVerif,dados:vDados}[tab]||vHome;
   if(tab==="mensagens")S.unread=0,save();
   $("#root").innerHTML=`<div class="app">
     <header class="app-top"><div class="in"><a class="brand" href="#/" aria-label="Site"><span class="mk"><i data-lucide="footprints"></i></span></a><div><small style="color:var(--muted);font-weight:600;font-size:13px">Nível ${S.level}</small><div style="font-weight:700;line-height:1.1">${LEVELS[S.level-1].t}</div></div>
@@ -2299,6 +2294,19 @@ function vAgenda(){
 }
 
 /* chat */
+/* ---------- professores: o aluno conhece cada um pela vitrine e escolhe o seu ---------- */
+function vProfs(){
+  const mine=S.pid&&findP(S.pid),ps=DB.personals.filter(p=>p.status==="ativo"&&p.id!==S.pid).sort((a,b)=>(b.uf===S.profile.uf)-(a.uf===S.profile.uf));
+  $("#view").innerHTML=`<div class="hello"><small>Professores</small><h2>${mine?"Seu professor":"Escolha seu professor"}</h2></div>
+  ${mine?`<div class="vits">${vitHtml(mine)}</div><p class="week-note" style="margin:10px 0 22px">Quer trocar de professor? Fale com a gente pela central de ajuda.</p>`:`<p class="sub">Leia a apresentação de cada um e escolha com quem você se sente mais à vontade. Ele vai ler suas respostas e falar com você pela Conversa.</p>`}
+  ${!mine?(ps.length?`<div class="vits">${ps.map(p=>`<div>${vitHtml(p)}<button class="btn btn-primary" data-pick="${esc(p.id)}" style="width:100%;margin-top:8px"><i data-lucide="user-round-check"></i>Escolher ${esc(p.name.split(" ")[0])}</button></div>`).join("")}</div>`:`<div class="alert ok"><i data-lucide="user-round-search"></i><span>Nosso time de professores está sendo montado. Assim que tiver alguém, ele aparece aqui.</span></div>`)
+   :(ps.length?`<div class="block-h"><h3>Outros professores</h3></div><div class="vits">${ps.map(p=>vitHtml(p)).join("")}</div>`:"")}`;
+  icons();
+  document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const p=findP(b.dataset.pick);if(!p)return;
+    sheet("user-round-check",`Escolher ${p.name}?`,"Ele passa a ser o seu professor: vê suas respostas, monta seus treinos e conversa com você.","Escolher",{cancel:"Agora não",onOk:()=>{S.pid=p.id;
+      if(!FB){S.messages.push({from:"them",text:`Oi, ${first()}! Eu sou o ${p.name.split(" ")[0]}, seu professor. Li suas respostas e fico feliz que você esteja aqui. Quando quiser, agende nossa primeira conversa na aba Agenda.`,t:nowT()});S.unread++}
+      save();toast(`Pronto! ${p.name.split(" ")[0]} é o seu professor.`);route(true)}})});
+}
 function vChat(){
   const quick=["Estou com vergonha de começar","Posso treinar sentado?","Hoje não estou bem","Quero mudar meu horário"];
   $("#view").innerHTML=`<div class="chat">
@@ -2464,13 +2472,13 @@ syncPrices();
 /* o cliente deste aparelho visto pelos painéis */
 /* cada aluno (o deste aparelho ou os carregados do banco) visto como cliente pelos painéis */
 function toC(id){const a=A(id);if(!a||!a.profile)return null;const p=a.profile;
-  return{id,you:id===ME,uf:p.uf||(FB?"":"SP"),city:p.city||"",name:p.name,level:a.level,pid:a.pid||(FB?null:"p1"),since:p.since,goals:p.goals||[],barriers:p.barriers||[],contact:p.contact||"Só mensagem",period:p.period||"Manhã",days:p.days||[],
+  return{id,you:id===ME,uf:p.uf||(FB?"":"SP"),city:p.city||"",name:p.name,level:a.level,pid:a.pid||null,since:p.since,goals:p.goals||[],barriers:p.barriers||[],contact:p.contact||"Só mensagem",period:p.period||"Manhã",days:p.days||[],
     medical:!!p.medical,medOk:!!p.medOk,workouts:a.workouts||[],talked:!!a.talked,outdoor:a.outdoor||0,gym:a.gymsessions||0,status:a.status||"ativo",msgs:a.messages||[],phone:FB?((a.info||{}).tel||"—"):"este aparelho"}}
 const meC=()=>toC(ME);
 const allClients=()=>DB.clients.concat(alIds().map(toC).filter(Boolean));
 const findC=id=>allClients().find(c=>c.id===id);
 const findP=id=>DB.personals.find(p=>p.id===id);
-function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||(FB?null:"p1"),ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
+function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||null,ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
 function updC(id,patch){
   const a=A(id);if(a){const map={level:"level",talked:"talked",outdoor:"outdoor",gym:"gymsessions",status:"status",pid:"pid"};
     for(const k in patch){if(k==="medOk")a.profile.medOk=patch[k];else a[map[k]||k]=patch[k]}if(patch.talked)autoRx(a);saveA(id)}
