@@ -1,7 +1,7 @@
 /* Guarda o site no aparelho para abrir sem internet.
    Página: rede primeiro (sempre a versão mais nova), cópia salva se estiver offline.
    Fontes e biblioteca de ícones: cópia salva primeiro. */
-const CACHE = "primeiropasso-v17"; /* o PassosFit mora no mesmo site: só apaga cópias do Primeiro Passo */
+const CACHE = "primeiropasso-v18"; /* o PassosFit mora no mesmo site: só apaga cópias do Primeiro Passo */
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
