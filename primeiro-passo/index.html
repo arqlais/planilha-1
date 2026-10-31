@@ -2530,14 +2530,15 @@ function login(){
       const miss=[f.name.length<3&&"nome",f.cref.length<4&&"CREF",!f.uf&&"estado",f.city.length<2&&"cidade",!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)&&"e-mail",f.pw.length<6&&"senha com 6 caracteres"].filter(Boolean);
       if(miss.length){$("#npx").textContent="Falta: "+miss.join(", ")+".";return}
       const bt=$("#npf button.btn-primary");bt.disabled=true;$("#npx").textContent="";
-      if(!FB){const id="p"+(DB.personals.length+1);DB.personals.push({id,name:f.name,cref:"CREF "+f.cref,uf:f.uf,area:f.city+" / "+f.uf,bio:"",spec:["Iniciantes"],status:"pendente",cap:15,since:Date.now(),email:f.email,info:{name:f.name,email:f.email,tel:f.tel}});saveDB();
+      if(!FB){const id="p"+(DB.personals.length+1);DB.personals.push({id,name:f.name,cref:"CREF "+f.cref,uf:f.uf,area:f.city+" / "+f.uf,bio:"",spec:["Iniciantes"],status:DEMO?"ativo":"pendente",cap:15,since:Date.now(),email:f.email,info:{name:f.name,email:f.email,tel:f.tel}});saveDB();
+        if(DEMO){setSess({role:"personal",pid:id});location.hash="#/personal";toast("Professor criado. Você já está no painel dele.");return}
         sheet("badge-check","Cadastro enviado","Agora entre como empresa e aprove este professor em Professores. Depois ele já pode entrar.","Entendi",{onOk:()=>{location.hash="#/entrar"}});return}
       FBL.signupPersonal(f).then(()=>sheet("badge-check","Cadastro enviado","A empresa vai conferir seu CREF. Quando for aprovado, você entra com este e-mail e senha em Entrar → Professor.","Entendi",{onOk:()=>{location.hash="#/entrar/personal"}})).catch(x=>{bt.disabled=false;$("#npx").textContent=x.msg})};
     return}
   if(!R){
     $("#root").innerHTML=`${top}<main class="login-main lg-center">
       ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Comece do zero, como no dia a dia. Tudo fica só neste aparelho e entra sem senha. Para trocar, use o botão "Trocar perfil".</p>
-      <ol class="demo-steps"><li>Crie o professor em "Sou professor".</li><li>Em "Sou da empresa", aprove o professor em Professores.</li><li>Em "Sou aluno", faça o cadastro do aluno.</li><li>Volte no professor para indicar os exercícios dele.</li></ol>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
+      <ol class="demo-steps"><li>Crie o professor em "Sou professor". Ele já entra direto no painel.</li><li>Em "Sou aluno", faça o cadastro do aluno.</li><li>Volte no professor para indicar os exercícios dele.</li></ol>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
       <div class="roles${DEMO?"":" two"}">
         <div class="role"><span class="ri"><i data-lucide="footprints"></i></span><h2>Sou aluno</h2><p>Seu caminho passo a passo, treinos, agenda e conversa com o seu professor.</p><a class="btn btn-primary" href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}">${has&&!S.loggedOut?"Abrir meu app":"Entrar no app"}<i data-lucide="arrow-right"></i></a></div>
         <div class="role"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Sou professor</h2><p>Seus alunos, alertas do dia, agenda, mensagens e seus ganhos.</p><a class="btn btn-primary" href="#/entrar/personal">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
@@ -2598,11 +2599,11 @@ function demoGo(who){
 function demoPersonal(){
   const ps=DB.personals;if(!ps.length){location.hash="#/entrar/nova-personal";return}
   const el=document.createElement("div");el.className="modal";el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Entrar como professor"><div class="big"><i data-lucide="dumbbell"></i></div><h3>Entrar como professor</h3>
-    <div class="demo-ps">${ps.map(p=>`<button class="btn ${p.status==="ativo"?"btn-primary":"btn-ghost"}" data-dp="${p.id}" ${p.status==="ativo"?"":"disabled"}>${esc(p.name)}${p.status==="ativo"?"":p.status==="pendente"?" · aguardando a empresa aprovar":" · desativada"}</button>`).join("")}
+    <div class="demo-ps">${ps.map(p=>`<button class="btn btn-primary" data-dp="${p.id}">${esc(p.name)}</button>`).join("")}
     <a class="btn btn-ghost" href="#/entrar/nova-personal" data-dpn><i data-lucide="user-plus"></i>Criar outro professor</a></div></div>`;
   document.body.appendChild(el);icons();const close=()=>el.remove();
   el.onclick=e=>{if(e.target===el)close()};
-  el.querySelectorAll("[data-dp]").forEach(b=>b.onclick=()=>{close();setSess({role:"personal",pid:b.dataset.dp});location.hash="#/personal"});
+  el.querySelectorAll("[data-dp]").forEach(b=>b.onclick=()=>{close();const p=findP(b.dataset.dp);if(p&&p.status!=="ativo"){p.status="ativo";saveDB()}setSess({role:"personal",pid:b.dataset.dp});location.hash="#/personal"});
   el.querySelector("[data-dpn]").onclick=close}
 function logout(){if(FB){FBL.logout();return}setSess({});location.hash="#/entrar"}
 
