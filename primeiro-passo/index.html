@@ -15,6 +15,9 @@
 <meta name="color-scheme" content="only light">
 <title>Primeiro Passo</title>
 <script>/* modo de teste (?demo): o atalho salvo na tela inicial precisa abrir o teste, não o app normal */
+/* ícone de teste na tela inicial: cada ícone tem a própria memória; se este já abriu o teste, continua sempre no teste */
+(function(){var sa=navigator.standalone||matchMedia("(display-mode: standalone)").matches,dm=/[?&]demo\b/.test(location.search);
+  try{if(sa&&dm)localStorage.setItem("pp-teste","1");if(sa&&!dm&&localStorage.getItem("pp-teste")==="1")history.replaceState(null,"",location.pathname+"?demo"+location.hash)}catch(e){}})();
 if(/[?&]demo\b/.test(location.search)){document.querySelector('link[rel=manifest]').href="demo/manifest.webmanifest";document.querySelector('meta[name=apple-mobile-web-app-title]').content="PP Teste";document.title="Primeiro Passo (teste)"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
