@@ -5964,7 +5964,9 @@ function archWorkouts(pid, list) {
 function builderHtml(pid) {
   if (ui.bMode == null) { try { ui.bMode = localStorage.getItem('pf-montar-modo') || 'semana'; } catch (e) { ui.bMode = 'semana'; } }
   const modes = `<div class="bmode" role="tablist"><button class="${ui.bMode === 'semana' ? 'on' : ''}" data-act="b-mode" data-v="semana"><i class="ic ic-cal"></i> Montar por dia</button><button class="${ui.bMode !== 'semana' ? 'on' : ''}" data-act="b-mode" data-v="treinos"><i class="ic ic-note"></i> Treinos (tabela)</button></div>`;
-  if (ui.bMode === 'semana') return `<section class="card">${modes}${weekHtml(pid)}</section>`;
+  // a barra de baixo (dias para pôr os exercícios marcados) fica fora do cartão: o desfoque do cartão prendia a barra
+  // no fim do cartão, e não no pé da tela (por isso era preciso rolar até lá embaixo)
+  if (ui.bMode === 'semana') { const h = weekHtml(pid), i = h.indexOf('<div class="wkp-bar">'); return `<section class="card">${modes}${i < 0 ? h : h.slice(0, i)}</section>${i < 0 ? '' : h.slice(i)}`; }
   const all = workoutsOf(pid).filter(w => w.day == null), nArch = all.filter(w => w.arch).length;
   const ws = all.filter(w => !w.arch || ui.bArch || w.id === ui.bGroup);
   if (!ws.some(w => w.id === ui.bGroup)) ui.bGroup = (ws.find(w => !w.arch) || ws[0] || {}).id || '';
@@ -6023,6 +6025,10 @@ const wkDaysOf = (pid, name) => WEEK.filter(([d]) => wkDayExs(pid, d).some(e => 
 // O rascunho é só uma lista de nomes e séries por dia (profile.weekDrafts): o aluno não vê, não cria exercício nem mexe em carga.
 // "Usar esta semana" monta a semana de verdade pelos mesmos passos do Montar por dia (exercício que continua leva as cargas;
 // o que sai fica guardado com o histórico) e guarda a semana que estava em uso como outro rascunho, para voltar se quiser.
+// exercícios marcados na lista (pode marcar vários e pôr todos no dia de uma vez)
+const wkSels = () => (ui.wk && ui.wk.sels) || [];
+const wkIsSel = n => wkSels().some(x => sameName(x.name, n));
+const wkAllIn = (pid, d) => { const l = wkSels(), exs = wkDayExs(pid, d); return l.length > 0 && l.every(x => exs.some(e => sameName(e.name, x.name))); };
 const wkDrafts = pid => (profile(pid) || {}).weekDrafts || [];
 const wkDraft = pid => { const W = ui.wk; return W && W.dv ? wkDrafts(pid).find(x => x.id === W.dv) || null : null; };
 const dvExs = (dr, d) => (dr.days[d] || []).map(x => ({ id: x.id, name: x.name, group: x.group, sets: Array.from({ length: x.n }, () => ({})) }));
@@ -6107,9 +6113,9 @@ function wkOwnList(pid, q, g) {
 }
 function wkListHtml(pid) {
   const W = ui.wk, q = normName(W.q || ''), own = wkOwnList(pid, q, W.g), list = [...own.map(x => [...x, 1]), ...catList(q, W.g, '')];
-  const item = ([gr, n, mine]) => { const ds = wkDaysOf(pid, n), on = W.sel && sameName(W.sel.name, n);
+  const item = ([gr, n, mine]) => { const ds = wkDaysOf(pid, n), on = wkIsSel(n);
     return `<button class="own-item ${on ? 'on' : ''}" data-act="wk-pick" data-g="${gr}" data-n="${esc(n)}"><span class="grow">${esc(n)}${mine ? ' <small class="wk-mine">seu</small>' : ''}${q ? ` <small>${gr}</small>` : ''}${ds.length ? `<em class="wk-in">${ds.map(d => WK_SHORT[d]).join(' · ')}</em>` : ''}</span><b>${on ? '✓' : '＋'}</b></button>`; };
-  const typed = (W.q || '').trim().slice(0, 60).replace(/^./, c => c.toUpperCase()), on = W.sel && typed && sameName(W.sel.name, typed);
+  const typed = (W.q || '').trim().slice(0, 60).replace(/^./, c => c.toUpperCase()), on = typed && wkIsSel(typed);
   return list.map(item).join('')
     + (typed && !list.some(([, n]) => normName(n) === q) ? `<button class="own-item ${on ? 'on' : ''}" data-act="wk-pick" data-g="${W.g}" data-n="${esc(typed)}"><span class="grow">Usar “${esc(typed)}” <small>nome fora da lista · ${W.g}</small></span><b>${on ? '✓' : '＋'}</b></button>` : '')
     || '<p class="hint" style="margin:8px 0">Nenhum exercício com esse nome.</p>';
@@ -6122,10 +6128,10 @@ function weekHtml(pid) {
   if (W.cmp) return wkPlansHtml(pid) + wkCmpHtml(pid);
   const days = WEEK.map(([d, nm]) => {
     const exs = wkDayExs(pid, d), w = dr ? null : dayWorkout(pid, d), also = dr ? [] : ((P.division || {})[d] || []).filter(x => x !== (w || {}).id && x !== CARDIO && isLetter(x, pid));
-    const inSel = W.sel && exs.some(e => sameName(e.name, W.sel.name));
-    return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${W.sel ? 'pick' : ''} ${inSel ? 'has' : ''}">
+    const pick = wkSels().length > 0, inSel = wkAllIn(pid, d);
+    return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${pick ? 'pick' : ''} ${inSel ? 'has' : ''}">
       <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'}<br>${(n => `${n} série${n === 1 ? '' : 's'}`)(exs.reduce((a, e) => a + e.sets.length, 0))}` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
-      ${W.sel ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? '✓ Está aqui' : '＋ Colocar aqui'}</button>` : ''}
+      ${pick ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? (wkSels().length > 1 ? '✓ Estão aqui' : '✓ Está aqui') : '＋ Colocar aqui'}</button>` : ''}
       ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${!dr && wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} série${e.sets.length === 1 ? '' : 's'}</small></button>
         ${W.open === e.id ? `<div class="wk-ed"><div class="bw-step"><small>Séries</small><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${e.sets.length}</b><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
           ${(src => src.length && !dr ? `<div class="wk-src"><small>Comparar cargas com</small>${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
@@ -6134,7 +6140,7 @@ function weekHtml(pid) {
           <button class="btn danger" data-act="wk-del" data-id="${e.id}">Tirar do dia</button></div></div>` : ''}</div>`).join('')}
       ${also.map(x => `<p class="wk-also">Também neste dia: <b>${esc(wName(x, pid))}</b><br><button class="link" data-act="wk-unalso" data-d="${d}" data-w="${x}">Tirar deste dia</button></p>`).join('')}</div>`;
   }).join('');
-  return `${wkPlansHtml(pid)}<p class="hint wk-how"><b>1.</b> Toque num exercício da lista. <b>2.</b> Toque em <b>＋ Colocar</b> nos dias em que ele entra. Toque num exercício do dia para mudar séries e repetições.</p>
+  return `${wkPlansHtml(pid)}<p class="hint wk-how"><b>1.</b> Toque em um ou mais exercícios da lista. <b>2.</b> Toque em <b>＋ Colocar</b> nos dias em que eles entram. Toque num exercício do dia para mudar séries e repetições.</p>
     <div class="wk-wrap"><div class="wk-days">${days}</div></div>
     ${dr ? '' : `<div class="wk-save"><button class="btn primary" data-act="wk-save">✓ Salvar semana</button>
       ${ui.wkSaved && ui.wkSaved.pid === pid ? `<small class="ok">✓ Semana salva às ${ui.wkSaved.hora}. Ela já aparece em Hoje, em cada dia.</small>` : '<small>Cada mudança já fica guardada sozinha. O botão confere se está tudo salvo na nuvem.</small>'}</div>`}
@@ -6146,8 +6152,8 @@ function weekHtml(pid) {
     <input class="search" id="wkSearch" placeholder="Buscar exercício" value="${esc(W.q || '')}" autocomplete="off">
     ${W.q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === W.g ? 'on' : ''}" data-act="wk-g" data-g="${x}">${x}</button>`).join('')}</div>`}
     <div class="own-list bw-list" id="wkList">${wkListHtml(pid)}</div>
-    ${W.sel ? `<div class="wkp-bar"><div class="wk-bt"><span class="grow"><b>${esc(W.sel.name)}</b><small>Toque nos dias em que ele entra</small></span><button class="btn" data-act="wk-unpick">Pronto</button></div>
-      <div class="wk-bd">${WEEK.map(([d]) => `<button class="${wkDayExs(pid, d).some(e => sameName(e.name, W.sel.name)) ? 'on' : ''}" data-act="wk-put" data-d="${d}">${WK_SHORT[d]}</button>`).join('')}</div></div><div class="wk-pad"></div>` : ''}`;
+    ${wkSels().length ? (l => `<div class="wkp-bar"><div class="wk-bt"><span class="grow"><b>${l.length > 1 ? `${l.length} exercícios marcados` : esc(l[0].name)}</b><small>${l.length > 1 ? esc(l.map(x => x.name).join(' · ')) : 'Marque mais na lista ou toque nos dias em que ele entra'}</small></span><button class="btn" data-act="wk-unpick">Pronto</button></div>
+      <div class="wk-bd">${WEEK.map(([d]) => `<button class="${wkAllIn(pid, d) ? 'on' : ''}" data-act="wk-put" data-d="${d}">${WK_SHORT[d]}</button>`).join('')}</div></div><div class="wk-pad"></div>`)(wkSels()) : ''}`;
 }
 // coloca ou tira o exercício escolhido do dia (o treino do dia é criado na primeira vez e entra na divisão da semana)
 // De onde vêm as cargas de comparação ("antes") de um exercício do dia: cada histórico já feito com nome igual ou parecido
@@ -6228,7 +6234,7 @@ function prevPullHtml(ex) {
     : '<small>Nenhum exercício parecido feito antes.</small>'}<button class="v2-pull-x" data-act="v2-find-prev">Fechar</button></div>`;
 }
 const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') && wkSources(pid, ex).length > 1 ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
-function wkToggle(pid, d, sel = ui.wk && ui.wk.sel) {
+function wkToggle(pid, d, sel) {
   const W = { sel }, P = profile(pid); if (!W.sel || !P) return;
   const cur = wkExs(pid, d).find(e => sameName(e.name, W.sel.name));
   if (cur) return wkRemove(pid, cur);
@@ -6288,11 +6294,19 @@ function wkAct(act, b) {
     wkLink(ex, x, day); save(); toast(`<b>${esc(ex.name)}</b> agora compara com ${esc(x.label)}${day ? `: ${ex.sets.length} séries da última vez` : ''}.`);
     const y = scrollY; render(); scrollTo(0, y); return; }
   const pid = ui.profile, W = ui.wk; if (!W) return;
-  const re = () => { const y = scrollY, l = document.getElementById('wkList'), ly = l ? l.scrollTop : 0; render(); scrollTo(0, y); const n = document.getElementById('wkList'); if (n) n.scrollTop = ly; };
+  // Redesenha sem a tela pular: os botões "＋ Colocar aqui" que aparecem/somem nos dias mudam a altura de cima, então
+  // segura no lugar a lista de exercícios (toque na lista ou na barra de baixo) ou o próprio botão tocado (toque nos dias)
+  const re = () => { document.documentElement.style.overflowAnchor = document.body.style.overflowAnchor = 'none'; // o navegador não "ajeita" a rolagem por conta própria (fazia a tela descer)
+    const l = document.getElementById('wkList'), ly = l ? l.scrollTop : 0, inList = b.closest('#wkList, .wkp-bar, .own-groups') || !b.isConnected;
+    const key = el => el && ['act', 'd', 'id', 'v', 'n', 'g'].map(k => el.dataset[k] || '').join('|'), bk = key(b), anc = inList ? l : b, top = anc && anc.isConnected ? anc.getBoundingClientRect().top : null, y = scrollY;
+    render(); scrollTo(0, y); const n = document.getElementById('wkList'); if (n) n.scrollTop = ly;
+    const a2 = inList ? n : [...document.querySelectorAll(`[data-act="${b.dataset.act}"]`)].find(x => key(x) === bk);
+    if (a2 && top != null) scrollBy(0, a2.getBoundingClientRect().top - top); };
   const dr = wkDraft(pid);
   if (dr && ['wk-put', 'wk-st', 'wk-mv', 'wk-del'].includes(act)) { // no rascunho: só nomes e séries, nada de carga
     const d = WEEK.map(([k]) => k).find(k => (dr.days[k] || []).some(x => x.id === b.dataset.id)), l = d != null ? dr.days[d] : null, x = l && l.find(y => y.id === b.dataset.id);
-    if (act === 'wk-put') { dvToggle(pid, dr, +b.dataset.d, W.sel); return re(); }
+    if (act === 'wk-put') { const d = +b.dataset.d, all = wkAllIn(pid, d), exs = dvExs(dr, d);
+      wkSels().forEach(x => { if (all || !exs.some(e => sameName(e.name, x.name))) dvToggle(pid, dr, d, x); }); return re(); }
     if (!x) return;
     if (act === 'wk-st') x.n = Math.max(1, Math.min(10, x.n + +b.dataset.d));
     if (act === 'wk-mv') { const i = l.indexOf(x), j = i + +b.dataset.d; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; }
@@ -6315,9 +6329,10 @@ function wkAct(act, b) {
     case 'wk-duse': if (!dr) return; ask({ title: `Usar "${dr.name}"?`, msg: `Ela passa a ser a semana em uso${pid === ME ? ' e aparece em Hoje' : ` e ${firstName(profile(pid))} já vê no app`}. A semana de agora fica guardada aqui como rascunho, para comparar ou voltar. Nenhuma carga se perde: exercício que continua leva as cargas, e o que sai fica guardado com o histórico.`, ok: 'Usar esta semana' }).then(r => {
         if (r.action !== 'ok') return; const nm = dr.name; wkUseDraft(pid, dr); re(); toast(`<b>${esc(nm)}</b> agora é a semana em uso. A anterior ficou guardada em Semanas.`); }); return;
     case 'wk-g': W.g = b.dataset.g; return re();
-    case 'wk-pick': W.sel = W.sel && sameName(W.sel.name, b.dataset.n) ? null : { name: b.dataset.n, group: b.dataset.g }; return re();
-    case 'wk-unpick': W.sel = null; return re();
-    case 'wk-put': wkToggle(pid, +b.dataset.d); return re();
+    case 'wk-pick': W.sels = wkIsSel(b.dataset.n) ? wkSels().filter(x => !sameName(x.name, b.dataset.n)) : [...wkSels(), { name: b.dataset.n, group: b.dataset.g }]; return re();
+    case 'wk-unpick': W.sels = []; return re();
+    case 'wk-put': { const d = +b.dataset.d, all = wkAllIn(pid, d); // todos já no dia: tira todos; senão põe os que faltam
+      wkSels().forEach(x => { if (all || !wkExs(pid, d).some(e => sameName(e.name, x.name))) wkToggle(pid, d, x); }); return re(); }
     case 'wk-open': W.open = W.open === b.dataset.id ? null : b.dataset.id; return re();
     case 'wk-st': { if (!ex) return; const f = b.dataset.f, d = +b.dataset.d;
       if (f === 'n') wkSetN(ex, Math.max(1, Math.min(10, ex.sets.length + d)));
@@ -9195,7 +9210,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/11-01:24';
+const APP_VERSION = '02/11-02:01';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
