@@ -638,6 +638,17 @@ body.desk main:has(.ws[data-active=montar] .wk-days) > *,body.desk main:has(> se
 .wk-also{margin:0;font-size:12px;color:var(--muted)}.wk-also .link{font-size:12px;padding:4px 0}
 .wk-src{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}.wk-src>small{width:100%;color:var(--muted);font-weight:700}.wk-src button{display:flex;flex-direction:column;align-items:flex-start;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.wk-src button small{color:var(--muted);font-size:11px}.wk-src button.on{border-color:var(--acc);background:var(--acc-soft)}.wk-src button.on b::before{content:'✓ '}
 .lr{margin:0 0 14px}.lr h3{margin:0 0 4px}.lr-it{padding:10px 0;border-top:1px solid var(--line)}.lr-it>small{display:block;color:var(--muted)}
+.wk-plans{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px}.wk-plans .lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-right:2px}
+.wk-plans button{border:1px solid var(--line);background:var(--input);color:var(--text);padding:8px 14px;border-radius:999px;font:inherit;font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:5px}
+.wk-plans button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}.wk-plans .add-chip{border:1.5px dashed var(--acc);background:transparent;color:var(--acc)}.wk-plans .cmp{border-color:var(--acc);color:var(--acc)}.wk-plans .cmp.on{color:var(--acc-ink)}
+.wk-plans .ic{width:15px;height:15px}
+.wk-dbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1.5px dashed var(--acc);border-radius:14px;padding:10px 12px;margin:0 0 12px}.wk-dbar small{display:block;color:var(--muted);font-size:12.5px}.wk-dbar .grow{flex:1 1 260px}.wk-dbar .btn{font-size:13px}
+.wk-cmpw{overflow-x:auto;border:1px solid var(--line);border-radius:14px}.wk-cmp table{border-collapse:collapse;width:100%;min-width:360px;font-size:14px}
+.wk-cmp th,.wk-cmp td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.wk-cmp thead th{background:var(--input);font-size:13px;white-space:nowrap}
+.wk-cmp tbody th{font-weight:700;color:var(--muted);white-space:nowrap}.wk-cmp td b{font-size:16px}.wk-cmp td small{display:block;color:var(--muted);font-size:11.5px}
+.wk-cmp td em{font-style:normal;font-size:12px;font-weight:800;margin-left:6px}.wk-cmp em.up{color:var(--acc)}.wk-cmp em.dn{color:var(--down)}
+@media (max-width:600px){.wk-cmp th,.wk-cmp td{padding:7px 6px}.wk-cmp table{min-width:0;font-size:13px}.wk-cmp thead th,.wk-cmp tbody th{white-space:normal}.wk-cmp td em{display:block;margin:0}}
+.wk-cmp tr.sec th{color:var(--text);background:var(--acc-soft);font-size:12.5px;text-transform:uppercase;letter-spacing:.4px}.wk-cmp tr.tot td b{color:var(--acc)}
 .wk-old{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-radius:14px;padding:10px 12px;margin:10px 0;background:var(--acc-soft);font-size:13.5px}
 .wk-mine{display:inline-block;padding:1px 7px;border-radius:99px;background:var(--acc-soft);color:var(--acc)!important;font-weight:800}
 .wk-in{display:block;font-style:normal;font-size:12px;color:var(--acc);font-weight:700}
@@ -6007,7 +6018,75 @@ function builderHtml(pid) {
 const WK_SHORT = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb', 0: 'Dom' };
 const dayWorkout = (pid, d) => workoutsOf(pid).find(w => w.day === d);
 const wkExs = (pid, d) => { const w = dayWorkout(pid, d); return w ? letterExs(w.id, pid) : []; };
-const wkDaysOf = (pid, name) => WEEK.filter(([d]) => wkExs(pid, d).some(e => sameName(e.name, name))).map(([d]) => d);
+const wkDaysOf = (pid, name) => WEEK.filter(([d]) => wkDayExs(pid, d).some(e => sameName(e.name, name))).map(([d]) => d);
+// ---------- Outras semanas (rascunhos): montar outra semana sem mexer na que está em uso, e comparar as duas ----------
+// O rascunho é só uma lista de nomes e séries por dia (profile.weekDrafts): o aluno não vê, não cria exercício nem mexe em carga.
+// "Usar esta semana" monta a semana de verdade pelos mesmos passos do Montar por dia (exercício que continua leva as cargas;
+// o que sai fica guardado com o histórico) e guarda a semana que estava em uso como outro rascunho, para voltar se quiser.
+const wkDrafts = pid => (profile(pid) || {}).weekDrafts || [];
+const wkDraft = pid => { const W = ui.wk; return W && W.dv ? wkDrafts(pid).find(x => x.id === W.dv) || null : null; };
+const dvExs = (dr, d) => (dr.days[d] || []).map(x => ({ id: x.id, name: x.name, group: x.group, sets: Array.from({ length: x.n }, () => ({})) }));
+const wkDayExs = (pid, d) => { const dr = wkDraft(pid); return dr ? dvExs(dr, d) : wkExs(pid, d); };
+const wkSnap = pid => Object.fromEntries(WEEK.map(([d]) => [d, wkExs(pid, d).map(e => ({ id: uid(), name: e.name, group: e.group, n: e.sets.length }))]).filter(([, l]) => l.length));
+function dvToggle(pid, dr, d, sel) {
+  const l = dr.days[d] = dr.days[d] || [], i = l.findIndex(x => sameName(x.name, sel.name));
+  if (i >= 0) l.splice(i, 1);
+  else { const live = WEEK.flatMap(([k]) => wkExs(pid, k)).find(e => sameName(e.name, sel.name)), prev = l[l.length - 1];
+    l.push({ id: uid(), name: sel.name, group: sel.group, n: live ? live.sets.length : prev ? prev.n : 3 }); }
+  if (!l.length) delete dr.days[d];
+  dr.at = new Date().toISOString(); save();
+}
+function wkSetN(ex, n) {
+  const last = ex.sets[ex.sets.length - 1] || { carga: null, reps: 10 };
+  ex.sets = Array.from({ length: n }, (_, i) => ex.sets[i] || { carga: last.carga, reps: last.reps });
+  const s = sessionOn(ex.id, today()); if (s && s.sets.length !== n) resizeSets(s, n);
+  ex.planDate = today();
+}
+function wkUseDraft(pid, dr) {
+  const P = profile(pid), was = wkSnap(pid);
+  WEEK.forEach(([d]) => {
+    const want = dr.days[d] || [];
+    want.forEach(x => { if (!wkExs(pid, d).some(e => sameName(e.name, x.name))) wkToggle(pid, d, { name: x.name, group: x.group }); });
+    wkExs(pid, d).filter(e => !want.some(x => sameName(x.name, e.name))).forEach(e => wkRemove(pid, e));
+    const list = wkExs(pid, d);
+    want.forEach((x, i) => { const e = list.find(y => sameName(y.name, x.name)); if (!e) return; e.order = i + 1; if (e.sets.length !== x.n) wkSetN(e, x.n); });
+  });
+  P.weekDrafts = wkDrafts(pid).filter(x => x !== dr);
+  if (Object.keys(was).length) P.weekDrafts.unshift({ id: uid(), name: `Semana usada até ${fmtDate(today())}`, at: new Date().toISOString(), days: was });
+  ui.wk.dv = null; ui.wk.open = null; save();
+}
+// números de uma semana: dias, exercícios, séries e séries por grupo (diretas = 1 série; ajuda = ½, como no resto do app)
+function wkStats(get) {
+  const o = { days: 0, ex: 0, sets: 0, per: {}, dir: {}, help: {} };
+  WEEK.forEach(([d]) => { const l = get(d); if (l.length) o.days++; o.ex += l.length;
+    const n = l.reduce((a, e) => a + e.sets.length, 0); o.sets += n; o.per[d] = n;
+    l.forEach(e => { const w = groupWeights(e), k = e.sets.length; for (const g in w) { const t = w[g] === 1 ? o.dir : o.help; t[g] = (t[g] || 0) + k * w[g]; } }); });
+  return o;
+}
+function wkCmpHtml(pid) {
+  const plans = [{ name: 'Em uso', st: wkStats(d => wkExs(pid, d)) }, ...wkDrafts(pid).map(dr => ({ name: dr.name, st: wkStats(d => dvExs(dr, d)) }))];
+  const base = plans[0].st, num = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  const diff = (v, b, i) => { if (!i || Math.abs(v - b) < .05) return ''; const up = v > b; return `<em class="${up ? 'up' : 'dn'}">${up ? '▲' : '▼'} ${num(Math.abs(v - b))}</em>`; };
+  const row = (label, f, cls = '') => `<tr class="${cls}"><th>${label}</th>${plans.map((p, i) => `<td><b>${num(f(p.st))}</b>${diff(f(p.st), f(base), i)}</td>`).join('')}</tr>`;
+  const groups = GROUPS.filter(g => plans.some(p => p.st.dir[g] || p.st.help[g]));
+  return `<div class="wk-cmp"><p class="hint">Séries que cada semana manda fazer. Por grupo: o número grande são as séries diretas; "+ ajuda" é a meia série dos músculos que ajudam (ex.: supino inclinado ajuda o tríceps). ▲▼ = diferença para a semana em uso.</p>
+    <div class="wk-cmpw"><table><thead><tr><th></th>${plans.map((p, i) => `<th>${i ? '' : '✓ '}${esc(p.name)}</th>`).join('')}</tr></thead><tbody>
+    ${row('Dias de treino', s => s.days)}${row('Exercícios', s => s.ex)}${row('Séries na semana', s => s.sets, 'tot')}
+    <tr class="sec"><th colspan="${plans.length + 1}">Séries por grupo na semana</th></tr>
+    ${groups.map(g => `<tr><th>${g}</th>${plans.map((p, i) => `<td><b>${num(p.st.dir[g] || 0)}</b>${diff(p.st.dir[g] || 0, base.dir[g] || 0, i)}${p.st.help[g] ? `<small>+ ${num(p.st.help[g])} ajuda</small>` : ''}</td>`).join('')}</tr>`).join('')}
+    <tr class="sec"><th colspan="${plans.length + 1}">Séries por dia</th></tr>
+    ${WEEK.map(([d, nm]) => row(nm, s => s.per[d] || 0)).join('')}
+    </tbody></table></div></div>`;
+}
+function wkPlansHtml(pid) {
+  const W = ui.wk, ds = wkDrafts(pid), dr = wkDraft(pid);
+  return `<div class="wk-plans"><span class="lbl">Semanas</span><button class="${!dr && !W.cmp ? 'on' : ''}" data-act="wk-dv" data-v="">✓ Em uso</button>
+    ${ds.map(x => `<button class="${dr === x && !W.cmp ? 'on' : ''}" data-act="wk-dv" data-v="${x.id}">${esc(x.name)}</button>`).join('')}
+    <button class="add-chip" data-act="wk-dnew">＋ Montar outra semana</button>
+    ${ds.length ? `<button class="cmp ${W.cmp ? 'on' : ''}" data-act="wk-cmp">⇄ Comparar semanas</button>` : ''}</div>
+    ${dr && !W.cmp ? `<div class="wk-dbar"><span class="grow"><b>Rascunho: ${esc(dr.name)}</b><small>${pid === ME ? 'Não aparece em Hoje' : `${esc(firstName(profile(pid)))} não vê`} e não mexe em nenhuma carga. A semana em uso continua igual até você tocar em <b>Usar esta semana</b>.</small></span>
+      <button class="btn" data-act="wk-dren">✎ Renomear</button><button class="btn danger" data-act="wk-ddel">Excluir</button><button class="btn primary" data-act="wk-duse">✓ Usar esta semana</button></div>` : ''}`;
+}
 // Lista para escolher: os exercícios que a pessoa já tem com nome próprio (fora do catálogo, ex.: "Remada unilateral"
 // da Evoque) vêm primeiro, marcados "seu", e entram com o mesmo histórico; depois o catálogo em ordem alfabética
 // Grupo pelo nome do exercício, quando o nome deixa claro o músculo
@@ -6037,34 +6116,38 @@ function wkListHtml(pid) {
 }
 function weekHtml(pid) {
   const W = ui.wk || (ui.wk = { sel: null, q: '', g: GROUPS[0], open: null }), P = profile(pid);
+  if (W.pid !== pid) { W.pid = pid; W.dv = null; W.cmp = false; }
+  const dr = wkDraft(pid); if (W.dv && !dr) W.dv = null;
+  if (W.cmp && !wkDrafts(pid).length) W.cmp = false;
+  if (W.cmp) return wkPlansHtml(pid) + wkCmpHtml(pid);
   const days = WEEK.map(([d, nm]) => {
-    const exs = wkExs(pid, d), w = dayWorkout(pid, d), also = ((P.division || {})[d] || []).filter(x => x !== (w || {}).id && x !== CARDIO && isLetter(x, pid));
+    const exs = wkDayExs(pid, d), w = dr ? null : dayWorkout(pid, d), also = dr ? [] : ((P.division || {})[d] || []).filter(x => x !== (w || {}).id && x !== CARDIO && isLetter(x, pid));
     const inSel = W.sel && exs.some(e => sameName(e.name, W.sel.name));
     return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${W.sel ? 'pick' : ''} ${inSel ? 'has' : ''}">
       <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'}<br>${(n => `${n} série${n === 1 ? '' : 's'}`)(exs.reduce((a, e) => a + e.sets.length, 0))}` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
       ${W.sel ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? '✓ Está aqui' : '＋ Colocar aqui'}</button>` : ''}
-      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} série${e.sets.length === 1 ? '' : 's'}</small></button>
+      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${!dr && wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} série${e.sets.length === 1 ? '' : 's'}</small></button>
         ${W.open === e.id ? `<div class="wk-ed"><div class="bw-step"><small>Séries</small><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${e.sets.length}</b><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
-          ${(src => src.length ? `<div class="wk-src"><small>Comparar cargas com</small>${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
+          ${(src => src.length && !dr ? `<div class="wk-src"><small>Comparar cargas com</small>${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
             return `<button class="${twinKey(e) === x.key ? 'on' : ''}" data-act="wk-src" data-id="${e.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)} · ${top && top.carga != null ? numVal(top.carga) + ' kg' : 'sem carga'}${top && top.reps != null ? ' × ' + numVal(top.reps) : ''}</small></button>`; }).join('')}</div>` : '')(wkSources(pid, e))}
           <div class="wk-eda"><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="1" aria-label="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
           <button class="btn danger" data-act="wk-del" data-id="${e.id}">Tirar do dia</button></div></div>` : ''}</div>`).join('')}
       ${also.map(x => `<p class="wk-also">Também neste dia: <b>${esc(wName(x, pid))}</b><br><button class="link" data-act="wk-unalso" data-d="${d}" data-w="${x}">Tirar deste dia</button></p>`).join('')}</div>`;
   }).join('');
-  return `<p class="hint wk-how"><b>1.</b> Toque num exercício da lista. <b>2.</b> Toque em <b>＋ Colocar</b> nos dias em que ele entra. Toque num exercício do dia para mudar séries e repetições.</p>
+  return `${wkPlansHtml(pid)}<p class="hint wk-how"><b>1.</b> Toque num exercício da lista. <b>2.</b> Toque em <b>＋ Colocar</b> nos dias em que ele entra. Toque num exercício do dia para mudar séries e repetições.</p>
     <div class="wk-wrap"><div class="wk-days">${days}</div></div>
-    <div class="wk-save"><button class="btn primary" data-act="wk-save">✓ Salvar semana</button>
-      ${ui.wkSaved && ui.wkSaved.pid === pid ? `<small class="ok">✓ Semana salva às ${ui.wkSaved.hora}. Ela já aparece em Hoje, em cada dia.</small>` : '<small>Cada mudança já fica guardada sozinha. O botão confere se está tudo salvo na nuvem.</small>'}</div>
-    ${(old => old.length ? `<div class="wk-old"><span class="grow"><b>${old.length} treino${old.length === 1 ? '' : 's'} antigo${old.length === 1 ? '' : 's'}</b> (${old.map(w => esc(w.name)).join(', ')}). Arquive para limpar a tela: as cargas e o histórico continuam valendo.</span><button class="btn" data-act="wk-arch">Arquivar antigos</button></div>` : '')(workoutsOf(pid).filter(w => w.day == null && !w.arch))}
-    ${(() => { const has = WEEK.filter(([d]) => wkExs(pid, d).length); if (!has.length) return '';
+    ${dr ? '' : `<div class="wk-save"><button class="btn primary" data-act="wk-save">✓ Salvar semana</button>
+      ${ui.wkSaved && ui.wkSaved.pid === pid ? `<small class="ok">✓ Semana salva às ${ui.wkSaved.hora}. Ela já aparece em Hoje, em cada dia.</small>` : '<small>Cada mudança já fica guardada sozinha. O botão confere se está tudo salvo na nuvem.</small>'}</div>`}
+    ${dr ? '' : (old => old.length ? `<div class="wk-old"><span class="grow"><b>${old.length} treino${old.length === 1 ? '' : 's'} antigo${old.length === 1 ? '' : 's'}</b> (${old.map(w => esc(w.name)).join(', ')}). Arquive para limpar a tela: as cargas e o histórico continuam valendo.</span><button class="btn" data-act="wk-arch">Arquivar antigos</button></div>` : '')(workoutsOf(pid).filter(w => w.day == null && !w.arch))}
+    ${(() => { const has = WEEK.filter(([d]) => wkDayExs(pid, d).length); if (!has.length) return '';
       if (!has.some(([d]) => d === W.mm)) W.mm = has[0][0];
-      return `<h4 class="mm-h">Músculos que o dia trabalha</h4><div class="mm-pick wk-mmd">${has.map(([d, nm]) => `<button class="${W.mm === d ? 'on' : ''}" data-act="wk-mm" data-d="${d}">${nm}</button>`).join('')}</div>${muscleMapHtml(wkExs(pid, W.mm), pid)}`; })()}
+      return `<h4 class="mm-h">Músculos que o dia trabalha</h4><div class="mm-pick wk-mmd">${has.map(([d, nm]) => `<button class="${W.mm === d ? 'on' : ''}" data-act="wk-mm" data-d="${d}">${nm}</button>`).join('')}</div>${muscleMapHtml(wkDayExs(pid, W.mm), pid)}`; })()}
     <h4 class="mm-h" id="wkLib">Exercícios</h4>
     <input class="search" id="wkSearch" placeholder="Buscar exercício" value="${esc(W.q || '')}" autocomplete="off">
     ${W.q ? '' : `<div class="chips own-groups">${GROUPS.map(x => `<button class="${x === W.g ? 'on' : ''}" data-act="wk-g" data-g="${x}">${x}</button>`).join('')}</div>`}
     <div class="own-list bw-list" id="wkList">${wkListHtml(pid)}</div>
     ${W.sel ? `<div class="wkp-bar"><div class="wk-bt"><span class="grow"><b>${esc(W.sel.name)}</b><small>Toque nos dias em que ele entra</small></span><button class="btn" data-act="wk-unpick">Pronto</button></div>
-      <div class="wk-bd">${WEEK.map(([d]) => `<button class="${wkExs(pid, d).some(e => sameName(e.name, W.sel.name)) ? 'on' : ''}" data-act="wk-put" data-d="${d}">${WK_SHORT[d]}</button>`).join('')}</div></div><div class="wk-pad"></div>` : ''}`;
+      <div class="wk-bd">${WEEK.map(([d]) => `<button class="${wkDayExs(pid, d).some(e => sameName(e.name, W.sel.name)) ? 'on' : ''}" data-act="wk-put" data-d="${d}">${WK_SHORT[d]}</button>`).join('')}</div></div><div class="wk-pad"></div>` : ''}`;
 }
 // coloca ou tira o exercício escolhido do dia (o treino do dia é criado na primeira vez e entra na divisão da semana)
 // De onde vêm as cargas de comparação ("antes") de um exercício do dia: cada histórico já feito com nome igual ou parecido
@@ -6145,8 +6228,8 @@ function prevPullHtml(ex) {
     : '<small>Nenhum exercício parecido feito antes.</small>'}<button class="v2-pull-x" data-act="v2-find-prev">Fechar</button></div>`;
 }
 const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') && wkSources(pid, ex).length > 1 ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
-function wkToggle(pid, d) {
-  const W = ui.wk, P = profile(pid); if (!W.sel || !P) return;
+function wkToggle(pid, d, sel = ui.wk && ui.wk.sel) {
+  const W = { sel }, P = profile(pid); if (!W.sel || !P) return;
   const cur = wkExs(pid, d).find(e => sameName(e.name, W.sel.name));
   if (cur) return wkRemove(pid, cur);
   let w = dayWorkout(pid, d);
@@ -6175,7 +6258,7 @@ function wkRemove(pid, ex) {
   if (!letterExs(L, pid).length) { const P = profile(pid); P.workouts = P.workouts.filter(w => w.id !== L);
     if (P.division) for (const k in P.division) P.division[k] = P.division[k].filter(x => x !== L); }
   letterExs(L, pid).forEach((e, k) => { e.order = k + 1; });
-  if (ui.wk.open === ex.id) ui.wk.open = null;
+  if (ui.wk && ui.wk.open === ex.id) ui.wk.open = null;
   save();
 }
 // Salvar semana: confere na nuvem que todos os dias estão lá (cada mudança já é guardada na hora)
@@ -6206,17 +6289,38 @@ function wkAct(act, b) {
     const y = scrollY; render(); scrollTo(0, y); return; }
   const pid = ui.profile, W = ui.wk; if (!W) return;
   const re = () => { const y = scrollY, l = document.getElementById('wkList'), ly = l ? l.scrollTop : 0; render(); scrollTo(0, y); const n = document.getElementById('wkList'); if (n) n.scrollTop = ly; };
+  const dr = wkDraft(pid);
+  if (dr && ['wk-put', 'wk-st', 'wk-mv', 'wk-del'].includes(act)) { // no rascunho: só nomes e séries, nada de carga
+    const d = WEEK.map(([k]) => k).find(k => (dr.days[k] || []).some(x => x.id === b.dataset.id)), l = d != null ? dr.days[d] : null, x = l && l.find(y => y.id === b.dataset.id);
+    if (act === 'wk-put') { dvToggle(pid, dr, +b.dataset.d, W.sel); return re(); }
+    if (!x) return;
+    if (act === 'wk-st') x.n = Math.max(1, Math.min(10, x.n + +b.dataset.d));
+    if (act === 'wk-mv') { const i = l.indexOf(x), j = i + +b.dataset.d; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; }
+    if (act === 'wk-del') { l.splice(l.indexOf(x), 1); if (!l.length) delete dr.days[d]; W.open = null; }
+    dr.at = new Date().toISOString(); save(); return re();
+  }
   const ex = b.dataset.id && exById(b.dataset.id);
   switch (act) {
+    case 'wk-dv': W.dv = b.dataset.v || null; W.cmp = false; W.open = null; W.mm = null; ui.mmPick = []; return re();
+    case 'wk-cmp': W.cmp = !W.cmp; W.open = null; return re();
+    case 'wk-dnew': { const n = wkDrafts(pid).length + 2;
+      ask({ title: 'Montar outra semana', msg: 'A semana em uso continua igual (e as cargas também). A nova fica como rascunho: dá para montar com calma, comparar as duas e só depois escolher qual usar.', field: 'Nome da nova semana', value: `Semana ${n}`, ok: 'Começar do zero', extra: 'Copiar a semana em uso' }).then(r => {
+        if (r.action === 'cancel') return;
+        const P = profile(pid), x = { id: uid(), name: (r.value || `Semana ${n}`).slice(0, 40), at: new Date().toISOString(), days: r.action === 'extra' ? wkSnap(pid) : {} };
+        P.weekDrafts = [...wkDrafts(pid), x]; W.dv = x.id; W.cmp = false; W.open = null; save(); re(); });
+      return; }
+    case 'wk-dren': if (!dr) return; ask({ title: 'Renomear semana', field: 'Nome', value: dr.name, ok: 'Salvar' }).then(r => { if (r.action !== 'ok') return; dr.name = r.value.slice(0, 40); save(); re(); }); return;
+    case 'wk-ddel': if (!dr) return; confirmAsk(`Excluir "${dr.name}"?`, 'Só este rascunho é apagado. A semana em uso, os treinos e as cargas continuam iguais.').then(ok => {
+        if (!ok) return; const P = profile(pid); P.weekDrafts = wkDrafts(pid).filter(x => x !== dr); W.dv = null; save(); re(); }); return;
+    case 'wk-duse': if (!dr) return; ask({ title: `Usar "${dr.name}"?`, msg: `Ela passa a ser a semana em uso${pid === ME ? ' e aparece em Hoje' : ` e ${firstName(profile(pid))} já vê no app`}. A semana de agora fica guardada aqui como rascunho, para comparar ou voltar. Nenhuma carga se perde: exercício que continua leva as cargas, e o que sai fica guardado com o histórico.`, ok: 'Usar esta semana' }).then(r => {
+        if (r.action !== 'ok') return; const nm = dr.name; wkUseDraft(pid, dr); re(); toast(`<b>${esc(nm)}</b> agora é a semana em uso. A anterior ficou guardada em Semanas.`); }); return;
     case 'wk-g': W.g = b.dataset.g; return re();
     case 'wk-pick': W.sel = W.sel && sameName(W.sel.name, b.dataset.n) ? null : { name: b.dataset.n, group: b.dataset.g }; return re();
     case 'wk-unpick': W.sel = null; return re();
     case 'wk-put': wkToggle(pid, +b.dataset.d); return re();
     case 'wk-open': W.open = W.open === b.dataset.id ? null : b.dataset.id; return re();
     case 'wk-st': { if (!ex) return; const f = b.dataset.f, d = +b.dataset.d;
-      if (f === 'n') { const n = Math.max(1, Math.min(10, ex.sets.length + d)), last = ex.sets[ex.sets.length - 1] || { carga: null, reps: 10 };
-        ex.sets = Array.from({ length: n }, (_, i) => ex.sets[i] || { carga: last.carga, reps: last.reps });
-        const s = sessionOn(ex.id, today()); if (s && s.sets.length !== n) resizeSets(s, n); }
+      if (f === 'n') wkSetN(ex, Math.max(1, Math.min(10, ex.sets.length + d)));
       else { const r = allSame(ex.sets, 'reps'), st = isTimed(ex) ? 5 : 1, v = Math.max(1, Math.min(isTimed(ex) ? 300 : 50, (typeof r === 'number' ? r : 10) + d * st)); ex.sets.forEach(x => { x.reps = v; }); }
       ex.planDate = today(); save(); return re(); }
     case 'wk-mv': { if (!ex) return; const list = letterExs(ex.letter, pid), i = list.indexOf(ex), j = i + +b.dataset.d; if (j < 0 || j >= list.length) return;
@@ -6985,7 +7089,7 @@ $main.addEventListener('click', e => {
       const id = b.dataset.id, cur = ui.mmPick || [];
       ui.mmPick = !id ? [] : cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; return render();
     }
-    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-nolink': case 'wk-unalso': case 'wk-save': case 'wk-arch': case 'wk-mm': return wkAct(act, b);
+    case 'wk-g': case 'wk-pick': case 'wk-unpick': case 'wk-put': case 'wk-open': case 'wk-st': case 'wk-mv': case 'wk-del': case 'wk-src': case 'wk-nolink': case 'wk-unalso': case 'wk-save': case 'wk-arch': case 'wk-mm': case 'wk-dv': case 'wk-cmp': case 'wk-dnew': case 'wk-dren': case 'wk-ddel': case 'wk-duse': return wkAct(act, b);
     case 'b-mode': ui.bMode = b.dataset.v; try { localStorage.setItem('pf-montar-modo', ui.bMode); } catch (e) {} ui.wk = null; return render();
     case 'mm-sex': { const p = profile(b.dataset.pid); if (!p) return; if (b.dataset.v === 'f') p.bodyF = true; else delete p.bodyF; ui.mmSel = null; save(); return render(); }
     case 'new': return isLetter(ui.group) ? openExLib(ui.profile, ui.group) : openDialog(null); // lista de exercícios (igual ao Montar)
@@ -9091,7 +9195,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '31/10-10:30';
+const APP_VERSION = '02/11-01:24';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
