@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B0F2A">
+<title>PassosFit · Apresentação</title>
+<link rel="icon" href="site/icon-v2-192.png">
+<link href="site/fontes.css" rel="stylesheet">
+<style>
+:root{--bg:#0B0F2A;--card:#151a3d;--line:#2a3166;--text:#F3F5FF;--muted:#A9B0D6;--lime:#C9F03D;--gold:#E0A93B;--navy:#1B3A5C}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 500px at 10% -10%,#2b2f8f55,transparent),radial-gradient(800px 500px at 110% 0%,#e0a93b22,transparent),var(--bg);color:var(--text);font:16px/1.5 Figtree,system-ui,"Segoe UI",sans-serif;padding:32px 16px 48px}
+main{max-width:1080px;margin:0 auto}
+.top{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.top img{width:52px;height:52px;border-radius:14px}
+h1{font:800 clamp(28px,4vw,42px)/1.1 "Bricolage Grotesque",Figtree,sans-serif;margin:0}
+.lead{color:var(--muted);margin:10px 0 26px;max-width:720px}
+.ok{display:inline-flex;align-items:center;gap:8px;background:#C9F03D22;color:var(--lime);border:1px solid #C9F03D55;border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px;margin-bottom:18px}
+h2{font:800 20px/1.2 "Bricolage Grotesque",Figtree,sans-serif;margin:30px 0 12px;display:flex;align-items:center;gap:10px}
+h2 .dot{width:12px;height:12px;border-radius:50%}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+a.c{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;transition:transform .15s,border-color .15s}
+a.c:hover{transform:translateY(-3px);border-color:var(--lime)}
+a.c.pp:hover{border-color:var(--gold)}
+.ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#C9F03D1f;color:var(--lime);margin-bottom:6px}
+.pp .ic{background:#E0A93B22;color:var(--gold)}
+.site .ic{background:#8b7cff26;color:#b9b0ff}
+.ic svg{width:24px;height:24px}
+a.c b{font-size:18px}
+a.c small{color:var(--muted);font-size:14px}
+.foot{margin-top:34px;padding:18px 20px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+button{font:700 14px Figtree,sans-serif;background:transparent;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:10px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+button:hover{border-color:var(--lime)}
+button svg{width:16px;height:16px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><img src="site/icon-v2-192.png" alt=""><h1>Apresentação</h1></div>
+  <p class="lead">Abra esta página uma vez com internet. Depois tudo funciona sem internet, no celular ou no computador. Os alunos e números são de exemplo. Pode tocar em qualquer botão à vontade: nada vai para o app de verdade.</p>
+  <span class="ok" id="off" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Funciona sem internet</span>
+
+  <h2><span class="dot" style="background:#b9b0ff"></span>O site</h2>
+  <div class="grid">
+    <a class="c site" href="site/portal/index.html"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span><b>Página inicial</b><small>passosfit.com.br, como um visitante vê: as duas plataformas.</small></a>
+  </div>
+
+  <h2><span class="dot" style="background:var(--lime)"></span>PassosFit</h2>
+  <div class="grid">
+    <a class="c" href="site/index.html?professor=1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><b>Área do professor</b><small>Painel, alunos, montar treino, evolução, pagamentos.</small></a>
+    <a class="c" href="site/index.html?aluno=demo-ana"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span><b>App do aluno</b><small>O treino do dia com cargas, como a aluna Ana vê.</small></a>
+    <a class="c" href="site/index.html?aluno=demo-bruno"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/></svg></span><b>Outro aluno</b><small>O app do Bruno, com cargas maiores e outra rotina.</small></a>
+  </div>
+
+  <h2><span class="dot" style="background:var(--gold)"></span>Primeiro Passo</h2>
+  <div class="grid">
+    <a class="c pp" href="site/portal/index.html#primeiro-passo"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 3 10.5 3 8c0-2.7 1.5-6 4.5-6C9.4 2 10 3.8 10 5.5c0 3.1-2 5.7-2 8.7V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.1 1-3.1 1-5.6 0-2.7-1.5-6-4.5-6C14.6 6 14 7.8 14 9.5c0 3.1 2 5.7 2 8.7V20a2 2 0 1 0 4 0Z"/></svg></span><b>Apresentação</b><small>A página do Primeiro Passo no site.</small></a>
+    <a class="c pp" href="site/primeiro-passo/index.html?como=aluno"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></span><b>App do aluno</b><small>Níveis, caminho passo a passo, treinos e agenda.</small></a>
+    <a class="c pp" href="site/primeiro-passo/index.html?como=personal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><b>Painel do professor</b><small>Alunos, alertas do dia, agenda, mensagens e ganhos.</small></a>
+    <a class="c pp" href="site/primeiro-passo/index.html?como=empresa"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4M18 9h2a2 2 0 0 1 2 2v11h-4M10 6h4M10 10h4M10 14h4M10 18h4"/></svg></span><b>Painel da empresa</b><small>Visão geral, clientes, financeiro e segurança.</small></a>
+  </div>
+
+  <div id="mat" hidden></div>
+
+  <div class="foot"><span>Mexeu muito e quer os exemplos do começo de novo?</span>
+    <button id="reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Recomeçar os exemplos</button></div>
+</main>
+<script>
+/* materiais que estiverem na pasta "materiais" */
+var MAT = [];
+var ICO = { pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>', mp4: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4Z"/></svg>' };
+document.getElementById('mat').innerHTML = MAT.map(function (m) { var ext = m[0].split('.').pop(); return '<a class="c site" href="materiais/' + encodeURIComponent(m[0]) + '" target="_blank"><span class="ic">' + (ICO[ext] || ICO.pdf) + '</span><b>' + m[1] + '</b><small>' + (ext === 'mp4' ? 'Vídeo' : 'PDF') + '</small></a>'; }).join('');
+document.getElementById('reset').onclick = function () {
+  if (!confirm('Apagar o que foi mexido e voltar os exemplos do começo?')) return;
+  try { Object.keys(localStorage).forEach(function (k) { if (/^apres-/.test(k)) localStorage.removeItem(k); }); } catch (e) {}
+  this.textContent = 'Pronto: exemplos do começo de novo';
+};
+/* guarda tudo no aparelho para abrir sem internet */
+var off = document.getElementById('off');
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
+  off.hidden = false; off.lastChild.textContent = 'Preparando para funcionar sem internet...'; off.style.opacity = .7;
+  navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; }).then(function () {
+    var tries = 0, t = setInterval(function () {
+      caches.has("apresentacao-20261104202340").then(function (ok) { if (ok || ++tries > 60) { clearInterval(t); if (ok) { off.lastChild.textContent = 'Pronto: já funciona sem internet'; off.style.opacity = 1; } } });
+    }, 500);
+  }).catch(function () { off.hidden = true; });
+}
+</script>
+</body>
+</html>
