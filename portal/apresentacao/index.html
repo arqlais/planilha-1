@@ -83,7 +83,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
   off.hidden = false; off.lastChild.textContent = 'Preparando para funcionar sem internet...'; off.style.opacity = .7;
   navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; }).then(function () {
     var tries = 0, t = setInterval(function () {
-      caches.has("apresentacao-20261104202340").then(function (ok) { if (ok || ++tries > 60) { clearInterval(t); if (ok) { off.lastChild.textContent = 'Pronto: já funciona sem internet'; off.style.opacity = 1; } } });
+      caches.has("apresentacao-20261104221048").then(function (ok) { if (ok || ++tries > 60) { clearInterval(t); if (ok) { off.lastChild.textContent = 'Pronto: já funciona sem internet'; off.style.opacity = 1; } } });
     }, 500);
   }).catch(function () { off.hidden = true; });
 }
