@@ -2638,10 +2638,10 @@ function login(){
     $("#root").innerHTML=`${top}<main class="login-main lg-center">
       ${DEMO?`<span class="kicker">Modo de teste</span><h1>Quem você quer ser agora?</h1><p class="lg-lead">Comece do zero, como no dia a dia. Tudo fica só neste aparelho e entra sem senha. Para trocar, use o botão "Trocar perfil".</p>
       <ol class="demo-steps"><li>Crie o professor em "Sou professor". Ele já entra direto no painel.</li><li>Em "Sou aluno", faça o cadastro do aluno.</li><li>Volte no professor para indicar os exercícios dele.</li></ol>`:`<span class="kicker">Área de acesso</span><h1>Que bom ter você aqui.</h1><p class="lg-lead">Escolha como você faz parte do Primeiro Passo.</p>`}
-      <div class="roles${DEMO?"":" two"}">
+      <div class="roles">
         <div class="role"><span class="ri"><i data-lucide="footprints"></i></span><h2>Sou aluno</h2><p>Seu caminho passo a passo, treinos, agenda e conversa com o seu professor.</p><a class="btn btn-primary" href="${has&&!S.loggedOut?"#/app":"#/entrar/aluno"}">${has&&!S.loggedOut?"Abrir meu app":"Entrar no app"}<i data-lucide="arrow-right"></i></a></div>
         <div class="role"><span class="ri"><i data-lucide="dumbbell"></i></span><h2>Sou professor</h2><p>Seus alunos, alertas do dia, agenda, mensagens e seus ganhos.</p><a class="btn btn-primary" href="#/entrar/personal">Entrar no painel<i data-lucide="arrow-right"></i></a></div>
-        ${DEMO?`<div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, professores, financeiro e segurança.</p><a class="btn btn-primary" href="#/entrar/empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>`:""}
+        ${true?`<div class="role"><span class="ri"><i data-lucide="building-2"></i></span><h2>Sou da empresa</h2><p>Gestão completa: clientes, professores, financeiro e segurança.</p><a class="btn btn-primary" href="index.html?como=empresa">Entrar no painel<i data-lucide="arrow-right"></i></a></div>`:""}
       </div>
       ${DEMO?`<div class="demo-more"><a class="btn btn-ghost" href="#/" data-dsite><i data-lucide="globe"></i>Ver o site, como um visitante</a><button class="btn btn-ghost" id="dreset"><i data-lucide="rotate-ccw"></i>Recomeçar o teste do zero</button></div>`
         :FB?"":`<p class="lg-note"><i data-lucide="info"></i>Versão de demonstração: os dados ficam salvos só neste navegador.</p>`}
