@@ -1020,6 +1020,7 @@ body.v2-full main{margin-top:0}
 .v2-sqs{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
 .v2-sqs .chk .v2i{width:13px;height:13px;stroke-width:3}
 .v2-nl{color:var(--muted);font-size:12.5px;font-weight:700;text-align:center}
+.bwk{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}.bwk b{color:var(--text);font-size:15px}.bwk small{font-size:11px;color:var(--muted);font-weight:700}
 .v2-chk{width:52px!important;height:52px!important;border-radius:50%;border:2px solid var(--line)!important;display:grid;place-items:center;color:var(--muted);background:transparent}
 .v2-chk .v2i{width:24px;height:24px;stroke-width:3}
 .v2-set.done{background:var(--acc-soft)}
@@ -2056,6 +2057,10 @@ function bodyWeightAt(pid, date) {
   const b = bodyOf(profile(pid)).filter(e => e.peso != null); if (!b.length) return 0;
   return (b.filter(e => e.date <= date).pop() || b[0]).peso;
 }
+// Carga do peso do corpo que aparece na tela do treino (barra fixa = o peso todo); 0 = não conta ou sem peso anotado
+const bwLoad = (ex, date) => { const f = ex && !isTimed(ex) ? bwFactor(ex) : 0, bw = f && bodyWeightAt(ex.profileId, date); return bw ? Math.round(bw * f * 10) / 10 : 0; };
+const bwTag = (ex, date, cls) => { const k = bwLoad(ex, date), f = bwFactor(ex);
+  return k ? `<span class="${cls} bwk"><b>${fmt(k)} kg</b><small>${f === 1 ? 'seu peso' : `${Math.round(f * 100)}% do peso`}</small></span>` : f && !isTimed(ex) ? `<span class="${cls} bwk"><small>peso do corpo</small><small>anote em Medidas</small></span>` : `<span class="${cls}">sem carga</span>`; };
 function effSets(s) {
   const ex = exById(s.exId), f = ex && !isTimed(ex) ? bwFactor(ex) : 0, bw = f && bodyWeightAt(ex.profileId, s.date);
   return bw ? s.sets.map(x => ({ ...x, carga: Math.round((bw * f + (x.carga || 0)) * 10) / 10 })) : s.sets;
@@ -2877,7 +2882,7 @@ const HOWTO = {
 function v2HowHtml(ex, lock) {
   const k = v2Key(ex), pr = PFA.pairOf(k), eq = pr ? (k === pr[1] ? 'maq' : 'livre') : '', demo = !!demoFor(ex);
   const can = !ui.studentMode || !lock;
-  return `<div class="v2-howto"${demo ? ` data-act="demo-ex" data-id="${ex.id}" role="button"` : ''}>${PFA.animHtml(k, 'v2-howto-anim', demo)}<span class="grow"><b>Como fazer</b><small>${esc(HOWTO[k] || 'Siga o movimento do bonequinho, devagar e com controle.')}</small>
+  return `<div class="v2-howto"${demo ? ` data-act="demo-ex" data-id="${ex.id}" role="button"` : ''}>${PFA.animHtml(k, 'v2-howto-anim', demo)}<span class="grow"><b>Como fazer</b><small>${esc((/barra fixa/.test(normName(ex.name)) && 'Pendurado na barra: puxe o corpo até o queixo passar da barra e desça devagar.') || HOWTO[k] || 'Siga o movimento do bonequinho, devagar e com controle.')}</small>
     ${pr ? `<span class="v2-eq">${[['livre', 'Livre'], ['maq', 'Máquina']].map(([v, l]) => `<button class="${eq === v ? 'on' : ''}" data-act="v2-equip" data-id="${ex.id}" data-v="${v}" ${can ? '' : 'disabled'}>${l}</button>`).join('')}</span>` : ''}</span></div>`;
 }
 function v2Gauge(p, label) {
@@ -2994,7 +2999,7 @@ function cardHtmlV2(ex) {
   const s = sessionOn(ex.id, ui.date) || blankSession(ex, ui.date), hints = blankSession(ex, ui.date).sets, prev = prevSession(ex.id, ui.date);
   const n = s.sets.length, done = s.sets.filter(x => x.done).length, complete = n > 0 && done === n, open = ui.v2open === ex.id;
   const p0 = (prev && prev.sets[0]) || (hints[0] && hints[0].hint) || {};
-  const sub = `${n}×${p0.reps != null ? (tm ? fmtSec(p0.reps) : p0.reps) : '–'}${!nl && p0.carga != null ? ` · ${fmt(p0.carga)} kg` : ''}`;
+  const bk = bwLoad(ex, ui.date), sub = `${n}×${p0.reps != null ? (tm ? fmtSec(p0.reps) : p0.reps) : '–'}${!nl && p0.carga != null ? ` · ${fmt(p0.carga)} kg` : bk ? ` · ${fmt(bk)} kg` : ''}`;
   const noRec = lock === 'past' && !sessionOn(ex.id, ui.date);
   const head = `<button class="v2-exh" data-act="v2-open" aria-expanded="${open}">${PFA.animHtml(v2Key(ex), 'v2-thumb')}<span class="grow"><b>${esc(ex.name)}</b><small>${noRec ? 'sem registro neste dia' : `${ex.group} · ${sub}`}</small></span>
     ${complete ? `<span class="v2-okb">${V2I.check}</span>` : `<span class="v2-cnt">${done}/${n}</span>`}${open || complete ? '' : `<span class="v2-chev">${V2I.chev}</span>`}</button>`;
@@ -3015,7 +3020,7 @@ function cardHtmlV2(ex) {
     </div>`;
     return `<div class="v2-set ${rowClass(x, p)}" data-i="${i}" data-base="v2-set">
       <span class="v2-sn">${i + 1}</span>
-      ${nl ? '<span class="v2-nl">sem carga</span>' : fld('carga', x, p, h, i)}
+      ${nl ? bwTag(ex, ui.date, 'v2-nl') : fld('carga', x, p, h, i)}
       ${fld('reps', x, p, h, i)}
       <button class="chk v2-chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>`;
   }).join('');
@@ -3023,8 +3028,8 @@ function cardHtmlV2(ex) {
     ${v2HowHtml(ex, lock)}
     ${lock ? '' : prevPullHtml(ex)}
     ${exDetailHtml(ex)}
-    ${tm ? '' : grid ? `<div class="v2-grid-h"><span>${nl ? 'reps' : 'peso · reps'} · antes</span>${V2_LAYOUT_BTN(true)}</div><div class="tiles v2-sqs">${rows}</div>`
-      : `<div class="v2-sets-h"><span>#</span><span>${nl ? '' : 'Peso (kg)'}</span><span>Reps</span><span>${V2_LAYOUT_BTN(false)}</span></div>${rows}`}
+    ${tm ? '' : grid ? `<div class="v2-grid-h"><span>${nl ? (bk ? `reps (${fmt(bk)} kg do seu peso)` : 'reps') : 'peso · reps'} · antes</span>${V2_LAYOUT_BTN(true)}</div><div class="tiles v2-sqs">${rows}</div>`
+      : `<div class="v2-sets-h"><span>#</span><span>${nl && !bk ? '' : 'Peso (kg)'}</span><span>Reps</span><span>${V2_LAYOUT_BTN(false)}</span></div>${rows}`}
     ${tm ? rows : ''}
     ${lock ? `<p class="lock-note"><i class="ic ic-lock"></i> ${lock === 'sent' ? `Enviado às ${new Date(s.fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Só consulta (dia passado)'}${ui.studentMode ? '' : ' · para corrigir o número de séries, toque em Editar'}</p>` : `<div class="v2-acts">
       <button data-act="addset">${V2I.plus}<span>Série</span></button><button data-act="rmset">${V2I.minus}<span>Série</span></button>
@@ -4621,7 +4626,7 @@ function cardHtml(ex) {
     </div>`;
     return `<div class="set ${rowClass(x, p)}" data-i="${i}" data-base="set">
       <span class="num">${i + 1}</span>
-      ${noLoadOf(ex) ? '<span class="noload">sem carga</span>' : stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
+      ${noLoadOf(ex) ? bwTag(ex, ui.date, 'noload') : stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
       ${stepper('reps', x.reps, `repetições da série ${i + 1}`, h.reps)}
       <button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button>
       <div class="meta"><span>${p && p.done ? (noLoadOf(ex) ? `antes: ${p.reps ?? '–'} repetições` : `antes: ${fmt(p.carga)} kg × ${p.reps ?? '–'}`) : 'sem registro anterior'}</span><span class="tot">${setTotal(x)}</span></div>
@@ -4744,14 +4749,15 @@ function compareHtml(s, prev) {
   // número de séries diferente da outra vez (tirou ou colocou uma): compara só as mesmas séries (as primeiras), para a meta ser justa
   const cut = prev && prev.sets.length !== s.sets.length ? Math.min(prev.sets.length, s.sets.length) : 0;
   const ts = cut ? s.sets.slice(0, cut) : s.sets, ps = prev ? (cut ? prev.sets.slice(0, cut) : prev.sets) : [];
-  const total = nl ? reps(ts) : vol(ts), pt = prev ? (nl ? reps(ps) : vol(ps)) : 0, max = Math.max(total, pt, 1);
+  const bk = nl && !tm && bwLoad(ex, s.date), kg = (ss, d) => vol(effSets({ exId: s.exId, date: d, sets: ss })), uu = bk ? 'kg' : u;
+  const total = bk ? kg(ts, s.date) : nl ? reps(ts) : vol(ts), pt = prev ? (bk ? kg(ps, prev.date) : nl ? reps(ps) : vol(ps)) : 0, max = Math.max(total, pt, 1);
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
   return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}${cut && s.sets.length > cut ? ` · ${cut} séries` : ''}</small></span>
-      <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${tm ? fmtSec(total) : `${fmt(total)} ${u}`}</b></div>
+      <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${tm ? fmtSec(total) : `${fmt(total)} ${uu}`}</b></div>
     ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}${cut ? ` · ${cut} série${cut === 1 ? '' : 's'}` : ''}</small></span>
-      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${tm ? fmtSec(pt) : `${fmt(pt)} ${u}`}</b></div>`
+      <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${tm ? fmtSec(pt) : `${fmt(pt)} ${uu}`}</b></div>`
       : `<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>${ex && !(CLOUD && cloud && cloud.role === 'student') ? (src => src.length ? `<div class="wk-src"><small>Puxar cargas de</small>${src.map(x => `<button data-act="wk-src" data-id="${ex.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)}</small></button>`).join('')}</div>` : '')(wkSources(ex.profileId, ex)) : ''}`}
-    <div>${prev ? progress(total, pt, finished, u) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
+    <div>${prev ? progress(total, pt, finished, uu) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
 }
 function refreshCard(exId) {
   const card = $main.querySelector(`[data-ex="${exId}"]`);
@@ -8431,6 +8437,15 @@ async function fixOnce() {
     mark('medidas-2706'); save();
     msgs.push('Sua avaliação de 27/06 foi salva em Medidas do corpo.');
   }
+  // 1m) (02/11) Peso de hoje do professor (80 kg): a barra fixa passa a contar o peso do corpo como carga
+  if (!done.has('peso-0211')) {
+    const me2 = profile(ME); me2.body = me2.body || [];
+    let e = me2.body.find(x => x.date === '2026-11-02');
+    if (!e) { e = { id: uid(), date: '2026-11-02' }; me2.body.push(e); }
+    if (e.peso == null) e.peso = 80;
+    mark('peso-0211'); save();
+    msgs.push('Seu peso (80 kg) foi anotado em Medidas: a barra fixa agora conta ele como carga.');
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -9210,7 +9225,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '02/11-02:01';
+const APP_VERSION = '02/11-12:57';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
