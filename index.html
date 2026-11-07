@@ -1264,7 +1264,15 @@ a.v2-btn{text-decoration:none}
 .v2-pfh .grow{flex:1;min-width:0}.v2-pfh b{display:block;font-size:19px;font-weight:800}.v2-pfh small{color:var(--muted);font-weight:700;font-size:13px;display:block}
 .v2-pfh .av.lg{width:64px;height:64px;font-size:20px;background:var(--lilac);color:var(--lilac-ink)}
 .v2-st{display:inline-flex;margin-top:6px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:800;background:rgba(255,255,255,.12)}
-.v2-st.ok{background:rgba(111,209,150,.18);color:var(--good)}.v2-st.warn{background:rgba(255,138,104,.18);color:var(--coral)}
+.v2-st.ok{background:rgba(111,209,150,.18);color:var(--good)}.v2-st.pause{background:rgba(255,255,255,.1);color:var(--muted)}
+small.pause{color:var(--muted)}
+.slist-sep{display:flex;align-items:center;gap:6px;margin:12px 4px 4px;color:var(--muted);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.slist-sep .v2i,.pf-pausebtn .v2i,.prof-h .pill .v2i{width:14px;height:14px;vertical-align:-2px}
+.v2-attacts{display:flex;flex-direction:column;gap:6px;flex:none}
+.v2-pausebtn{padding:4px 10px!important;font-size:12px!important;gap:6px!important;color:var(--muted)}.v2-pausebtn .v2i{width:13px;height:13px}
+.v2-pausedlink{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 14px;border-radius:16px;border:1px dashed var(--line);background:transparent;color:var(--muted);font-weight:700;font-size:13px;text-align:left}
+.v2-pausedlink .grow{flex:1}
+.v2-pfacts .v2-pfpause{display:inline-flex;align-items:center;gap:6px}.v2-pfacts .v2-pfpause .v2i{width:14px;height:14px}.v2-st.warn{background:rgba(255,138,104,.18);color:var(--coral)}
 .v2-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px;text-align:center}
 .v2-grid3 div{background:rgba(255,255,255,.08);border-radius:16px;padding:10px 4px}
 .v2-grid3 b{font-family:'Outfit','Archivo',sans-serif;font-weight:600;font-size:19px}.v2-grid3 small{font-size:11.5px}
@@ -3576,9 +3584,14 @@ const V2_PROF_DESK = [...V2_PROF_VIEWS, ['ia', 'Assistente'], ['ajustes', 'Ajust
 const MY_VIEWS = ['eu', 'treino', 'historico', 'evolucao', 'medidas', 'montar'];
 const v2Prof = () => skinOn() && !ui.studentMode;
 const v2Ico = d => `<svg viewBox="0 0 24 24" class="v2i">${d}</svg>`;
+const V2_PAUSE = '<rect x="6.5" y="5" width="3.5" height="14" rx="1"/><rect x="14" y="5" width="3.5" height="14" rx="1"/>', V2_PLAY = '<path d="M7 4.5v15l12-7.5z"/>';
 const v2Students = () => db.profiles.filter(p => p.id !== ME && !p.test).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 // Situação do aluno: convite não aceito, treinou hoje, sumido…
+// Aluno pausado (parado, mas pode voltar): sai da lista de atenção e o contador de dias para.
+// Nada é apagado. Se ele voltar a treinar depois da pausa, sai da pausa sozinho.
+const isPaused = p => !!(p && p.paused && !((trainedDates(p.id).slice(-1)[0] || '') > p.paused));
 function v2Status(p) {
+  if (isPaused(p)) return ['pause', `Pausado desde ${fmtDate(p.paused)}`];
   if (CLOUD && !p.uid) return ['warn', 'Convite não aceito'];
   const last = trainedDates(p.id).pop();
   if (!last) return ['', 'Ainda não treinou'];
@@ -3688,7 +3701,7 @@ addEventListener('resize', closeAppSwitch);
 function renderPainelV2() {
   const sts = v2Students(), ws = weekStart(today());
   const todayL = sts.filter(p => v2Days(p.id).has(today())), week = sts.filter(p => [...v2Days(p.id)].some(d => d >= ws));
-  const att = sts.filter(p => v2Status(p)[0] === 'warn');
+  const att = sts.filter(p => v2Status(p)[0] === 'warn'), nPaused = sts.filter(isPaused).length;
   const me = profile(ME), myPlan = liveWorkouts(ME).map(w => w.id).filter(g => dayPlan(me, today()).includes(g)), myW = myPlan[0] || firstWorkout(ME);
   const myEx = myW ? letterExs(myW, ME)[0] : null;
   const reqs = CLOUD && cloud ? requestsHtml() : '';
@@ -3706,13 +3719,15 @@ function renderPainelV2() {
     <div class="v2-sec"><h3>Precisa de atenção</h3><span class="v2-chipwarn">${att.length}</span></div>
     <div class="v2-stack">${att.map(p => { const [, t] = v2Status(p), inv = CLOUD && !p.uid;
       return `<div class="v2-att"><button class="av" data-act="open-profile" data-pid="${p.id}" data-v="perfil">${avIn(p)}</button><div class="grow" data-act="open-profile" data-pid="${p.id}" data-v="perfil"><b>${esc(p.name)}</b><small>${t}</small></div>
-        ${inv ? `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Seu treino já está no app. Crie sua senha por este link: ${inviteLink(p)}`)}">${v2Ico('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.5 6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.3-1.2"/>')}Reenviar</a>`
-          : `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Sentimos sua falta. Bora voltar hoje? Seu treino está no app.`)}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}Lembrar</a>`}</div>`; }).join('') || '<section class="card v2-muted" style="text-align:center;margin:0">Todos em dia ✓</section>'}</div>
+        <div class="v2-attacts">${inv ? `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Seu treino já está no app. Crie sua senha por este link: ${inviteLink(p)}`)}">${v2Ico('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.5 6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.3-1.2"/>')}Reenviar</a>`
+          : `<a class="v2-btn sm ink" href="${waLink(p, `Oi, ${firstName(p)}! Sentimos sua falta. Bora voltar hoje? Seu treino está no app.`)}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}Lembrar</a>`}
+        <button class="v2-btn sm line v2-pausebtn" data-act="pause-student" data-pid="${p.id}" aria-label="Pausar ${esc(firstName(p))}">${v2Ico(V2_PAUSE)}<span>Pausar</span></button></div></div>`; }).join('') || '<section class="card v2-muted" style="text-align:center;margin:0">Todos em dia ✓</section>'}</div>
+    ${nPaused ? `<button class="v2-pausedlink" data-act="v2-paused-list">${v2Ico(V2_PAUSE)}<span class="grow">${nPaused} aluno${nPaused === 1 ? '' : 's'} pausado${nPaused === 1 ? '' : 's'}</span>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</button>` : ''}
     <div class="v2-sec"><h3>Hoje nos treinos</h3><button data-view="alunos">Todos</button></div>
     <section class="card">${todayL.map(p => { const ss = profSessions(p.id).filter(s => s.date === today() && hasDone(s)), kg = ss.reduce((a, s) => a + sessVol(s), 0), cm = cardioBetween(today(), today(), p.id);
       const fin = ss.map(s => s.fin).filter(Boolean).sort().pop();
       return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
-    ${cardioWeekListHtml(sts)}
+    ${cardioWeekListHtml(sts.filter(p => !isPaused(p)))}
     </div><div class="col">
     ${me ? cardioDaysHtml(me, 'Seu cardio da semana') : ''}
     <div class="v2-sec"><h3>Seu treino de hoje</h3><button data-act="v2-mytreino">Abrir</button></div>
@@ -3731,14 +3746,16 @@ function renderPainelV2() {
 }
 function renderAlunosV2() {
   const sts = v2Students(), f = ui.v2filter || 'Todos', q = (ui.q || '').trim().toLowerCase();
-  const list = sts.filter(p => (!q || p.name.toLowerCase().includes(q)) && (f === 'Todos' || (f === 'Hoje' && v2Status(p)[1] === 'Treinou hoje') || (f === 'Sumidos' && /dias sem treinar/.test(v2Status(p)[1])) || (f === 'Convite' && v2Status(p)[1] === 'Convite não aceito')));
+  const list = sts.filter(p => (!q || p.name.toLowerCase().includes(q)) && v2FilterOk(p, f));
   $main.innerHTML = `<div class="v2-top"><div class="grow"><small>${sts.length} aluno${sts.length === 1 ? '' : 's'}</small><h2>Alunos</h2></div><button class="v2-btn sm pri" data-act="add-student">${v2Ico('<path d="M12 5v14M5 12h14"/>')}Novo aluno</button></div>
     <label class="v2-search">${v2Ico('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>')}<input id="v2Q" placeholder="Buscar aluno" value="${esc(ui.q || '')}" aria-label="Buscar aluno" autocomplete="off"></label>
-    <div class="v2-segin" style="margin-bottom:14px">${['Todos', 'Hoje', 'Sumidos', 'Convite'].map(x => `<button class="${x === f ? 'on' : ''}" data-act="v2-filter" data-f="${x}">${x}</button>`).join('')}</div>
+    <div class="v2-segin" style="margin-bottom:14px">${['Todos', 'Hoje', 'Sumidos', 'Convite', ...(f === 'Pausados' || sts.some(isPaused) ? ['Pausados'] : [])].map(x => `<button class="${x === f ? 'on' : ''}" data-act="v2-filter" data-f="${x}">${x}</button>`).join('')}</div>
     <section class="card" id="v2List">${v2ListHtml(list)}</section>
     <button class="v2-btn line full" style="margin-top:12px" data-act="test-profile">${testProfile() ? 'Abrir perfil de teste' : 'Criar perfil de teste'}</button>
     ${v2Sign()}`;
 }
+const v2FilterOk = (p, f) => { const t = v2Status(p)[1];
+  return f === 'Pausados' ? isPaused(p) : f === 'Todos' ? true : f === 'Hoje' ? t === 'Treinou hoje' : f === 'Sumidos' ? /dias sem treinar/.test(t) : f === 'Convite' ? t === 'Convite não aceito' : true; };
 const v2ListHtml = list => list.map(p => { const [k, t] = v2Status(p); return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av">${avIn(p)}</span><div class="grow"><b>${esc(p.name)}</b>
     <small class="${k}">${t}${isConsult(p) ? '' : ' · só o app'}</small>${v2WeekDots(p.id)}</div>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</div>`; }).join('') || '<p class="v2-muted" style="text-align:center;margin:0">Ninguém aqui.</p>';
 function v2ProfHead(p) {
@@ -3748,7 +3765,8 @@ function v2ProfHead(p) {
     <div class="v2-grid3"><div><b>${s.weekDays}</b><small>treinos/sem</small></div><div><b>${pc == null ? '–' : `${pc > 0 ? '+' : ''}${pc}%`}</b><small>peso total</small></div><div><b>${fmtMin(cardioWeekOf(p).done)}</b><small>min cardio</small></div></div>
     <div class="v2-rowx" style="gap:8px;margin-top:14px"><a class="v2-btn sm pri" style="flex:1;margin:0" href="${waLink(p, '')}">${v2Ico('<path d="M4 20l1.2-3.6A8 8 0 1 1 8 19z"/>')}WhatsApp</a><button class="v2-btn sm" style="flex:1;margin:0;background:rgba(255,255,255,.12)" data-act="student-mode">${v2Ico('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>')}Ver como aluno</button></div>
     <div class="v2-pfacts"><button data-act="open-profile" data-pid="${p.id}" data-v="treino">Treino</button><button data-act="open-profile" data-pid="${p.id}" data-v="historico">Histórico</button><button data-act="open-profile" data-pid="${p.id}" data-v="evolucao">Gráficos</button><button data-act="go-montar">Montar detalhado</button>
-      <button class="${isConsult(p) ? 'on' : ''}" data-act="consult-toggle">Consultoria: ${isConsult(p) ? 'sim' : 'não'}</button>${p.test ? '<button data-act="test-sim">Simular semana</button><button data-act="test-clear">Limpar teste</button>' : ''}</div>
+      <button class="${isConsult(p) ? 'on' : ''}" data-act="consult-toggle">Consultoria: ${isConsult(p) ? 'sim' : 'não'}</button>
+      <button class="v2-pfpause" data-act="${isPaused(p) ? 'unpause-student' : 'pause-student'}" data-pid="${p.id}">${v2Ico(isPaused(p) ? V2_PLAY : V2_PAUSE)}${isPaused(p) ? 'Reativar aluno' : 'Pausar aluno'}</button>${p.test ? '<button data-act="test-sim">Simular semana</button><button data-act="test-clear">Limpar teste</button>' : ''}</div>
     ${p.notes ? `<div class="v2-note2">${esc(p.notes)}</div>` : ''}
     ${p.consultReq && !isConsult(p) ? `<div class="v2-note2"><b>★ ${esc(firstName(p))} pediu a consultoria em ${fmtDate(p.consultReq)}.</b> Para virar aluno da consultoria, toque em <b>Consultoria: não</b>.</div>` : ''}</section>`;
 }
@@ -5932,14 +5950,14 @@ function renderAlunosDesk() {
   const q = ui.q.trim().toLowerCase(), shown = students.filter(p => !q || p.name.toLowerCase().includes(q));
   const ym = today().slice(0, 7);
   const row = p => { const st = payStatus(p, ym); return `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${avIn(p)}</span>
-      <span class="grow"><b>${esc(p.name)}</b><small>${p.test ? 'só para testar · não conta nos números' : p.consultReq && !isConsult(p) ? 'quer a consultoria!' : esc(profileSummary(p.id).lastTxt)}</small></span>${p.test ? '' : isConsult(p) ? readyChip(p, true) : `<span class="pstat ${p.consultReq ? 'late' : 'wait'}">${p.consultReq ? '★' : 'app'}</span>`}${st && st.k === 'late' ? '<span class="pstat late"><i class="ic ic-card"></i></span>' : ''}</button>`; };
+      <span class="grow"><b>${esc(p.name)}</b><small>${p.test ? 'só para testar · não conta nos números' : isPaused(p) ? `Pausado desde ${fmtDate(p.paused)}` : p.consultReq && !isConsult(p) ? 'quer a consultoria!' : esc(profileSummary(p.id).lastTxt)}</small></span>${p.test ? '' : isConsult(p) ? readyChip(p, true) : `<span class="pstat ${p.consultReq ? 'late' : 'wait'}">${p.consultReq ? '★' : 'app'}</span>`}${st && st.k === 'late' ? '<span class="pstat late"><i class="ic ic-card"></i></span>' : ''}</button>`; };
   const sel = ui.profile !== ME && profile(ui.profile), real = students.filter(p => !p.test);
   $main.innerHTML = `<div class="split">
     <aside class="slist">
       <div class="actions" style="margin:0 0 8px"><button class="btn primary" style="width:100%" data-act="add-student">＋ Adicionar aluno</button>
         <button class="btn" style="width:100%" data-act="test-profile">${testProfile() ? 'Abrir perfil de teste' : 'Criar perfil de teste'}</button></div>
       <input class="search" id="search" placeholder="Buscar aluno" value="${esc(ui.q)}" style="margin-bottom:6px">
-      <div id="studentList">${shown.map(row).join('') || `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda.'}</p>`}</div>
+      <div id="studentList">${shown.filter(p => !isPaused(p)).map(row).join('')}${shown.some(isPaused) ? `<p class="slist-sep">${v2Ico(V2_PAUSE)} Pausados</p>${shown.filter(isPaused).map(row).join('')}` : ''}${shown.length ? '' : `<p class="empty">${students.length ? 'Nenhum aluno encontrado.' : 'Nenhum aluno ainda.'}</p>`}</div>
     </aside>
     <section class="spane">${sel ? perfilHtml(sel, true) : `
       ${CLOUD && cloud ? requestsHtml() : ''}
@@ -6848,6 +6866,7 @@ function perfilHtml(p, desk) {
       <div class="prof-h"><span class="av">${avIn(p)}</span>
         <div class="grow"><h2>${esc(p.name)}</h2>
           <small style="color:var(--muted)">${p.since ? `Aluno desde ${fmtDate(p.since)}/${p.since.slice(2, 4)}` : 'Aluno'}${p.phone ? ' · ' + esc(p.phone) : ''}</small>
+          ${!mine && isPaused(p) ? `<div class="tags" style="margin-top:4px"><span class="pill">${v2Ico(V2_PAUSE)} Pausado desde ${fmtDate(p.paused)}</span></div>` : ''}
           ${p.goal ? `<div class="tags" style="margin-top:4px"><span class="pill up"><i class="ic ic-target"></i> ${esc(p.goal)}</span></div>` : ''}</div>
         <button class="icon" data-act="student-edit" aria-label="Editar dados">✎</button></div>
       ${p.notes ? `<div class="note">${esc(p.notes)}</div>` : ''}
@@ -6859,6 +6878,7 @@ function perfilHtml(p, desk) {
         ${mine ? '' : '<button class="btn" data-act="goto-msg">Mensagem</button>'}
         <button class="btn" data-act="student-mode">Ver como o aluno</button>
         <button class="btn ${isConsult(p) ? 'primary' : ''}" data-act="consult-toggle">Consultoria: ${isConsult(p) ? 'sim' : 'não (só o app)'}</button>
+        ${mine || p.test ? '' : `<button class="btn pf-pausebtn" data-act="${isPaused(p) ? 'unpause-student' : 'pause-student'}" data-pid="${p.id}">${v2Ico(isPaused(p) ? V2_PLAY : V2_PAUSE)} ${isPaused(p) ? 'Reativar aluno' : 'Pausar aluno'}</button>`}
         ${p.test ? '<button class="btn" data-act="test-sim">Simular semana feita</button>' : ''}
         ${p.test ? '<button class="btn danger" data-act="test-clear">Limpar teste</button>' : ''}
         ${desk ? '' : `<button class="btn" data-act="go-montar">Montar treino detalhado</button>${p.test ? '' : readyBtn(p)}`}
@@ -7012,13 +7032,13 @@ $main.addEventListener('input', e => {
   if (e.target.id === 'v2Q') {
     ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
     const f = ui.v2filter || 'Todos', el = document.getElementById('v2List');
-    if (el) el.innerHTML = v2ListHtml(v2Students().filter(p => (!q || p.name.toLowerCase().includes(q)) && (f === 'Todos' || (f === 'Hoje' && v2Status(p)[1] === 'Treinou hoje') || (f === 'Sumidos' && /dias sem treinar/.test(v2Status(p)[1])) || (f === 'Convite' && v2Status(p)[1] === 'Convite não aceito'))));
+    if (el) el.innerHTML = v2ListHtml(v2Students().filter(p => (!q || p.name.toLowerCase().includes(q)) && v2FilterOk(p, f)));
     return;
   }
   if (e.target.id === 'search' && isDesk()) {
     ui.q = e.target.value; const q = ui.q.trim().toLowerCase();
     document.getElementById('studentList').innerHTML = db.profiles.filter(p => p.id !== ME && p.name.toLowerCase().includes(q))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${avIn(p)}</span><span class="grow"><b>${esc(p.name)}</b><small>${esc(profileSummary(p.id).lastTxt)}</small></span>${readyChip(p, true)}</button>`).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => `<button class="srow ${p.id === ui.profile ? 'on' : ''}" data-act="desk-pick" data-pid="${p.id}"><span class="av">${avIn(p)}</span><span class="grow"><b>${esc(p.name)}</b><small>${isPaused(p) ? `Pausado desde ${fmtDate(p.paused)}` : esc(profileSummary(p.id).lastTxt)}</small></span>${readyChip(p, true)}</button>`).join('') || '<p class="empty">Nenhum aluno encontrado.</p>';
     return;
   }
   if (e.target.id === 'search') {
@@ -7335,6 +7355,17 @@ $main.addEventListener('click', e => {
     case 'v2-save': return v2SharePost(true);
     case 'v2-mytreino': ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.v2done = null; return go('treino');
     case 'v2-filter': ui.v2filter = b.dataset.f; return render();
+    case 'v2-paused-list': ui.v2filter = 'Pausados'; ui.q = ''; return go('alunos');
+    case 'pause-student': {
+      const p = profile(b.dataset.pid); if (!p) return;
+      p.paused = today(); save(); render();
+      return toast(`${esc(firstName(p))}: pausado. Nada foi apagado. Se voltar a treinar, sai da pausa sozinho.`);
+    }
+    case 'unpause-student': {
+      const p = profile(b.dataset.pid); if (!p) return;
+      delete p.paused; save(); render();
+      return toast(`${esc(firstName(p))}: ativo de novo.`);
+    }
     case 'show-qr': return showQr();
     case 'copy-ig': return copyText(signupLink('ig')).then(ok => toast(ok ? '<i class="ic ic-link"></i> Link copiado. Cole na bio do Instagram.' : 'Não deu para copiar sozinho: ' + signupLink('ig')));
     case 'v2-signup': copyText(signupLink()).then(ok => toast(ok ? '<i class="ic ic-link"></i> Link de cadastro copiado! Mande para quem quiser usar o app.' : signupLink())); return;
@@ -7814,7 +7845,8 @@ function iaFind(nome) {
 const IA_GUIDE = `Como o app funciona (versão nova, celular):
 - Barra de baixo do professor: Painel, Alunos, Pagamentos, Meu perfil. No computador há menu lateral com as mesmas áreas e Ajustes e backup.
 - Painel: alunos que treinaram hoje, ativos na semana, "Precisa de atenção" (convite não aceito ou muitos dias sem treinar, com botão para lembrar pelo WhatsApp), cardio da semana, atalhos (Novo aluno, Link de cadastro, QR code do app). O sino abre Acessos (quem entrou, quem treinou, pedidos de conta). A foto abre Ajustes e backup.
-- Alunos: lista com busca e filtros (Todos, Hoje, Sumidos, Convite). Tocar no aluno abre o perfil: WhatsApp, Ver como aluno, Treino, Histórico, Gráficos, Montar detalhado, Consultoria sim/não, divisão da semana, planejamento das próximas semanas, meta de cardio, medidas, recados e conta do aluno.
+- Pausar aluno: aluno parado que pode voltar. No Painel (Precisa de atenção) ou no perfil do aluno, botão Pausar: sai da lista de atenção e os dias sem treinar param de contar; nada é apagado. Reativar no perfil, ou sai da pausa sozinho quando voltar a treinar.
+- Alunos: lista com busca e filtros (Todos, Hoje, Sumidos, Convite, Pausados). Tocar no aluno abre o perfil: WhatsApp, Ver como aluno, Treino, Histórico, Gráficos, Montar detalhado, Consultoria sim/não, divisão da semana, planejamento das próximas semanas, meta de cardio, medidas, recados e conta do aluno.
 - Montar treino: no perfil do aluno, "Montar detalhado". Cada treino tem nome livre (ex.: Superiores). Adiciona exercícios da biblioteca, com séries, repetições, carga, descanso, técnica e observação. Treino novo fica escondido do aluno até tocar em "Liberar no app" ou colocar no planejamento. Dá para duplicar e copiar o treino para outro aluno.
 - Divisão da semana: escolhe o que o aluno faz em cada dia. Planejamento: treino só para uma data. Copiar para a semana seguinte repete a semana.
 - Cardio: meta por dia ou por semana no perfil do aluno; o aluno marca o tempo (corrida, bicicleta, escada, elíptico).
@@ -9225,7 +9257,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '05/11-23:45';
+const APP_VERSION = '07/11-11:50';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
