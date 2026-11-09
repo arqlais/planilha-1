@@ -6231,7 +6231,7 @@ const liveExs = pid => db.exercises.filter(e => e.profileId === pid && !e.archiv
 function wkAutoLink(pid) {
   let n = 0;
   liveExs(pid).forEach(e => {
-    if (!noHistory(e)) return;
+    if (e.noLink || !noHistory(e)) return; // "Não é o mesmo" / histórico separado: nunca liga sozinho
     const day = (profile(pid).workouts.find(w => w.id === e.letter) || {}).day != null;
     const x = wkSources(pid, e).find(wkAutoOk(e, day)); if (x) { wkLink(e, x, day); n++; }
   });
@@ -6431,7 +6431,7 @@ function splitHistory(ex, oldName) {
   if (!ownHistory(ex)) return false;
   const oldId = ex.id, keep = { ...plain(ex), name: oldName, letter: null, archived: true };
   delete keep.order; delete keep.twin; delete ex.twin;
-  ex.id = uid(); ex.planDate = today();
+  ex.id = uid(); ex.planDate = today(); ex.noLink = true;
   db.exercises.push(keep);
   // treino de hoje ainda em andamento fica com o exercício novo
   db.sessions.forEach(x => { if (x.exId === oldId && x.date === today() && !x.fin) x.exId = ex.id; });
@@ -8511,6 +8511,27 @@ async function fixOnce() {
     mark('livre-maquina-marcar');
     if (n) { save(); msgs.push('Livre e máquina separados de novo: cada jeito mostra só as suas cargas.'); }
   }
+  // 1o) (09/11) Professor trocou de cross over (mais pesado): Tríceps francês unilateral começa do zero.
+  //     As cargas antigas ficam guardadas no Histórico como "(histórico antigo)"; o treino de hoje já é do cross novo.
+  if (!done.has('triceps-frances-zero-0911')) {
+    await ensureFull(ME);
+    const D = '2026-11-09', alvo = 'triceps frances unilateral', oldName = 'Tríceps francês unilateral (histórico antigo)';
+    const live = profExs(ME).filter(e => normName(e.name) === alvo && isLetter(e.letter, ME));
+    let n = 0;
+    live.forEach(e => {
+      if (!db.sessions.some(x => x.exId === e.id && x.date < D && hasDone(x))) return;
+      const oldId = e.id, keep = { ...plain(e), name: oldName, letter: null, archived: true };
+      delete keep.order; delete keep.twin; delete e.twin;
+      e.id = uid(); e.planDate = D; e.noLink = true; e.sets = e.sets.map(x => ({ ...x, carga: null }));
+      db.exercises.push(keep);
+      db.sessions.forEach(x => { if (x.exId === oldId && x.date >= D) x.exId = e.id; }); // o de hoje fica com o cross novo
+      n++;
+    });
+    // outros guardados com o mesmo nome (fora dos treinos) também saem do "antes"
+    db.exercises.forEach(x => { if (x.profileId === ME && !isLetter(x.letter, ME) && normName(x.name) === alvo) { x.name = oldName; x.archived = true; } });
+    mark('triceps-frances-zero-0911');
+    if (n) { save(); msgs.push('Tríceps francês unilateral começou do zero (cross novo). As cargas antigas ficaram guardadas no Histórico.'); }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -9290,7 +9311,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '09/11-14:29';
+const APP_VERSION = '09/11-14:51';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
