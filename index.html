@@ -2587,6 +2587,10 @@ Object.assign(POSES, {
   crucmaq: { front: true, st: `<path d="M60 4v11" ${EQ} stroke-width="5"/><path d="M28 5h76M104 5v74M92 79h20" ${EQ} stroke-width="4"/><rect x="95" y="44" width="8" height="26" rx="1.5" fill="color-mix(in srgb, currentColor 28%, transparent)"/><path d="M95 50.5h8M95 57h8M95 63.5h8" stroke="color-mix(in srgb, currentColor 45%, transparent)" stroke-width="1"/><path d="M99 8v36" stroke="color-mix(in srgb, currentColor 40%, transparent)" stroke-width="1.5"/><rect x="48" y="14" width="24" height="37" rx="5" fill="color-mix(in srgb, currentColor 20%, transparent)"/>${FRONTSEAT}<path d="M48 79h24" ${EQ} stroke-width="5"/>`, w: 'vgrip', lever: [32, 5],
     A: P([60, 13], [60, 21], [52, 24], [38, 26], [24, 28], [55, 49], [54, 64], [54, 79], [51, 79]),
     B: P([60, 13], [60, 21], [52, 24], [47, 29], [56, 31], [55, 49], [54, 64], [54, 79], [51, 79]) },
+  // elevação lateral na máquina, vista de frente: sentado, encosto alto, almofadas por fora dos cotovelos; sobe os braços pelos lados
+  lateralmaq: { front: true, st: `<rect x="48" y="14" width="24" height="37" rx="5" fill="color-mix(in srgb, currentColor 20%, transparent)"/>${FRONTSEAT}<path d="M18 79h84" ${EQ} stroke-width="4"/>`, w: 'epad',
+    A: P([60, 13], [60, 21], [52, 24], [49, 37], [44, 44], [55, 49], [54, 64], [54, 79], [51, 79]),
+    B: P([60, 13], [60, 21], [52, 24], [39, 25], [31, 31], [55, 49], [54, 64], [54, 79], [51, 79]) },
   peck: { front: true, st: FRONTSEAT, w: 'epad',
     A: P([60, 13], [60, 21], [52, 24], [38, 25], [38, 12], [55, 49], [54, 64], [54, 79], [51, 79]),
     B: P([60, 13], [60, 21], [52, 24], [51, 27], [56, 13], [55, 49], [54, 64], [54, 79], [51, 79]) },
@@ -2747,7 +2751,7 @@ Object.assign(POSES, {
     B: X(P([71, 35], [64, 38], [62, 39], [52, 40], [39, 39], [38, 42], [40, 55], [28, 56], [24, 54]), { k2: [32, 62], a2: [34, 79], t2: [41, 79] }) },
 });
 // Mesmo exercício feito livre ou na máquina: [livre, máquina]
-const VARIANTS = [['supino', 'chestpress'], ['supinoinc', 'chestpressinc'], ['supinoinchalter', 'chestpressinc'], ['supinohalter', 'chestpress'], ['cavalinho', 'cavalinhomaq'], ['remada', 'remadamaq'], ['agacha', 'smith'], ['desenv', 'desenvmaq'], ['crucifixo', 'crucmaq']];
+const VARIANTS = [['supino', 'chestpress'], ['supinoinc', 'chestpressinc'], ['supinoinchalter', 'chestpressinc'], ['supinohalter', 'chestpress'], ['cavalinho', 'cavalinhomaq'], ['remada', 'remadamaq'], ['agacha', 'smith'], ['desenv', 'desenvmaq'], ['crucifixo', 'crucmaq'], ['lateral', 'lateralmaq']];
 const pairOf = k => VARIANTS.find(v => v.includes(k)) || null;
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 const L = (p, q, w, extra = '') => `<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" stroke-width="${w}" ${extra}/>`;
@@ -2820,7 +2824,7 @@ function guessAnim(name, group) {
   const n = norm(name);
   const RX = [[/cavalinho.*(maquina|apoio|articulad)|remada.*(apoio no peito|peito apoiado)/, 'cavalinhomaq'], [/cavalinho|remada t\b|t-?bar/, 'cavalinho'],
     [/supino inclinad.*(maquina|articulad)|chest press inclinad/, 'chestpressinc'], [/supino inclinad.*halter/, 'supinoinchalter'], [/supino inclinad/, 'supinoinc'],
-    [/desenvolvimento.*(maquina|articulad)/, 'desenvmaq'],
+    [/desenvolvimento.*(maquina|articulad)/, 'desenvmaq'], [/elevacao lateral.*(maquina|articulad)/, 'lateralmaq'],
     [/tricep.*corda|corda.*tricep/, 'tricorda'], [/tricep.*(coice|kickback)|coice.*tricep/, 'tricoice'], [/tricep.*unilateral/, 'triceps'],
     [/voador inverso|crucifixo inverso|peck deck inverso/, 'crucinv'], [/cadeira flexora|flexora sentad/, 'cadflexora'], [/elevacao frontal/, 'elevfrontal'], [/encolhimento/, 'encolhimento'], [/concentrad/, 'concentrada'], [/triceps (no )?banco|mergulho no banco/, 'mergulho'], [/sumo/, 'sumo'], [/ponte/, 'ponte'], [/infra|elevacao de pernas/, 'infra'], [/polichinelo/, 'polichinelo'], [/remo/, 'remoerg'], [/escada/, 'escada'], [/eliptico/, 'eliptico'], [/bicicleta|bike/, 'bike'], [/esteira|corrida|caminhada/, 'esteira'], [/crucifixo.*(polia|cabo)/, 'cross'], [/crucifixo.*(maquina|aparelho)|(pec|peitoral) fly|fly.*maquina/, 'crucmaq'], [/voador|peck/, 'peck'], [/supino.*maquina|chest press/, 'chestpress'], [/remada baixa/, 'remadabaixa'], [/remada.*(maquina|sentad|articulad)/, 'remadamaq'], [/graviton|assistid/, 'graviton'], [/scott/, 'scott'], [/abdutora/, 'abdutora'], [/adutora/, 'adutora'], [/gluteo|coice|kickback/, 'gluteocabo'], [/pelvica|hip thrust/, 'pelvica'], [/panturrilha sentad/, 'pantsentado'], [/hack/, 'hack'], [/smith/, 'smith'], [/terra/, 'terra'], [/stiff/, 'stiff'], [/afundo|passada|bulgaro/, 'afundo'], [/martelo/, 'martelo'], [/frances/, 'frances'], [/testa/, 'testa'], [/serrote|unilateral/, 'serrote'], [/flexao/, 'flexao'], [/prancha/, 'prancha'], [/abdominal.*maquina/, 'abdmaq'], [/rosca.*(cabo|polia)/, 'roscacabo'], [/supino.*halter/, 'supinohalter'], [/crucifixo|fly/, 'crucifixo'], [/cross/, 'cross'], [/supino|flexao/, 'supino'], [/puxada|pulldown|barra fixa/, 'puxada'], [/remada|serrote|row/, 'remada'], [/desenvolvimento|militar|arnold/, 'desenv'], [/elevacao lateral|elevacao frontal|lateral/, 'lateral'], [/rosca|martelo|scott/, 'rosca'], [/tricep|frances|testa|pulley|coice|mergulho/, 'triceps'], [/leg|hack/, 'legpress'], [/extensora/, 'extensora'], [/flexora|mesa|romeno/, 'flexora'], [/panturrilha|gemeo|soleo/, 'pant'], [/abdom|crunch/, 'abdo'], [/agach|afundo|bulgaro|passada|smith/, 'agacha']];
   for (const [r, k] of RX) if (r.test(n)) return k;
@@ -2872,6 +2876,7 @@ const HOWTO = {
   desenv: 'Sentado: empurre os halteres para cima da cabeça e desça até a orelha.',
   desenvmaq: 'Sentado na máquina: empurre as alças para cima e desça devagar.',
   lateral: 'Em pé: suba os braços pelos lados até a altura dos ombros.',
+  lateralmaq: 'Sentado na máquina, braços nas almofadas: suba os cotovelos pelos lados até a altura dos ombros e desça devagar.',
   elevfrontal: 'Em pé: suba os braços pela frente até a altura dos ombros.',
   rosca: 'Em pé, cotovelos colados no corpo: suba a barra dobrando só os cotovelos.',
   martelo: 'Palmas viradas uma para a outra: suba os halteres dobrando os cotovelos.',
@@ -9285,7 +9290,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '09/11-14:12';
+const APP_VERSION = '09/11-14:14';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
