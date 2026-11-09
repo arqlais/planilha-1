@@ -2106,11 +2106,16 @@ const exHistory = exId => {
 // O "antes" e as comparações só olham as vezes feitas do mesmo jeito; registro antigo sem marca vale o padrão do exercício.
 const eqDefault = ex => { const k = PFA.guessAnim(ex.name, ex.group), pr = PFA.pairOf(k); return pr ? (k === pr[1] ? 'maq' : 'livre') : ''; };
 const sessEq = s => { const e = exById(s.exId); return e && eqDefault(e) ? s.equip || e.equip || eqDefault(e) : ''; };
+// Cada treino montado tem a sua carga (pedido do Igor, 09/11): o mesmo exercício na segunda e na quinta não se misturam.
+// O "antes" vem da última vez naquele mesmo treino (se o aluno fizer o treino de quinta na sexta, vale o de quinta).
+// Treino que ainda não teve esse exercício: pega a última vez em qualquer treino (como era antes), até ter a primeira vez dele.
+// O registro guarda o treino em que foi feito (s.w); registro antigo sem marca vale o treino atual do exercício.
+const sessW = s => s.w || (exById(s.exId) || {}).letter || null;
 const prevSession = (exId, date) => {
-  const h = exHistory(exId).filter(s => s.date < date), ex = exById(exId);
-  if (!ex || !eqDefault(ex)) return h.pop();
-  const eq = exEq(ex, date) || eqDefault(ex);
-  return h.filter(s => sessEq(s) === eq).pop();
+  const ex = exById(exId); let h = exHistory(exId).filter(s => s.date < date);
+  if (ex && eqDefault(ex)) { const eq = exEq(ex, date) || eqDefault(ex); h = h.filter(s => sessEq(s) === eq); }
+  const same = ex && ex.letter ? h.filter(s => sessW(s) === ex.letter) : [];
+  return (same.length ? same : h).pop();
 };
 const sessionOn = (exId, date) => bestSession(db.sessions.filter(s => s.exId === exId && s.date === date));
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
@@ -2149,7 +2154,7 @@ function blankSession(ex, date) {
 function ensureSession(ex, date) {
   if (date === today()) markActivity(date); // está treinando agora
   let s = sessionOn(ex.id, date);
-  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); db.sessions.push(s); }
+  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); if (ex.letter) s.w = ex.letter; db.sessions.push(s); }
   if (date === today() && !s.t0 && !s.fin) s.t0 = new Date().toISOString(); // começou agora: dá a duração do treino no check-in
   if (ui.studentMode && !meStu()) s.by = 'aluno'; // marcação feita pelo aluno
   s.up = new Date().toISOString(); s.dv = devKind(); // última mudança: quando e em que aparelho (para conferir depois)
@@ -9257,7 +9262,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '07/11-11:50';
+const APP_VERSION = '09/11-00:57';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
