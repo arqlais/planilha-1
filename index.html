@@ -2106,6 +2106,10 @@ const exHistory = exId => {
 // O "antes" e as comparações só olham as vezes feitas do mesmo jeito; registro antigo sem marca vale o padrão do exercício.
 const eqDefault = ex => { const k = PFA.guessAnim(ex.name, ex.group), pr = PFA.pairOf(k); return pr ? (k === pr[1] ? 'maq' : 'livre') : ''; };
 const sessEq = s => { const e = exById(s.exId); return e && eqDefault(e) ? s.equip || e.equip || eqDefault(e) : ''; };
+// Grava o jeito (livre/máquina) nas vezes já feitas que ainda não têm marca, para trocar o padrão do exercício
+// não mudar o que já foi feito. Só acrescenta a marca: nenhuma carga muda.
+const eqFreeze = ex => { if (!eqDefault(ex)) return 0; let n = 0; const ids = twinIds(ex.id);
+  db.sessions.forEach(s => { if (ids.has(s.exId) && !s.equip) { const q = sessEq(s); if (q) { s.equip = q; n++; } } }); return n; };
 // Cada treino montado tem a sua carga (pedido do Igor, 09/11): o mesmo exercício na segunda e na quinta não se misturam.
 // O "antes" vem da última vez naquele mesmo treino (se o aluno fizer o treino de quinta na sexta, vale o de quinta).
 // Treino que ainda não teve esse exercício: pega a última vez em qualquer treino (como era antes), até ter a primeira vez dele.
@@ -2154,7 +2158,7 @@ function blankSession(ex, date) {
 function ensureSession(ex, date) {
   if (date === today()) markActivity(date); // está treinando agora
   let s = sessionOn(ex.id, date);
-  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); if (ex.letter) s.w = ex.letter; db.sessions.push(s); }
+  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); if (ex.letter) s.w = ex.letter; if (eqDefault(ex)) s.equip = ex.equip || eqDefault(ex); db.sessions.push(s); }
   if (date === today() && !s.t0 && !s.fin) s.t0 = new Date().toISOString(); // começou agora: dá a duração do treino no check-in
   if (ui.studentMode && !meStu()) s.by = 'aluno'; // marcação feita pelo aluno
   s.up = new Date().toISOString(); s.dv = devKind(); // última mudança: quando e em que aparelho (para conferir depois)
@@ -7273,7 +7277,11 @@ $main.addEventListener('click', e => {
     case 'demo-ex': return openDemo(exById(b.dataset.id));
     case 'v2-equip': { // livre ou máquina: o professor muda o padrão (e o dia aberto); o aluno marca só o dia de hoje
       const ex = exById(b.dataset.id), v = b.dataset.v; if (!ex) return;
-      if (!ui.studentMode) { ex.equip = v; const s = sessionOn(ex.id, ui.date); if (s) s.equip = v; }
+      if (!ui.studentMode) {
+        // antes de mudar o padrão, as vezes já feitas sem marca ficam com o jeito que valiam (senão a máquina vira livre)
+        if (ex.equip !== v) return ensureFull(ex.profileId).then(() => { eqFreeze(ex); ex.equip = v; const s = sessionOn(ex.id, ui.date); if (s) s.equip = v; save(); render(); });
+        const s = sessionOn(ex.id, ui.date); if (s) s.equip = v;
+      }
       else { const lr = lockReason(ex.id); if (lr) return toast(LOCK_MSG[lr]); ensureSession(ex, ui.date).equip = v; }
       save(); return render();
     }
@@ -8483,6 +8491,21 @@ async function fixOnce() {
     mark('peso-0211'); save();
     msgs.push('Seu peso (80 kg) foi anotado em Medidas: a barra fixa agora conta ele como carga.');
   }
+  // 1n) (09/11) Crucifixo feito na máquina contava também no livre: os treinos antigos sem marca seguiam o padrão
+  //     atual do exercício. Crucifixo do professor: carga de 25 kg ou mais era máquina, menos que isso livre.
+  //     Os outros exercícios ficam marcados com o jeito que já mostravam. Só acrescenta a marca; nenhuma carga muda.
+  if (!done.has('livre-maquina-marcar')) {
+    await ensureFull(ME);
+    let n = 0;
+    const exs = profExs(ME).filter(e => eqDefault(e)), cru = new Set(exs.filter(e => normName(e.name) === 'crucifixo').map(e => e.id));
+    db.sessions.forEach(s => {
+      if (!cru.has(s.exId) || s.equip) return;
+      s.equip = Math.max(0, ...s.sets.map(x => x.carga || 0)) >= 25 ? 'maq' : 'livre'; n++;
+    });
+    exs.forEach(e => { n += eqFreeze(e); });
+    mark('livre-maquina-marcar');
+    if (n) { save(); msgs.push('Livre e máquina separados de novo: cada jeito mostra só as suas cargas.'); }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -9262,7 +9285,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '09/11-00:57';
+const APP_VERSION = '09/11-14:12';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
