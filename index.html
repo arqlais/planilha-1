@@ -2113,13 +2113,17 @@ const eqFreeze = ex => { if (!eqDefault(ex)) return 0; let n = 0; const ids = tw
 // Cada treino montado tem a sua carga (pedido do Igor, 09/11): o mesmo exercício na segunda e na quinta não se misturam.
 // O "antes" vem da última vez naquele mesmo treino (se o aluno fizer o treino de quinta na sexta, vale o de quinta).
 // Treino que ainda não teve esse exercício: pega a última vez em qualquer treino (como era antes), até ter a primeira vez dele.
-// O registro guarda o treino em que foi feito (s.w); registro antigo sem marca vale o treino atual do exercício.
-const sessW = s => s.w || (exById(s.exId) || {}).letter || null;
+// O registro guarda o treino em que foi feito (s.w). Registro antigo sem marca só conta como "do mesmo treino" se for
+// recente (até 14 dias antes da última vez em qualquer treino): exercício antigo que voltou para um treino não pode
+// trazer uma carga de meses atrás no lugar da última vez feita (Agachamento do Igor, 11/11, mostrava 15/06).
+const SAME_W_DAYS = 14;
 const prevSession = (exId, date) => {
   const ex = exById(exId); let h = exHistory(exId).filter(s => s.date < date);
   if (ex && eqDefault(ex)) { const eq = exEq(ex, date) || eqDefault(ex); h = h.filter(s => sessEq(s) === eq); }
-  const same = ex && ex.letter ? h.filter(s => sessW(s) === ex.letter) : [];
-  return (same.length ? same : h).pop();
+  const L = ex && ex.letter, last = h[h.length - 1]; if (!L || !last) return last;
+  const min = addDays(last.date, -SAME_W_DAYS);
+  const same = h.filter(s => s.w ? s.w === L : s.date >= min && (exById(s.exId) || {}).letter === L);
+  return same.length ? same[same.length - 1] : last;
 };
 const sessionOn = (exId, date) => bestSession(db.sessions.filter(s => s.exId === exId && s.date === date));
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
@@ -9311,7 +9315,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '09/11-14:51';
+const APP_VERSION = '11/11-14:25';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
