@@ -5979,6 +5979,43 @@ async function loadPlanVersions(pid) {
   } catch (e) { ui.planVers = null; toast('Não foi possível buscar as cópias agora.'); }
   render();
 }
+// Treino de um dia da semana excluído sem querer: volta da cópia mais recente (últimos 7 dias) que ainda tinha ele.
+// Volta com o mesmo id (o "antes" de cada exercício continua vindo deste treino), séries, cargas, ordem e observações.
+// O histórico não muda. Exercício com o mesmo nome que já está no treino desse dia não é duplicado.
+async function restoreDeletedDay(pid, d) {
+  const p = profile(pid); if (!p || !cloud || !cloud.fs) return 0;
+  const ID = firebase.firestore.FieldPath.documentId(), since = addDays(today(), -7);
+  const idx = await cloud.fs.doc('backups/_index').get(), dates = (idx.exists ? idx.data().dates || [] : []).filter(x => x >= since);
+  const vers = await cloud.fs.collection('backups').where(ID, '>=', `v_${pid}_`).where(ID, '<', `v_${pid}_~`).get();
+  const docs = [...vers.docs, ...await Promise.all(dates.map(x => cloud.fs.doc(`backups/${x}_${pid}`).get()))];
+  const items = [];
+  docs.forEach(doc => { if (!doc.exists) return; try { const x = doc.data(), pr = x.kind === 'v' ? JSON.parse(x.data) : JSON.parse(x.data)['profiles/' + pid] || {};
+    if ((x.date || (x.at || '').slice(0, 10)) >= since) items.push({ at: x.at || x.date || '', workouts: pr.workouts || [], exercises: pr.exercises || [], division: pr.division || {}, plans: pr.plans || {} }); } catch (e) {} });
+  items.sort((a, b) => b.at.localeCompare(a.at));
+  const have = new Set((p.workouts || []).map(w => w.id));
+  for (const x of items) {
+    const bw = x.workouts.find(w => !have.has(w.id) && (w.day === d || (x.division[d] || []).includes(w.id)) && x.exercises.some(e => e.letter === w.id));
+    if (!bw) continue;
+    const cur = (p.workouts || []).find(w => w.day === d && !w.arch);
+    const target = cur || { ...plain(bw) };
+    if (!cur) p.workouts = [...(p.workouts || []), target];
+    p.division = p.division || {};
+    if ((x.division[d] || []).includes(bw.id) || target.day === d) p.division[d] = [...new Set([...(p.division[d] || []), target.id])];
+    // planejamento de hoje em diante que tinha este treino
+    for (const [k, v] of Object.entries(x.plans)) if (k >= today() && p.plans && p.plans[k] && (v.w || []).includes(bw.id) && !(p.plans[k].w || []).includes(target.id)) p.plans[k].w = [...(p.plans[k].w || []), target.id];
+    let n = 0;
+    x.exercises.filter(e => e.letter === bw.id).forEach(e0 => {
+      if (letterExs(target.id, pid).some(e => sameName(e.name, e0.name))) return;
+      const e = db.exercises.find(y => y.id === e0.id);
+      if (e && isLetter(e.letter, pid) && e.letter !== target.id) return; // está em outro treino montado: não mexe
+      if (e) { e.letter = target.id; delete e.archived; e.order = e0.order; }
+      else db.exercises.push({ ...plain(e0), profileId: pid, letter: target.id });
+      n++;
+    });
+    return n;
+  }
+  return 0;
+}
 function renderPerfil() {
   const p = profile(ui.profile);
   if (!p || p.id === ME) { ui.view = 'alunos'; return render(); }
@@ -8558,6 +8595,12 @@ async function fixOnce() {
     mark('triceps-frances-zero-0911');
     if (n) { save(); msgs.push('Tríceps francês unilateral começou do zero (cross novo). As cargas antigas ficaram guardadas no Histórico.'); }
   }
+  // 1p) (12/11) Professor excluiu sem querer o treino de quinta: volta da cópia mais recente que ainda tinha ele
+  if (!done.has('quinta-volta-1211')) {
+    const n = await restoreDeletedDay(ME, 4);
+    mark('quinta-volta-1211');
+    if (n) { save(); render(); msgs.push(`✓ O treino de quinta voltou: ${n} exercício${n === 1 ? '' : 's'}, com séries e cargas.`); }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -9337,7 +9380,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/11-01:44';
+const APP_VERSION = '12/11-14:05';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
