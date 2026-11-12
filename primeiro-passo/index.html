@@ -21,7 +21,7 @@ if(/[?&]demo\b/.test(location.search)){document.querySelector('link[rel=manifest
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="vendor/lucide-pp.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-firestore-compat.js"></script>
@@ -1428,7 +1428,12 @@ img,video,canvas{max-width:100%}
   .verif-done{justify-items:stretch;grid-template-columns:minmax(0,1fr)}
   .verif-done>*{max-width:100%}
   .pcard .top{flex-wrap:wrap}
+  .badges{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pill{white-space:normal;text-align:left;overflow-wrap:normal}
+  .hist small{flex-wrap:wrap;row-gap:6px}
 }
+/* botão no fim da linha (Ver, Conferir, Pagar) nunca fica cortado: a linha quebra o texto, não o botão */
+.rw .end{min-width:min-content}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
