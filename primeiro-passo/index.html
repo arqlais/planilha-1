@@ -1403,7 +1403,7 @@ img,video,canvas{max-width:100%}
 @media (min-width:2200px){html{zoom:1.25}}
 @media (min-width:3000px){html{zoom:1.5}}
 @media (max-width:340px){
-  body{overflow-wrap:anywhere}
+  body{overflow-wrap:break-word}
   .wrap{padding-left:12px;padding-right:12px}
   .topbar .wrap{gap:6px}
   .rbtn{width:38px;height:38px}
@@ -1414,6 +1414,8 @@ img,video,canvas{max-width:100%}
   .composer button{width:44px;height:44px}
 }
 @media (max-width:260px){
+  body .nw{white-space:normal}
+  body{overflow-wrap:anywhere} /* só no zoom muito alto (tela de 260 px ou menos): melhor quebrar a palavra do que a página escapar para o lado */
   .stats,.grid2,.grid2.wide,.plans,.plans.dyn{grid-template-columns:minmax(0,1fr)!important}
   .acc-btn span{display:none}
   .tabbar a{font-size:9px}
@@ -1432,6 +1434,9 @@ img,video,canvas{max-width:100%}
   .pill{white-space:normal;text-align:left;overflow-wrap:normal}
   .hist small{flex-wrap:wrap;row-gap:6px}
 }
+/* CREF e CPF nunca quebram no meio ("000000-/G/SP") */
+.nw{white-space:nowrap}
+.pn-me small{white-space:nowrap;font-size:12px}
 /* botão no fim da linha (Ver, Conferir, Pagar) nunca fica cortado: a linha quebra o texto, não o botão */
 .rw .end{min-width:min-content}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -2965,7 +2970,7 @@ function aClientes(){
 function aPersonais(bl){
   const cur=mkey(Date.now()),act=allClients().filter(c=>c.status==="ativo");
   $("#pv").innerHTML=`<div class="pgrid">${DB.personals.map(p=>{const n=act.filter(c=>c.pid===p.id).length,rev=bl.filter(b=>b.m===cur&&b.pid===p.id).reduce((s,b)=>s+b.amount,0);
-    return`<article class="pcard"><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div></div>
+    return`<article class="pcard"><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3><small style="color:var(--muted)"><span class="nw">${esc(p.cref)}</span> · ${esc(p.area)}</small></div></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${p.status==="ativo"?pill("ok","circle-check","Ativo"):p.status==="pendente"?pill("warn","hourglass","Aguardando análise"):pill("mute","pause","Inativo")}${p.spec.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>
       <p class="dm" style="color:var(--muted);font-size:14.5px">${esc(p.bio||"")}</p>
       ${p.status==="ativo"?`<div><div style="display:flex;justify-content:space-between;font-size:14px"><span>Alunos</span><b>${n} de ${p.cap}</b></div><div class="prog mt" style="margin-top:6px"><i style="width:${Math.min(100,n/p.cap*100)}%"></i></div></div>
@@ -3050,7 +3055,7 @@ function aLeads(){
   const ST={novo:["info","sparkles","Novo"],contatado:["warn","phone","Em contato"],convertido:["ok","circle-check","Convertido"],arquivado:["mute","archive","Arquivado"]};
   $("#pv").innerHTML=`<div class="filters" role="group" aria-label="Filtrar contatos">${[["novo","Novos"],["contatado","Em contato"],["convertido","Convertidos"],["todos","Todos"]].map(([k,t])=>`<button aria-pressed="${LF===k}" data-lf="${k}">${t} (${k==="todos"?DB.leads.length:DB.leads.filter(l=>l.status===k).length})</button>`).join("")}</div>
   <div class="pgrid">${L.length?L.map(l=>`<article class="lead"><div class="top">${pill(...ST[l.status])}${pill(l.type==="personal"?"warn":"mute",l.type==="personal"?"dumbbell":"user-round",l.type==="personal"?"Quer ser professor":"Quer começar")}<small style="margin-left:auto">${rel(l.at)}</small></div>
-    <b style="font-size:17px">${esc(l.name)}</b><small>${esc(l.contact)}${l.cref?" · "+esc(l.cref):""}${l.area?" · "+esc(l.area):""}</small><p>“${esc(l.msg)}”</p>
+    <b style="font-size:17px">${esc(l.name)}</b><small>${esc(l.contact)}${l.cref?` · <span class="nw">${esc(l.cref)}</span>`:""}${l.area?" · "+esc(l.area):""}</small><p>“${esc(l.msg)}”</p>
     <div class="pc-foot">${l.status==="novo"?`<button class="btn btn-ghost btn-sm" data-ls="${l.id}" data-v="contatado"><i data-lucide="phone"></i>Marcar em contato</button>`:""}${l.status!=="convertido"&&l.status!=="arquivado"?`<button class="btn btn-primary btn-sm" data-conv="${l.id}"><i data-lucide="${l.type==="personal"?"badge-check":"user-plus"}"></i>${l.type==="personal"?"Enviar para análise":"Virar cliente"}</button><button class="btn btn-ghost btn-sm" data-ls="${l.id}" data-v="arquivado" aria-label="Arquivar"><i data-lucide="archive"></i></button>`:""}</div></article>`).join(""):`<div class="empty">Nenhum contato aqui.</div>`}</div>
   <div class="info mt"><i data-lucide="info"></i><span>Os contatos chegam pelos formulários do site (“Fale com a gente” e “Seja professor parceiro”).</span></div>`;
   document.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{LF=b.dataset.lf;route(true)});
@@ -3125,7 +3130,7 @@ function pGanhos(p){
   <div class="info mt"><i data-lucide="percent"></i><span>Você fica com <b style="color:var(--ink)">${pctf(sp)}</b> de cada mensalidade dos seus alunos. ${pctf(1-sp)} fica com a empresa.</span></div>
   <section class="card mt"><div class="card-h"><h3>Seus ganhos por mês</h3></div>${vbars(ms.map(m=>({label:mlabel(m,1),short:mlabel(m),v:fin(bl.filter(b=>b.m===m)).rep})))}</section>
   <section class="card mt"><div class="card-h"><h3>Seus repasses</h3></div><div class="rows">${ms.slice(0,5).reverse().map(m=>{const f=fin(bl.filter(b=>b.m===m)),d=DB.payouts[payoutKey(p.id,m)];return`<div class="rw"><span><b>${mlabel(m,1)} de ${m.slice(0,4)}</b><small>${f.paidN} ${f.paidN===1?"mensalidade paga":"mensalidades pagas"}</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(f.rep)}</b>${(()=>{const ps=payoutState(p.id,m);return pill(ps.k,ps.ic,ps.t)})()}</span></div>`}).join("")}</div></section>
-  <a class="task mt" href="#/personal/dados" style="text-decoration:none;color:inherit"><span class="ti"><i data-lucide="landmark"></i></span><span><b>Onde você recebe</b><small>${p.payout&&p.payout.key?`Pix ${esc(p.payout.type)} ${esc(p.payout.key)}`:"Cadastre sua chave Pix"} · em Meus dados</small></span><i class="go" data-lucide="chevron-right"></i></a>`;
+  <a class="task mt" href="#/personal/dados" style="text-decoration:none;color:inherit"><span class="ti"><i data-lucide="landmark"></i></span><span><b>Onde você recebe</b><small>${p.payout&&p.payout.key?`Pix ${esc(p.payout.type)} <span class="nw">${esc(p.payout.key)}</span>`:"Cadastre sua chave Pix"} · em Meus dados</small></span><i class="go" data-lucide="chevron-right"></i></a>`;
 }
 
 /* ---------- empresa: financeiro ---------- */
@@ -3423,7 +3428,7 @@ function aSeg(){
   const SEV={alta:["bad","Alta"],media:["warn","Média"],baixa:["mute","Baixa"]};
   $("#pv").innerHTML=`<div class="kpis">${kpi("hourglass","Verificações em análise",pend.length,"clientes aguardando")}${kpi("shield-alert","Clientes sem verificação",unver.length,"a partir do nível 2")}${kpi("map-pin-check","Encontros presenciais hoje",today.length,`${today.filter(b=>(DB.checkins[b.id]||{}).in).length} com check-in`)}${kpi("message-square-warning","Relatos abertos",inc.filter(i=>i.status==="aberto").length,`${inc.filter(i=>i.status==="aberto"&&i.sev==="alta").length} urgentes`)}</div>
   <div class="grid2">
-    <section class="card"><div class="card-h"><h3>Verificações para aprovar</h3></div><div class="rows clip">${pend.length?pend.map(c=>{const k=kycOf(c.id);return`<div class="rw">${avatar(c)}<span><b>${esc(c.name)}</b><small>CPF ${esc(k.cpf||"—")} · ${esc(k.city||"")} · ${rel(k.at)}</small></span><span class="end"><button class="btn btn-ghost btn-sm" data-kyc="${c.id}" data-v="recusado" aria-label="Recusar"><i data-lucide="x"></i></button><button class="btn btn-primary btn-sm" data-kyc="${c.id}" data-v="verificado"><i data-lucide="check"></i>Aprovar</button></span></div>`}).join(""):`<p class="empty-s">Nenhuma verificação esperando.</p>`}</div>
+    <section class="card"><div class="card-h"><h3>Verificações para aprovar</h3></div><div class="rows clip">${pend.length?pend.map(c=>{const k=kycOf(c.id);return`<div class="rw">${avatar(c)}<span><b>${esc(c.name)}</b><small>CPF <span class="nw">${esc(k.cpf||"—")}</span> · ${esc(k.city||"")} · ${rel(k.at)}</small></span><span class="end"><button class="btn btn-ghost btn-sm" data-kyc="${c.id}" data-v="recusado" aria-label="Recusar"><i data-lucide="x"></i></button><button class="btn btn-primary btn-sm" data-kyc="${c.id}" data-v="verificado"><i data-lucide="check"></i>Aprovar</button></span></div>`}).join(""):`<p class="empty-s">Nenhuma verificação esperando.</p>`}</div>
       <p class="week-note">Na versão final, aqui aparecem o resultado da comparação facial e da leitura do documento feitos pelo serviço de verificação.</p></section>
     <section class="card"><div class="card-h"><h3>Encontros presenciais de hoje</h3></div><div class="rows">${today.length?today.map(b=>{const c=findC(b.cid),p=findP(b.pid),ck=DB.checkins[b.id]||{};return c?`<div class="rw"><span class="time">${hm(b.ts)}</span><span><b>${esc(c.name)} · ${esc(p?p.name.split(" ")[0]:"")}</b><small>${b.type} · código ${meetCode(b)}</small></span><span class="end">${ck.out?pill("ok","circle-check","Encerrado "+hm(ck.out)):ck.in?pill("info","map-pin-check","Em andamento desde "+hm(ck.in)):b.ts<Date.now()-15*6e4?pill("bad","circle-alert","Sem check-in"):pill("mute","clock","Aguardando")}</span></div>`:""}).join(""):`<p class="empty-s">Nenhum encontro presencial hoje.</p>`}</div></section>
   </div>
@@ -3435,7 +3440,7 @@ function aSeg(){
       <small>${esc(f.pname)} ↔ ${esc(f.cname)}</small><p>“${esc(f.text)}”</p>
       <div class="pc-foot">${f.status==="aberto"?`<button class="btn btn-primary btn-sm" data-flag="${f.id}" data-v="tratado"><i data-lucide="check"></i>Marcar tratado</button>${f.from==="personal"?`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="adv"><i data-lucide="file-warning"></i>Advertir professor</button>`:""}`:`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="aberto">Reabrir</button>`}</div></article>`).join("")}</div>`:`<div class="empty">Nenhum alerta. As mensagens do chat são checadas automaticamente.</div>`}
     <p class="week-note">O chat avisa antes de enviar mensagens com telefone, redes sociais ou pagamento por fora. Se a pessoa enviar mesmo assim, o alerta aparece aqui. Termo de parceria, item 4: não aliciamento por 12 meses.</p></section>
-  <section class="card mt"><div class="card-h"><h3>Verificação dos professores</h3></div><div class="rows">${DB.personals.filter(p=>p.status!=="inativo").map(p=>{const s=p.safety||{};return`<div class="rw"><span class="av">${esc(initials(p.name))}</span><span><b>${esc(p.name)}</b><small>${esc(p.cref)}</small></span><span class="end">${[["doc","Documento"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes"]].map(([k,t])=>`<button class="pill ${s[k]?"ok":"mute"} tog" data-ps="${p.id}" data-k="${k}" aria-pressed="${!!s[k]}"><i data-lucide="${s[k]?"check":"circle-dashed"}"></i>${t}</button>`).join("")}</span></div>`}).join("")}</div>
+  <section class="card mt"><div class="card-h"><h3>Verificação dos professores</h3></div><div class="rows">${DB.personals.filter(p=>p.status!=="inativo").map(p=>{const s=p.safety||{};return`<div class="rw"><span class="av">${esc(initials(p.name))}</span><span><b>${esc(p.name)}</b><small><span class="nw">${esc(p.cref)}</span></small></span><span class="end">${[["doc","Documento"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes"]].map(([k,t])=>`<button class="pill ${s[k]?"ok":"mute"} tog" data-ps="${p.id}" data-k="${k}" aria-pressed="${!!s[k]}"><i data-lucide="${s[k]?"check":"circle-dashed"}"></i>${t}</button>`).join("")}</span></div>`}).join("")}</div>
     <p class="week-note">Um professor só recebe alunos para encontros presenciais com os quatro itens conferidos. Toque para marcar ou desmarcar.</p></section>`;
   document.querySelectorAll("[data-kyc]").forEach(b=>b.onclick=()=>{const id=b.dataset.kyc,v=b.dataset.v;
     const ak=A(id);if(ak){ak.kyc=Object.assign(ak.kyc||{},{status:v,at:Date.now()});saveA(id);ak.messages.push({from:"them",text:v==="verificado"?"Sua identidade foi verificada. Agora podemos marcar encontros presenciais com segurança.":"Não conseguimos confirmar sua identidade com as fotos enviadas. Pode tentar de novo pelo seu perfil?",t:nowT()});ak.unread++;saveA(id)}
@@ -3782,7 +3787,7 @@ function pDados(p){
 function openPFicha(id){const p=findP(id),inf=p.info||{},s=p.safety||{},po=p.payout||{},r=ratingOf(p.id),n=allClients().filter(c=>c.pid===p.id&&c.status==="ativo").length;
   const m=document.createElement("div");m.className="drawer";document.body.appendChild(m);document.body.style.overflow="hidden";
   const close=()=>{removeEventListener("keydown",k);m.remove();document.body.style.overflow="";route(true)};const k=e=>{if(e.key==="Escape")close()};addEventListener("keydown",k);m.onclick=e=>{if(e.target===m)close()};
-  m.innerHTML=`<div class="dp" role="dialog" aria-modal="true" aria-labelledby="pfh"><div class="dp-h"><span class="av">${esc(initials(p.name))}</span><div><h2 id="pfh">${esc(p.name)}</h2><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div><button class="rbtn" id="pfx" aria-label="Fechar"><i data-lucide="x"></i></button></div>
+  m.innerHTML=`<div class="dp" role="dialog" aria-modal="true" aria-labelledby="pfh"><div class="dp-h"><span class="av">${esc(initials(p.name))}</span><div><h2 id="pfh">${esc(p.name)}</h2><small style="color:var(--muted)"><span class="nw">${esc(p.cref)}</span> · ${esc(p.area)}</small></div><button class="rbtn" id="pfx" aria-label="Fechar"><i data-lucide="x"></i></button></div>
     <div class="sec2"><h3>Dados pessoais</h3><div class="plist">${dline("E-mail",esc(p.email||"—"))}${dline("Celular",esc(inf.tel||"—"))}${dline("CPF",esc(inf.cpf||"***.***.***-**"))}${dline("Nascimento",inf.birth?new Date(inf.birth+"T12:00").toLocaleDateString("pt-BR"):"—")}${dline("Endereço",esc([inf.addr,inf.num&&"nº "+inf.num,inf.city].filter(Boolean).join(", ")||"—"))}</div></div>
     <div class="sec2"><h3>Contrato</h3><div class="plist">${dline("Termo de parceria",p.terms?`Aceito ${new Date(p.terms.at).toLocaleDateString("pt-BR")} · v${p.terms.v}`:"Pendente")}${dline("Percentual",pctf(splitOf(p.id)))}${dline("Recebimento",`Pix ${esc(po.type||"")} ${esc(po.key||"não cadastrado")}`)}${dline("Alunos ativos",`${n} de ${p.cap}`)}${dline("Avaliação (confidencial)",r.n?`${r.avg.toLocaleString("pt-BR",{maximumFractionDigits:1})} ★ · ${r.n} avaliações`:"—")}</div></div>
     <div class="sec2"><h3>Documentos</h3><div class="chk">${[["doc","Documento com foto"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes criminais"]].map(([k2,t])=>`<div class="${s[k2]?"y":""}"><i data-lucide="${s[k2]?"circle-check":"circle-dashed"}"></i>${t}</div>`).join("")}</div></div>

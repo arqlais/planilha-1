@@ -1359,7 +1359,12 @@ img,video,canvas{max-width:100%}
 }
 @media (max-width:359px){
   main{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
-  body{overflow-wrap:anywhere}
+  body{overflow-wrap:break-word} /* só quebra uma palavra se ela sozinha não couber na linha (antes cortava qualquer palavra: "Sér/ies") */
+  .cd-pick button{font-size:11px;letter-spacing:-.2px}
+  .v2-grid3 small{font-size:10.5px}
+  .card-h.wsh{flex-wrap:wrap}.card-h.wsh .grow{min-width:min(200px,100%)}
+  .hist{font-size:12px}.hist th{font-size:9px}.hist td,.hist th{padding:5px 1px}.hist .pill{font-size:10px;padding:2px 4px}
+  .pay-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pay-kpis>div{padding-left:10px;padding-right:10px}
   .v2-top{gap:8px}
   .v2-icbtn,.v2-avbtn,.v2-icb{width:40px;height:40px}
   .v2-sets-h,.v2-set{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 44px;gap:5px}
@@ -1379,6 +1384,14 @@ img,video,canvas{max-width:100%}
   .wsnav{flex-wrap:wrap;margin-left:0}
   :root[data-skin="v2"] nav.bottom{left:8px;right:8px}
   :root[data-skin="v2"] nav.bottom button{min-width:0}
+}
+/* celular bem estreito (ex.: Galaxy Fold fechado, 280 px): letras um pouco menores para nenhuma palavra quebrar no meio */
+@media (max-width:300px){
+  .v2-row>b,.list-row>b{font-size:13px}
+  .v2-thumb.sm{width:40px;height:40px}
+  .pay-kpis b{font-size:15px}
+  .v2-grid3>div{padding-left:2px;padding-right:2px}.v2-grid3 small{font-size:10px}
+  .list-row .grow small{font-size:11.5px}
 }
 @media (max-width:259px){
   .v2-tiles,.v2-kpis{grid-template-columns:minmax(0,1fr)!important}
@@ -9322,7 +9335,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/11-23:58';
+const APP_VERSION = '12/11-00:47';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
