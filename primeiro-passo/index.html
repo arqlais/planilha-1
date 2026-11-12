@@ -21,10 +21,10 @@ if(/[?&]demo\b/.test(location.search)){document.querySelector('link[rel=manifest
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="vendor/lucide-pp.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-auth-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-firestore-compat.js"></script>
+<script src="vendor/lucide-pp.js?v=1"></script>
+<script src="vendor/firebase-10.14.1/firebase-app-compat.js"></script>
+<script src="vendor/firebase-10.14.1/firebase-auth-compat.js"></script>
+<script src="vendor/firebase-10.14.1/firebase-firestore-compat.js"></script>
 <style>
 :root{
   --navy:#1B3A5C;--blue:#2F5D8A;--sky:#DCE7F3;--mist:#F3F6FA;--gold:#E0A93B;--gold-soft:#FBF1DC;
@@ -1434,6 +1434,13 @@ img,video,canvas{max-width:100%}
   .pill{white-space:normal;text-align:left;overflow-wrap:normal}
   .hist small{flex-wrap:wrap;row-gap:6px}
 }
+/* notebook (até 1279 px): gráfico em largura inteira, para os números não ficarem minúsculos nem sobrar espaço vazio */
+@media (min-width:768px) and (max-width:1279px){.grid2:has(> .card .chart){grid-template-columns:minmax(0,1fr)}}
+@media (min-width:1280px){.grid2:has(> .card .chart){align-items:start}}
+/* gráfico estreito (celular, cartão pequeno): números do gráfico em tamanho de leitura */
+.chart{container-type:inline-size}
+@container (max-width:480px){.chart .ax{font-size:16px}.chart .vl{font-size:17px}}
+@container (max-width:360px){.chart .ax{font-size:20px}.chart .vl{font-size:21px}.chart svg{overflow:visible}}
 /* CREF e CPF nunca quebram no meio ("000000-/G/SP") */
 .nw{white-space:nowrap}
 .pn-me small{white-space:nowrap;font-size:12px}

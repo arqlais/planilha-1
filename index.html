@@ -1394,6 +1394,8 @@ img,video,canvas{max-width:100%}
   .list-row .grow small{font-size:11.5px}
 }
 @media (max-width:259px){
+  nav.bottom button{font-size:0!important;line-height:0!important;gap:0!important} /* zoom alto: menu de baixo só com os desenhos (o nome não cabia: "Pagamen...") */
+  .cd-pick{grid-template-columns:repeat(4,minmax(0,1fr))!important;row-gap:6px} /* zoom alto: dias em duas linhas (Dom Seg Ter Qua / Qui Sex Sáb), nada cortado */
   .v2-tiles,.v2-kpis{grid-template-columns:minmax(0,1fr)!important}
   .v2-kpis .v2-tile{grid-row:auto!important}
   .v2-exh{flex-wrap:wrap}
@@ -9335,7 +9337,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/11-00:47';
+const APP_VERSION = '12/11-01:44';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
