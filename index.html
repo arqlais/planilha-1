@@ -1344,6 +1344,10 @@ img,video,canvas{max-width:100%}
 .v2-top .v2-brand{min-width:0}
 .v2-howto{flex-wrap:wrap}.v2-howto .grow{min-width:0}
 .v2-badges{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* Histórico em celular de 360px: a tabela cabe no cartão (o % não sai para fora) */
+@media (max-width:400px){.hist td,.hist th{padding:6px 2px}.hist .pill{padding:2px 6px;font-size:11px}}
+/* computador pequeno (notebook 1024 a 1279): Resumo do perfil em uma coluna, sem texto espremido palavra por palavra */
+@media (max-width:1279px){body.desk .ws[data-active=resumo] [data-tab=resumo]{grid-template-columns:minmax(0,1fr)}}
 /* celular: títulos grandes acompanham a largura da tela (nem enormes num celular estreito, nem pequenos num grande) */
 @media (max-width:480px){
   .v2-greet,.v2-ph-title h1,.v2-rest{font-size:clamp(24px,7.4vw,30px)}
@@ -1355,7 +1359,12 @@ img,video,canvas{max-width:100%}
 }
 @media (max-width:359px){
   main{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
-  body{overflow-wrap:anywhere}
+  body{overflow-wrap:break-word} /* só quebra uma palavra se ela sozinha não couber na linha (antes cortava qualquer palavra: "Sér/ies") */
+  .cd-pick button{font-size:11px;letter-spacing:-.2px}
+  .v2-grid3 small{font-size:10.5px}
+  .card-h.wsh{flex-wrap:wrap}.card-h.wsh .grow{min-width:min(200px,100%)}
+  .hist{font-size:12px}.hist th{font-size:9px}.hist td,.hist th{padding:5px 1px}.hist .pill{font-size:10px;padding:2px 4px}
+  .pay-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pay-kpis>div{padding-left:10px;padding-right:10px}
   .v2-top{gap:8px}
   .v2-icbtn,.v2-avbtn,.v2-icb{width:40px;height:40px}
   .v2-sets-h,.v2-set{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 44px;gap:5px}
@@ -1376,7 +1385,17 @@ img,video,canvas{max-width:100%}
   :root[data-skin="v2"] nav.bottom{left:8px;right:8px}
   :root[data-skin="v2"] nav.bottom button{min-width:0}
 }
+/* celular bem estreito (ex.: Galaxy Fold fechado, 280 px): letras um pouco menores para nenhuma palavra quebrar no meio */
+@media (max-width:300px){
+  .v2-row>b,.list-row>b{font-size:13px}
+  .v2-thumb.sm{width:40px;height:40px}
+  .pay-kpis b{font-size:15px}
+  .v2-grid3>div{padding-left:2px;padding-right:2px}.v2-grid3 small{font-size:10px}
+  .list-row .grow small{font-size:11.5px}
+}
 @media (max-width:259px){
+  nav.bottom button{font-size:0!important;line-height:0!important;gap:0!important} /* zoom alto: menu de baixo só com os desenhos (o nome não cabia: "Pagamen...") */
+  .cd-pick{grid-template-columns:repeat(4,minmax(0,1fr))!important;row-gap:6px} /* zoom alto: dias em duas linhas (Dom Seg Ter Qua / Qui Sex Sáb), nada cortado */
   .v2-tiles,.v2-kpis{grid-template-columns:minmax(0,1fr)!important}
   .v2-kpis .v2-tile{grid-row:auto!important}
   .v2-exh{flex-wrap:wrap}
@@ -1950,10 +1969,12 @@ const clearActivity = () => { lastAct = null; try { localStorage.removeItem(ACT_
 const markActivity = date => { lastAct = { t: Date.now(), d: date }; try { localStorage.setItem(ACT_KEY, JSON.stringify(lastAct)); } catch (e) {} };
 const toDate = s => new Date(s + 'T12:00:00');
 const parseNum = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null; };
-const fmt = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-const fmtMin = n => (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 }); // minutos de cardio (ex.: 13,25)
+const NF1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }), NF2 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }); // criados uma vez só (mais rápido)
+const fmt = n => typeof n === 'number' ? NF1.format(n) : (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const fmtMin = n => typeof n === 'number' ? NF2.format(n) : (n ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 }); // minutos de cardio (ex.: 13,25) // minutos de cardio (ex.: 13,25)
 const fmtDate = s => { const [y, m, d] = s.split('-'); return `${d}/${m}`; };
-const weekday = s => toDate(s).toLocaleDateString('pt-BR', { weekday: 'long' });
+const DF_WD = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' });
+const weekday = s => DF_WD.format(toDate(s));
 const numVal = v => v == null ? '' : String(v).replace('.', ',');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const initials = n => n.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -2086,7 +2107,8 @@ function profSessions(pid = ui.profile) {
 const sameName = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
 // Exercícios "gêmeos" dividem o histórico (o "antes" e a comparação): mesmo nome, sem ligar para acento, maiúscula
 // ou espaço, ou ligados pelo professor ("Comparar com o histórico de…" no ⋯ do exercício)
-const twinKey = e => e.twin || (e.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+const twinNorm = new Map(); // nome já arrumado fica guardado: as telas grandes chamam isto milhares de vezes
+const twinKey = e => { if (e.twin) return e.twin; const n = e.name || ''; let k = twinNorm.get(n); if (k === undefined) { k = n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); if (twinNorm.size > 5000) twinNorm.clear(); twinNorm.set(n, k); } return k; };
 function twinIds(exId) {
   const e = exById(exId);
   if (!e) return new Set([exId]);
@@ -8117,8 +8139,8 @@ const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Ar
 const plain = v => JSON.parse(JSON.stringify(v));
 const writable = path => cloud.role === 'admin' || path.includes('/months/');
 
-function loadScript(src) {
-  return new Promise((ok, fail) => { const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = fail; document.head.appendChild(el); });
+function loadScript(src, ordered) {
+  return new Promise((ok, fail) => { const el = document.createElement('script'); el.src = src; if (ordered) el.async = false; el.onload = ok; el.onerror = fail; document.head.appendChild(el); });
 }
 async function cloudBoot() {
   const inv = new URLSearchParams(location.search).get('convite');
@@ -8129,7 +8151,7 @@ async function cloudBoot() {
   if (wantLogin) history.replaceState(null, '', location.pathname);
   { const de = new URLSearchParams(location.search).get('de'), rs = SRC_TAG[de] || refSrc(); if (rs) try { localStorage.setItem(NEW_KEY + '-ref', rs); } catch (e) {} if (de) history.replaceState(null, '', location.pathname); }
   showAuth('loading');
-  try { for (const f of ['app', 'auth', 'firestore']) await loadScript(`vendor/firebase/firebase-${f}-compat.js`); }
+  try { await Promise.all(['app', 'auth', 'firestore'].map(f => loadScript(`vendor/firebase/firebase-${f}-compat.js`, true))); } // baixa os três juntos (mais rápido) e roda na ordem certa
   catch (e) { return showAuth('login', 'Sem conexão para carregar o app. Tente de novo.'); }
   firebase.initializeApp(CFG.firebase);
   const auth = firebase.auth(), fs = firebase.firestore();
@@ -9315,7 +9337,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '11/11-14:42';
+const APP_VERSION = '12/11-01:44';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
