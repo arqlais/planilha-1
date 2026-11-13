@@ -1,5 +1,5 @@
 // PassosFit: guarda o app no aparelho para abrir e anotar o treino sem internet.
-// Página e configuração: busca na internet primeiro (para pegar a versão nova) e, sem internet, usa a cópia guardada.
+// Página e configuração: abre com a cópia guardada (rápido) e atualiza a cópia por trás; versão nova vem pelo "?v=".
 // Arquivos que não mudam (Firebase, ícones): usa a cópia guardada.
 const CACHE = 'passosfit-v4'; // nome novo: apaga a cópia antiga (página sempre da internet, sem cópia velha do navegador)
 const FILES = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'icon-v2-192.png', 'icon-v2-512.png', 'apple-touch-icon-v2.png', 'fonts/archivo.woff2', 'fonts/manrope.woff2', 'fonts/outfit.woff2', 'fonts/unbounded.woff2', 'fonts/spacemono-400.woff2', 'fonts/spacemono-700.woff2', 'brand/logo-i.svg', 'brand/logo-i-escuro.svg', 'vendor/qrcode.js',
@@ -31,10 +31,12 @@ self.addEventListener('fetch', e => {
       return res;
     });
     const saved = () => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./'));
-    // internet fraca (academia): se a página não chegar em 3 s, abre a cópia guardada no celular.
-    // A versão nova continua baixando e fica guardada para a próxima vez (e o app avisa que tem versão nova).
-    const slow = new Promise(ok => setTimeout(ok, 3000)).then(saved).then(r => r || net);
-    e.respondWith(Promise.race([net.catch(saved), slow]).catch(saved).then(r => r || net));
+    // Abre na hora com a cópia guardada no celular (antes esperava a internet até 3 s). A versão nova baixa por trás e fica
+    // guardada; o app confere a versão ao abrir e, se mudou, recarrega com "?v=" (esse endereço vem sempre da internet).
+    if (url.searchParams.has('v')) {
+      const slow = new Promise(ok => setTimeout(ok, 6000)).then(saved).then(r => r || net);
+      e.respondWith(Promise.race([net.catch(saved), slow]).catch(saved).then(r => r || net));
+    } else e.respondWith(saved().then(r => r || net.catch(saved)));
     e.waitUntil(net.catch(() => {}));
     return;
   }
