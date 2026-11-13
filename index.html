@@ -2176,14 +2176,18 @@ const bwTag = (ex, date, cls) => { const k = bwLoad(ex, date), f = bwFactor(ex);
 const PD_X = 2;
 const cableMemo = new Map();
 const isCable = ex => { if (!ex) return false; const k = ex.name + '|' + ex.group; let v = cableMemo.get(k);
-  if (v === undefined) { v = equipOf(ex.name) === 'polia' || /polia/.test(HOWTO[PFA.guessAnim(ex.name, ex.group)] || ''); cableMemo.set(k, v); } return v; };
+  // nome que diz halter, barra, máquina ou paralela não é polia, mesmo que o bonequinho seja parecido (Tríceps francês, JM press...)
+  if (v === undefined) { const n = normName(ex.name); v = equipOf(ex.name) === 'polia' || /corda|crossover|pulley/.test(n) || !/halter|barra|maquina|smith|paralela|mergulho|press|frances|testa|banco/.test(n) && /polia/.test(HOWTO[PFA.guessAnim(ex.name, ex.group)] || ''); cableMemo.set(k, v); } return v; };
 const pdLoad = c => c > 0 && Math.abs(c % 2.5 - 1.25) < .01;
-const pdSet = (ex, x) => !!x && pdLoad(x.carga) && isCable(ex);
-const pdSess = s => s.sets.some(x => x.done && pdSet(exById(s.exId), x));
+// Só conta em dobro quando TODAS as séries com peso daquela vez terminam em ,25/,75 (a polia dupla nunca mostra 10, 12,5...).
+// Polia comum com uma plaquinha extra (10 · 11,25 · 12,5) fica como foi anotado.
+const pdAll = sets => { const w = (sets || []).filter(x => x && x.carga > 0); return w.length > 0 && w.every(x => pdLoad(x.carga)); };
+const pdSet = (ex, x, sets) => !!x && pdLoad(x.carga) && isCable(ex) && (!sets || pdAll(sets));
+const pdSess = s => isCable(exById(s.exId)) && s.sets.some(x => x.done) && pdAll(s.sets);
 function effSets(s) {
   const ex = exById(s.exId), f = ex && !isTimed(ex) ? bwFactor(ex) : 0, bw = f && bodyWeightAt(ex.profileId, s.date);
   if (bw) return s.sets.map(x => ({ ...x, carga: Math.round((bw * f + (x.carga || 0)) * 10) / 10 }));
-  return isCable(ex) && s.sets.some(x => pdLoad(x.carga)) ? s.sets.map(x => pdLoad(x.carga) ? { ...x, carga: x.carga * PD_X } : x) : s.sets;
+  return isCable(ex) && pdAll(s.sets) ? s.sets.map(x => pdLoad(x.carga) ? { ...x, carga: x.carga * PD_X } : x) : s.sets;
 }
 const sessVol = s => vol(effSets(s));
 const hasDone = s => s.sets.some(x => x.done);
@@ -2192,7 +2196,14 @@ const profile = id => db.profiles.find(p => p.id === id);
 const profExs = (pid = ui.profile) => db.exercises.filter(e => e.profileId === pid);
 function profSessions(pid = ui.profile) {
   const ids = new Set(profExs(pid).map(e => e.id));
-  return db.sessions.filter(s => ids.has(s.exId) && hasDone(s));
+  return uniqSess(db.sessions.filter(s => ids.has(s.exId) && hasDone(s)));
+}
+// Mesmo exercício com dois registros no mesmo dia (internet caindo no meio do treino): nas contas vale um só, o mais
+// completo (igual à tela do treino). Antes as somas de kg e séries contavam os dois. Só leitura: nada é apagado.
+function uniqSess(list) {
+  let dup = false; const by = new Map();
+  for (const s of list) { const k = s.exId + '|' + s.date, o = by.get(k); if (o) { dup = true; if (sessRank(s) > sessRank(o)) by.set(k, s); } else by.set(k, s); }
+  return dup ? list.filter(s => by.get(s.exId + '|' + s.date) === s) : list;
 }
 // Mesmo exercício em dois treinos (ex.: Cadeira flexora na segunda e na quinta): o histórico é um só
 const sameName = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -2292,7 +2303,7 @@ function addDays(dateStr, n) { const d = toDate(dateStr); d.setDate(d.getDate() 
 function volumeBetween(from, to, group, pid = ui.profile) {
   const match = typeof group === 'function' ? group : e => !group || e.group === group;
   const ids = new Set(profExs(pid).filter(match).map(e => e.id));
-  return db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to).reduce((a, s) => a + sessVol(s), 0);
+  return uniqSess(db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to && hasDone(s))).reduce((a, s) => a + sessVol(s), 0);
 }
 function weekPair(group, pid = ui.profile, ref = ui.date) {
   const ws = weekStart(ref);
@@ -3151,13 +3162,13 @@ function cardHtmlV2(ex) {
   const rows = s.sets.map((x, i) => {
     const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
     if (tm) return plankRowHtml(ex, x, p, h, i);
-    if (grid) return `<div class="tile ${rowClass(x, p, ex)}" data-i="${i}" data-base="tile">
+    if (grid) return `<div class="tile ${rowClass(x, p, ex, s.sets, prev && prev.sets)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>
       ${nl ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
       <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
       <div class="ant">${p && p.done ? (nl ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
     </div>`;
-    return `<div class="v2-set ${rowClass(x, p, ex)}" data-i="${i}" data-base="v2-set">
+    return `<div class="v2-set ${rowClass(x, p, ex, s.sets, prev && prev.sets)}" data-i="${i}" data-base="v2-set">
       <span class="v2-sn">${i + 1}</span>
       ${nl ? bwTag(ex, ui.date, 'v2-nl') : fld('carga', x, p, h, i)}
       ${fld('reps', x, p, h, i)}
@@ -3289,8 +3300,9 @@ function v2SendReply(t) {
 // Melhor série de cada exercício (kg × reps)
 function v2Records(pid) {
   const best = {};
-  for (const s of profSessions(pid)) effSets(s).forEach((y, i) => { const x = s.sets[i], v = setVol(y); if (v && (!best[s.exId] || v > best[s.exId].v)) best[s.exId] = { v, x }; });
-  return Object.entries(best).sort((a, b) => b[1].v - a[1].v).slice(0, 5).map(([id, b]) => ({ ex: exById(id), x: b.x })).filter(r => r.ex);
+  // o mesmo exercício em dois treinos aparece uma vez só (o melhor dos dois)
+  for (const s of profSessions(pid)) { const e = exById(s.exId), k = e ? twinKey(e) : s.exId; effSets(s).forEach((y, i) => { const x = s.sets[i], v = setVol(y); if (v && (!best[k] || v > best[k].v)) best[k] = { v, x, id: s.exId }; }); }
+  return Object.values(best).sort((a, b) => b.v - a.v).slice(0, 5).map(b => ({ ex: exById(b.id), x: b.x })).filter(r => r.ex);
 }
 function renderEuV2() {
   const p = profile(ui.profile), pid = p.id, total = trainedDates(pid).length, streak = v2Streak(pid), cmin = profCardio(pid).reduce((a, c) => a + (c.min || 0), 0);
@@ -3595,18 +3607,17 @@ return { drawPost, drawWeek, drawMonth, TEMPLATES, PW, PH, FH };
 // ===== App novo: tela "Treino completo" com as artes para postar =====
 function v2PostData(pid, d) {
   const p = profile(pid), st = dayStats(pid, d), ids = new Set(profExs(pid).map(e => e.id));
-  const ss = db.sessions.filter(x => ids.has(x.exId) && x.date === d && hasDone(x));
-  const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0], t1 = ss.map(x => x.fin).filter(Boolean).sort().pop();
-  let treino = t0 && t1 ? Math.round((new Date(t1) - new Date(t0)) / 6e4) : 0;
-  const cardio = Math.round(st.cardio || 0); treino = Math.max(0, treino - (treino > cardio ? cardio : 0));
-  if (st.sets && (treino < 5 || treino > 240)) treino = Math.max(5, Math.round(st.sets * 2.5 / 5) * 5);
-  let rec = 0; ss.forEach(x => { const best = Math.max(0, ...x.sets.map(setVol)), before = db.sessions.filter(y => y.exId === x.exId && y.date < d).flatMap(y => y.sets.map(setVol)); if (before.length && best > Math.max(...before)) rec++; });
+  const ss = uniqSess(db.sessions.filter(x => ids.has(x.exId) && x.date === d && hasDone(x)));
+  const tt = trainTime(pid, d), treino = tt.treino, cardio = tt.cardio;
+  // recorde: a melhor série de hoje (kg × reps, com polia dupla e peso do corpo) passou de todas as vezes antes,
+  // olhando o mesmo exercício nos outros treinos também e o mesmo jeito (livre/máquina)
+  let rec = 0; ss.forEach(x => { const best = Math.max(0, ...effSets(x).map(setVol)), eq = sessEq(x), before = exHistory(x.exId).filter(y => y.date < d && sessEq(y) === eq).flatMap(y => effSets(y).map(setVol)); if (before.length && best > Math.max(...before)) rec++; });
   const cs = profCardio(pid).filter(c => c.date === d), mode = cs.length ? modeOf(cs[cs.length - 1].mode)[1].toLowerCase() : 'cardio';
   const ws = weekStart(d), days = v2Days(pid), first = ss.map(x => exById(x.exId)).find(Boolean);
   const letters = [...new Set(ss.map(x => (exById(x.exId) || {}).letter).filter(Boolean))];
   return { name: firstName(p), coach: v2Coach(), wname: st.ws.join(' + ') || (cardio ? 'Cardio' : 'Treino'), letter: '', desc: letters.map(L => letterDesc(L, pid)).filter(Boolean).join(' · '),
     treino, cardio, total: treino + cardio, mode, series: st.sets, kg: Math.round(st.kg), rec, streak: Math.max(1, v2Streak(pid)),
-    checkin: t0 ? new Date(t0).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '',
+    checkin: tt.start ? new Date(tt.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '',
     date: `${+d.slice(8)} ${MONTHS[+d.slice(5, 7) - 1].slice(0, 3)} ${d.slice(0, 4)}`,
     week: Array.from({ length: 7 }, (_, i) => { const x = addDays(ws, i); return x === d ? 'today' : x > d ? 'future' : days.has(x) ? 'done' : 'off'; }),
     anim: first ? v2Key(first) : 'esteira' };
@@ -4605,16 +4616,35 @@ async function sendWorkout(auto) {
 // ---------- Check-in: arte do treino feito para postar (estilo Strava / Gympass) ----------
 // quem está usando o próprio app (aluno, ou o professor no treino dele / no perfil de teste)
 const canCheckin = () => (ui.studentMode && (meStu() || !(CLOUD && cloud && cloud.role === 'admin') || (profile(ui.profile) || {}).test)) || (!ui.studentMode && ui.profile === ME);
-function dayStats(pid, d) {
-  const ids = new Set(profExs(pid).map(e => e.id)), ss = db.sessions.filter(x => ids.has(x.exId) && x.date === d && x.sets.some(y => y.done));
-  const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0], t1 = ss.map(x => x.fin).filter(Boolean).sort().pop();
-  let min = t0 && t1 ? Math.round((new Date(t1) - new Date(t0)) / 6e4) : null;
-  if (min != null && (min < 5 || min > 300)) min = null; // tempo que não faz sentido
-  // treino inteiro (séries + descanso + cardio): no mínimo ~2,5 min por série feita mais o cardio
+// Tempo do treino do dia (o mesmo número em todas as telas e artes):
+// musculação = da primeira série tocada até a última série marcada; cardio = os minutos anotados; total = os dois somados.
+// Antes o app pegava "primeira série até enviar" e tirava o cardio dessa conta: quem fez o cardio ANTES da musculação
+// perdia os minutos do cardio duas vezes (ex.: 18:00 às 19:30 virava 70 min em vez de 90).
+// Sem horário que faça sentido (dia antigo, treino marcado depois), vale uma estimativa: 2,5 min por série feita.
+function trainTime(pid, d) {
+  const ids = new Set(profExs(pid).map(e => e.id)), ss = uniqSess(db.sessions.filter(x => ids.has(x.exId) && x.date === d && hasDone(x)));
+  const cs = profCardio(pid).filter(c => c.date === d), cardio = Math.round(cs.reduce((a, c) => a + (c.min || 0), 0));
   const sets = ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0);
-  const cmin = db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0);
-  const est = sets ? Math.round((sets * 2.5 + cmin) / 5) * 5 : 0;
-  if (est && (!min || min < est)) min = Math.min(300, est);
+  const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0], fin = ss.map(x => x.fin).filter(Boolean).sort().pop();
+  // fim da musculação: a última mudança nas séries (antes de enviar); registro antigo sem essa marca: a hora de enviar
+  const ends = ss.map(x => x.up && (!x.fin || x.up <= x.fin) ? x.up : x.fin).filter(Boolean).sort(), t1 = ends.pop();
+  const ms = t => new Date(t).getTime();
+  let treino = t0 && t1 && sets ? Math.round((ms(t1) - ms(t0)) / 6e4) : 0, est = false;
+  // cardio feito NO MEIO da musculação (entre as séries) sai da conta da musculação, para não contar duas vezes
+  if (treino > 0) { const a = ms(t0), b = ms(t1), noUp = ss.every(x => !x.up);
+    const over = cs.reduce((acc, c) => { if (!(c.min > 0)) return acc;
+      if (!c.at) return acc + (noUp && treino > c.min ? c.min : 0); // registro antigo sem horário: como era antes
+      const ce = ms(c.at), cb = ce - c.min * 6e4; return acc + Math.max(0, Math.min(b, ce) - Math.max(a, cb)) / 6e4; }, 0);
+    treino = Math.max(0, Math.round(treino - over)); }
+  if (sets && (treino < 5 || treino > 240)) { treino = Math.max(5, Math.round(sets * 2.5 / 5) * 5); est = true; }
+  // chegada: o começo do cardio (se foi antes da primeira série) ou a primeira série
+  const cStart = cs.filter(c => c.at && c.min > 0).map(c => ms(c.at) - c.min * 6e4).sort((a, b) => a - b)[0];
+  const start = t0 && !est ? (cStart != null && cStart < ms(t0) && ms(t0) - cStart < 4 * 36e5 ? cStart : ms(t0)) : cStart != null && !sets ? cStart : null;
+  return { treino: sets ? treino : 0, cardio, total: (sets ? treino : 0) + cardio, est, start, fin };
+}
+function dayStats(pid, d) {
+  const ids = new Set(profExs(pid).map(e => e.id)), ss = uniqSess(db.sessions.filter(x => ids.has(x.exId) && x.date === d && x.sets.some(y => y.done)));
+  const tt = trainTime(pid, d), min = tt.total || null;
   const ws = [...new Set(ss.map(x => (exById(x.exId) || {}).letter).filter(Boolean))].map(L => wName(L, pid));
   return { min, ws, sets: ss.reduce((a, x) => a + x.sets.filter(y => y.done).length, 0), ex: ss.length,
     kg: ss.reduce((a, x) => a + sessVol(x), 0), cardio: Math.round(db.cardio.filter(c => c.profileId === pid && c.date === d).reduce((a, c) => a + c.min, 0) * 10) / 10 };
@@ -4784,13 +4814,13 @@ function cardHtml(ex) {
   const rows = s.sets.map((x, i) => {
     const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
     if (tm) return plankRowHtml(ex, x, p, h, i);
-    if (tiles) return `<div class="tile ${rowClass(x, p, ex)}" data-i="${i}" data-base="tile">
+    if (tiles) return `<div class="tile ${rowClass(x, p, ex, s.sets, prev && prev.sets)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></div>
       ${noLoadOf(ex) ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
       <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
       <div class="ant">${p && p.done ? (noLoadOf(ex) ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
     </div>`;
-    return `<div class="set ${rowClass(x, p, ex)}" data-i="${i}" data-base="set">
+    return `<div class="set ${rowClass(x, p, ex, s.sets, prev && prev.sets)}" data-i="${i}" data-base="set">
       <span class="num">${i + 1}</span>
       ${noLoadOf(ex) ? bwTag(ex, ui.date, 'noload') : stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
       ${stepper('reps', x.reps, `repetições da série ${i + 1}`, h.reps)}
@@ -4902,10 +4932,10 @@ function exDetailHtml(ex) {
 }
 const fmtRest = sec => sec >= 60 ? `${Math.floor(sec / 60)}min${sec % 60 ? ' ' + (sec % 60) + 's' : ''}` : `${sec}s`;
 const setTotal = x => x.carga != null && x.reps != null ? `${fmt(x.carga * x.reps)} kg` : '';
-function rowClass(x, p, ex) {
+function rowClass(x, p, ex, xs, ps) {
   if (!x.done) return '';
   if (!p || !p.done) return 'done';
-  let cv = setVol(x) * (pdSet(ex, x) ? PD_X : 1), pv = setVol(p) * (pdSet(ex, p) ? PD_X : 1);
+  let cv = setVol(x) * (pdSet(ex, x, xs) ? PD_X : 1), pv = setVol(p) * (pdSet(ex, p, ps) ? PD_X : 1);
   if (x.carga == null && p.carga == null) { cv = x.reps || 0; pv = p.reps || 0; } // sem carga / prancha: compara repetições (segundos)
   return 'done' + (cv > pv ? ' up' : cv < pv ? ' down' : '');
 }
@@ -4917,8 +4947,8 @@ function compareHtml(s, prev) {
   const cut = prev && prev.sets.length !== s.sets.length ? Math.min(prev.sets.length, s.sets.length) : 0;
   const ts = cut ? s.sets.slice(0, cut) : s.sets, ps = prev ? (cut ? prev.sets.slice(0, cut) : prev.sets) : [];
   const bk = nl && !tm && bwLoad(ex, s.date), kg = (ss, d) => vol(effSets({ exId: s.exId, date: d, sets: ss })), uu = bk ? 'kg' : u;
-  const pv = ss => vol(ss.map(x => pdSet(ex, x) ? { ...x, carga: x.carga * PD_X } : x)); // polia dupla conta em dobro
-  const total = bk ? kg(ts, s.date) : nl ? reps(ts) : pv(ts), pt = prev ? (bk ? kg(ps, prev.date) : nl ? reps(ps) : pv(ps)) : 0, max = Math.max(total, pt, 1);
+  const pv = (ss, all) => vol(ss.map(x => pdSet(ex, x, all) ? { ...x, carga: x.carga * PD_X } : x)); // polia dupla conta em dobro
+  const total = bk ? kg(ts, s.date) : nl ? reps(ts) : pv(ts, s.sets), pt = prev ? (bk ? kg(ps, prev.date) : nl ? reps(ps) : pv(ps, prev.sets)) : 0, max = Math.max(total, pt, 1);
   const pd = !nl && (pdSess(s) || prev && pdSess(prev)); // polia dupla: explica por que o total é o dobro do número anotado
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
   return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}${cut && s.sets.length > cut ? ` · ${cut} séries` : ''}</small></span>
@@ -4971,7 +5001,7 @@ function addCardio(mode, min) {
   min = Math.round(min);
   if (!(min > 0)) return toast('Informe os minutos.');
   const g0 = cardioGoalOf(profile(ui.profile), ui.date);
-  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, ...(g0 > 0 ? { goal: g0 } : {}), ...stuMark() });
+  db.cardio.push({ id: uid(), profileId: ui.profile, date: ui.date, mode, min, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}), ...stuMark() });
   save(); render();
   toast(`<b>${modeOf(mode)[1]}</b>: ${min} min registrados`);
 }
@@ -5264,7 +5294,7 @@ function weeklySeries(n) {
   const idx = new Map(weeks.map((w, i) => [w, i]));
   const exMap = new Map(profExs().map(e => [e.id, e]));
   const acc = Object.fromEntries(GROUPS.map(g => [g, weeks.map(() => ({ sum: 0, cnt: 0, reps: 0, any: false }))]));
-  for (const s of db.sessions) {
+  for (const s of uniqSess(db.sessions.filter(s => exMap.has(s.exId) && hasDone(s)))) {
     const e = exMap.get(s.exId), i = idx.get(weekStart(s.date));
     if (!e || i == null) continue;
     for (const x of effSets(s)) if (x.done) {
@@ -5487,8 +5517,9 @@ function evoGroupWeeks(g, W, span = 12) {
   for (const s of best.values()) (byWk[W.wk(s.date)] = byWk[W.wk(s.date)] || []).push(s);
   const end = Math.max(W.cur, ...Object.keys(byWk).map(Number)), first = Math.max(1, end - span + 1), rows = [];
   for (let n = first; n <= end; n++) {
-    const ss = byWk[n] || [], sets = {};
-    for (const s of ss) { const k = twinKey(exMap.get(s.exId)) + sessEq(s); sets[k] = (sets[k] || []).concat(effSets(s).filter(x => x.done)); }
+    const ss = (byWk[n] || []).sort((a, b) => a.date.localeCompare(b.date)), sets = {};
+    // cada exercício em cada treino montado (o da segunda e o da quinta têm cargas diferentes), na ordem dos dias
+    for (const s of ss) { const e = exMap.get(s.exId), k = twinKey(e) + sessEq(s) + '|' + (s.w || e.letter || ''); sets[k] = (sets[k] || []).concat(effSets(s).filter(x => x.done)); }
     const done = ss.flatMap(s => s.sets.filter(x => x.done));
     rows.push({ n, from: W.from(n), cur: n === W.cur, empty: !ss.length, ex: Object.keys(sets).length, sets: done.length, reps: done.reduce((a, x) => a + (x.reps || 0), 0), total: ss.reduce((a, s) => a + sessVol(s), 0), bySet: sets });
   }
@@ -5509,7 +5540,7 @@ function evoOverviewHtml(list, W) {
   const good = base.filter(x => ['recorde', 'sobe'].includes(x.st.k)).sort((a, b) => gain(b) - gain(a));
   const name = x => `${esc(x.name)}${x.eq ? ` <small>· ${x.eq === 'maq' ? 'Máquina' : 'Livre'}</small>` : ''}`;
   const item = x => `<li><span class="evo-li-h"><b>${name(x)}</b>${evoChip(x.st.k, x.st.txt)}</span><small>${esc(x.group)} · ${EVO_HINT[x.st.k] || ''}</small></li>`;
-  const gItem = x => { const g = gain(x), f = x.pts[0], l = x.pts[x.pts.length - 1], tp = f.vol ? Math.round((l.vol - f.vol) / f.vol * 100) : 0;
+  const gItem = x => { const g = gain(x), f = x.pts[0], l = x.pts[x.pts.length - 1], tp = Math.round(evoFair(l, f) || 0);
     return `<li><span class="evo-li-h"><b>${name(x)}</b>${evoChip(x.st.k)}</span><small>${esc(x.group)} · ${g > 0 && x.vu === ' kg' ? `+${fmt(g)} kg de carga desde ${fmtDate(f.date)}` : tp > 0 ? `total +${tp}% desde ${fmtDate(f.date)}` : `total de ${fmt(l.vol)}${x.vu} no último`}</small></li>`; };
   // Frequência: grupos × últimas 8 semanas (quadro cheio = treinou; mais forte = mais séries)
   let heat = '';
@@ -5564,7 +5595,7 @@ function evoGroupHtml(g, W, list) {
   const counts = ['recorde', 'sobe', 'estavel', 'novo', 'caiu', 'estag', 'queda', 'parado'].map(k => [k, mine.filter(x => x.st.k === k).length]).filter(x => x[1]);
   const exHtml = mine.map(x => {
     const P = x.pts, f = P[0], l = P[P.length - 1], u = x.timed ? ' s' : ' kg', g2 = l.top - f.top;
-    const tp = f.vol ? (l.vol - f.vol) / f.vol * 100 : null;
+    const tp = evoFair(l, f); // mesmas séries (regra do Igor): 3 séries contra 4 não vira "subiu"
     const facts = [`Total no último: <b>${fmt(l.vol)}${x.vu}</b>`, `Melhor total: <b>${fmt(Math.max(...P.map(p => p.vol)))}${x.vu}</b>`,
       x.vu === ' kg' ? `Carga máx.: <b>${fmt(l.top)} kg</b>${P.length > 1 && g2 ? ` (${g2 > 0 ? '+' : ''}${fmt(g2)} kg)` : ''}` : '',
       P.length > 1 && tp != null ? `Desde ${fmtDate(f.date)}: ${evoPctPill(tp)}` : '', `${P.length} ${P.length === 1 ? 'treino' : 'treinos'}`, x.active ? '' : 'fora do treino atual'].filter(Boolean);
@@ -7511,7 +7542,7 @@ $main.addEventListener('input', e => {
   s.sets[i][inp.dataset.f] = parseNum(inp.value);
   save();
   const x = s.sets[i], prev = prevSession(ex.id, ui.date);
-  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i], ex);
+  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i], ex, s.sets, prev && prev.sets);
   const tot = row.querySelector('.tot'); if (tot) tot.textContent = setTotal(x);
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
   refreshTop();
@@ -7530,7 +7561,7 @@ function autoCheck(inp) {
   ui.autoAt = { ex: ex.id, i, t: Date.now() }; // o toque no ✓ logo em seguida não desmarca
   if (navigator.vibrate) navigator.vibrate(30);
   const prev = prevSession(ex.id, ui.date), done = s.sets.filter(y => y.done).length, n = s.sets.length;
-  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i], ex);
+  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i], ex, s.sets, prev && prev.sets);
   const ring = card.querySelector('.ring'); if (ring) { ring.style.setProperty('--p', done / n * 100); ring.textContent = `${done}/${n}`; }
   const all = card.querySelector('[data-act="alldone"]'); if (all) all.textContent = done === n ? 'Desmarcar todas' : '✓ Marcar todas';
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
@@ -8593,7 +8624,11 @@ async function startSession(user) {
     try { await cloud.fs.doc('profiles/' + inv.pid).update({ uid: user.uid, claim: inv.code }); } catch (e) {}
     clearInvite();
   }
-  const q = await cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).get();
+  // já abriu neste aparelho: acha a ficha na cópia guardada (na hora, sem esperar a internet da academia).
+  // Se o professor tirou o acesso, a resposta do servidor chega logo depois e fecha o app como antes.
+  let q = null;
+  if (!inv) try { q = await cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).get({ source: 'cache' }); if (q.empty || q.docs[0].data().deleted) q = null; } catch (e) { q = null; }
+  if (!q) q = await cloud.fs.collection('profiles').where('uid', '==', user.uid).limit(1).get();
   if (q.empty || q.docs[0].data().deleted) return noProfile(user);
   startStudent(q.docs[0].id);
 }
@@ -8604,6 +8639,11 @@ const RESCUE_KEY = 'planilha-resgate';
 function readRescue() { try { return JSON.parse(localStorage.getItem(RESCUE_KEY)) || {}; } catch (e) { return {}; } }
 function writeRescue(r) { try { localStorage.setItem(RESCUE_KEY, JSON.stringify(r)); } catch (e) {} }
 async function saveRescueFromCache(user, admin) {
+  // lê a cópia inteira do aparelho: no máximo a cada 6 horas (era a cada abertura e deixava o app lento para abrir).
+  // A cópia guardada só junta (nunca perde meses já guardados), então a de algumas horas atrás continua valendo.
+  let last = 0; try { last = +localStorage.getItem(RESCUE_KEY + '-at') || 0; } catch (e) {}
+  if (Date.now() - last < 6 * 36e5) return;
+  try { localStorage.setItem(RESCUE_KEY + '-at', String(Date.now())); } catch (e) {}
   try {
     const fs = cloud.fs;
     const ps = admin ? await fs.collection('profiles').get({ source: 'cache' })
@@ -9082,6 +9122,7 @@ function backupsHtml() {
 // Professor: carrega só os meses recentes de cada aluno (os antigos vêm quando precisar).
 // Assim as leituras do Firebase não crescem com os anos. O aluno carrega os dele inteiros (são poucos).
 const WINDOW_MONTHS = 6;
+const CACHE_WAIT = 2500; // ms esperando o servidor antes de abrir com a cópia do aparelho
 function windowStartMonth() { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - (WINDOW_MONTHS - 1)); return isoDate(d).slice(0, 7); }
 const isOldMonth = (pid, ym) => cloud && cloud.role === 'admin' && ym < cloud.windowStart && !cloud.fullLoaded.has(pid);
 function subscribeMonths(pid) {
@@ -9094,6 +9135,7 @@ function subscribeMonths(pid) {
       ch.type === 'removed' ? remote.delete(path) : takeRemote(path, ch.doc.data());
     });
     if (freshSnap(snap)) cloud.waiting.delete(pid);
+    if (snap.metadata.fromCache && snap.size && cloud.role === 'student') cloud.cacheM = true; // a cópia do aparelho tem os meses
     onRemote();
   }, err => cloudError(err));
   cloud.months.set(pid, un);
@@ -9130,7 +9172,11 @@ function startAdmin() {
   cloud.windowStart = windowStartMonth(); cloud.fullLoaded = new Set(); cloud.loadingOld = new Map(); cloud.removed = new Set();
   // Espera os dados do servidor (não só a cópia guardada no aparelho), para não começar com dados antigos.
   // Sem internet (ou se o servidor demorar), segue com a cópia do aparelho.
-  setTimeout(() => { cloud.cacheOk = true; onRemote(); }, 8000);
+  // Abre mais rápido (pedido do Igor, 13/11): com a cópia do aparelho pronta, espera o servidor só 2,5 s (antes 8 s).
+  // O que chegar do servidor depois entra sozinho na tela, e o que for anotado sobe juntando com a nuvem (nada se perde).
+  // Aparelho sem cópia nenhuma (primeira vez): espera o servidor como antes (8 s), para nunca abrir vazio.
+  const ok = () => { cloud.cacheOk = true; onRemote(); };
+  setTimeout(() => remote.size ? ok() : setTimeout(ok, 8000 - CACHE_WAIT), CACHE_WAIT);
   cloud.unsubs.push(cloud.fs.collection('profiles').onSnapshot({ includeMetadataChanges: true }, snap => {
     cloud.profilesSeen = true; if (!snap.metadata.fromCache) cloud.serverSeen = true;
     snap.docChanges().forEach(ch => {
@@ -9165,6 +9211,8 @@ function startStudent(pid) {
   // o aluno sempre abre direto no treino de hoje
   ui.view = 'treino'; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.histDay = null;
   cloud.pid = pid; cloud.months = new Map(); cloud.waiting = new Set(); cloud.gotProfiles = false; cloud.lost = false;
+  // internet fraca: abre com a cópia do aparelho (só se ela já tem os treinos; aparelho novo espera o servidor como antes)
+  setTimeout(() => { if (cloud.pid === pid && !cloud.ready && cloud.gotProfiles && cloud.cacheM) { cloud.cacheOk = true; cloud.waiting.clear(); onRemote(); } }, CACHE_WAIT);
   cloud.unsubs.push(cloud.fs.doc('profiles/' + pid).onSnapshot(doc => {
     if (cloud.lost) return;
     // ficha sumiu para este login ou mudou de dono: o professor tirou o acesso
@@ -9773,7 +9821,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/11-02:20';
+const APP_VERSION = '13/11-02:46';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
