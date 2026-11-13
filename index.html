@@ -8601,6 +8601,18 @@ async function fixOnce() {
     mark('quinta-volta-1211');
     if (n) { save(); render(); msgs.push(`✓ O treino de quinta voltou: ${n} exercício${n === 1 ? '' : 's'}, com séries e cargas.`); }
   }
+  // 1q) (12/11) Professor fez 30 min de cardio na escada na quinta 12/11 e não marcou
+  if (!done.has('cardio-escada-1211')) {
+    await ensureFull(ME);
+    const D = '2026-11-12', prev = db.cardio.filter(c => c.profileId === ME && c.date === D);
+    mark('cardio-escada-1211');
+    if (!prev.some(c => c.mode === 'escada' && c.min >= 30)) {
+      const g0 = cardioGoalOf(profile(ME), D), keep = cardioExtraKeep(ME, D, prev);
+      db.cardio = db.cardio.filter(c => !(c.profileId === ME && c.date === D));
+      db.cardio.push({ id: uid(), profileId: ME, date: D, mode: 'escada', min: 30, ...keep, at: new Date().toISOString(), ...(g0 > 0 ? { goal: g0 } : {}) });
+      save(); render(); msgs.push('✓ Cardio de quinta (12/11): 30 min de escada salvos.');
+    }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -9380,7 +9392,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/11-14:05';
+const APP_VERSION = '12/11-22:50';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
