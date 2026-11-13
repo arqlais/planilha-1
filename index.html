@@ -1076,6 +1076,18 @@ body.v2-full main{margin-top:0}
 .v2-pull.open>button{display:flex;width:100%;text-align:left;background:rgba(255,255,255,.08);border:0;border-radius:12px;padding:10px 12px;color:var(--text)}
 .v2-pull.open>.v2-pull-x{justify-content:center;background:none;color:var(--muted);font-weight:700}
 .v2-howto{align-items:flex-start;cursor:default}.v2-howto[role=button]{cursor:pointer}.v2-howto small{display:block;line-height:1.35;margin-top:2px}
+.abv{margin:0 0 12px}.abv-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 2px 8px}
+.abv-h b{font-size:13px;font-weight:800}.abv-h small,.abv-note,.abv-one small{font-size:12px;color:var(--muted);font-weight:600}
+.abv-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.abv-t{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:16px;background:rgba(255,255,255,.07);border:2px solid transparent;color:var(--text);font:inherit;min-width:0}
+.abv-t span{font-size:12.5px;font-weight:700;white-space:nowrap}.abv-t.on{border-color:var(--accent);background:rgba(201,240,61,.12)}.abv-t.on span{color:var(--accent)}
+.abv-t .abv-ic{width:100%;height:54px;background:transparent;--halo:#22305F}.abv-t:not(.on) .abv-ic{opacity:.75}
+.abv-note{margin:8px 2px 0}
+.abv-one{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border-radius:16px;padding:6px 8px 6px 6px;margin-bottom:8px}
+.abv-one .abv-ic{width:58px;height:40px;background:transparent;--halo:#22305F}.abv-one .grow{min-width:0}.abv-one b{display:block;font-weight:800;font-size:14px}
+.abv-one small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.abv-tr{border:0;background:rgba(255,255,255,.1);color:var(--text);font:inherit;font-weight:800;font-size:12.5px;padding:8px 12px;border-radius:99px;flex:none}
+.abv-kg{margin:0 0 12px}
 .v2-eq{display:inline-flex;margin-top:8px;background:rgba(255,255,255,.08);border-radius:99px;padding:3px;gap:2px}
 .v2-eq button{border:0;background:transparent;color:var(--text);font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:99px}
 .v2-eq button.on{background:var(--accent);color:var(--on-accent)}.v2-eq button:disabled{opacity:.6}
@@ -1946,7 +1958,7 @@ const equipOf = name => { const n = normName(name);
 const isTimed = ex => !!ex && /prancha|hollow/.test(normName(ex.name));
 // Sem carga, só repetições: marcado no exercício ou sempre (prancha e abdominais no chão), mesmo nos treinos antigos
 const NOLOAD_ALWAYS = /abdominal (livre|supra|infra|obliquo|bicicleta|canivete|remador|tesoura|v$)/;
-const noLoadOf = ex => !!ex && (!!ex.noLoad || isTimed(ex) || NOLOAD_ALWAYS.test(normName(ex.name)));
+const noLoadOf = (ex, date) => !!ex && (abVarOn(ex) ? !abKg(ex, date) : (!!ex.noLoad || isTimed(ex) || NOLOAD_ALWAYS.test(normName(ex.name))));
 const fmtSec = v => { if (v == null) return '–'; const t = Math.round(v), m = Math.floor(t / 60), r = t % 60; return m ? `${m} min${r ? ` ${String(r).padStart(2, '0')} s` : ''}` : `${r} s`; };
 const catGroup = name => { const n = (name || '').toLowerCase(); for (const [g, l] of Object.entries(CATALOG)) if (l.some(x => x.toLowerCase() === n)) return g; return null; };
 // Exercícios do catálogo em ordem alfabética: com busca (sem acento, várias palavras), ou do grupo escolhido; filtro de equipamento
@@ -2230,9 +2242,26 @@ const eqFreeze = ex => { if (!eqDefault(ex)) return 0; let n = 0; const ids = tw
 // recente (até 14 dias antes da última vez em qualquer treino): exercício antigo que voltou para um treino não pode
 // trazer uma carga de meses atrás no lugar da última vez feita (Agachamento do Igor, 11/11, mostrava 15/06).
 const SAME_W_DAYS = 14;
+// Abdominal com variações (pedido do Igor, 13/11): quando o professor põe o "Abdominal livre", o aluno escolhe qual vai fazer.
+// Cada variação tem o seu "antes" (o registro guarda s.vr); registro antigo sem marca conta como supra.
+// Máquina e polia têm carga; as livres são só repetições, mas o aluno pode ligar "Com peso" (s.ak) quando segura uma anilha.
+const ABV = [['supra', 'Supra', 'abdo', 'Abdominal supra'], ['infra', 'Infra', 'infra', 'Abdominal infra'], ['obliquo', 'Oblíquo', 'obliq', 'Abdominal oblíquo'],
+  ['bici', 'Bicicleta', 'abdbici', 'Abdominal bicicleta'], ['maq', 'Máquina', 'abdmaq', 'Abdominal na máquina'], ['polia', 'Polia', 'abdpolia', 'Abdominal na polia']];
+const ABV_KG = new Set(['maq', 'polia']);
+const ABV_HOW = { infra: 'Deitado, pernas esticadas: suba as pernas juntas sem tirar a lombar do chão e desça devagar.' };
+const abVarOn = ex => !!ex && /^abdominal( livre)?$/.test(twinKey(ex));
+const sessVr = s => s.vr || 'supra';
+const abvOf = v => ABV.find(a => a[0] === v) || ABV[0];
+const exVr = (ex, date = ui.date) => { const s = sessionOn(ex.id, date); if (s && s.vr) return s.vr;
+  const h = exHistory(ex.id).filter(x => x.date < date); return h.length ? sessVr(h[h.length - 1]) : 'supra'; };
+// carga ligada? máquina e polia sempre; livre só se o aluno ligou no dia, ou se a última vez nessa variação teve peso
+const abKg = (ex, date = ui.date) => { const v = exVr(ex, date); if (ABV_KG.has(v)) return true;
+  const s = sessionOn(ex.id, date); if (s && s.ak != null) return !!s.ak;
+  const h = exHistory(ex.id).filter(x => x.date < date && sessVr(x) === v), l = h[h.length - 1]; return !!(l && l.sets.some(x => x.done && x.carga > 0)); };
 const prevSession = (exId, date) => {
   const ex = exById(exId); let h = exHistory(exId).filter(s => s.date < date);
   if (ex && eqDefault(ex)) { const eq = exEq(ex, date) || eqDefault(ex); h = h.filter(s => sessEq(s) === eq); }
+  if (ex && abVarOn(ex)) { const v = exVr(ex, date); h = h.filter(s => sessVr(s) === v); }
   const L = ex && ex.letter, last = h[h.length - 1]; if (!L || !last) return last;
   const min = addDays(last.date, -SAME_W_DAYS);
   const same = h.filter(s => s.w ? s.w === L : s.date >= min && (exById(s.exId) || {}).letter === L);
@@ -2275,7 +2304,7 @@ function blankSession(ex, date) {
 function ensureSession(ex, date) {
   if (date === today()) markActivity(date); // está treinando agora
   let s = sessionOn(ex.id, date);
-  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); if (ex.letter) s.w = ex.letter; if (eqDefault(ex)) s.equip = ex.equip || eqDefault(ex); db.sessions.push(s); }
+  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); if (ex.letter) s.w = ex.letter; if (eqDefault(ex)) s.equip = ex.equip || eqDefault(ex); if (abVarOn(ex)) s.vr = exVr(ex, date); db.sessions.push(s); }
   if (date === today() && !s.t0 && !s.fin) s.t0 = new Date().toISOString(); // começou agora: dá a duração do treino no check-in
   if (ui.studentMode && !meStu()) s.by = 'aluno'; // marcação feita pelo aluno
   s.up = new Date().toISOString(); s.dv = devKind(); // última mudança: quando e em que aparelho (para conferir depois)
@@ -2813,6 +2842,15 @@ Object.assign(POSES, {
   ponte: { st: FLOOR, w: '',
     A: P([22, 75], [29, 76], [31, 76], [40, 78], [48, 78], [52, 76], [68, 60], [74, 78], [81, 78]),
     B: P([22, 75], [29, 76], [31, 76], [40, 78], [48, 78], [54, 58], [70, 56], [74, 78], [81, 78]) },
+  obliq: { st: FLOOR, w: '',
+    A: X(P([30, 75], [37, 76], [39, 76], [33, 66], [29, 71], [60, 76], [74, 60], [86, 78], [93, 78]), { k2: [70, 58], a2: [62, 66], t2: [60, 70] }),
+    B: X(P([40, 61], [45, 67], [46, 68], [54, 60], [42, 60], [60, 76], [74, 60], [86, 78], [93, 78]), { k2: [70, 58], a2: [62, 66], t2: [60, 70] }) },
+  abdbici: { st: FLOOR, w: '',
+    A: X(P([32, 62], [38, 68], [39, 69], [46, 60], [33, 58], [58, 76], [56, 58], [70, 56], [75, 52]), { k2: [76, 68], a2: [94, 60], t2: [98, 55] }),
+    B: X(P([32, 62], [38, 68], [39, 69], [46, 60], [33, 58], [58, 76], [76, 68], [94, 60], [98, 55]), { k2: [56, 58], a2: [70, 56], t2: [75, 52] }) },
+  abdpolia: { st: `${FLOOR}<path d="M28 4v76M22 4h12" ${EQ} stroke-width="4"/>`, w: 'grip', cable: [30, 8],
+    A: P([64, 24], [62, 32], [62, 34], [56, 30], [58, 24], [62, 56], [68, 78], [50, 78], [44, 79]),
+    B: P([84, 52], [78, 50], [77, 49], [76, 40], [80, 46], [62, 58], [68, 78], [50, 78], [44, 79]) },
   infra: { st: FLOOR, w: '',
     A: P([20, 74], [27, 76], [29, 76], [34, 78], [42, 78], [56, 76], [72, 73], [88, 71], [92, 66]),
     B: P([20, 74], [27, 76], [29, 76], [34, 78], [42, 78], [56, 76], [62, 60], [68, 44], [64, 39]) },
@@ -2939,7 +2977,7 @@ function animLoop(now) {
 }
 function guessAnim(name, group) {
   const n = norm(name);
-  const RX = [[/cavalinho.*(maquina|apoio|articulad)|remada.*(apoio no peito|peito apoiado)/, 'cavalinhomaq'], [/cavalinho|remada t\b|t-?bar/, 'cavalinho'],
+  const RX = [[/abdominal.*bicicleta/, 'abdbici'], [/abdominal.*obliquo/, 'obliq'], [/abdominal.*polia/, 'abdpolia'], [/cavalinho.*(maquina|apoio|articulad)|remada.*(apoio no peito|peito apoiado)/, 'cavalinhomaq'], [/cavalinho|remada t\b|t-?bar/, 'cavalinho'],
     [/supino inclinad.*(maquina|articulad)|chest press inclinad/, 'chestpressinc'], [/supino inclinad.*halter/, 'supinoinchalter'], [/supino inclinad/, 'supinoinc'],
     [/desenvolvimento.*(maquina|articulad)/, 'desenvmaq'], [/elevacao lateral.*(maquina|articulad)/, 'lateralmaq'],
     [/tricep.*corda|corda.*tricep/, 'tricorda'], [/tricep.*(coice|kickback)|coice.*tricep/, 'tricoice'], [/tricep.*unilateral/, 'triceps'],
@@ -2970,7 +3008,20 @@ const V2I = {
 };
 // Livre ou máquina: o que foi marcado no dia vale mais que o padrão do exercício
 const exEq = (ex, date = ui.date) => (sessionOn(ex.id, date) || {}).equip || ex.equip || '';
-const v2Key = ex => PFA.keyOf(ex, exEq(ex));
+const v2Key = ex => abVarOn(ex) ? abvOf(exVr(ex))[2] : PFA.keyOf(ex, exEq(ex));
+// Escolha da variação do abdominal: aberta (6 desenhos) até o aluno escolher no dia; depois vira uma linha com "Trocar"
+function abvHtml(ex, lock) {
+  const cur = exVr(ex), s = sessionOn(ex.id, ui.date), open = !lock && (ui.abvOpen === ex.id || !(s && s.vr));
+  const prev = prevSession(ex.id, ui.date), A = abvOf(cur), kg = abKg(ex);
+  const ic = k => { const D = PFA.POSES[k] || {}, lying = !/abdmaq|abdpolia/.test(k);
+    return `<span class="anim abv-ic"><svg viewBox="${lying ? '6 34 108 48' : '0 0 120 84'}" aria-hidden="true"><g>${D.st || ''}</g><g>${PFA.figure(k, 1)}</g></svg></span>`; };
+  const note = prev ? `"antes" de ${fmtDate(prev.date)}` : 'primeira vez: ainda sem "antes"';
+  const kgBtn = ABV_KG.has(cur) ? '' : `<span class="v2-eq abv-kg">${[[0, 'Sem peso'], [1, 'Com peso']].map(([v, l]) => `<button class="${+kg === v ? 'on' : ''}" data-act="abv-kg" data-id="${ex.id}" data-v="${v}" ${lock ? 'disabled' : ''}>${l}</button>`).join('')}</span>`;
+  if (!open) return `<div class="abv-one">${ic(A[2])}<span class="grow"><b>${A[1]}</b><small>${note}</small></span>${lock ? '' : `<button class="abv-tr" data-act="abv-open" data-id="${ex.id}">Trocar</button>`}</div>${lock ? '' : kgBtn}`;
+  return `<div class="abv"><div class="abv-h"><b>Qual você vai fazer?</b><small>toque para escolher</small></div>
+    <div class="abv-row">${ABV.map(([v, l, k]) => `<button class="abv-t${v === cur ? ' on' : ''}" data-act="abv" data-id="${ex.id}" data-v="${v}">${ic(k)}<span>${l}</span></button>`).join('')}</div>
+    <div class="abv-note">${note}</div></div>`;
+}
 // "Como fazer" em uma frase, para cada desenho
 const HOWTO = {
   supino: 'Deitado no banco reto: desça a barra até o peito e empurre para cima.',
@@ -3016,12 +3067,16 @@ const HOWTO = {
   afundo: 'Um passo à frente: desça até o joelho de trás quase tocar o chão.',
   pant: 'Na ponta dos pés: suba o mais alto que der e desça devagar.',
   abdo: 'Deitado, joelhos dobrados: suba o tronco tirando os ombros do chão.',
+  abdmaq: 'Sentado na máquina, mãos nas alças: dobre o tronco para a frente contraindo o abdômen e volte devagar.',
+  obliq: 'Deitado, joelhos dobrados: suba o tronco girando, levando o cotovelo na direção do joelho do outro lado.',
+  abdbici: 'Deitado, mãos atrás da cabeça: leve um joelho ao peito e estique a outra perna, alternando os lados.',
+  abdpolia: 'Ajoelhado na polia, corda atrás da cabeça: dobre o tronco para baixo contraindo o abdômen e volte devagar.',
   prancha: 'Corpo reto apoiado nos antebraços: segure parado, sem deixar o quadril cair.',
 };
 function v2HowHtml(ex, lock) {
   const k = v2Key(ex), pr = PFA.pairOf(k), eq = pr ? (k === pr[1] ? 'maq' : 'livre') : '', demo = !!demoFor(ex);
   const can = !ui.studentMode || !lock;
-  return `<div class="v2-howto"${demo ? ` data-act="demo-ex" data-id="${ex.id}" role="button"` : ''}>${PFA.animHtml(k, 'v2-howto-anim', demo)}<span class="grow"><b>Como fazer</b><small>${esc((/barra fixa/.test(normName(ex.name)) && 'Pendurado na barra: puxe o corpo até o queixo passar da barra e desça devagar.') || HOWTO[k] || 'Siga o movimento do bonequinho, devagar e com controle.')}</small>
+  return `<div class="v2-howto"${demo ? ` data-act="demo-ex" data-id="${ex.id}" role="button"` : ''}>${PFA.animHtml(k, 'v2-howto-anim', demo)}<span class="grow"><b>Como fazer</b><small>${esc((/barra fixa/.test(normName(ex.name)) && 'Pendurado na barra: puxe o corpo até o queixo passar da barra e desça devagar.') || (abVarOn(ex) && ABV_HOW[exVr(ex)]) || HOWTO[k] || 'Siga o movimento do bonequinho, devagar e com controle.')}</small>
     ${pr ? `<span class="v2-eq">${[['livre', 'Livre'], ['maq', 'Máquina']].map(([v, l]) => `<button class="${eq === v ? 'on' : ''}" data-act="v2-equip" data-id="${ex.id}" data-v="${v}" ${can ? '' : 'disabled'}>${l}</button>`).join('')}</span>` : ''}</span></div>`;
 }
 function v2Gauge(p, label) {
@@ -3140,7 +3195,7 @@ function cardHtmlV2(ex) {
   const p0 = (prev && prev.sets[0]) || (hints[0] && hints[0].hint) || {};
   const bk = bwLoad(ex, ui.date), sub = `${n}×${p0.reps != null ? (tm ? fmtSec(p0.reps) : p0.reps) : '–'}${!nl && p0.carga != null ? ` · ${fmt(p0.carga)} kg` : bk ? ` · ${fmt(bk)} kg` : ''}`;
   const noRec = lock === 'past' && !sessionOn(ex.id, ui.date);
-  const head = `<button class="v2-exh" data-act="v2-open" aria-expanded="${open}">${PFA.animHtml(v2Key(ex), 'v2-thumb')}<span class="grow"><b>${esc(ex.name)}</b><small>${noRec ? 'sem registro neste dia' : `${ex.group} · ${sub}`}</small></span>
+  const head = `<button class="v2-exh" data-act="v2-open" aria-expanded="${open}">${PFA.animHtml(v2Key(ex), 'v2-thumb')}<span class="grow"><b>${esc(abVarOn(ex) ? abvOf(exVr(ex))[3] : ex.name)}</b><small>${noRec ? 'sem registro neste dia' : `${ex.group} · ${sub}`}</small></span>
     ${complete ? `<span class="v2-okb">${V2I.check}</span>` : `<span class="v2-cnt">${done}/${n}</span>`}${open || complete ? '' : `<span class="v2-chev">${V2I.chev}</span>`}</button>`;
   if (!open || noRec) return `<div class="v2ex ${complete ? 'done' : ''}">${head}<div class="compare" hidden></div></div>`;
   const grid = ui.v2grid && !tm, pm = !lock;
@@ -3164,6 +3219,7 @@ function cardHtmlV2(ex) {
       <button class="chk v2-chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>`;
   }).join('');
   return `<div class="v2ex open ${complete ? 'done' : ''}">${head}<div class="v2-exb">
+    ${abVarOn(ex) ? abvHtml(ex, lock) : ''}
     ${v2HowHtml(ex, lock)}
     ${lock ? '' : prevPullHtml(ex)}
     ${exDetailHtml(ex)}
@@ -4894,7 +4950,7 @@ function rowClass(x, p, ex) {
 }
 const PD_NOTE = '<p class="pd-note"><span class="pd-x">×2</span><span><b>Polia dupla</b> · o peso da placa conta em dobro, para comparar igual à polia comum</span></p>';
 function compareHtml(s, prev) {
-  const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && noLoadOf(ex)) || tm, u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
+  const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && noLoadOf(ex, s.date)) || tm || (abVarOn(ex) && !!prev && !prev.sets.some(x => x.done && x.carga > 0)), u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
   const reps = sets => sets.reduce((a, x) => a + (x.done && x.reps != null ? x.reps : 0), 0);
   // número de séries diferente da outra vez (tirou ou colocou uma): compara só as mesmas séries (as primeiras), para a meta ser justa
   const cut = prev && prev.sets.length !== s.sets.length ? Math.min(prev.sets.length, s.sets.length) : 0;
@@ -7691,6 +7747,14 @@ $main.addEventListener('click', e => {
     case 'ws-week': ui.wsOff = Math.max(-26, Math.min(8, (ui.wsOff || 0) + +b.dataset.d)); ui.wsOpen = null; return render();
     case 'ws-why': ui.wsOpen = ui.wsOpen === b.dataset.g ? null : b.dataset.g; return render();
     case 'demo-ex': return openDemo(exById(b.dataset.id));
+    case 'abv-open': ui.abvOpen = b.dataset.id; return render();
+    case 'abv': case 'abv-kg': { // variação do abdominal (ou peso ligado) só no dia aberto
+      const ex = exById(b.dataset.id); if (!ex) return;
+      const lr = ui.studentMode && lockReason(ex.id); if (lr) return toast(LOCK_MSG[lr]);
+      const s = ensureSession(ex, ui.date);
+      if (act === 'abv') { s.vr = b.dataset.v; ui.abvOpen = null; } else s.ak = b.dataset.v === '1';
+      save(); return render();
+    }
     case 'v2-equip': { // livre ou máquina: o professor muda o padrão (e o dia aberto); o aluno marca só o dia de hoje
       const ex = exById(b.dataset.id), v = b.dataset.v; if (!ex) return;
       if (!ui.studentMode) {
@@ -9756,7 +9820,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/11-23:39';
+const APP_VERSION = '13/11-02:32';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
