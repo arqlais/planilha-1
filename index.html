@@ -653,6 +653,8 @@ body.desk main:has(.ws[data-active=montar] .wk-days) > *,body.desk main:has(> se
 @media (max-width:600px){.wk-cmp th,.wk-cmp td{padding:7px 6px}.wk-cmp table{min-width:0;font-size:13px}.wk-cmp thead th,.wk-cmp tbody th{white-space:normal}.wk-cmp td em{display:block;margin:0}}
 .wk-cmp tr.sec th{color:var(--text);background:var(--acc-soft);font-size:12.5px;text-transform:uppercase;letter-spacing:.4px}.wk-cmp tr.tot td b{color:var(--acc)}
 .wk-old{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-radius:14px;padding:10px 12px;margin:10px 0;background:var(--acc-soft);font-size:13.5px}
+.wk-subq{display:flex;align-items:center;gap:4px;width:max-content;margin-top:3px;padding:1px 8px 1px 6px;border-radius:99px;border:1px solid var(--acc);color:var(--acc)!important;font-weight:800;font-size:11px;white-space:nowrap}.wk-subq .v2i{width:12px;height:12px;stroke-width:2.4}
+.wk-sub>small{display:flex;align-items:center;gap:5px;white-space:nowrap}.wk-ed .wk-sub>small .v2i{display:none}.wk-sub>small .v2i{width:14px;height:14px;stroke-width:2.4;color:var(--acc)}
 .wk-mine{display:inline-block;padding:1px 7px;border-radius:99px;background:var(--acc-soft);color:var(--acc)!important;font-weight:800}
 .wk-in{display:block;font-style:normal;font-size:12px;color:var(--acc);font-weight:700}
 .bw-step{display:flex;align-items:center;gap:6px}.bw-step small{flex:1;color:var(--muted);font-weight:700;font-size:12.5px}
@@ -832,6 +834,9 @@ tr.evo-off td{color:var(--muted);font-style:italic}tr.evo-off td.evo-wk{font-sty
 .evo-facts{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin:6px 0 4px}
 .evo-facts span{white-space:nowrap}.evo-facts b{color:var(--text)}
 .evo-line{margin:4px 0}
+.evo-subn{display:flex;align-items:center;gap:8px;margin:6px 0;padding:7px 10px;border-radius:12px;background:var(--input);font-size:12.5px;color:var(--muted)}
+.evo-subn b{color:var(--text)}.evo-subn .v2i{width:16px;height:16px;color:var(--acc);stroke-width:2.4}.evo-subn .link{flex:none;font-size:12.5px;font-weight:800;padding:2px 0;white-space:nowrap}
+tr.evo-old td{color:var(--muted)}
 .evo-hint{display:flex;align-items:flex-start;gap:6px;font-size:12.5px;margin:4px 0 6px;color:var(--text)}
 .evo-hint .v2i{width:15px;height:15px;color:#F2C04E;margin-top:1px}
 .evo-scroll{max-height:280px;overflow-y:auto}
@@ -5433,7 +5438,20 @@ function evoExercises(pid = ui.profile) {
       out.push({ id: rep.id + (eq ? '-' + eq : ''), ex: rep, name: rep.name, group: rep.group, eq, pts, active: on, timed, vu, st: evoStatus(pts, on) });
     }
   }
-  return out;
+  // Troca de exercício: as vezes do antigo entram no começo da linha do novo (antes da marca da troca) e o antigo sai da
+  // lista. Só no gráfico: o status, as % e os recordes do novo continuam só com o que foi feito nele.
+  const byK = new Map(), subK = new Map(), gone = new Set(), took = new Set();
+  out.forEach(x => { const k = twinKey(x.ex); (byK.get(k) || byK.set(k, []).get(k)).push(x); });
+  profExs(pid).forEach(e => { if (e.subOf) subK.set(twinKey(e), e.subOf); });
+  const chain = (x, olds, depth) => { const k = subK.get(twinKey(x.ex)), os = k && depth < 5 ? (byK.get(k) || []).filter(o => o !== x && !olds.includes(o)) : [];
+    olds.push(...os); const first = x.pts[0].date;
+    return [...os.flatMap(o => chain(o, olds, depth + 1)), ...os.flatMap(o => o.pts.map(q => ({ ...q, name: o.name })))].filter(q => q.date < first).sort((a, b) => a.date.localeCompare(b.date)); };
+  for (const x of [...out].sort((a, b) => b.active - a.active)) {
+    const k = twinKey(x.ex); if (took.has(k) || gone.has(x) || !subK.has(k)) continue;
+    const olds = [], pv = chain(x, olds, 0); if (!pv.length) continue;
+    x.prev = pv; x.subName = pv[pv.length - 1].name; took.add(k); olds.forEach(o => { if (!o.active) gone.add(o); });
+  }
+  return gone.size ? out.filter(x => !gone.has(x)) : out;
 }
 // Semanas do aluno: Semana 1 = 7 dias a partir do primeiro treino feito no app (histórico importado e antes do cadastro ficam fora)
 function evoWeeks(pid = ui.profile) {
@@ -5534,11 +5552,16 @@ function evoGroupHtml(g, W, list) {
       x.vu === ' kg' ? `Carga máx.: <b>${fmt(l.top)} kg</b>${P.length > 1 && g2 ? ` (${g2 > 0 ? '+' : ''}${fmt(g2)} kg)` : ''}` : '',
       P.length > 1 && tp != null ? `Desde ${fmtDate(f.date)}: ${evoPctPill(tp)}` : '', `${P.length} ${P.length === 1 ? 'treino' : 'treinos'}`, x.active ? '' : 'fora do treino atual'].filter(Boolean);
     const tr = P.slice().reverse().map((p, i, arr) => `<tr><td>${fmtDate(p.date)}<small>/${p.date.slice(2, 4)}</small></td><td><b>${fmt(p.top)}${u}</b></td><td>${p.sets.length}</td><td>${x.timed ? fmtSec(p.reps) : p.reps}</td><td>${fmt(p.vol)}</td><td>${arr[i + 1] ? evoPctPill(x.st.pct[P.length - 1 - i]) : ''}</td></tr>`).join('');
+    const Q = x.prev || [], coach = canPullPrev() && !ui.demo, picking = coach && ui.evoSub === x.ex.id;
+    const subRow = Q.length ? `<p class="evo-subn">${v2Ico(SUB_ICO)}<span class="grow">Substituiu <b>${esc(x.subName)}</b> em ${fmtDate(P[0].date)}. A parte cinza do gráfico é o exercício antigo.</span>${coach ? `<button class="link" data-act="evo-sub" data-id="${x.ex.id}">${picking ? 'Fechar' : 'Mudar'}</button>` : ''}</p>`
+      : coach && x.active && !x.ex.subNo && P.length <= 8 && subCands(x.ex).length ? `<p class="evo-subn">${v2Ico(SUB_ICO)}<span class="grow">Este exercício entrou no lugar de outro?</span><button class="link" data-act="evo-sub" data-id="${x.ex.id}">${picking ? 'Fechar' : 'Escolher'}</button></p>` : '';
+    const prevRows = Q.length ? `<tr class="evo-off"><td colspan="6">Antes da troca: ${esc(x.subName)}</td></tr>` + Q.slice().reverse().map(p => `<tr class="evo-old"><td>${fmtDate(p.date)}<small>/${p.date.slice(2, 4)}</small></td><td>${fmt(p.top)}${u}</td><td>${p.sets.length}</td><td>${x.timed ? fmtSec(p.reps) : p.reps}</td><td>${fmt(p.vol)}</td><td></td></tr>`).join('') : '';
     return `<div class="evo-ex"><div class="evo-exh"><b>${esc(x.name)}</b>${x.eq ? `<span class="evo-eq">${x.eq === 'maq' ? 'Máquina' : 'Livre'}</span>` : ''}${evoChip(x.st.k, x.st.txt)}</div>
       <div class="evo-facts">${facts.map(t => `<span>${t}</span>`).join('')}</div>
-      ${P.length > 1 ? `<div class="chart-wrap evo-line" data-evo="${esc(x.id)}"></div>` : ''}
+      ${subRow}${picking ? subPickHtml(x.ex, Q.length ? 'Substituiu qual?' : 'Entrou no lugar de qual?') : ''}
+      ${P.length + Q.length > 1 ? `<div class="chart-wrap evo-line" data-evo="${esc(x.id)}"></div>` : ''}
       ${EVO_HINT[x.st.k] ? `<p class="evo-hint">${v2Ico(EVO_ICO.alert)}${EVO_HINT[x.st.k]}</p>` : ''}
-      <details class="tbl"><summary>Ver todos os ${P.length} registros</summary><div class="tbl-scroll evo-scroll"><table class="hist"><thead><tr><th>Data</th><th>${x.timed ? 'Tempo máx.' : 'Carga máx.'}</th><th>Séries</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>${tr}</tbody></table></div></details></div>`;
+      <details class="tbl"><summary>Ver todos os ${P.length + Q.length} registros</summary><div class="tbl-scroll evo-scroll"><table class="hist"><thead><tr><th>Data</th><th>${x.timed ? 'Tempo máx.' : 'Carga máx.'}</th><th>Séries</th><th>Reps</th><th>Total</th><th></th></tr></thead><tbody>${tr}${prevRows}</tbody></table></div></details></div>`;
   }).join('');
   return `<section class="card evo-g"><div class="card-h"><div class="grow"><h3><span class="key" style="background:${COLOR(g)};vertical-align:middle"></span> ${g}</h3>
       <small>kg total por semana (carga × repetições). Semana sem treino aparece vazia. A % compara só as mesmas séries dos mesmos exercícios.</small></div></div>
@@ -5552,7 +5575,7 @@ function evoGroupHtml(g, W, list) {
 // (pausa longa aparece como faixa "N dias sem")
 let evoLines = new Map();
 function evoLineSvg(x, W) {
-  const P = x.pts, H = 168, m = { l: 48, r: 16, t: 26, b: 26 }, u = x.vu;
+  const Q = x.prev || [], N = x.pts, P = [...Q, ...N], nq = Q.length, H = 168, m = { l: 48, r: 16, t: 26, b: 26 }, u = x.vu;
   const d0 = toDate(P[0].date), span = Math.max(1, daysBetween(P[0].date, P[P.length - 1].date));
   const X = p => m.l + daysBetween(P[0].date, p.date) / span * (W - m.l - m.r);
   const tops = P.map(p => p.vol), lo0 = Math.min(...tops), hi0 = Math.max(...tops);
@@ -5564,15 +5587,20 @@ function evoLineSvg(x, W) {
   for (let v = lo; v <= hi + 1e-9; v += step) { const y = Y(v); g += `<line x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}" style="stroke:var(--line)" stroke-width="1"/><text x="${m.l - 6}" y="${y + 4}" text-anchor="end">${fmt(v)}</text>`; }
   for (let i = 1; i < P.length; i++) { const dd = daysBetween(P[i - 1].date, P[i].date); if (dd > 21) { const a = X(P[i - 1]) + 6, b = X(P[i]) - 6;
     if (b > a) g += `<rect x="${a}" y="${m.t - 4}" width="${b - a}" height="${H - m.t - m.b + 4}" rx="6" style="fill:var(--line)" opacity=".45"/>${b - a > 64 ? `<text x="${(a + b) / 2}" y="${H - m.b - 8}" text-anchor="middle">${dd} dias sem</text>` : ''}`; } }
-  let path = ''; for (let i = 0; i < P.length; i++) { const gap = i && daysBetween(P[i - 1].date, P[i].date) > 21; path += `${i && !gap ? 'L' : 'M'}${X(P[i]).toFixed(1)},${Y(P[i].vol).toFixed(1)}`; }
-  for (let i = 1; i < P.length; i++) if (daysBetween(P[i - 1].date, P[i].date) > 21) g += `<line x1="${X(P[i - 1])}" y1="${Y(P[i - 1].vol)}" x2="${X(P[i])}" y2="${Y(P[i].vol)}" style="stroke:var(--acc)" stroke-width="1.5" stroke-dasharray="3 5" opacity=".7"/>`;
-  g += `<path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  const iMax = tops.lastIndexOf(hi0), lab = new Set([0, P.length - 1]);
+  // troca de exercício: o antigo em cinza, a marca no dia da troca e o novo na cor do app (uma linha só)
+  const col = i => i < nq ? 'var(--muted)' : 'var(--acc)';
+  if (nq) { const xs = X(N[0]); g += `<line x1="${xs}" x2="${xs}" y1="${m.t - 8}" y2="${H - m.b}" style="stroke:var(--text)" stroke-width="1.2" stroke-dasharray="4 4" opacity=".55"/><text x="${xs - 5}" y="${m.t - 12}" text-anchor="end" style="fill:var(--muted);font-weight:700">troca</text>`; }
+  let path = ''; const paths = ['', ''];
+  for (let i = 0; i < P.length; i++) { const gap = i && (daysBetween(P[i - 1].date, P[i].date) > 21 || i === nq); paths[i < nq ? 0 : 1] += `${i && !gap ? 'L' : 'M'}${X(P[i]).toFixed(1)},${Y(P[i].vol).toFixed(1)}`; }
+  for (let i = 1; i < P.length; i++) if (i === nq || daysBetween(P[i - 1].date, P[i].date) > 21) g += `<line x1="${X(P[i - 1])}" y1="${Y(P[i - 1].vol)}" x2="${X(P[i])}" y2="${Y(P[i].vol)}" style="stroke:${col(i - 1)}" stroke-width="1.5" stroke-dasharray="3 5" opacity=".7"/>`;
+  if (paths[0]) g += `<path d="${paths[0]}" fill="none" style="stroke:var(--muted)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" opacity=".8"/>`;
+  path = paths[1]; g += `<path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const iMax = nq + N.map(p => p.vol).lastIndexOf(Math.max(...N.map(p => p.vol))), lab = new Set([0, P.length - 1]);
   if (X(P[P.length - 1]) - X(P[iMax]) > 70 && X(P[iMax]) - X(P[0]) > 70) lab.add(iMax); // rótulo do recorde só se não encostar nos outros
   let runMax = -1;
-  P.forEach((p, i) => { const rec = p.vol > runMax + .01; runMax = Math.max(runMax, p.vol);
-    g += `<circle cx="${X(p)}" cy="${Y(p.vol)}" r="${lab.has(i) ? 5 : 4}" style="fill:${rec && i ? 'var(--acc)' : 'var(--card)'};stroke:var(--acc)" stroke-width="2"/>`;
-    if (lab.has(i)) g += `<text x="${Math.min(W - m.r, Math.max(m.l, X(p)))}" y="${Y(p.vol) - 10}" text-anchor="${i === 0 && P.length > 1 ? 'start' : i === P.length - 1 ? 'end' : 'middle'}" style="fill:var(--text);font-weight:700">${fmt(p.vol)}${u}</text>`; });
+  P.forEach((p, i) => { const rec = i >= nq && p.vol > runMax + .01; if (i >= nq) runMax = Math.max(runMax, p.vol);
+    g += `<circle cx="${X(p)}" cy="${Y(p.vol)}" r="${lab.has(i) ? 5 : 4}" style="fill:${rec && i > nq ? 'var(--acc)' : 'var(--card)'};stroke:${col(i)}" stroke-width="2"/>`;
+    if (lab.has(i)) g += `<text x="${Math.min(W - m.r, Math.max(m.l, X(p)))}" y="${Y(p.vol) - 10}" text-anchor="${i === 0 && P.length > 1 ? 'start' : i === P.length - 1 ? 'end' : 'middle'}" style="fill:${i < nq ? 'var(--muted)' : 'var(--text)'};font-weight:700">${fmt(p.vol)}${u}</text>`; });
   g += `<text x="${m.l}" y="${H - 6}" text-anchor="start">${fmtDate(P[0].date)}/${P[0].date.slice(2, 4)}</text><text x="${W - m.r}" y="${H - 6}" text-anchor="end">${fmtDate(P[P.length - 1].date)}/${P[P.length - 1].date.slice(2, 4)}</text>`;
   g += `<line class="xh" y1="${m.t - 4}" y2="${H - m.b}" style="stroke:var(--muted)" stroke-width="1" visibility="hidden"/>`;
   return { svg: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Total de ${esc(x.name)} em cada treino">${g}<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/></svg><div class="tip" hidden></div>`, X };
@@ -5585,10 +5613,11 @@ function drawEvoLines() {
     const el = wrap.querySelector('svg'), tip = wrap.querySelector('.tip'), xh = el.querySelector('.xh'), u = x.timed ? ' s' : ' kg';
     const show = e => {
       const r = el.getBoundingClientRect(), px = (e.clientX - r.left) * W / r.width;
-      let i = 0, bd = Infinity; x.pts.forEach((p, k) => { const d = Math.abs(X(p) - px); if (d < bd) { bd = d; i = k; } });
-      const p = x.pts[i], pc = x.st.pct[i];
+      const A = [...(x.prev || []), ...x.pts], nq = A.length - x.pts.length;
+      let i = 0, bd = Infinity; A.forEach((p, k) => { const d = Math.abs(X(p) - px); if (d < bd) { bd = d; i = k; } });
+      const p = A[i], pc = i >= nq ? x.st.pct[i - nq] : null;
       xh.setAttribute('x1', X(p)); xh.setAttribute('x2', X(p)); xh.setAttribute('visibility', 'visible');
-      tip.innerHTML = `<div class="th">${fmtDate(p.date)}/${p.date.slice(2, 4)}</div><div class="r"><b>${fmt(p.vol)}${x.vu}</b><span class="n">total</span></div>${x.vu === ' kg' ? `<div class="r"><b>${fmt(p.top)} kg</b><span class="n">carga máx.</span></div>` : ''}
+      tip.innerHTML = `<div class="th">${fmtDate(p.date)}/${p.date.slice(2, 4)}</div>${nq ? `<div class="r"><span class="n">${esc(i < nq ? p.name : x.name)}</span></div>` : ''}<div class="r"><b>${fmt(p.vol)}${x.vu}</b><span class="n">total</span></div>${x.vu === ' kg' ? `<div class="r"><b>${fmt(p.top)} kg</b><span class="n">carga máx.</span></div>` : ''}
         <div class="r"><b>${p.sets.length} × ${x.timed ? fmtSec(Math.round(p.reps / Math.max(1, p.sets.length))) : fmt(Math.round(p.reps / Math.max(1, p.sets.length) * 10) / 10)}</b><span class="n">séries × média</span></div>
         ${pc != null ? `<div class="r">${evoPctPill(pc)}<span class="n">vs. vez anterior</span></div>` : ''}`;
       tip.hidden = false;
@@ -6513,10 +6542,11 @@ function weekHtml(pid) {
     return `<div class="wk-day ${exs.length || also.length ? '' : 'empty'} ${pick ? 'pick' : ''} ${inSel ? 'has' : ''}">
       <div class="wk-dh"><b>${nm}</b><small>${exs.length ? `${exs.length} exercício${exs.length === 1 ? '' : 's'}<br>${(n => `${n} série${n === 1 ? '' : 's'}`)(exs.reduce((a, e) => a + e.sets.length, 0))}` : also.length ? 'Nada novo ainda' : 'Descanso'}</small></div>
       ${pick ? `<button class="wk-put ${inSel ? 'on' : ''}" data-act="wk-put" data-d="${d}">${inSel ? (wkSels().length > 1 ? '✓ Estão aqui' : '✓ Está aqui') : '＋ Colocar aqui'}</button>` : ''}
-      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${!dr && wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}</span><small>${e.sets.length} série${e.sets.length === 1 ? '' : 's'}</small></button>
+      ${exs.map((e, i) => `<div class="wk-ex ${W.open === e.id ? 'open' : ''}"><button class="wk-exn" data-act="wk-open" data-id="${e.id}"><span class="grow" lang="pt-BR">${esc(e.name)}${!dr && wkSrcLabel(pid, e) ? ` <small class="wk-mine">${wkSrcLabel(pid, e)}</small>` : ''}${!dr && subAsk(e) ? `<small class="wk-subq">${v2Ico(SUB_ICO)}Substitui?</small>` : ''}</span><small>${e.sets.length} série${e.sets.length === 1 ? '' : 's'}</small></button>
         ${W.open === e.id ? `<div class="wk-ed"><div class="bw-step"><small>Séries</small><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="-1" aria-label="Menos séries">−</button><b>${e.sets.length}</b><button data-act="wk-st" data-id="${e.id}" data-f="n" data-d="1" aria-label="Mais séries">＋</button></div>
           ${(src => src.length && !dr ? `<div class="wk-src"><small>Comparar cargas com</small>${src.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
             return `<button class="${twinKey(e) === x.key ? 'on' : ''}" data-act="wk-src" data-id="${e.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)} · ${top && top.carga != null ? numVal(top.carga) + ' kg' : 'sem carga'}${top && top.reps != null ? ' × ' + numVal(top.reps) : ''}</small></button>`; }).join('')}</div>` : '')(wkSources(pid, e))}
+          ${dr ? '' : subPickHtml(e, 'Substitui qual?')}
           <div class="wk-eda"><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button class="bw-mv" data-act="wk-mv" data-id="${e.id}" data-d="1" aria-label="Descer" ${i < exs.length - 1 ? '' : 'disabled'}>↓</button>
           <button class="btn danger" data-act="wk-del" data-id="${e.id}">Tirar do dia</button></div></div>` : ''}</div>`).join('')}
       ${also.map(x => `<p class="wk-also">Também neste dia: <b>${esc(wName(x, pid))}</b><br><button class="link" data-act="wk-unalso" data-d="${d}" data-w="${x}">Tirar deste dia</button></p>`).join('')}</div>`;
@@ -6614,6 +6644,43 @@ function prevPullHtml(ex) {
     return `<button data-act="v2-use-prev" data-k="${esc(x.key)}"><span class="grow"><b>${esc(x.ex.name)}</b><small>${fmtDate(x.last.date)}${top && top.carga != null ? ` · ${numVal(top.carga)} kg` : ''}${top && top.reps != null ? ` × ${numVal(top.reps)}` : ''}</small></span></button>`; }).join('')
     : '<small>Nenhum exercício parecido feito antes.</small>'}<button class="v2-pull-x" data-act="v2-find-prev">Fechar</button></div>`;
 }
+// Troca de exercício (pedido do Igor, 13/11): o exercício novo pode substituir um antigo do mesmo músculo principal
+// (ex.: Remada unilateral -> Remada DY na máquina, na troca de academia). Isso só liga o gráfico da Evolução numa linha
+// com a marca do dia da troca: o "antes", as % e os recordes continuam só do exercício novo, e nenhuma carga muda.
+// ex.subOf = chave do exercício antigo (twinKey), ex.subAt = dia da troca, ex.subNo = "nenhum, é exercício novo".
+const SUB_ICO = '<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>';
+const subMain = e => musclesOf(e).p;
+function subCands(ex) {
+  const pid = ex.profileId, mine = twinKey(ex), main = new Set(subMain(ex)); if (!main.size) return [];
+  const live = new Set(liveExs(pid).flatMap(e => twinKey(e) === mine ? [twinKey(e)] : [twinKey(e), e.subOf].filter(Boolean))), last = new Map(), out = new Map(); // já trocado por outro exercício não aparece de novo
+  for (const x of db.sessions) if (hasDone(x)) { const o = last.get(x.exId); if (!o || x.date > o.date) last.set(x.exId, x); }
+  db.exercises.forEach(e => {
+    if (e.profileId !== pid || !e.name || !last.has(e.id)) return;
+    const k = twinKey(e); if (k === mine || live.has(k) || !subMain(e).some(m => main.has(m))) return;
+    const l = last.get(e.id), cur = out.get(k); if (!cur || l.date > cur.last.date) out.set(k, { key: k, ex: e, last: l });
+  });
+  return [...out.values()].sort((a, b) => b.last.date.localeCompare(a.last.date)).slice(0, 6);
+}
+// mostra a pergunta "Substitui qual?" só para exercício novo (até 3 treinos feitos) que ainda não foi respondido
+const subDone = ex => { const ids = twinIds(ex.id); return new Set(db.sessions.filter(x => ids.has(x.exId) && hasDone(x)).map(x => x.date)).size; };
+const subAsk = ex => !ex.subOf && !ex.subNo && subDone(ex) <= 3 && subCands(ex).length > 0;
+const subName = ex => { if (!ex.subOf) return ''; const o = db.exercises.find(e => e.profileId === ex.profileId && twinKey(e) === ex.subOf); return o ? o.name : ''; };
+function subSet(ex, key) { // vale para o exercício e os gêmeos dele (mesmo histórico)
+  const ids = twinIds(ex.id), first = db.sessions.filter(x => ids.has(x.exId) && hasDone(x)).map(x => x.date).sort()[0];
+  db.exercises.filter(e => ids.has(e.id)).forEach(e => {
+    if (key) { e.subOf = key; e.subAt = first || today(); delete e.subNo; } else { delete e.subOf; delete e.subAt; e.subNo = true; } });
+}
+// trocou o nome para outro exercício do mesmo músculo (ex.: Remada unilateral -> Remada DY): é uma troca, liga no gráfico
+const subRenamed = (ex, oldName) => { const o = { name: oldName, group: ex.group }; if (subMain(o).some(m => subMain(ex).includes(m))) { ex.subOf = twinKey(o); ex.subAt = today(); delete ex.subNo; } };
+// botões da pergunta (Montar por dia e Evolução): os antigos do mesmo músculo, mais "Nenhum, é novo"
+function subPickHtml(ex, title) {
+  const list = subCands(ex);
+  if (ex.subOf && !list.some(x => x.key === ex.subOf)) { const o = db.exercises.find(e => e.profileId === ex.profileId && twinKey(e) === ex.subOf); if (o) list.unshift({ key: ex.subOf, ex: o, last: null }); }
+  if (!list.length) return '';
+  return `<div class="wk-src wk-sub"><small>${v2Ico(SUB_ICO)}${title}</small>${list.map(x => { const top = x.last && (x.last.sets.filter(y => y.done)[0] || x.last.sets[0]);
+    return `<button class="${ex.subOf === x.key ? 'on' : ''}" data-act="sub-pick" data-id="${ex.id}" data-k="${esc(x.key)}"><b>${esc(x.ex.name)}</b><small>${x.last ? `${fmtDate(x.last.date)}${top && top.carga != null ? ' · ' + numVal(top.carga) + ' kg' : ''}` : 'ligado'}</small></button>`; }).join('')}
+    <button class="${ex.subNo ? 'on' : ''}" data-act="sub-pick" data-id="${ex.id}" data-k=""><b>Nenhum</b><small>é um exercício novo</small></button></div>`;
+}
 const wkSrcLabel = (pid, ex) => { const k = twinKey(ex); return k.includes('|') && wkSources(pid, ex).length > 1 ? k.split('|')[0].replace(/^./, c => c.toUpperCase()) : ''; };
 function wkToggle(pid, d, sel) {
   const W = { sel }, P = profile(pid); if (!W.sel || !P) return;
@@ -6634,7 +6701,8 @@ function wkToggle(pid, d, sel) {
       ...(old && old.twin ? { twin: old.twin } : {}), ...(old && old.rest ? { rest: old.rest } : {}), ...(old && old.method ? { method: old.method } : {}), ...(old && old.note ? { note: old.note } : {}),
       sets: old ? old.sets.map(x => ({ carga: x.carga ?? null, reps: x.reps ?? null })) : Array.from({ length: prev ? prev.sets.length : 3 }, () => ({ carga: null, reps: isTimed(W.sel) ? 30 : 10 })),
       ...(old ? (old.noLoad ? { noLoad: true } : {}) : noLoadOf(W.sel) || NOLOAD_RX.test(normName(W.sel.name)) ? { noLoad: true } : {}) });
-    if (!old) { const ne = db.exercises[db.exercises.length - 1], x = wkSources(pid, ne).find(wkAutoOk(ne, true)); if (x) wkLink(ne, x); }
+    if (!old) { const ne = db.exercises[db.exercises.length - 1], x = wkSources(pid, ne).find(wkAutoOk(ne, true)); if (x) wkLink(ne, x);
+      if (ui.wk && subAsk(ne)) ui.wk.open = ne.id; } // exercício novo do mesmo músculo de um antigo: já abre a pergunta "Substitui qual?"
   }
   save();
 }
@@ -6792,7 +6860,7 @@ function builderChange(t) {
     const cn = catName(v), nn = cn || v.trim().slice(0, 60); if (!nn || nn === ex.name) { t.value = ex.name; return; }
     const old = ex.name; ex.name = nn; t.value = nn;
     if (cn) { const g = catGroup(cn); if (g && g !== ex.group) { ex.group = g; const sg = $main.querySelector(`[data-bf="group"][data-id="${ex.id}"]`); if (sg) sg.value = g; } if (NOLOAD_RX.test(normName(cn)) && !noLoadOf(ex)) { ex.noLoad = true; bRender(true); } }
-    if (!nearName(old, nn) && splitHistory(ex, old)) toast(`<b>${esc(nn)}</b> começa com histórico novo. O histórico de ${esc(old)} continua guardado.`);
+    if (!nearName(old, nn) && splitHistory(ex, old)) { subRenamed(ex, old); toast(`<b>${esc(nn)}</b> começa com histórico novo. O histórico de ${esc(old)} continua guardado${ex.subOf ? ' e aparece antes dele no gráfico da Evolução' : ''}.`); }
     bRender(false);
     const mm = $main.querySelector('.mm-wrap'); if (mm && ex.letter) mm.outerHTML = muscleMapHtml(letterExs(ex.letter, ex.profileId), ex.profileId); // o desenho acompanha o nome novo
     return;
@@ -7787,6 +7855,12 @@ $main.addEventListener('click', e => {
       });
       return;
     }
+    case 'sub-pick': { const ex = exById(b.dataset.id); if (!ex) return; const k = b.dataset.k || null;
+      if (k && ex.subOf === k) { subSet(ex, null); db.exercises.filter(e => e.profileId === ex.profileId && twinKey(e) === twinKey(ex)).forEach(e => { delete e.subNo; }); } else subSet(ex, k);
+      if (ui.evoSub === ex.id) ui.evoSub = null;
+      save(); const y = scrollY; render(); scrollTo(0, y);
+      return toast(ex.subOf ? `<b>${esc(ex.name)}</b> substitui ${esc(subName(ex))}: os dois ficam na mesma linha do gráfico da Evolução. As cargas de cada um continuam separadas.` : k ? `<b>${esc(ex.name)}</b> não está mais ligado a outro exercício.` : `<b>${esc(ex.name)}</b> fica como exercício novo.`); }
+    case 'evo-sub': ui.evoSub = ui.evoSub === b.dataset.id ? null : b.dataset.id; { const y = scrollY; render(); scrollTo(0, y); } return;
     case 'evo-last': ui.date = b.dataset.d; ui.month = ui.date.slice(0, 7); render(); return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'untrash': b.disabled = true; return untrash(b.dataset.pid).then(() => toast('✓ Aluno de volta, com tudo.'), err => { b.disabled = false; cloudError(err); });
     case 'bk-open': return loadBackupDates().catch(err => toast('Não foi possível abrir as cópias (' + (err.code || 'erro') + '). Confira as regras do Firebase.'));
@@ -8045,7 +8119,7 @@ $form.addEventListener('submit', e => {
     editing.name = name; editing.group = group; editing.letter = letter; if (letter) delete editing.archived;
     if ($form.noload.checked) editing.noLoad = true; else delete editing.noLoad;
     if (!document.getElementById('twinF').hidden) { const tw = $form.twin.value; if (tw) editing.twin = tw; else delete editing.twin; }
-    if (!nearName(oldName, name) && splitHistory(editing, oldName)) toast(`<b>${esc(name)}</b> começa com histórico novo. O histórico de ${esc(oldName)} continua guardado.`);
+    if (!nearName(oldName, name) && splitHistory(editing, oldName)) { subRenamed(editing, oldName); toast(`<b>${esc(name)}</b> começa com histórico novo. O histórico de ${esc(oldName)} continua guardado${editing.subOf ? ' e aparece antes dele no gráfico da Evolução' : ''}.`); }
     // Se mudou séries/carga/reps, vira o novo plano (modelo + treino do dia)
     if ([$form.sets.value, $form.carga.value, $form.reps.value].join('|') !== initialPlan) {
       editing.sets = Array.from({ length: n }, () => ({ carga, reps })); editing.planDate = today();
@@ -8893,6 +8967,16 @@ async function fixOnce() {
       save(); render(); msgs.push('✓ Cardio de quinta (12/11): 30 min de escada salvos.');
     }
   }
+  // 1r) (13/11) Professor trocou a Remada unilateral pela Remada DY na máquina (Smart Fit): liga as duas no gráfico da Evolução
+  // (só a ligação: nenhuma carga muda e o "antes" da DY continua só dela)
+  if (!done.has('remada-dy-troca-1311')) {
+    await ensureFull(ME);
+    const last = e => Math.max(0, ...db.sessions.filter(x => x.exId === e.id && hasDone(x)).map(x => +x.date.replace(/-/g, '')));
+    const dy = profExs(ME).filter(e => /^remada dy/.test(normName(e.name))).sort((a, c) => isLetter(c.letter, ME) - isLetter(a.letter, ME))[0];
+    const old = profExs(ME).filter(e => /^remada unilateral/.test(normName(e.name)) && last(e)).sort((a, c) => last(c) - last(a))[0];
+    if (dy && old && !dy.subOf) { subSet(dy, twinKey(old)); save(); msgs.push(`✓ Remada DY ligada à ${esc(old.name)} no gráfico da Evolução.`); }
+    if ((dy && old) || today() > '2026-11-30') mark('remada-dy-troca-1311');
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -9672,7 +9756,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/11-23:15';
+const APP_VERSION = '12/11-23:39';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
