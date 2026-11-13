@@ -1076,18 +1076,15 @@ body.v2-full main{margin-top:0}
 .v2-pull.open>button{display:flex;width:100%;text-align:left;background:rgba(255,255,255,.08);border:0;border-radius:12px;padding:10px 12px;color:var(--text)}
 .v2-pull.open>.v2-pull-x{justify-content:center;background:none;color:var(--muted);font-weight:700}
 .v2-howto{align-items:flex-start;cursor:default}.v2-howto[role=button]{cursor:pointer}.v2-howto small{display:block;line-height:1.35;margin-top:2px}
-.abv{margin:0 0 12px}.abv-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 2px 8px}
-.abv-h b{font-size:13px;font-weight:800}.abv-h small,.abv-note,.abv-one small{font-size:12px;color:var(--muted);font-weight:600}
-.abv-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.abv-t{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:16px;background:rgba(255,255,255,.07);border:2px solid transparent;color:var(--text);font:inherit;min-width:0}
-.abv-t span{font-size:12.5px;font-weight:700;white-space:nowrap}.abv-t.on{border-color:var(--accent);background:rgba(201,240,61,.12)}.abv-t.on span{color:var(--accent)}
-.abv-t .abv-ic{width:100%;height:54px;background:transparent;--halo:#22305F}.abv-t:not(.on) .abv-ic{opacity:.75}
-.abv-note{margin:8px 2px 0}
-.abv-one{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border-radius:16px;padding:6px 8px 6px 6px;margin-bottom:8px}
-.abv-one .abv-ic{width:58px;height:40px;background:transparent;--halo:#22305F}.abv-one .grow{min-width:0}.abv-one b{display:block;font-weight:800;font-size:14px}
-.abv-one small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.abv-tr{border:0;background:rgba(255,255,255,.1);color:var(--text);font:inherit;font-weight:800;font-size:12.5px;padding:8px 12px;border-radius:99px;flex:none}
-.abv-kg{margin:0 0 12px}
+.abv-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
+.abv-t{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 2px 5px;border-radius:12px;background:rgba(255,255,255,.07);border:1.5px solid transparent;color:var(--text);font:inherit;min-width:0}
+.abv-t span{font-size:11.5px;font-weight:700;white-space:nowrap}.abv-t.on{border-color:var(--accent);background:rgba(201,240,61,.12)}.abv-t.on span{color:var(--accent)}
+.abv-ic{display:block;background:transparent;--halo:#22305F}.abv-ic svg{width:100%;height:100%;display:block}
+.abv-t .abv-ic{width:100%;height:30px}.abv-t:not(.on) .abv-ic{opacity:.75}
+.abv-one{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:14px;padding:4px 5px 4px 4px;margin:0 0 10px}
+.abv-one .abv-ic{width:46px;height:28px;flex:none}.abv-one b{font-weight:800;font-size:14px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.abv-pill{border:1.5px solid transparent;background:rgba(255,255,255,.1);color:var(--text);font:inherit;font-weight:800;font-size:12px;padding:6px 11px;border-radius:99px;flex:none;white-space:nowrap}
+.abv-pill.on{border-color:var(--accent);color:var(--accent);background:rgba(201,240,61,.12)}
 .v2-eq{display:inline-flex;margin-top:8px;background:rgba(255,255,255,.08);border-radius:99px;padding:3px;gap:2px}
 .v2-eq button{border:0;background:transparent;color:var(--text);font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:99px}
 .v2-eq button.on{background:var(--accent);color:var(--on-accent)}.v2-eq button:disabled{opacity:.6}
@@ -3012,15 +3009,11 @@ const v2Key = ex => abVarOn(ex) ? abvOf(exVr(ex))[2] : PFA.keyOf(ex, exEq(ex));
 // Escolha da variação do abdominal: aberta (6 desenhos) até o aluno escolher no dia; depois vira uma linha com "Trocar"
 function abvHtml(ex, lock) {
   const cur = exVr(ex), s = sessionOn(ex.id, ui.date), open = !lock && (ui.abvOpen === ex.id || !(s && s.vr));
-  const prev = prevSession(ex.id, ui.date), A = abvOf(cur), kg = abKg(ex);
+  const A = abvOf(cur), kg = abKg(ex);
   const ic = k => { const D = PFA.POSES[k] || {}, lying = !/abdmaq|abdpolia/.test(k);
-    return `<span class="anim abv-ic"><svg viewBox="${lying ? '6 34 108 48' : '0 0 120 84'}" aria-hidden="true"><g>${D.st || ''}</g><g>${PFA.figure(k, 1)}</g></svg></span>`; };
-  const note = prev ? `"antes" de ${fmtDate(prev.date)}` : 'primeira vez: ainda sem "antes"';
-  const kgBtn = ABV_KG.has(cur) ? '' : `<span class="v2-eq abv-kg">${[[0, 'Sem peso'], [1, 'Com peso']].map(([v, l]) => `<button class="${+kg === v ? 'on' : ''}" data-act="abv-kg" data-id="${ex.id}" data-v="${v}" ${lock ? 'disabled' : ''}>${l}</button>`).join('')}</span>`;
-  if (!open) return `<div class="abv-one">${ic(A[2])}<span class="grow"><b>${A[1]}</b><small>${note}</small></span>${lock ? '' : `<button class="abv-tr" data-act="abv-open" data-id="${ex.id}">Trocar</button>`}</div>${lock ? '' : kgBtn}`;
-  return `<div class="abv"><div class="abv-h"><b>Qual você vai fazer?</b><small>toque para escolher</small></div>
-    <div class="abv-row">${ABV.map(([v, l, k]) => `<button class="abv-t${v === cur ? ' on' : ''}" data-act="abv" data-id="${ex.id}" data-v="${v}">${ic(k)}<span>${l}</span></button>`).join('')}</div>
-    <div class="abv-note">${note}</div></div>`;
+    return `<span class="anim abv-ic"><svg viewBox="${lying ? '6 34 108 48' : '10 2 100 80'}" aria-hidden="true"><g>${D.st || ''}</g><g>${PFA.figure(k, 1)}</g></svg></span>`; };
+  if (!open) return `<div class="abv-one">${ic(A[2])}<b class="grow">${A[1]}</b>${ABV_KG.has(cur) ? '' : `<button class="abv-pill${kg ? ' on' : ''}" data-act="abv-kg" data-id="${ex.id}" data-v="${kg ? 0 : 1}" ${lock ? 'disabled' : ''}>${kg ? 'Com peso' : 'Sem peso'}</button>`}${lock ? '' : `<button class="abv-pill" data-act="abv-open" data-id="${ex.id}">Trocar</button>`}</div>`;
+  return `<div class="abv-row">${ABV.map(([v, l, k]) => `<button class="abv-t${v === cur ? ' on' : ''}" data-act="abv" data-id="${ex.id}" data-v="${v}" aria-label="${l}">${ic(k)}<span>${l}</span></button>`).join('')}</div>`;
 }
 // "Como fazer" em uma frase, para cada desenho
 const HOWTO = {
@@ -9820,7 +9813,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/11-02:32';
+const APP_VERSION = '13/11-02:38';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
