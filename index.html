@@ -1076,6 +1076,15 @@ body.v2-full main{margin-top:0}
 .v2-pull.open>button{display:flex;width:100%;text-align:left;background:rgba(255,255,255,.08);border:0;border-radius:12px;padding:10px 12px;color:var(--text)}
 .v2-pull.open>.v2-pull-x{justify-content:center;background:none;color:var(--muted);font-weight:700}
 .v2-howto{align-items:flex-start;cursor:default}.v2-howto[role=button]{cursor:pointer}.v2-howto small{display:block;line-height:1.35;margin-top:2px}
+.abv-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
+.abv-t{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 2px 5px;border-radius:12px;background:rgba(255,255,255,.07);border:1.5px solid transparent;color:var(--text);font:inherit;min-width:0}
+.abv-t span{font-size:11.5px;font-weight:700;white-space:nowrap}.abv-t.on{border-color:var(--accent);background:rgba(201,240,61,.12)}.abv-t.on span{color:var(--accent)}
+.abv-ic{display:block;background:transparent;--halo:#22305F}.abv-ic svg{width:100%;height:100%;display:block}
+.abv-t .abv-ic{width:100%;height:36px}.abv-t:not(.on) .abv-ic{opacity:.75}
+.abv-one{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:14px;padding:4px 5px 4px 4px;margin:0 0 10px}
+.abv-one .abv-ic{width:46px;height:28px;flex:none}.abv-one b{font-weight:800;font-size:14px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.abv-pill{border:1.5px solid transparent;background:rgba(255,255,255,.1);color:var(--text);font:inherit;font-weight:800;font-size:12px;padding:6px 11px;border-radius:99px;flex:none;white-space:nowrap}
+.abv-pill.on{border-color:var(--accent);color:var(--accent);background:rgba(201,240,61,.12)}
 .v2-eq{display:inline-flex;margin-top:8px;background:rgba(255,255,255,.08);border-radius:99px;padding:3px;gap:2px}
 .v2-eq button{border:0;background:transparent;color:var(--text);font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:99px}
 .v2-eq button.on{background:var(--accent);color:var(--on-accent)}.v2-eq button:disabled{opacity:.6}
@@ -1946,7 +1955,7 @@ const equipOf = name => { const n = normName(name);
 const isTimed = ex => !!ex && /prancha|hollow/.test(normName(ex.name));
 // Sem carga, só repetições: marcado no exercício ou sempre (prancha e abdominais no chão), mesmo nos treinos antigos
 const NOLOAD_ALWAYS = /abdominal (livre|supra|infra|obliquo|bicicleta|canivete|remador|tesoura|v$)/;
-const noLoadOf = ex => !!ex && (!!ex.noLoad || isTimed(ex) || NOLOAD_ALWAYS.test(normName(ex.name)));
+const noLoadOf = (ex, date) => !!ex && (abVarOn(ex) ? !abKg(ex, date) : (!!ex.noLoad || isTimed(ex) || NOLOAD_ALWAYS.test(normName(ex.name))));
 const fmtSec = v => { if (v == null) return '–'; const t = Math.round(v), m = Math.floor(t / 60), r = t % 60; return m ? `${m} min${r ? ` ${String(r).padStart(2, '0')} s` : ''}` : `${r} s`; };
 const catGroup = name => { const n = (name || '').toLowerCase(); for (const [g, l] of Object.entries(CATALOG)) if (l.some(x => x.toLowerCase() === n)) return g; return null; };
 // Exercícios do catálogo em ordem alfabética: com busca (sem acento, várias palavras), ou do grupo escolhido; filtro de equipamento
@@ -2241,9 +2250,29 @@ const eqFreeze = ex => { if (!eqDefault(ex)) return 0; let n = 0; const ids = tw
 // recente (até 14 dias antes da última vez em qualquer treino): exercício antigo que voltou para um treino não pode
 // trazer uma carga de meses atrás no lugar da última vez feita (Agachamento do Igor, 11/11, mostrava 15/06).
 const SAME_W_DAYS = 14;
+// Abdominal com variações (pedido do Igor, 13/11): quando o professor põe o "Abdominal livre", o aluno escolhe qual vai fazer.
+// Cada variação tem o seu "antes" (o registro guarda s.vr); registro antigo sem marca conta como supra.
+// Máquina e polia têm carga; as livres são só repetições, mas o aluno pode ligar "Com peso" (s.ak) quando segura uma anilha.
+const ABV = [['supra', 'Supra', 'av_supra', 'Abdominal supra'], ['infra', 'Infra', 'av_infra', 'Abdominal infra'], ['obliquo', 'Oblíquo', 'av_obliq', 'Abdominal oblíquo'],
+  ['bici', 'Bicicleta', 'av_bici', 'Abdominal bicicleta'], ['maq', 'Máquina', 'av_maq', 'Abdominal na máquina'], ['polia', 'Polia', 'av_polia', 'Abdominal na polia']];
+// Panturrilha (pedido do Igor, 13/11): "Panturrilha" ou "Panturrilha em pé" no treino; o aluno marca onde fez (máquina ocupada etc.)
+const PNV = [['empe', 'Em pé', 'pv_empe', 'Panturrilha em pé'], ['maq', 'Máquina', 'pv_maq', 'Panturrilha na máquina'], ['sentado', 'Sentado', 'pv_sent', 'Panturrilha sentado'],
+  ['legpress', 'Leg press', 'pv_leg', 'Panturrilha no leg press'], ['smith', 'Smith', 'pv_smith', 'Panturrilha no Smith'], ['uni', 'Unilateral', 'pv_uni', 'Panturrilha unilateral']];
+const VFAM = [{ rx: /^abdominal( livre)?$/, list: ABV, kg: new Set(['maq', 'polia']), opt: true },
+  { rx: /^panturrilha( em pe)?$/, list: PNV, kg: new Set(PNV.map(x => x[0])), opt: false }];
+const famOf = ex => ex ? VFAM.find(f => f.rx.test(twinKey(ex))) : null;
+const abVarOn = ex => !!famOf(ex);
+const sessVr = (s, f) => s.vr || f.list[0][0]; // registro antigo sem marca: a primeira da lista (supra / em pé)
+const abvOf = (ex, v) => { const f = famOf(ex); return f.list.find(a => a[0] === v) || f.list[0]; };
+const exVr = (ex, date = ui.date) => { const f = famOf(ex), s = sessionOn(ex.id, date); if (s && s.vr) return s.vr;
+  const h = exHistory(ex.id).filter(x => x.date < date); return h.length ? sessVr(h[h.length - 1], f) : f.list[0][0]; };
+const abKg = (ex, date = ui.date) => { const f = famOf(ex), v = exVr(ex, date); if (f.kg.has(v)) return true;
+  const s = sessionOn(ex.id, date); if (s && s.ak != null) return !!s.ak;
+  const h = exHistory(ex.id).filter(x => x.date < date && sessVr(x, f) === v), l = h[h.length - 1]; return !!(l && l.sets.some(x => x.done && x.carga > 0)); };
 const prevSession = (exId, date) => {
   const ex = exById(exId); let h = exHistory(exId).filter(s => s.date < date);
   if (ex && eqDefault(ex)) { const eq = exEq(ex, date) || eqDefault(ex); h = h.filter(s => sessEq(s) === eq); }
+  const fam = famOf(ex); if (fam) { const v = exVr(ex, date); h = h.filter(s => sessVr(s, fam) === v); }
   const L = ex && ex.letter, last = h[h.length - 1]; if (!L || !last) return last;
   const min = addDays(last.date, -SAME_W_DAYS);
   const same = h.filter(s => s.w ? s.w === L : s.date >= min && (exById(s.exId) || {}).letter === L);
@@ -2286,7 +2315,7 @@ function blankSession(ex, date) {
 function ensureSession(ex, date) {
   if (date === today()) markActivity(date); // está treinando agora
   let s = sessionOn(ex.id, date);
-  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); if (ex.letter) s.w = ex.letter; if (eqDefault(ex)) s.equip = ex.equip || eqDefault(ex); db.sessions.push(s); }
+  if (!s) { s = blankSession(ex, date); s.sets = s.sets.map(({ hint, ...x }) => x); s.id = uid(); if (ex.letter) s.w = ex.letter; if (eqDefault(ex)) s.equip = ex.equip || eqDefault(ex); if (abVarOn(ex)) s.vr = exVr(ex, date); db.sessions.push(s); }
   if (date === today() && !s.t0 && !s.fin) s.t0 = new Date().toISOString(); // começou agora: dá a duração do treino no check-in
   if (ui.studentMode && !meStu()) s.by = 'aluno'; // marcação feita pelo aluno
   s.up = new Date().toISOString(); s.dv = devKind(); // última mudança: quando e em que aparelho (para conferir depois)
@@ -2879,6 +2908,50 @@ Object.assign(POSES, {
     B: X(P([71, 35], [64, 38], [62, 39], [52, 40], [39, 39], [38, 42], [40, 55], [28, 56], [24, 54]), { k2: [32, 62], a2: [34, 79], t2: [41, 79] }) },
 });
 // Mesmo exercício feito livre ou na máquina: [livre, máquina]
+// Variações (abdominal e panturrilha) com o mesmo corpo (mesmas medidas de tronco, braço e perna), montadas por ângulos:
+// assim os desenhos ficam todos proporcionais entre si. Ângulo em graus: 0 = para a direita, 90 = para cima.
+(() => {
+  const L = { head: 7, torso: 22, arm: 10, fore: 9, thigh: 17, shin: 17, foot: 5.5 };
+  const dir = (g, len) => [len * Math.cos(g * Math.PI / 180), -len * Math.sin(g * Math.PI / 180)];
+  const at = (p, g, len) => { const d = dir(g, len); return [+(p[0] + d[0]).toFixed(1), +(p[1] + d[1]).toFixed(1)]; };
+  const body = (o) => {
+    const hp = o.hp, n = at(hp, o.torso, L.torso), s = at(hp, o.torso, L.torso - 2), h = at(n, o.torso + (o.neck || 0), L.head);
+    const e = at(s, o.arm, L.arm), w = at(e, o.fore, L.fore), k = at(hp, o.thigh, L.thigh), a = at(k, o.shin, L.shin), t = at(a, o.foot, L.foot);
+    const r = P(h, n, s, e, w, hp, k, a, t);
+    if (o.thigh2 != null) { r.k2 = at(hp, o.thigh2, L.thigh); r.a2 = at(r.k2, o.shin2, L.shin); r.t2 = at(r.a2, o.foot2 ?? o.foot, L.foot); }
+    if (o.arm2 != null) { r.e2 = at(s, o.arm2, L.arm); r.w2 = at(r.e2, o.fore2, L.fore); }
+    return r;
+  };
+  // em pé: a altura do quadril sai do pé (ponta no chão ou no degrau), para o calcanhar subir de verdade
+  const stand = (o, toeY, toeX) => { const b0 = body({ ...o, hp: [0, 0] }), dx = toeX - b0.t[0], dy = toeY - b0.t[1]; return body({ ...o, hp: [dx, dy] }); };
+  const nape = (o) => ({ ...o, arm: o.torso - 55, fore: o.torso + 160 }); // mãos atrás da cabeça
+  const legsUp = { thigh: 52, shin: -62, foot: 0 }; // joelhos dobrados, pés no chão
+  const STEP = `<rect x="52" y="75" width="26" height="5" rx="1.5" fill="color-mix(in srgb, currentColor 35%, transparent)"/>`;
+  const legs = { thigh: -90, shin: -90 }, up = -52, down = 14; // pé: calcanhar embaixo (ponta mais alta) e calcanhar em cima
+  Object.assign(POSES, {
+    av_supra: { st: FLOOR, w: '', A: body({ hp: [60, 76], torso: 178, arm: -2, fore: -2, ...legsUp }), B: body({ hp: [60, 76], torso: 140, neck: -8, arm: 18, fore: 14, ...legsUp }) },
+    av_infra: { st: FLOOR, w: '', A: body({ hp: [56, 76], torso: 180, arm: 0, fore: 0, thigh: 6, shin: 6, foot: 70 }), B: body({ hp: [56, 76], torso: 180, arm: 0, fore: 0, thigh: 78, shin: 84, foot: -10 }) },
+    av_obliq: { st: FLOOR, w: '', A: body(nape({ hp: [60, 76], torso: 178, ...legsUp })), B: body(nape({ hp: [60, 76], torso: 138, neck: -8, ...legsUp })) },
+    av_bici: { st: FLOOR, w: '', A: body(nape({ hp: [62, 76], torso: 152, neck: -6, thigh: 72, shin: -8, foot: 30, thigh2: 14, shin2: 14, foot2: 70 })),
+      B: body(nape({ hp: [62, 76], torso: 152, neck: -6, thigh: 14, shin: 14, foot: 70, thigh2: 72, shin2: -8, foot2: 30 })) },
+    av_maq: { st: SEAT(42), w: 'grip', A: body({ hp: [50, 58], torso: 92, arm: -60, fore: 95, thigh: 2, shin: -92, foot: 0 }),
+      B: body({ hp: [50, 58], torso: 48, neck: -10, arm: -104, fore: 51, thigh: 2, shin: -92, foot: 0 }) },
+    av_polia: { st: `${FLOOR}<path d="M24 4v76M18 4h12" ${EQ} stroke-width="4"/>`, w: 'grip', cable: [26, 8],
+      A: body(nape({ hp: [62, 61], torso: 92, thigh: -84, shin: 180, foot: 185 })), B: body(nape({ hp: [62, 61], torso: 28, neck: -12, thigh: -84, shin: 180, foot: 185 })) },
+    pv_empe: { st: `${FLOOR}${STEP}`, w: 'db', A: stand({ torso: 90, arm: -94, fore: -90, ...legs, foot: down }, 75, 66), B: stand({ torso: 90, arm: -94, fore: -90, ...legs, foot: up }, 75, 66) },
+    pv_maq: { st: `${FLOOR}${STEP}<path d="M40 6v74M40 12h24" ${EQ} stroke-width="4"/>`, w: 'grip', A: stand({ torso: 90, arm: -40, fore: 100, ...legs, foot: down }, 75, 66), B: stand({ torso: 90, arm: -40, fore: 100, ...legs, foot: up }, 75, 66) },
+    pv_smith: { st: `${FLOOR}${STEP}<path d="M34 2v78M86 2v78" ${EQ} stroke-width="3"/>`, w: 'bar', A: stand({ torso: 90, arm: -40, fore: 100, ...legs, foot: down }, 75, 66), B: stand({ torso: 90, arm: -40, fore: 100, ...legs, foot: up }, 75, 66) },
+    pv_uni: { st: `${FLOOR}${STEP}<path d="M84 8v72" ${EQ} stroke-width="4"/>`, w: 'db', A: stand({ torso: 90, arm: -94, fore: -90, arm2: 10, fore2: 10, ...legs, foot: down, thigh2: -100, shin2: -160, foot2: -120 }, 75, 66),
+      B: stand({ torso: 90, arm: -94, fore: -90, arm2: 10, fore2: 10, ...legs, foot: up, thigh2: -100, shin2: -160, foot2: -120 }, 75, 66) },
+    pv_sent: { st: `${SEAT(40)}<rect x="62" y="74" width="18" height="6" rx="1.5" fill="color-mix(in srgb, currentColor 35%, transparent)"/>`, w: 'kpad',
+      A: body({ hp: [48, 56], torso: 92, arm: -40, fore: -10, thigh: 0, shin: -90, foot: down }), B: body({ hp: [48, 56], torso: 92, arm: -32, fore: -4, thigh: 9, shin: -86, foot: -40 }) },
+    pv_leg: { st: `${FLOOR}<path d="M20 44L44 70M44 70h10M50 70v10" ${EQ} stroke-width="5"/>`, w: 'grip',
+      A: body({ hp: [44, 64], torso: 135, arm: -20, fore: -40, thigh: 28, shin: 28, foot: 112 }), B: body({ hp: [44, 64], torso: 135, arm: -20, fore: -40, thigh: 28, shin: 28, foot: 70 }) },
+  });
+  // placa do leg press: na ponta dos pés, de lado (perpendicular às pernas)
+  const c = POSES.pv_leg.A.t; POSES.pv_leg.st += `<path d="M${(c[0] - 7).toFixed(1)} ${(c[1] - 12).toFixed(1)}L${(c[0] + 7).toFixed(1)} ${(c[1] + 12).toFixed(1)}" ${EQ} stroke-width="5"/>`;
+  POSES.obliq = POSES.av_obliq; POSES.abdbici = POSES.av_bici; POSES.abdpolia = POSES.av_polia;
+})();
 const VARIANTS = [['supino', 'chestpress'], ['supinoinc', 'chestpressinc'], ['supinoinchalter', 'chestpressinc'], ['supinohalter', 'chestpress'], ['cavalinho', 'cavalinhomaq'], ['remada', 'remadamaq'], ['agacha', 'smith'], ['desenv', 'desenvmaq'], ['crucifixo', 'crucmaq'], ['lateral', 'lateralmaq']];
 const pairOf = k => VARIANTS.find(v => v.includes(k)) || null;
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -2950,7 +3023,7 @@ function animLoop(now) {
 }
 function guessAnim(name, group) {
   const n = norm(name);
-  const RX = [[/cavalinho.*(maquina|apoio|articulad)|remada.*(apoio no peito|peito apoiado)/, 'cavalinhomaq'], [/cavalinho|remada t\b|t-?bar/, 'cavalinho'],
+  const RX = [[/abdominal.*bicicleta/, 'abdbici'], [/abdominal.*obliquo/, 'obliq'], [/abdominal.*polia/, 'abdpolia'], [/cavalinho.*(maquina|apoio|articulad)|remada.*(apoio no peito|peito apoiado)/, 'cavalinhomaq'], [/cavalinho|remada t\b|t-?bar/, 'cavalinho'],
     [/supino inclinad.*(maquina|articulad)|chest press inclinad/, 'chestpressinc'], [/supino inclinad.*halter/, 'supinoinchalter'], [/supino inclinad/, 'supinoinc'],
     [/desenvolvimento.*(maquina|articulad)/, 'desenvmaq'], [/elevacao lateral.*(maquina|articulad)/, 'lateralmaq'],
     [/tricep.*corda|corda.*tricep/, 'tricorda'], [/tricep.*(coice|kickback)|coice.*tricep/, 'tricoice'], [/tricep.*unilateral/, 'triceps'],
@@ -2981,7 +3054,16 @@ const V2I = {
 };
 // Livre ou máquina: o que foi marcado no dia vale mais que o padrão do exercício
 const exEq = (ex, date = ui.date) => (sessionOn(ex.id, date) || {}).equip || ex.equip || '';
-const v2Key = ex => PFA.keyOf(ex, exEq(ex));
+const v2Key = ex => abVarOn(ex) ? abvOf(ex, exVr(ex))[2] : PFA.keyOf(ex, exEq(ex));
+// Escolha da variação do abdominal: aberta (6 desenhos) até o aluno escolher no dia; depois vira uma linha com "Trocar"
+function abvHtml(ex, lock) {
+  const cur = exVr(ex), s = sessionOn(ex.id, ui.date), open = !lock && (ui.abvOpen === ex.id || !(s && s.vr));
+  const f = famOf(ex), A = abvOf(ex, cur), kg = abKg(ex);
+  const ic = k => { const D = PFA.POSES[k] || {};
+    return `<span class="anim abv-ic"><svg viewBox="${f.list === PNV ? '4 0 112 84' : '2 14 116 70'}" aria-hidden="true"><g>${D.st || ''}</g><g>${PFA.figure(k, 1)}</g></svg></span>`; };
+  if (!open) return `<div class="abv-one">${ic(A[2])}<b class="grow">${A[1]}</b>${f.kg.has(cur) ? '' : `<button class="abv-pill${kg ? ' on' : ''}" data-act="abv-kg" data-id="${ex.id}" data-v="${kg ? 0 : 1}" ${lock ? 'disabled' : ''}>${kg ? 'Com peso' : 'Sem peso'}</button>`}${lock ? '' : `<button class="abv-pill" data-act="abv-open" data-id="${ex.id}">Trocar</button>`}</div>`;
+  return `<div class="abv-row">${f.list.map(([v, l, k]) => `<button class="abv-t${v === cur ? ' on' : ''}" data-act="abv" data-id="${ex.id}" data-v="${v}" aria-label="${l}">${ic(k)}<span>${l}</span></button>`).join('')}</div>`;
+}
 // "Como fazer" em uma frase, para cada desenho
 const HOWTO = {
   supino: 'Deitado no banco reto: desça a barra até o peito e empurre para cima.',
@@ -3027,6 +3109,22 @@ const HOWTO = {
   afundo: 'Um passo à frente: desça até o joelho de trás quase tocar o chão.',
   pant: 'Na ponta dos pés: suba o mais alto que der e desça devagar.',
   abdo: 'Deitado, joelhos dobrados: suba o tronco tirando os ombros do chão.',
+  abdmaq: 'Sentado na máquina, mãos nas alças: dobre o tronco para a frente contraindo o abdômen e volte devagar.',
+  obliq: 'Deitado, joelhos dobrados: suba o tronco girando, levando o cotovelo na direção do joelho do outro lado.',
+  abdbici: 'Deitado, mãos atrás da cabeça: leve um joelho ao peito e estique a outra perna, alternando os lados.',
+  abdpolia: 'Ajoelhado na polia, corda atrás da cabeça: dobre o tronco para baixo contraindo o abdômen e volte devagar.',
+  av_supra: 'Deitado, joelhos dobrados: suba o tronco tirando os ombros do chão.',
+  av_infra: 'Deitado, pernas esticadas: suba as pernas juntas sem tirar a lombar do chão e desça devagar.',
+  av_obliq: 'Deitado, joelhos dobrados: suba o tronco girando, levando o cotovelo na direção do joelho do outro lado.',
+  av_bici: 'Deitado, mãos atrás da cabeça: leve um joelho ao peito e estique a outra perna, alternando os lados.',
+  av_maq: 'Sentado na máquina, mãos nas alças: dobre o tronco para a frente contraindo o abdômen e volte devagar.',
+  av_polia: 'Ajoelhado na polia, corda atrás da cabeça: dobre o tronco para baixo contraindo o abdômen e volte devagar.',
+  pv_empe: 'Em pé no degrau, halteres nas mãos: suba na ponta dos pés o mais alto que der e desça devagar.',
+  pv_maq: 'Ombros nas almofadas da máquina: suba na ponta dos pés o mais alto que der e desça devagar.',
+  pv_smith: 'Barra do Smith nas costas, pés no degrau: suba na ponta dos pés e desça devagar.',
+  pv_uni: 'Em um pé só no degrau, mão apoiada: suba na ponta do pé e desça devagar. Depois troque a perna.',
+  pv_sent: 'Sentado, almofada em cima dos joelhos: suba os calcanhares o mais alto que der e desça devagar.',
+  pv_leg: 'No leg press, só a ponta dos pés na plataforma: empurre com a ponta dos pés e volte devagar.',
   prancha: 'Corpo reto apoiado nos antebraços: segure parado, sem deixar o quadril cair.',
 };
 function v2HowHtml(ex, lock) {
@@ -3151,7 +3249,7 @@ function cardHtmlV2(ex) {
   const p0 = (prev && prev.sets[0]) || (hints[0] && hints[0].hint) || {};
   const bk = bwLoad(ex, ui.date), sub = `${n}×${p0.reps != null ? (tm ? fmtSec(p0.reps) : p0.reps) : '–'}${!nl && p0.carga != null ? ` · ${fmt(p0.carga)} kg` : bk ? ` · ${fmt(bk)} kg` : ''}`;
   const noRec = lock === 'past' && !sessionOn(ex.id, ui.date);
-  const head = `<button class="v2-exh" data-act="v2-open" aria-expanded="${open}">${PFA.animHtml(v2Key(ex), 'v2-thumb')}<span class="grow"><b>${esc(ex.name)}</b><small>${noRec ? 'sem registro neste dia' : `${ex.group} · ${sub}`}</small></span>
+  const head = `<button class="v2-exh" data-act="v2-open" aria-expanded="${open}">${PFA.animHtml(v2Key(ex), 'v2-thumb')}<span class="grow"><b>${esc(abVarOn(ex) ? abvOf(ex, exVr(ex))[3] : ex.name)}</b><small>${noRec ? 'sem registro neste dia' : `${ex.group} · ${sub}`}</small></span>
     ${complete ? `<span class="v2-okb">${V2I.check}</span>` : `<span class="v2-cnt">${done}/${n}</span>`}${open || complete ? '' : `<span class="v2-chev">${V2I.chev}</span>`}</button>`;
   if (!open || noRec) return `<div class="v2ex ${complete ? 'done' : ''}">${head}<div class="compare" hidden></div></div>`;
   const grid = ui.v2grid && !tm, pm = !lock;
@@ -3175,6 +3273,7 @@ function cardHtmlV2(ex) {
       <button class="chk v2-chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>`;
   }).join('');
   return `<div class="v2ex open ${complete ? 'done' : ''}">${head}<div class="v2-exb">
+    ${abVarOn(ex) ? abvHtml(ex, lock) : ''}
     ${v2HowHtml(ex, lock)}
     ${lock ? '' : prevPullHtml(ex)}
     ${exDetailHtml(ex)}
@@ -4941,7 +5040,7 @@ function rowClass(x, p, ex, xs, ps) {
 }
 const PD_NOTE = '<p class="pd-note"><span class="pd-x">×2</span><span><b>Polia dupla</b> · o peso da placa conta em dobro, para comparar igual à polia comum</span></p>';
 function compareHtml(s, prev) {
-  const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && noLoadOf(ex)) || tm, u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
+  const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && noLoadOf(ex, s.date)) || tm || (abVarOn(ex) && !!prev && !prev.sets.some(x => x.done && x.carga > 0)), u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
   const reps = sets => sets.reduce((a, x) => a + (x.done && x.reps != null ? x.reps : 0), 0);
   // número de séries diferente da outra vez (tirou ou colocou uma): compara só as mesmas séries (as primeiras), para a meta ser justa
   const cut = prev && prev.sets.length !== s.sets.length ? Math.min(prev.sets.length, s.sets.length) : 0;
@@ -7739,6 +7838,14 @@ $main.addEventListener('click', e => {
     case 'ws-week': ui.wsOff = Math.max(-26, Math.min(8, (ui.wsOff || 0) + +b.dataset.d)); ui.wsOpen = null; return render();
     case 'ws-why': ui.wsOpen = ui.wsOpen === b.dataset.g ? null : b.dataset.g; return render();
     case 'demo-ex': return openDemo(exById(b.dataset.id));
+    case 'abv-open': ui.abvOpen = b.dataset.id; return render();
+    case 'abv': case 'abv-kg': { // variação do abdominal (ou peso ligado) só no dia aberto
+      const ex = exById(b.dataset.id); if (!ex) return;
+      const lr = ui.studentMode && lockReason(ex.id); if (lr) return toast(LOCK_MSG[lr]);
+      const s = ensureSession(ex, ui.date);
+      if (act === 'abv') { s.vr = b.dataset.v; ui.abvOpen = null; } else s.ak = b.dataset.v === '1';
+      save(); return render();
+    }
     case 'v2-equip': { // livre ou máquina: o professor muda o padrão (e o dia aberto); o aluno marca só o dia de hoje
       const ex = exById(b.dataset.id), v = b.dataset.v; if (!ex) return;
       if (!ui.studentMode) {
@@ -9821,7 +9928,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/11-02:46';
+const APP_VERSION = '13/11-03:35';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
