@@ -3431,6 +3431,23 @@ function figSrc(key, color, acc) {
 }
 function fitFont(c, text, weight, family, max, width) { let sz = max; do { c.font = `${weight} ${sz}px ${family}`; sz -= 6; } while (c.measureText(text).width > width && sz > 20); }
 function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect(x, y, w, h, r); }
+// Faz o texto caber numa largura: diminui a fonte até um mínimo e, se ainda não couber, corta com "…" (nunca sobrepõe)
+function fitText(c, text, weight, family, max, width, min = 30) {
+  let sz = max; c.font = `${weight} ${sz}px ${family}`;
+  while (c.measureText(text).width > width && sz > min) { sz -= 2; c.font = `${weight} ${sz}px ${family}`; }
+  if (c.measureText(text).width <= width) return text;
+  let t = text; while (t.length > 1 && c.measureText(t + '…').width > width) t = t.slice(0, -1);
+  return t.trimEnd() + '…';
+}
+// Linha com um texto à esquerda e outro à direita (ex.: nome do treino e "por ..."): os dois sempre com espaço entre eles
+function footLR(c, left, right, y, xl, xr, weight, size, family = 'Manrope') {
+  // os dois diminuem juntos (mesmo tamanho); se ainda não couber, o da esquerda ganha "…"
+  let sz = size; const W = () => { c.font = `${weight} ${sz}px ${family}`; return c.measureText(left).width + c.measureText(right).width + 40; };
+  while (W() > xr - xl && sz > 30) sz -= 2;
+  const rt = fitText(c, right, weight, family, sz, (xr - xl) * .42, sz), rw = c.measureText(rt).width;
+  c.textAlign = 'left'; if (left) c.fillText(fitText(c, left, weight, family, sz, xr - xl - rw - 40, sz), xl, y);
+  c.font = `${weight} ${sz}px ${family}`; c.textAlign = 'right'; c.fillText(rt, xr, y);
+}
 function drawMark(c, x, y, size, fill, sym) {
   if (sym) { const k = Math.min(size / sym.width, size / sym.height); c.drawImage(sym, x + (size - sym.width * k) / 2, y + (size - sym.height * k) / 2, sym.width * k, sym.height * k); return; }
   const u = size / 24; c.fillStyle = fill; V2SYM.forEach(([a, b, w, h]) => { rr(c, x + a * u, y + b * u, w * u, h * u, Math.min(w, h) / 2 * u); c.fill(); });
@@ -3454,14 +3471,14 @@ const TEMPLATES = [
     c.save(); c.globalAlpha = .08; c.fillStyle = ink; [[540, 1180, 160, 760], [720, 860, 160, 1080], [900, 520, 160, 1420]].forEach(([x, y, w, h]) => { rr(c, x, y, w, h, 48); c.fill(); }); c.restore();
     brandRow(c, 80, 100, ink, A);
     c.fillStyle = ink; c.textAlign = 'right'; c.font = '700 38px Manrope'; c.fillText(D.date.toUpperCase(), PW - 80, 150);
-    c.textAlign = 'left'; c.font = '800 46px Manrope'; c.fillText(`${D.name.toUpperCase()} TREINOU`, 84, 400);
+    c.textAlign = 'left'; c.fillText(fitText(c, `${D.name.toUpperCase()} TREINOU`, 800, 'Manrope', 46, 920), 84, 400);
     fitFont(c, String(D.total), 700, 'Unbounded', 560, 920); c.fillText(String(D.total), 60, 900);
     c.lineWidth = 10; c.strokeStyle = ink; c.font = '700 236px Unbounded'; c.strokeText('MIN', 80, 1150);
     c.font = '600 58px Outfit'; const t1 = `${D.treino} min de treino`; const w1 = c.measureText(t1).width + 80;
     rr(c, 80, 1220, w1, 110, 55); c.fillStyle = ink; c.fill(); c.fillStyle = acc; c.fillText(t1, 120, 1295);
-    if (D.cardio) { const t2 = `+ ${D.cardio} min de ${D.mode}`; const w2 = c.measureText(t2).width + 80; rr(c, 80, 1350, w2, 110, 55); c.lineWidth = 6; c.strokeStyle = ink; c.stroke(); c.fillStyle = ink; c.fillText(t2, 120, 1425); }
+    if (D.cardio) { const t2 = fitText(c, `+ ${D.cardio} min de ${D.mode}`, 600, 'Outfit', 58, 840); const w2 = c.measureText(t2).width + 80; rr(c, 80, 1350, w2, 110, 55); c.lineWidth = 6; c.strokeStyle = ink; c.stroke(); c.fillStyle = ink; c.fillText(t2, 120, 1425); }
     [['séries', D.series], ['kg', fmt(D.kg)], ['recordes', D.rec]].forEach(([l, v], i) => { const x = 80 + i * 313; rr(c, x, 1530, 293, 220, 44); c.fillStyle = ink; c.fill(); c.fillStyle = acc; fitFont(c, String(v), 600, 'Outfit', 104, 250); c.fillText(String(v), x + 30, 1645); c.font = '700 36px Manrope'; c.fillText(l, x + 32, 1708); });
-    c.fillStyle = ink; c.font = '700 38px Manrope'; c.fillText(`${D.wname}${D.desc ? ' · ' + D.desc : ''}`, 84, 1840); c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 80, 1840);
+    c.fillStyle = ink; footLR(c, `${D.wname}${D.desc ? ' · ' + D.desc : ''}`, `por ${D.coach}`, 1840, 84, PW - 80, 700, 38);
   } },
   { name: 'Recibo', draw(c, D, A) {
     if (!A.nobg) navyBg(c, PH);
@@ -3475,18 +3492,18 @@ const TEMPLATES = [
     c.font = `700 32px ${mono}`; c.fillText('CUPOM DO TREINO', 0, cy); cy += 46;
     c.font = `400 28px ${mono}`; c.fillText(`${D.date.toUpperCase()}${D.checkin ? ' · CHECK-IN ' + D.checkin : ''}`, 0, cy); cy += 40;
     const dash = () => { c.save(); c.setLineDash([12, 10]); c.strokeStyle = 'rgba(21,23,28,.45)'; c.lineWidth = 3; c.beginPath(); c.moveTo(x + 50, cy); c.lineTo(x + w - 50, cy); c.stroke(); c.restore(); cy += 60; };
-    const row = (l, v, big) => { c.font = `${big ? 700 : 400} ${big ? 34 : 30}px ${mono}`; c.textAlign = 'left'; c.fillText(l, x + 60, cy); c.textAlign = 'right'; c.fillText(v, x + w - 60, cy);
+    const row = (l, v, big) => { const wt = big ? 700 : 400, sz = big ? 34 : 30; c.font = `${wt} ${sz}px ${mono}`; l = fitText(c, l, wt, mono, sz, w - 160 - c.measureText(v).width, 22); c.textAlign = 'left'; c.fillText(l, x + 60, cy); c.textAlign = 'right'; c.fillText(v, x + w - 60, cy);
       const lw = c.measureText(l).width; c.font = `400 30px ${mono}`; const vw = c.measureText(v).width; let dots = ''; const avail = w - 120 - lw - vw - 40; const dw = c.measureText('.').width; for (let k = 0; k < avail / dw; k++) dots += '.'; c.textAlign = 'left'; c.globalAlpha = .4; c.fillText(dots, x + 60 + lw + 20, cy); c.globalAlpha = 1; cy += 58; };
     dash();
     row(`${D.wname.toUpperCase()}`, `${D.treino} MIN`, true);
-    if (D.desc) { c.font = `400 26px ${mono}`; c.textAlign = 'left'; c.fillText(D.desc.toUpperCase(), x + 60, cy - 18); cy += 30; }
+    if (D.desc) { c.textAlign = 'left'; c.fillText(fitText(c, D.desc.toUpperCase(), 400, mono, 26, w - 120, 20), x + 60, cy - 18); cy += 30; }
     if (D.cardio) row(`CARDIO ${D.mode.toUpperCase()}`, `${D.cardio} MIN`, true);
     row('SÉRIES', String(D.series)); row('PESO LEVANTADO', `${fmt(D.kg)} KG`); row('RECORDES', String(D.rec)); row('SEQUÊNCIA', `${D.streak} SEM.`);
     dash();
     c.textAlign = 'left'; c.font = `700 40px ${mono}`; c.fillText('TOTAL', x + 60, cy + 30); c.textAlign = 'right'; c.font = '700 104px Unbounded'; c.fillText(`${D.total}`, x + w - 190, cy + 40); c.font = `700 40px ${mono}`; c.fillText('MIN', x + w - 60, cy + 30); cy += 120;
     dash();
     let bx = x + 90, seed = D.total * 7 + D.series; while (bx < x + w - 90) { seed = (seed * 9301 + 49297) % 233280; const bw = 3 + (seed % 5) * 2.4; c.fillRect(bx, cy - 20, bw, 120); bx += bw + 3 + (seed % 3) * 3; }
-    cy += 170; c.textAlign = 'center'; c.font = `700 32px ${mono}`; c.fillText('OBRIGADO PELO SUOR', 0, cy); cy += 46; c.font = `400 26px ${mono}`; c.fillText(`${D.name.toUpperCase()} · POR ${D.coach.toUpperCase()}`, 0, cy);
+    cy += 170; c.textAlign = 'center'; c.font = `700 32px ${mono}`; c.fillText('OBRIGADO PELO SUOR', 0, cy); cy += 46; c.fillText(fitText(c, `${D.name.toUpperCase()} · POR ${D.coach.toUpperCase()}`, 400, mono, 26, w - 120, 20), 0, cy);
     c.restore();
     c.save(); c.translate(860, 300); c.rotate(.22); c.beginPath(); c.arc(0, 0, 150, 0, Math.PI * 2); c.fillStyle = A.acc; c.fill(); c.fillStyle = A.on; c.textAlign = 'center'; c.font = '700 44px Unbounded'; c.fillText('TREINO', 0, -6); c.fillText('FEITO', 0, 48); c.restore();
   } },
@@ -3498,14 +3515,14 @@ const TEMPLATES = [
     const x = 60, y = 1080, w = 960, h = 760;
     c.save(); rr(c, x, y, w, h, 64); c.clip(); c.filter = 'blur(40px)'; if (A.photo) cover(c, A.photo, 0, 0, PW, PH); else blueArt(c, { fig: null }); c.filter = 'none'; c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(x, y, w, h); c.restore();
     rr(c, x, y, w, h, 64); c.strokeStyle = 'rgba(255,255,255,.32)'; c.lineWidth = 3; c.stroke();
-    c.textAlign = 'left'; c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '700 40px Manrope'; c.fillText(`${D.name} · ${D.wname}${D.desc ? ' · ' + D.desc : ''}`.slice(0, 44), x + 60, y + 100);
+    c.textAlign = 'left'; c.fillStyle = 'rgba(255,255,255,.8)'; c.fillText(fitText(c, `${D.name} · ${D.wname}${D.desc ? ' · ' + D.desc : ''}`, 700, 'Manrope', 40, w - 120), x + 60, y + 100);
     c.fillStyle = '#fff'; c.font = '600 240px Outfit'; c.fillText(String(D.total), x + 50, y + 340); const tw = c.measureText(String(D.total)).width; c.font = '500 80px Outfit'; c.fillText('min', x + 70 + tw, y + 340);
     const cx = x + w - 200, cyy = y + 330, R1 = 120, R2 = 150, N = 30, p1 = D.treino / D.total;
     for (let i = 0; i <= N; i++) { const a = Math.PI * (1 - i / N), on = i / N <= p1; c.strokeStyle = on ? A.acc : '#B8A7FF'; c.lineWidth = i % 5 ? 7 : 10; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx + R1 * Math.cos(a), cyy - R1 * Math.sin(a)); c.lineTo(cx + R2 * Math.cos(a), cyy - R2 * Math.sin(a)); c.stroke(); }
     c.fillStyle = 'rgba(255,255,255,.75)'; c.textAlign = 'center'; c.font = '700 30px Manrope'; c.fillText('treino + cardio', cx, cyy - 10);
     c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(x + 60, y + 430, w - 120, 2);
     [['musculação', `${D.treino} min`, A.acc], ['cardio', `${D.cardio} min`, '#B8A7FF'], ['séries', String(D.series), '#fff']].forEach(([l, v, col], i) => { const xx = x + 60 + i * 300; c.textAlign = 'left'; c.fillStyle = col; c.beginPath(); c.arc(xx + 10, y + 512, 10, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.75)'; c.font = '700 34px Manrope'; c.fillText(l, xx + 34, y + 524); c.fillStyle = '#fff'; c.font = '600 72px Outfit'; c.fillText(v, xx, y + 620); });
-    c.fillStyle = 'rgba(255,255,255,.7)'; c.font = '700 32px Manrope'; c.textAlign = 'left'; c.fillText(`${D.checkin ? 'check-in ' + D.checkin + ' · ' : ''}por ${D.coach}`, x + 60, y + 705);
+    c.fillStyle = 'rgba(255,255,255,.7)'; c.textAlign = 'left'; c.fillText(fitText(c, `${D.checkin ? 'check-in ' + D.checkin + ' · ' : ''}por ${D.coach}`, 700, 'Manrope', 32, w - 120), x + 60, y + 705);
   } },
   { name: 'Degraus', draw(c, D, A) {
     const bg = '#B8A7FF', ink = '#160F3D';
@@ -3522,8 +3539,8 @@ const TEMPLATES = [
       c.fillStyle = ink; c.textAlign = 'center'; c.font = '800 38px Manrope'; c.fillText(['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][i], x + bw / 2, base + 60);
     });
     c.textAlign = 'left'; c.fillStyle = ink; c.font = '600 120px Outfit'; c.fillText(`${D.total} min hoje`, 76, 1720);
-    c.font = '600 40px Manrope'; c.fillText(`${D.treino} de treino${D.cardio ? ` + ${D.cardio} de ${D.mode}` : ''}${D.checkin ? ` · check-in ${D.checkin}` : ''}`, 80, 1790);
-    c.font = '700 34px Manrope'; c.globalAlpha = .7; c.fillText(`passos.fit · por ${D.coach}`, 80, 1860); c.globalAlpha = 1;
+    c.fillText(fitText(c, `${D.treino} de treino${D.cardio ? ` + ${D.cardio} de ${D.mode}` : ''}${D.checkin ? ` · check-in ${D.checkin}` : ''}`, 600, 'Manrope', 40, 920), 80, 1790);
+    c.globalAlpha = .7; c.fillText(fitText(c, `passos.fit · por ${D.coach}`, 700, 'Manrope', 34, 920), 80, 1860); c.globalAlpha = 1;
   } },
 ];
 
@@ -3540,16 +3557,16 @@ const FEEDS = [
     c.save(); c.globalAlpha = .08; c.fillStyle = ink; [[620, 820, 130, 560], [770, 600, 130, 780], [920, 360, 130, 1020]].forEach(([x, y, w, h]) => { rr(c, x, y, w, h, 40); c.fill(); }); c.restore();
     brandRow(c, 72, 72, ink, A);
     c.fillStyle = ink; c.textAlign = 'right'; c.font = '700 34px Manrope'; c.fillText(D.date.toUpperCase(), PW - 72, 118);
-    c.textAlign = 'left'; c.font = '800 40px Manrope'; c.fillText(`${D.name.toUpperCase()} TREINOU`, 76, 290);
+    c.textAlign = 'left'; c.fillText(fitText(c, `${D.name.toUpperCase()} TREINOU`, 800, 'Manrope', 40, 928), 76, 290);
     fitFont(c, String(D.total), 700, 'Unbounded', 400, 560); c.fillText(String(D.total), 60, 640);
     const nw = c.measureText(String(D.total)).width, mx = 60 + nw + 28;
     c.lineWidth = 7; c.strokeStyle = ink; fitFont(c, 'MIN', 700, 'Unbounded', 150, PW - 72 - mx); c.strokeText('MIN', mx, 640);
     c.font = '600 50px Outfit'; const t1 = `${D.treino} min de treino`, w1 = c.measureText(t1).width + 70;
     rr(c, 76, 700, w1, 96, 48); c.fillStyle = ink; c.fill(); c.fillStyle = acc; c.fillText(t1, 111, 765);
-    if (D.cardio) { const t2 = `+ ${D.cardio} min de ${D.mode}`, w2 = c.measureText(t2).width + 70, x2 = 76 + w1 + 16 + w2 > PW - 60 ? 76 : 76 + w1 + 16, y2 = x2 === 76 ? 812 : 700;
+    if (D.cardio) { const t2 = fitText(c, `+ ${D.cardio} min de ${D.mode}`, 600, 'Outfit', 50, 858), w2 = c.measureText(t2).width + 70, x2 = 76 + w1 + 16 + w2 > PW - 60 ? 76 : 76 + w1 + 16, y2 = x2 === 76 ? 812 : 700;
       rr(c, x2, y2, w2, 96, 48); c.lineWidth = 5; c.strokeStyle = ink; c.stroke(); c.fillStyle = ink; c.fillText(t2, x2 + 35, y2 + 65); }
     [['séries', D.series], ['kg', fmt(D.kg)], ['recordes', D.rec]].forEach(([l, v], i) => { const x = 76 + i * 315; rr(c, x, 980, 295, 190, 40); c.fillStyle = ink; c.fill(); c.fillStyle = acc; fitFont(c, String(v), 600, 'Outfit', 92, 250); c.fillText(String(v), x + 28, 1080); c.font = '700 32px Manrope'; c.fillText(l, x + 30, 1138); });
-    c.fillStyle = ink; c.font = '700 34px Manrope'; c.fillText(`${D.wname}${D.desc ? ' · ' + D.desc : ''}`, 76, 1270); c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 72, 1270);
+    c.fillStyle = ink; footLR(c, `${D.wname}${D.desc ? ' · ' + D.desc : ''}`, `por ${D.coach}`, 1270, 76, PW - 72, 700, 34);
   },
   function recibo(c, D, A) {
     navyBg(c, FH);
@@ -3564,7 +3581,7 @@ const FEEDS = [
     const x = 56, y = 830, w = 968, h = 464;
     c.save(); rr(c, x, y, w, h, 56); c.clip(); c.filter = 'blur(40px)'; if (A.photo) cover(c, A.photo, 0, 0, PW, FH); else { c.translate(0, -300); blueArt(c, { fig: null }, PW, FH + 300); } c.restore();
     c.save(); rr(c, x, y, w, h, 56); c.fillStyle = 'rgba(255,255,255,.14)'; c.fill(); c.strokeStyle = 'rgba(255,255,255,.32)'; c.lineWidth = 3; c.stroke(); c.restore();
-    c.textAlign = 'left'; c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '700 34px Manrope'; c.fillText(`${D.name} · ${D.wname}${D.desc ? ' · ' + D.desc : ''}`.slice(0, 46), x + 50, y + 80);
+    c.textAlign = 'left'; c.fillStyle = 'rgba(255,255,255,.8)'; c.fillText(fitText(c, `${D.name} · ${D.wname}${D.desc ? ' · ' + D.desc : ''}`, 700, 'Manrope', 34, w - 100), x + 50, y + 80);
     c.fillStyle = '#fff'; c.font = '600 190px Outfit'; c.fillText(String(D.total), x + 42, y + 260); const tw = c.measureText(String(D.total)).width; c.font = '500 64px Outfit'; c.fillText('min', x + 58 + tw, y + 260);
     const cx = x + w - 170, cyy = y + 250, R1 = 96, R2 = 122, N = 26, p1 = D.treino / D.total;
     for (let i = 0; i <= N; i++) { const a = Math.PI * (1 - i / N); c.strokeStyle = i / N <= p1 ? A.acc : '#B8A7FF'; c.lineWidth = i % 5 ? 6 : 9; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx + R1 * Math.cos(a), cyy - R1 * Math.sin(a)); c.lineTo(cx + R2 * Math.cos(a), cyy - R2 * Math.sin(a)); c.stroke(); }
@@ -3585,8 +3602,8 @@ const FEEDS = [
       c.fillStyle = ink; c.textAlign = 'center'; c.font = '800 34px Manrope'; c.fillText(['S', 'T', 'Q', 'Q', 'S', 'S', 'D'][i], x + bw / 2, base + 52);
     });
     c.textAlign = 'left'; c.fillStyle = ink; c.font = '600 100px Outfit'; c.fillText(`${D.total} min hoje`, 68, 1200);
-    c.font = '600 36px Manrope'; c.fillText(`${D.treino} de treino${D.cardio ? ` + ${D.cardio} de ${D.mode}` : ''}${D.checkin ? ` · check-in ${D.checkin}` : ''}`, 72, 1262);
-    c.font = '700 32px Manrope'; c.globalAlpha = .7; c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 72, 118); c.globalAlpha = 1;
+    c.fillText(fitText(c, `${D.treino} de treino${D.cardio ? ` + ${D.cardio} de ${D.mode}` : ''}${D.checkin ? ` · check-in ${D.checkin}` : ''}`, 600, 'Manrope', 36, 936), 72, 1262);
+    c.globalAlpha = .7; c.textAlign = 'right'; c.fillText(fitText(c, `por ${D.coach}`, 700, 'Manrope', 32, 400), PW - 72, 118); c.globalAlpha = 1;
   },
 ];
 
@@ -3598,7 +3615,7 @@ function weekArt(c, D, A, H) {
   c.save(); c.globalAlpha = .08; c.fillStyle = ink; [[540, 1180, 160, 760], [720, 860, 160, 1080], [900, 520, 160, 1420]].forEach(([x, y, w, h]) => { rr(c, x, y, w, h, 48); c.fill(); }); c.restore();
   brandRow(c, 80, 100, ink, A);
   c.fillStyle = ink; c.textAlign = 'right'; c.font = '700 38px Manrope'; c.fillText(D.range.toUpperCase(), PW - 80, 150);
-  c.textAlign = 'left'; c.font = '800 46px Manrope'; c.fillText(`SEMANA DE ${D.name.toUpperCase()}`, 84, 400);
+  c.textAlign = 'left'; c.fillText(fitText(c, `SEMANA DE ${D.name.toUpperCase()}`, 800, 'Manrope', 46, 920), 84, 400);
   fitFont(c, D.treinos, 700, 'Unbounded', 420, 920); c.fillText(D.treinos, 60, 790);
   fitFont(c, 'TREINOS FEITOS', 700, 'Unbounded', 110, 920); c.fillText('TREINOS FEITOS', 80, 950);
   const n = 7, gap = 22, bw = (PW - 160 - gap * (n - 1)) / n, y = 1090;
@@ -3610,7 +3627,7 @@ function weekArt(c, D, A, H) {
   });
   c.textAlign = 'left'; c.font = '600 54px Outfit'; c.fillStyle = ink; c.fillText(D.diasTxt, 84, 1350);
   D.tiles.forEach(([v, l], i) => { const x = 80 + i * 470, ty = 1440; rr(c, x, ty, 450, 280, 48); c.fillStyle = ink; c.fill(); c.fillStyle = acc; c.textAlign = 'left'; fitFont(c, v, 600, 'Outfit', 140, 390); c.fillText(v, x + 36, ty + 160); fitFont(c, l, 700, 'Manrope', 38, 380); c.fillText(l, x + 38, ty + 236); });
-  c.fillStyle = ink; c.textAlign = 'left'; c.font = '700 38px Manrope'; c.fillText('passos.fit', 84, 1840); c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 80, 1840);
+  c.fillStyle = ink; footLR(c, 'passos.fit', `por ${D.coach}`, 1840, 84, PW - 80, 700, 38);
 }
 // Relatório do mês (para mandar ao aluno): dias treinados no calendário, números do mês e as cargas que subiram
 function monthArt(c, D, A) {
@@ -3648,7 +3665,7 @@ function monthArt(c, D, A) {
     c.textAlign = 'right'; c.font = '600 42px Outfit'; const t = `${a} → ${b2}`, tw = c.measureText(t).width; c.fillText(t, PW - 80, y);
     c.textAlign = 'left'; fitFont(c, n, 700, 'Manrope', 40, 920 - tw - 30); c.fillText(n, 84, y);
   });
-  c.fillStyle = ink; c.textAlign = 'left'; c.font = '700 36px Manrope'; c.fillText('passos.fit', 84, H - 60); c.textAlign = 'right'; c.fillText(`por ${D.coach}`, PW - 80, H - 60);
+  c.fillStyle = ink; footLR(c, 'passos.fit', `por ${D.coach}`, H - 60, 84, PW - 80, 700, 36);
 }
 async function drawMonth(cv, D) {
   await postFonts();
@@ -9863,7 +9880,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/11-02:46';
+const APP_VERSION = '13/11-02:54';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
