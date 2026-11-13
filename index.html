@@ -403,6 +403,9 @@ label.f textarea{display:block;width:100%;margin-top:5px;background:var(--input)
 
 .compare{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:grid;gap:6px}
 .cmp-row{display:grid;grid-template-columns:78px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.pd-note{display:flex;gap:8px;align-items:center;margin:2px 0 0;font-size:12px;line-height:1.35;color:var(--muted)}
+.pd-note b{color:var(--text)}
+.pd-x{flex:none;display:inline-grid;place-items:center;min-width:26px;height:20px;padding:0 5px;border-radius:6px;background:var(--accent);color:var(--on-accent,#12150F);font-weight:800;font-size:11px}
 .cmp-row span{color:var(--muted);line-height:1.15}
 .cmp-row span small{display:block;font-size:11px}
 .cmp-row b{font-variant-numeric:tabular-nums}
@@ -2162,9 +2165,20 @@ function bodyWeightAt(pid, date) {
 const bwLoad = (ex, date) => { const f = ex && !isTimed(ex) ? bwFactor(ex) : 0, bw = f && bodyWeightAt(ex.profileId, date); return bw ? Math.round(bw * f * 10) / 10 : 0; };
 const bwTag = (ex, date, cls) => { const k = bwLoad(ex, date), f = bwFactor(ex);
   return k ? `<span class="${cls} bwk"><b>${fmt(k)} kg</b><small>${f === 1 ? 'seu peso' : `${Math.round(f * 100)}% do peso`}</small></span>` : f && !isTimed(ex) ? `<span class="${cls} bwk"><small>peso do corpo</small><small>anote em Medidas</small></span>` : `<span class="${cls}">sem carga</span>`; };
+// Polia dupla (Smart Fit e parecidas): a placa mostra o peso em CADA pegador (1,25 · 3,75 · 6,25 ...: sempre termina em ,25 ou ,75).
+// Com o mesmo esforço, o número fica perto da metade da polia comum. Para a comparação ser justa, o app conta esse peso em dobro
+// (pedido do Igor, 13/11). O número anotado nunca muda: só a conta das comparações, da Evolução e dos resumos.
+const PD_X = 2;
+const cableMemo = new Map();
+const isCable = ex => { if (!ex) return false; const k = ex.name + '|' + ex.group; let v = cableMemo.get(k);
+  if (v === undefined) { v = equipOf(ex.name) === 'polia' || /polia/.test(HOWTO[PFA.guessAnim(ex.name, ex.group)] || ''); cableMemo.set(k, v); } return v; };
+const pdLoad = c => c > 0 && Math.abs(c % 2.5 - 1.25) < .01;
+const pdSet = (ex, x) => !!x && pdLoad(x.carga) && isCable(ex);
+const pdSess = s => s.sets.some(x => x.done && pdSet(exById(s.exId), x));
 function effSets(s) {
   const ex = exById(s.exId), f = ex && !isTimed(ex) ? bwFactor(ex) : 0, bw = f && bodyWeightAt(ex.profileId, s.date);
-  return bw ? s.sets.map(x => ({ ...x, carga: Math.round((bw * f + (x.carga || 0)) * 10) / 10 })) : s.sets;
+  if (bw) return s.sets.map(x => ({ ...x, carga: Math.round((bw * f + (x.carga || 0)) * 10) / 10 }));
+  return isCable(ex) && s.sets.some(x => pdLoad(x.carga)) ? s.sets.map(x => pdLoad(x.carga) ? { ...x, carga: x.carga * PD_X } : x) : s.sets;
 }
 const sessVol = s => vol(effSets(s));
 const hasDone = s => s.sets.some(x => x.done);
@@ -3132,13 +3146,13 @@ function cardHtmlV2(ex) {
   const rows = s.sets.map((x, i) => {
     const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
     if (tm) return plankRowHtml(ex, x, p, h, i);
-    if (grid) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
+    if (grid) return `<div class="tile ${rowClass(x, p, ex)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">${V2I.check}</button></div>
       ${nl ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
       <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
       <div class="ant">${p && p.done ? (nl ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
     </div>`;
-    return `<div class="v2-set ${rowClass(x, p)}" data-i="${i}" data-base="v2-set">
+    return `<div class="v2-set ${rowClass(x, p, ex)}" data-i="${i}" data-base="v2-set">
       <span class="v2-sn">${i + 1}</span>
       ${nl ? bwTag(ex, ui.date, 'v2-nl') : fld('carga', x, p, h, i)}
       ${fld('reps', x, p, h, i)}
@@ -3270,7 +3284,7 @@ function v2SendReply(t) {
 // Melhor série de cada exercício (kg × reps)
 function v2Records(pid) {
   const best = {};
-  for (const s of profSessions(pid)) for (const x of s.sets) { const v = setVol(x); if (v && (!best[s.exId] || v > best[s.exId].v)) best[s.exId] = { v, x }; }
+  for (const s of profSessions(pid)) effSets(s).forEach((y, i) => { const x = s.sets[i], v = setVol(y); if (v && (!best[s.exId] || v > best[s.exId].v)) best[s.exId] = { v, x }; });
   return Object.entries(best).sort((a, b) => b[1].v - a[1].v).slice(0, 5).map(([id, b]) => ({ ex: exById(id), x: b.x })).filter(r => r.ex);
 }
 function renderEuV2() {
@@ -4715,7 +4729,7 @@ const stepper = (f, v, label, hint) => `<div class="step">
 // Prancha: uma linha por série com o cronômetro (conta 3 s para a pessoa se posicionar e depois conta os segundos)
 function plankRowHtml(ex, x, p, h, i) {
   const run = ui.plank && ui.plank.exId === ex.id && ui.plank.i === i;
-  return `<div class="set plank ${run ? 'running' : rowClass(x, p)}" data-i="${i}" data-base="set plank">
+  return `<div class="set plank ${run ? 'running' : rowClass(x, p, ex)}" data-i="${i}" data-base="set plank">
     <span class="num">${i + 1}</span>
     ${run ? `<button class="btn plank-go stop" data-act="plank-stop"><span data-plank-t>${plankText()}</span> · Parar</button>`
       : `<button class="btn plank-go" data-act="plank-start" aria-label="Cronometrar a série ${i + 1}"><i class="ic ic-timer"></i> ${x.done ? 'De novo' : 'Começar'}</button>`}
@@ -4748,13 +4762,13 @@ function cardHtml(ex) {
   const rows = s.sets.map((x, i) => {
     const p = prev && prev.sets[i], h = (hints[i] && hints[i].hint) || {};
     if (tm) return plankRowHtml(ex, x, p, h, i);
-    if (tiles) return `<div class="tile ${rowClass(x, p)}" data-i="${i}" data-base="tile">
+    if (tiles) return `<div class="tile ${rowClass(x, p, ex)}" data-i="${i}" data-base="tile">
       <div class="tile-h"><span class="num">${i + 1}</span><button class="chk" data-act="done" aria-label="Série ${i + 1} feita">✓</button></div>
       ${noLoadOf(ex) ? '' : `<label><input data-f="carga" inputmode="decimal" value="${numVal(x.carga)}" placeholder="${h.carga != null ? numVal(h.carga) : 'kg'}" aria-label="carga da série ${i + 1}"></label>`}
       <label><input data-f="reps" inputmode="numeric" value="${numVal(x.reps)}" placeholder="${h.reps != null ? numVal(h.reps) : 'reps'}" aria-label="repetições da série ${i + 1}"></label>
       <div class="ant">${p && p.done ? (noLoadOf(ex) ? `${p.reps ?? '–'} reps` : `${fmt(p.carga)}×${p.reps ?? '–'}`) : 'novo'}</div>
     </div>`;
-    return `<div class="set ${rowClass(x, p)}" data-i="${i}" data-base="set">
+    return `<div class="set ${rowClass(x, p, ex)}" data-i="${i}" data-base="set">
       <span class="num">${i + 1}</span>
       ${noLoadOf(ex) ? bwTag(ex, ui.date, 'noload') : stepper('carga', x.carga, `carga da série ${i + 1}`, h.carga)}
       ${stepper('reps', x.reps, `repetições da série ${i + 1}`, h.reps)}
@@ -4866,13 +4880,14 @@ function exDetailHtml(ex) {
 }
 const fmtRest = sec => sec >= 60 ? `${Math.floor(sec / 60)}min${sec % 60 ? ' ' + (sec % 60) + 's' : ''}` : `${sec}s`;
 const setTotal = x => x.carga != null && x.reps != null ? `${fmt(x.carga * x.reps)} kg` : '';
-function rowClass(x, p) {
+function rowClass(x, p, ex) {
   if (!x.done) return '';
   if (!p || !p.done) return 'done';
-  let cv = setVol(x), pv = setVol(p);
+  let cv = setVol(x) * (pdSet(ex, x) ? PD_X : 1), pv = setVol(p) * (pdSet(ex, p) ? PD_X : 1);
   if (x.carga == null && p.carga == null) { cv = x.reps || 0; pv = p.reps || 0; } // sem carga / prancha: compara repetições (segundos)
   return 'done' + (cv > pv ? ' up' : cv < pv ? ' down' : '');
 }
+const PD_NOTE = '<p class="pd-note"><span class="pd-x">×2</span><span><b>Polia dupla</b> · o peso da placa conta em dobro, para comparar igual à polia comum</span></p>';
 function compareHtml(s, prev) {
   const ex = exById(s.exId), tm = isTimed(ex), nl = !!(ex && noLoadOf(ex)) || tm, u = tm ? 's' : nl ? 'reps' : 'kg'; // sem carga: compara o total de repetições (prancha: de segundos)
   const reps = sets => sets.reduce((a, x) => a + (x.done && x.reps != null ? x.reps : 0), 0);
@@ -4880,14 +4895,16 @@ function compareHtml(s, prev) {
   const cut = prev && prev.sets.length !== s.sets.length ? Math.min(prev.sets.length, s.sets.length) : 0;
   const ts = cut ? s.sets.slice(0, cut) : s.sets, ps = prev ? (cut ? prev.sets.slice(0, cut) : prev.sets) : [];
   const bk = nl && !tm && bwLoad(ex, s.date), kg = (ss, d) => vol(effSets({ exId: s.exId, date: d, sets: ss })), uu = bk ? 'kg' : u;
-  const total = bk ? kg(ts, s.date) : nl ? reps(ts) : vol(ts), pt = prev ? (bk ? kg(ps, prev.date) : nl ? reps(ps) : vol(ps)) : 0, max = Math.max(total, pt, 1);
+  const pv = ss => vol(ss.map(x => pdSet(ex, x) ? { ...x, carga: x.carga * PD_X } : x)); // polia dupla conta em dobro
+  const total = bk ? kg(ts, s.date) : nl ? reps(ts) : pv(ts), pt = prev ? (bk ? kg(ps, prev.date) : nl ? reps(ps) : pv(ps)) : 0, max = Math.max(total, pt, 1);
+  const pd = !nl && (pdSess(s) || prev && pdSess(prev)); // polia dupla: explica por que o total é o dobro do número anotado
   const finished = s.sets.length > 0 && s.sets.every(x => x.done);
   return `<div class="cmp-row"><span>${ui.date === today() ? 'Hoje' : 'Este treino'}<small>${fmtDate(ui.date)}${cut && s.sets.length > cut ? ` · ${cut} séries` : ''}</small></span>
       <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${tm ? fmtSec(total) : `${fmt(total)} ${uu}`}</b></div>
     ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}${cut ? ` · ${cut} série${cut === 1 ? '' : 's'}` : ''}</small></span>
       <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${tm ? fmtSec(pt) : `${fmt(pt)} ${uu}`}</b></div>`
       : `<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>${ex && !(CLOUD && cloud && cloud.role === 'student') ? (src => src.length ? `<div class="wk-src"><small>Puxar cargas de</small>${src.map(x => `<button data-act="wk-src" data-id="${ex.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)}</small></button>`).join('')}</div>` : '')(wkSources(ex.profileId, ex)) : ''}`}
-    <div>${prev ? progress(total, pt, finished, uu) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>`;
+    <div>${prev ? progress(total, pt, finished, uu) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>${pd ? PD_NOTE : ''}`;
 }
 function refreshCard(exId) {
   const card = $main.querySelector(`[data-ex="${exId}"]`);
@@ -4981,7 +4998,7 @@ function missedDay(p, iso) {
 const sundayOf = iso => addDays(iso, -toDate(iso).getDay());
 const rangeLabel = (a, b) => `${+a.slice(8)}${a.slice(5, 7) === b.slice(5, 7) ? '' : ` de ${MONTHS[+a.slice(5, 7) - 1].slice(0, 3)}`} a ${+b.slice(8)} de ${MONTHS[+b.slice(5, 7) - 1].slice(0, 3)}`;
 // melhor série de uma sessão: maior carga e, nela, mais repetições
-const topSet = s => s.sets.filter(x => x.done && x.carga != null).reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
+const topSet = s => effSets(s).filter(x => x.done && x.carga != null).reduce((b, x) => !b || x.carga > b.carga || x.carga === b.carga && (x.reps || 0) > (b.reps || 0) ? x : b, null);
 function weekReport(pid, ws) { return periodReport(pid, ws, addDays(ws, 6), addDays(ws, -7), addDays(ws, -1)); }
 // mês inteiro (1º ao último dia), comparado com o mês anterior
 function monthReport(pid, ym) {
@@ -5228,7 +5245,7 @@ function weeklySeries(n) {
   for (const s of db.sessions) {
     const e = exMap.get(s.exId), i = idx.get(weekStart(s.date));
     if (!e || i == null) continue;
-    for (const x of s.sets) if (x.done) {
+    for (const x of effSets(s)) if (x.done) {
       const b = acc[e.group][i];
       b.any = true; b.reps += isTimed(e) ? 0 : x.reps || 0; // segundos da prancha não somam como repetições
       if (x.carga != null) { b.sum += x.carga; b.cnt++; }
@@ -7409,7 +7426,7 @@ $main.addEventListener('input', e => {
   s.sets[i][inp.dataset.f] = parseNum(inp.value);
   save();
   const x = s.sets[i], prev = prevSession(ex.id, ui.date);
-  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i]);
+  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i], ex);
   const tot = row.querySelector('.tot'); if (tot) tot.textContent = setTotal(x);
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
   refreshTop();
@@ -7428,7 +7445,7 @@ function autoCheck(inp) {
   ui.autoAt = { ex: ex.id, i, t: Date.now() }; // o toque no ✓ logo em seguida não desmarca
   if (navigator.vibrate) navigator.vibrate(30);
   const prev = prevSession(ex.id, ui.date), done = s.sets.filter(y => y.done).length, n = s.sets.length;
-  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i]);
+  row.className = row.dataset.base + ' ' + rowClass(x, prev && prev.sets[i], ex);
   const ring = card.querySelector('.ring'); if (ring) { ring.style.setProperty('--p', done / n * 100); ring.textContent = `${done}/${n}`; }
   const all = card.querySelector('[data-act="alldone"]'); if (all) all.textContent = done === n ? 'Desmarcar todas' : '✓ Marcar todas';
   card.querySelector('.compare').innerHTML = compareHtml(s, prev);
@@ -9655,7 +9672,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '12/11-22:56';
+const APP_VERSION = '12/11-23:15';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
