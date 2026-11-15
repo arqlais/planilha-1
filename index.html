@@ -1984,7 +1984,12 @@ const OLD_GROUPS = { 'Braços': ['Bíceps', 'Tríceps'], Pernas: LEGS };
 // Treinos de cada perfil com nome livre (ex.: "Superiores", "Treino A"). Cada exercício guarda o id do
 // treino em "letter" (nome histórico do campo) e o grupo muscular. Os antigos A/B/C/D viram "Treino A"...
 const OLD_LETTERS = ['A', 'B', 'C', 'D'];
-const workoutsOf = (pid = ui.profile) => { const p = db.profiles.find(x => x.id === pid); return (p && p.workouts) || []; };
+// treinos por dia (Montar por dia) sempre na ordem da semana, de segunda a domingo, mesmo se um dia foi criado
+// ou restaurado depois (ex.: a Quinta restaurada aparecia no fim). Os outros treinos ficam onde estavam.
+const wkPos = d => (d + 6) % 7;
+const workoutsOf = (pid = ui.profile) => { const p = db.profiles.find(x => x.id === pid), ws = (p && p.workouts) || [];
+  const byDay = ws.filter(w => w.day != null).sort((a, b) => wkPos(a.day) - wkPos(b.day)); let k = 0;
+  return byDay.length > 1 ? ws.map(w => w.day != null ? byDay[k++] : w) : ws; };
 const isLetter = (v, pid = ui.profile) => !!v && workoutsOf(pid).some(w => w.id === v);
 const wName = (id, pid = ui.profile) => (workoutsOf(pid).find(w => w.id === id) || {}).name || 'Treino';
 // Treino guardado (montado mas ainda não liberado): não aparece no app do aluno (nem no Meu treino do professor)
@@ -9947,7 +9952,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/11-21:51';
+const APP_VERSION = '14/11-23:32';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
