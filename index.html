@@ -998,6 +998,7 @@ body.v2-full main{margin-top:0}
 .v2-over .grow{flex:1}
 .v2-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.24);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);white-space:nowrap}
 .v2-chip .v2i{width:14px;height:14px}
+.v2-chip.ok{background:rgba(111,209,150,.22);border-color:rgba(111,209,150,.5)}
 .v2-icb{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.24);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .v2-hero{background:rgba(6,12,34,.5);border:1px solid var(--line);color:var(--text);border-radius:28px;padding:0 20px 20px;position:relative;overflow:hidden;margin-bottom:14px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .v2-hero:not(:has(.v2-hero-ph)){padding-top:20px}
@@ -3172,8 +3173,10 @@ function v2Day(p) {
   const t0 = ss.map(x => x.t0).filter(Boolean).sort()[0];
   const exDone = exs.filter(e => isComplete(e.id)).length;
   const frac = total ? done / total : 0, cfrac = goal ? Math.min(1, cmin / goal) : 0;
-  const prog = goal ? (total ? frac * .8 + cfrac * .2 : cfrac) : total ? frac : cmin > 0 ? 1 : 0; // dia sem meta: cardio feito = dia feito
-  return { plan, groups, exs, total, done, goal, cmin, t0, exDone, prog, cardio: plan.includes(CARDIO) || goal > 0 };
+  // o cardio fica à parte: a porcentagem e o tempo do treino são só da musculação (dia só de cardio: o cardio)
+  const prog = total ? frac : goal ? cfrac : cmin > 0 ? 1 : 0;
+  const wDone = total > 0 && (done >= total || exs.some(e => sentAt(e.id, ui.date)));
+  return { plan, groups, exs, total, done, goal, cmin, t0, exDone, prog, wDone, cardio: plan.includes(CARDIO) || goal > 0 };
 }
 function v2WeekHtml(p) {
   const ws = weekStart(today()), trained = new Set(trainedDates(p.id)), cdays = new Set(profCardio(p.id).filter(c => c.min > 0).map(c => c.date));
@@ -3200,7 +3203,7 @@ function v2HomeHtml(p, d, isToday) {
       <div class="v2-hero-sub">${esc(d.groups.map(g => letterDesc(g)).filter(Boolean).join(' · '))}${d.cardio ? (d.groups.length ? ' + Cardio' : 'Cardio') : ''}</div>
       <div class="v2-meta">${d.total ? `<span>${d.total} séries</span>` : ''}${d.goal ? `<span>${V2I.run} + ${fmtMin(d.goal)} min cardio</span>` : ''}</div>
       ${d.exs.length ? `<div class="v2-thumbs">${d.exs.slice(0, 6).map(e => PFA.animHtml(v2Key(e), 'v2-th')).join('')}</div>` : ''}
-      ${started ? `<div class="v2-progt"><span>${d.exDone} de ${d.exs.length} exercícios feitos</span><b>${Math.round(d.prog * 100)}%</b></div><div class="v2-bar"><i style="width:${d.prog * 100}%"></i></div>` : ''}
+      ${started ? `<div class="v2-progt"><span>${d.exDone} de ${d.exs.length} exercícios feitos</span><b>${Math.round(d.prog * 100)}%</b></div><div class="v2-bar"><i style="width:${d.prog * 100}%"></i></div>${d.total && d.goal ? `<div class="v2-progt"><span>Cardio (à parte)</span><b>${fmtMin(d.cmin)}/${fmtMin(d.goal)} min</b></div>` : ''}` : ''}
       <button class="v2-go" data-act="v2-start"><span class="ball">${V2I.play}</span>${d.prog >= 1 ? 'Ver treino feito' : started ? 'Continuar treino' : 'Começar treino'}<span class="chev"><span>›</span><span>›</span><span>›</span></span></button>
     </section>` : `<section class="v2-hero"><div class="v2-eyebrow">${isToday ? 'Hoje' : fmtDate(ui.date)}</div><h1 class="v2-rest">Dia de descanso</h1>
       <p class="v2-muted">${meStu() ? 'Nenhum treino seu marcado para' : 'Seu professor não passou treino para'} ${isToday ? 'hoje' : 'este dia'}. O corpo também cresce no descanso.</p>
@@ -3214,14 +3217,15 @@ function v2HomeHtml(p, d, isToday) {
 }
 function v2RunHtml(p, d, isToday) {
   const cur = d.exs.find(e => e.id === ui.v2open) || d.exs.find(e => !isComplete(e.id)) || d.exs[0];
-  const el = d.t0 && isToday ? Math.max(0, Math.floor((Date.now() - new Date(d.t0)) / 6e4)) : null;
+  // tempo do treino: corre enquanto faltam séries; com tudo feito (ou enviado) para no tempo da musculação, sem esperar o cardio
+  const el = d.wDone ? trainTime(p.id, ui.date).treino || null : d.t0 && isToday ? Math.max(0, Math.floor((Date.now() - new Date(d.t0)) / 6e4)) : null;
   const loose = d.exs.filter(e => !d.groups.includes(e.letter));
   const blocks = d.groups.map(g => { const exs = d.exs.filter(e => e.letter === g);
     return (d.groups.length > 1 ? `<h3 class="v2-gtitle">${esc(wName(g))}</h3>` : '')
       + (exs.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('') || '<p class="empty">Seu professor ainda não colocou exercícios aqui.</p>'); }).join('')
     + loose.map(e => `<section class="card" data-ex="${e.id}">${cardHtml(e)}</section>`).join('');
   return `<div class="v2-tw"><div class="v2-tw-a">
-    ${v2Art(cur ? v2Key(cur) : 'esteira', `<div class="v2-over">${isToday ? `<button class="v2-icb" data-act="v2-home" aria-label="Voltar ao início">${V2I.back}</button>` : ''}<span class="grow"></span>${el != null ? `<span class="v2-chip">${V2I.clock}${el} min</span>` : ''}</div>
+    ${v2Art(cur ? v2Key(cur) : 'esteira', `<div class="v2-over">${isToday ? `<button class="v2-icb" data-act="v2-home" aria-label="Voltar ao início">${V2I.back}</button>` : ''}<span class="grow"></span>${el != null ? `<span class="v2-chip${d.wDone ? ' ok' : ''}">${V2I.clock}${d.wDone ? `Treino: ${durTxt(el)}` : `${el} min`}</span>` : ''}</div>
       <div class="v2-wtitle"><small>${esc(d.groups.map(g => letterDesc(g)).filter(Boolean).join(' · ') || (isToday ? 'Treino de hoje' : 'Treino do dia'))}</small><h1>${esc(v2Names(d))}</h1></div>`, 'v2-whead')}
     <div class="v2-gauge-card" id="v2Gauge">${v2GaugeInner(d)}</div>
     <div class="daynav">
@@ -3237,7 +3241,7 @@ function v2RunHtml(p, d, isToday) {
     </div></div>`;
 }
 function v2GaugeInner(d) {
-  return `${v2Gauge(d.prog, d.cardio && d.total ? 'treino + cardio' : d.total ? 'do treino' : 'do cardio')}
+  return `${v2Gauge(d.prog, d.total ? (d.wDone ? 'treino feito' : 'do treino') : 'do cardio')}
     <div class="v2-grows"><div><b>${d.t0 ? new Date(d.t0).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '–'}</b><small>início</small></div><div><b>${d.done}/${d.total}</b><small>séries</small></div>
     ${d.goal ? `<div class="${d.cmin >= d.goal ? 'ok' : 'due'}"><b>${fmtMin(d.cmin)}/${fmtMin(d.goal)}</b><small>cardio</small></div>` : `<div><b>${d.exDone}/${d.exs.length}</b><small>exercícios</small></div>`}</div>`;
 }
@@ -4446,7 +4450,7 @@ function ctTick() {
 // grava o cardio enquanto o cronômetro corre (a partir de 1 min, depois a cada 2 min):
 // o professor já vê que o aluno treinou hoje e nada se perde se ele esquecer de finalizar
 function ctPut(t, total) {
-  const p = profile(t.pid); if (!p || daySent(t.date, t.pid)) return false;
+  const p = profile(t.pid); if (!p) return false;
   const prev = db.cardio.filter(c => c.profileId === t.pid && c.date === t.date), g0 = cardioGoalOf(p, t.date);
   const keep = cardioExtraKeep(t.pid, t.date, prev);
   db.cardio = db.cardio.filter(c => !(c.profileId === t.pid && c.date === t.date));
@@ -4468,7 +4472,6 @@ function ctFinish(auto) {
   const min = Math.round(sec / 60 * 100) / 100;
   if (!(min > 0)) { render(); return toast('Cronômetro cancelado: nenhum minuto contado.'); }
   const p = profile(t.pid); if (!p) return render();
-  if (daySent(t.date, t.pid)) { render(); return toast('O treino deste dia já foi enviado: o tempo do cronômetro não foi somado.'); }
   const total = Math.min(300, Math.round(((t.base || 0) + min) * 100) / 100), g0 = cardioGoalOf(p, t.date);
   ctPut(t, total); render();
   toast(`${auto ? '<i class="ic ic-alarm"></i> Tempo! ' : ''}${modeOf(t.mode)[1]}: ${fmtMin(min)} min salvos${g0 && total >= g0 ? ' · meta de cardio concluída!' : ''}`);
@@ -4654,12 +4657,12 @@ function unlockNotesHtml(p) {
 const lockReason = (exId, date = ui.date) => date !== today() && !dayUnlocked(date) ? 'past' : sentAt(exId, date) ? 'sent' : '';
 const LOCK_MSG = { past: 'Dias passados ficam só para consulta: só dá para alterar o treino de hoje.', sent: 'Este treino já foi enviado: as cargas e repetições não podem mais ser alteradas.' };
 const dayLocked = (date = ui.date) => date !== today() && !dayUnlocked(date);
-// Cardio também trava depois que o treino do dia é enviado
 const daySent = (date = ui.date, pid = ui.profile) => profExs(pid).some(e => sentAt(e.id, date));
 // (o professor, na ficha do aluno, pode marcar ou corrigir o cardio dele em qualquer dia)
 const profForStudent = () => ui.profile !== ME && !ui.studentMode && cloudRole() !== 'student';
-const cardioLocked = (date = ui.date) => !profForStudent() && (dayLocked(date) || daySent(date));
-const cardioLockMsg = () => dayLocked() ? LOCK_MSG.past : 'O treino de hoje já foi enviado: o cardio também ficou registrado e não pode mais ser alterado.';
+// O cardio fica à parte do treino: enviar a musculação não trava o cardio (dá para fazer depois, no mesmo dia)
+const cardioLocked = (date = ui.date) => !profForStudent() && dayLocked(date);
+const cardioLockMsg = () => LOCK_MSG.past;
 // Exercícios que contam para "Enviar treino": os do treino aberto (professor) ou os do dia (aluno)
 function sendableExs() {
   if (ui.studentMode && selfTab() === 'own') return ui.ownW ? letterExs(ui.ownW) : [];
@@ -4691,7 +4694,7 @@ function sendHtml() {
   const exs = sendableExs(); if (!exs.length) return '';
   const sent = exs.map(e => sentAt(e.id)).filter(Boolean).sort();
   if (sent.length === exs.length) return `<section class="card sent-card"><div class="card-h"><span class="pill up" style="font-size:14px">✓</span><div class="grow"><h3>Treino enviado</h3>
-      <small>Enviado às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Está salvo e registrado${ui.studentMode ? ' para você e seu professor' : ''}; não dá mais para alterar.</small></div></div>
+      <small>Enviado às ${new Date(sent[sent.length - 1]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Está salvo e registrado${ui.studentMode ? ' para você e seu professor' : ''}; as cargas não mudam mais. O cardio continua liberado hoje.</small></div></div>
       ${canCheckin() ? '<button class="btn primary" style="width:100%;padding:12px;margin-top:10px" data-act="checkin"><i class="ic ic-cam"></i> Postar ou salvar a arte do treino</button>' : ''}</section>`;
   const open = exs.filter(e => !sentAt(e.id)), ready = open.every(e => isComplete(e.id));
   const missing = open.filter(e => !isComplete(e.id)).length;
@@ -4711,9 +4714,9 @@ function maybeAskSend() {
 async function sendWorkout(auto) {
   const exs = sendableExs().filter(e => !sentAt(e.id));
   if (!exs.length || !exs.every(e => isComplete(e.id))) return toast('Confirme todas as séries para enviar o treino.');
-  if (ct && ct.pid === ui.profile && ct.date === ui.date && !auto) ctFinish(false); // cronômetro ligado: o tempo feito vai junto
-  const pp = profile(ui.profile), noCardio = (dayPlan(pp, ui.date).includes(CARDIO) || cardioGoalOf(pp, ui.date)) && !profCardio().some(c => c.date === ui.date);
-  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${ui.date !== today() ? `Este treino fica no dia ${fmtDate(ui.date)} (${weekday(ui.date)}), não hoje. ` : ''}${noCardio ? 'Atenção: o cardio de hoje ainda não foi anotado: depois de enviar não dá mais para anotar. ' : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode && !meStu() ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas, repetições e o cardio.`, noCardio ? 'Enviar mesmo assim' : 'Enviar')) return;
+  // o cardio fica à parte: enviar o treino não mexe no cronômetro do cardio e o cardio ainda pode ser feito depois, no mesmo dia
+  const pp = profile(ui.profile), noCardio = ui.date === today() && (dayPlan(pp, ui.date).includes(CARDIO) || cardioGoalOf(pp, ui.date)) && !profCardio().some(c => c.date === ui.date && c.min > 0);
+  if (!await confirmAsk(auto ? 'Treino completo! Enviar agora?' : 'Enviar treino?', `${ui.date !== today() ? `Este treino fica no dia ${fmtDate(ui.date)} (${weekday(ui.date)}), não hoje. ` : ''}Depois de enviado, o treino fica registrado e ninguém${ui.studentMode && !meStu() ? ' (nem você, nem o professor)' : ''} consegue alterar as cargas e repetições.${noCardio ? ' O cardio fica à parte: dá para fazer depois, até o fim do dia.' : ''}`, 'Enviar')) return;
   const at = new Date().toISOString();
   exs.forEach(e => { const s = sessionOn(e.id, ui.date); s.fin = at; if (ui.studentMode && !meStu()) s.by = 'aluno'; });
   if (dayUnlocked(ui.date) && !(CLOUD && cloud && cloud.role === 'student')) delete profile(ui.profile).unlocks[ui.date]; // enviado: o dia trava de novo
@@ -9944,7 +9947,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '13/11-20:35';
+const APP_VERSION = '14/11-21:51';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
