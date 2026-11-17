@@ -829,14 +829,14 @@ body.offline #offBar{display:block}
 tr.evo-off td{color:var(--muted);font-style:italic}tr.evo-off td.evo-wk{font-style:normal}
 .evo-exs>summary{margin-top:6px}
 .evo-cnt{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
-.evo-ex{padding:14px 0 10px;border-bottom:1px solid var(--line)}
+.evo-ex{padding:14px 0 10px;border-bottom:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto 280px} /* fora da tela: o navegador só desenha quando chega perto (Evolução com muitos exercícios) */
 .evo-ex:last-child{border-bottom:0}
 .evo-exh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .evo-exh>b{font-size:15px;margin-right:auto}
 .evo-eq{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .evo-facts{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin:6px 0 4px}
 .evo-facts span{white-space:nowrap}.evo-facts b{color:var(--text)}
-.evo-line{margin:4px 0}
+.evo-line{margin:4px 0}.evo-line[data-evo]:empty{min-height:168px} /* lugar do gráfico guardado até ele ser desenhado */
 .evo-subn{display:flex;align-items:center;gap:8px;margin:6px 0;padding:7px 10px;border-radius:12px;background:var(--input);font-size:12.5px;color:var(--muted)}
 .evo-subn b{color:var(--text)}.evo-subn .v2i{width:16px;height:16px;color:var(--acc);stroke-width:2.4}.evo-subn .link{flex:none;font-size:12.5px;font-weight:800;padding:2px 0;white-space:nowrap}
 tr.evo-old td{color:var(--muted)}
@@ -2231,7 +2231,16 @@ function exOfProfile(pid) {
   return pIdx.m.get(pid) || [];
 }
 const profExs = (pid = ui.profile) => exOfProfile(pid).filter(e => e.profileId === pid);
+// Durante o desenho de uma tela a mesma conta é pedida várias vezes por aluno: guarda a resposta só enquanto desenha
+// (e só se nada foi acrescentado ou tirado nesse meio tempo). Cada chamada recebe a sua cópia.
+let rMemo = null;
 function profSessions(pid = ui.profile) {
+  if (rMemo && rMemo.sa === db.sessions && rMemo.sl === db.sessions.length && rMemo.ea === db.exercises && rMemo.el === db.exercises.length) {
+    let r = rMemo.ps.get(pid); if (!r) rMemo.ps.set(pid, r = profSessions0(pid)); return r.slice();
+  }
+  return profSessions0(pid);
+}
+function profSessions0(pid) {
   const ids = new Set(profExs(pid).map(e => e.id));
   return uniqSess(sessOfIds(ids).filter(hasDone));
 }
@@ -2374,7 +2383,8 @@ function addDays(dateStr, n) { const d = toDate(dateStr); d.setDate(d.getDate() 
 function volumeBetween(from, to, group, pid = ui.profile) {
   const match = typeof group === 'function' ? group : e => !group || e.group === group;
   const ids = new Set(profExs(pid).filter(match).map(e => e.id));
-  return uniqSess(sessOfIds(ids).filter(s => s.date >= from && s.date <= to && hasDone(s))).reduce((a, s) => a + sessVol(s), 0);
+  // (mesmo resultado de antes: tirar os repetidos do mesmo exercício no mesmo dia e depois filtrar dá na mesma)
+  return profSessions(pid).filter(s => ids.has(s.exId) && s.date >= from && s.date <= to).reduce((a, s) => a + sessVol(s), 0);
 }
 function weekPair(group, pid = ui.profile, ref = ui.date) {
   const ws = weekStart(ref);
@@ -2608,6 +2618,10 @@ function navToggle(desk) {
   b.title = navOff ? 'Mostrar o menu' : 'Esconder o menu'; b.setAttribute('aria-label', b.title); b.setAttribute('aria-expanded', String(!navOff));
 }
 function render() {
+  rMemo = { sa: db.sessions, sl: db.sessions.length, ea: db.exercises, el: db.exercises.length, ps: new Map() };
+  try { return render0(); } finally { rMemo = null; }
+}
+function render0() {
   // perfil aberto: traz os meses antigos (o "antes" e as comparações olham o histórico inteiro, não só os últimos 6 meses)
   if (CLOUD && cloud && cloud.role === 'admin' && cloud.ready && profile(ui.profile)) ensureFull(ui.profile);
   if (ui.group !== CARDIO && !isLetter(ui.group)) ui.group = firstWorkout(); // treino que não existe mais neste perfil
@@ -5668,7 +5682,7 @@ function evoWeeks(pid = ui.profile) {
 // kg total de um grupo por semana, com as semanas sem treino no meio (não pula mais nenhuma)
 function evoGroupWeeks(g, W, span = 12) {
   const exs = profExs().filter(e => e.group === g), exMap = new Map(exs.map(e => [e.id, e])), best = new Map();
-  for (const s of db.sessions) if (exMap.has(s.exId) && hasDone(s) && s.date >= W.start) { const k = s.exId + '|' + s.date, o = best.get(k); if (!o || sessRank(s) > sessRank(o)) best.set(k, s); }
+  for (const s of sessOfIds(new Set(exMap.keys()))) if (exMap.has(s.exId) && hasDone(s) && s.date >= W.start) { const k = s.exId + '|' + s.date, o = best.get(k); if (!o || sessRank(s) > sessRank(o)) best.set(k, s); }
   if (!best.size) return null;
   const byWk = {};
   for (const s of best.values()) (byWk[W.wk(s.date)] = byWk[W.wk(s.date)] || []).push(s);
@@ -5813,9 +5827,19 @@ function evoLineSvg(x, W) {
 function drawEvoLines() {
   // mede todas as larguras primeiro e só depois desenha (medir depois de cada desenho fazia a tela recalcular tudo a cada gráfico)
   const wraps = [...document.querySelectorAll('.evo-line[data-evo]')], Ws = wraps.map(w => Math.max(260, (w.closest('.evo-ex') || w.parentElement).clientWidth));
+  // cada gráfico é desenhado quando chega perto da tela (com muitos exercícios, desenhar todos de uma vez deixava a Evolução lenta)
+  if (evoIO) evoIO.disconnect();
+  evoIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { evoIO.unobserve(en.target); en.target.__draw && en.target.__draw(); } }), { rootMargin: '900px 0px' }) : null;
   wraps.forEach((wrap, wi) => {
     const x = evoLines.get(wrap.dataset.evo); if (!x) return;
     const W = Ws[wi];
+    wrap.__draw = () => { wrap.__draw = null; drawEvoLine(wrap, x, W); };
+    if (evoIO) evoIO.observe(wrap); else wrap.__draw();
+  });
+}
+let evoIO = null;
+function drawEvoLine(wrap, x, W) {
+  {
     const { svg, X } = evoLineSvg(x, W); wrap.innerHTML = svg;
     const el = wrap.querySelector('svg'), tip = wrap.querySelector('.tip'), xh = el.querySelector('.xh'), u = x.timed ? ' s' : ' kg';
     const show = e => {
@@ -5833,7 +5857,7 @@ function drawEvoLines() {
     };
     el.addEventListener('pointermove', show); el.addEventListener('pointerdown', show);
     el.addEventListener('pointerleave', () => { tip.hidden = true; xh.setAttribute('visibility', 'hidden'); });
-  });
+  }
 }
 
 function renderEvolution() {
@@ -7034,7 +7058,8 @@ function resizeSets(s, n) {
 // Renomear para OUTRO exercício (ex.: Tríceps francês → Cadeira flexora) não leva o histórico junto: o histórico
 // fica guardado com o nome antigo e o exercício renomeado começa do zero. Correções de nome (maiúscula, acento,
 // "Puxada" → "Puxada alta", erro de digitação) mantêm o histórico.
-const normName = n => (n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+const nnMemo = new Map(); // mesmo nome, mesma resposta: guardada
+const normName = n => { n = n || ''; let v = nnMemo.get(n); if (v === undefined) { v = n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); if (nnMemo.size > 5000) nnMemo.clear(); nnMemo.set(n, v); } return v; };
 function nearName(a, b) {
   a = normName(a); b = normName(b);
   if (a === b || a.includes(b) || b.includes(a)) return true;
@@ -10001,7 +10026,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '16/11-23:49';
+const APP_VERSION = '17/11-20:22';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
