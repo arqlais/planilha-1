@@ -2209,12 +2209,30 @@ function effSets(s) {
 }
 const sessVol = s => vol(effSets(s));
 const hasDone = s => s.sets.some(x => x.done);
-const exById = id => db.exercises.find(e => e.id === id);
+// Busca do exercício pelo id com um índice (antes percorria a lista inteira a cada chamada: milhares por tela).
+// O índice é refeito quando a lista muda; cada resposta é conferida na própria lista, então nunca devolve algo velho.
+let exIdx = null, exIdxArr = null, exIdxLen = -1;
+const exIdxBuild = () => { exIdx = new Map(); exIdxArr = db.exercises; exIdxLen = db.exercises.length; db.exercises.forEach((e, i) => { if (!exIdx.has(e.id)) exIdx.set(e.id, i); }); };
+const exById = id => {
+  if (exIdxArr !== db.exercises || exIdxLen !== db.exercises.length) exIdxBuild();
+  let i = exIdx.get(id), e = i === undefined ? undefined : db.exercises[i];
+  if (e && e.id === id) return e;
+  exIdxBuild(); i = exIdx.get(id); return i === undefined ? undefined : db.exercises[i];
+};
 const profile = id => db.profiles.find(p => p.id === id);
-const profExs = (pid = ui.profile) => db.exercises.filter(e => e.profileId === pid);
+// Exercícios separados por aluno (refeito quando a lista muda e no fim de cada tarefa). O dono de um exercício nunca muda.
+let pIdx = null;
+function exOfProfile(pid) {
+  if (!pIdx || pIdx.arr !== db.exercises || pIdx.len !== db.exercises.length) {
+    const m = new Map(); db.exercises.forEach(e => { let b = m.get(e.profileId); if (!b) m.set(e.profileId, b = []); b.push(e); });
+    const me = pIdx = { arr: db.exercises, len: db.exercises.length, m }; queueMicrotask(() => { if (pIdx === me) pIdx = null; });
+  }
+  return pIdx.m.get(pid) || [];
+}
+const profExs = (pid = ui.profile) => exOfProfile(pid).filter(e => e.profileId === pid);
 function profSessions(pid = ui.profile) {
   const ids = new Set(profExs(pid).map(e => e.id));
-  return uniqSess(db.sessions.filter(s => ids.has(s.exId) && hasDone(s)));
+  return uniqSess(sessOfIds(ids).filter(hasDone));
 }
 // Mesmo exercício com dois registros no mesmo dia (internet caindo no meio do treino): nas contas vale um só, o mais
 // completo (igual à tela do treino). Antes as somas de kg e séries contavam os dois. Só leitura: nada é apagado.
@@ -2233,15 +2251,29 @@ function twinIds(exId) {
   const e = exById(exId);
   if (!e) return new Set([exId]);
   const k = twinKey(e);
-  return new Set(db.exercises.filter(x => x.profileId === e.profileId && twinKey(x) === k).map(x => x.id));
+  return new Set(exOfProfile(e.profileId).filter(x => x.profileId === e.profileId && twinKey(x) === k).map(x => x.id));
 }
 // Se o mesmo exercício ficou com dois registros no mesmo dia (ex.: internet caindo no meio), vale sempre o mais completo:
 // o enviado, depois o com mais séries feitas. Assim o "antes" e a tela nunca pegam o registro pela metade.
 const sessRank = s => (s.fin ? 1e6 : 0) + s.sets.filter(x => x.done).length * 1e3 + s.sets.filter(x => x.carga != null || x.reps != null).length;
 const bestSession = list => list.length < 2 ? list[0] : list.reduce((a, b) => sessRank(b) > sessRank(a) ? b : a);
+// Índice dos registros por exercício (antes cada tela percorria TODOS os registros de todos os alunos várias vezes).
+// Vale só até o fim da tarefa atual (é refeito na próxima) e também é refeito quando a lista muda ou um registro troca
+// de exercício/dia (sessTouch): a resposta é sempre a mesma de antes, só mais rápida.
+let sIdx = null;
+const sessTouch = () => { sIdx = null; };
+function sessIdx() {
+  if (sIdx && sIdx.arr === db.sessions && sIdx.len === db.sessions.length) return sIdx.m;
+  const m = new Map(); db.sessions.forEach((s, i) => { let b = m.get(s.exId); if (!b) m.set(s.exId, b = []); b.push(i); });
+  const me = sIdx = { arr: db.sessions, len: db.sessions.length, m };
+  queueMicrotask(() => { if (sIdx === me) sIdx = null; });
+  return m;
+}
+// registros destes exercícios, na mesma ordem da lista (igual a percorrer db.sessions)
+const sessOfIds = ids => { const m = sessIdx(), pos = []; for (const id of ids) { const b = m.get(id); if (b) pos.push(...b); } if (ids.size > 1) pos.sort((a, b) => a - b); return pos.map(i => db.sessions[i]).filter(s => ids.has(s.exId)); };
 const exHistory = exId => {
   const ids = twinIds(exId), by = new Map();
-  db.sessions.forEach(s => { if (!ids.has(s.exId) || !hasDone(s)) return; const k = s.exId + '|' + s.date, o = by.get(k); if (!o || sessRank(s) > sessRank(o)) by.set(k, s); });
+  sessOfIds(ids).forEach(s => { if (!ids.has(s.exId) || !hasDone(s)) return; const k = s.exId + '|' + s.date, o = by.get(k); if (!o || sessRank(s) > sessRank(o)) by.set(k, s); });
   return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
 };
 // Livre ou máquina (exercícios que têm os dois jeitos, ex.: Supino reto x Chest press): cada jeito tem a sua carga.
@@ -2287,7 +2319,7 @@ const prevSession = (exId, date) => {
   const same = h.filter(s => s.w ? s.w === L : s.date >= min && (exById(s.exId) || {}).letter === L);
   return same.length ? same[same.length - 1] : last;
 };
-const sessionOn = (exId, date) => bestSession(db.sessions.filter(s => s.exId === exId && s.date === date));
+const sessionOn = (exId, date) => bestSession(sessOfIds(new Set([exId])).filter(s => s.exId === exId && s.date === date));
 const profCardio = (pid = ui.profile) => db.cardio.filter(c => c.profileId === pid);
 // soma arredondada: minutos quebrados do cronômetro (ex.: 10,2 + 0,1) não podem virar 76.27000000000001
 const cardioBetween = (from, to, pid = ui.profile) => Math.round(profCardio(pid).filter(c => c.date >= from && c.date <= to).reduce((a, c) => a + c.min, 0) * 10) / 10;
@@ -2341,7 +2373,7 @@ function addDays(dateStr, n) { const d = toDate(dateStr); d.setDate(d.getDate() 
 function volumeBetween(from, to, group, pid = ui.profile) {
   const match = typeof group === 'function' ? group : e => !group || e.group === group;
   const ids = new Set(profExs(pid).filter(match).map(e => e.id));
-  return uniqSess(db.sessions.filter(s => ids.has(s.exId) && s.date >= from && s.date <= to && hasDone(s))).reduce((a, s) => a + sessVol(s), 0);
+  return uniqSess(sessOfIds(ids).filter(s => s.date >= from && s.date <= to && hasDone(s))).reduce((a, s) => a + sessVol(s), 0);
 }
 function weekPair(group, pid = ui.profile, ref = ui.date) {
   const ws = weekStart(ref);
@@ -3040,7 +3072,11 @@ function animLoop(now) {
   });
   requestAnimationFrame(animLoop);
 }
+const gaMemo = new Map(); // mesma resposta para o mesmo nome e grupo: guardada (as telas chamam isto milhares de vezes)
 function guessAnim(name, group) {
+  const mk = name + '|' + group; let mv = gaMemo.get(mk); if (mv === undefined) { if (gaMemo.size > 5000) gaMemo.clear(); mv = guessAnim0(name, group); gaMemo.set(mk, mv); } return mv;
+}
+function guessAnim0(name, group) {
   const n = norm(name);
   const RX = [[/abdominal.*bicicleta/, 'abdbici'], [/abdominal.*obliquo/, 'obliq'], [/abdominal.*polia/, 'abdpolia'], [/cavalinho.*(maquina|apoio|articulad)|remada.*(apoio no peito|peito apoiado)/, 'cavalinhomaq'], [/cavalinho|remada t\b|t-?bar/, 'cavalinho'],
     [/supino inclinad.*(maquina|articulad)|chest press inclinad/, 'chestpressinc'], [/supino inclinad.*halter/, 'supinoinchalter'], [/supino inclinad/, 'supinoinc'],
@@ -5774,9 +5810,11 @@ function evoLineSvg(x, W) {
   return { svg: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Total de ${esc(x.name)} em cada treino">${g}<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/></svg><div class="tip" hidden></div>`, X };
 }
 function drawEvoLines() {
-  document.querySelectorAll('.evo-line[data-evo]').forEach(wrap => {
+  // mede todas as larguras primeiro e só depois desenha (medir depois de cada desenho fazia a tela recalcular tudo a cada gráfico)
+  const wraps = [...document.querySelectorAll('.evo-line[data-evo]')], Ws = wraps.map(w => Math.max(260, (w.closest('.evo-ex') || w.parentElement).clientWidth));
+  wraps.forEach((wrap, wi) => {
     const x = evoLines.get(wrap.dataset.evo); if (!x) return;
-    const card = wrap.closest('.evo-ex') || wrap.parentElement, W = Math.max(260, card.clientWidth);
+    const W = Ws[wi];
     const { svg, X } = evoLineSvg(x, W); wrap.innerHTML = svg;
     const el = wrap.querySelector('svg'), tip = wrap.querySelector('.tip'), xh = el.querySelector('.xh'), u = x.timed ? ' s' : ' kg';
     const show = e => {
@@ -6743,7 +6781,7 @@ function wkSources(pid, ex) {
   const flat = n => normName(n).replace(/[^a-z0-9]/g, ''), me = flat(ex.name), core = nameCore(ex.name), out = new Map();
   db.exercises.filter(e => e.profileId === pid && e.id !== ex.id && e.name).forEach(e => {
     const o = flat(e.name); if (!o || !(o === me || o.includes(me) || me.includes(o) || nameCore(e.name) === core)) return;
-    const last = db.sessions.filter(x => x.exId === e.id && hasDone(x)).sort((a, b) => b.date.localeCompare(a.date))[0];
+    const last = sessOfIds(new Set([e.id])).filter(hasDone).sort((a, b) => b.date.localeCompare(a.date))[0];
     if (!last) return;
     const k = twinKey(e), cur = out.get(k);
     if (!cur || last.date > cur.last.date) out.set(k, { key: k, ex: e, last });
@@ -6767,7 +6805,7 @@ function wkLink(ex, x, copy = true) {
 const wkAutoOk = (e, day) => x => (day && x.key.includes('|')) || nameCore(x.ex.name) === nameCore(e.name);
 // exercício sem nenhum histórico: liga sozinho ao histórico parecido mais recente (ex.: "Crossover" novo pega o da Evoque)
 // (nos dias do Montar por dia também pega o mesmo exercício de outra academia e copia as cargas; nos outros treinos só liga o histórico)
-const noHistory = e => { const ids = twinIds(e.id); return !db.sessions.some(x => ids.has(x.exId) && hasDone(x)); };
+const noHistory = e => { const ids = twinIds(e.id); return !sessOfIds(ids).some(hasDone); };
 const liveExs = pid => db.exercises.filter(e => e.profileId === pid && !e.archived && e.letter && e.name && (profile(pid).workouts || []).some(w => w.id === e.letter && !w.arch));
 function wkAutoLink(pid) {
   let n = 0;
@@ -7013,7 +7051,7 @@ function splitHistory(ex, oldName) {
   ex.id = uid(); ex.planDate = today(); ex.noLink = true;
   db.exercises.push(keep);
   // treino de hoje ainda em andamento fica com o exercício novo
-  db.sessions.forEach(x => { if (x.exId === oldId && x.date === today() && !x.fin) x.exId = ex.id; });
+  db.sessions.forEach(x => { if (x.exId === oldId && x.date === today() && !x.fin) x.exId = ex.id; }); sessTouch();
   return true;
 }
 function builderChange(t) {
@@ -7154,7 +7192,7 @@ function adoptRemoved() {
       const cur = sessionOn(ex.id, s.date);
       if (cur && filled(cur)) return; // o novo já foi anotado: não mexe
       if (cur) db.sessions = db.sessions.filter(x => x !== cur);
-      s.exId = ex.id; n++;
+      s.exId = ex.id; n++; sessTouch();
     });
   });
   if (n) save();
@@ -7914,7 +7952,7 @@ $main.addEventListener('click', e => {
         // treinos montados: os da cópia voltam como estavam; o que existe hoje e não está na cópia continua (nada é apagado)
         if (x.workouts.length) { const ws = (p.workouts || []).filter(w => !x.workouts.some(y => y.id === w.id)); p.workouts = [...x.workouts.map(w => ({ ...w })), ...ws]; }
         x.exercises.forEach(e0 => { const e = { ...plain(e0), profileId: p.id }, i = db.exercises.findIndex(y => y.id === e.id);
-          if (i >= 0) db.exercises[i] = e; else db.exercises.push(e); });
+          if (i >= 0) { db.exercises[i] = e; pIdx = null; } else db.exercises.push(e); });
         const t = today(), plans = { ...(p.plans || {}) };
         for (const k of Object.keys(plans)) if (k >= t) delete plans[k];
         for (const [k, v] of Object.entries(x.plans || {})) if (k >= t) plans[k] = v;
@@ -8007,7 +8045,7 @@ $main.addEventListener('click', e => {
         if (!ss.length && !cc.length) return toast(`O dia ${fmtDate(to)} já tem esses exercícios anotados: nada foi passado.`);
         const moving = new Set(ss.map(x => x.exId));
         db.sessions = db.sessions.filter(x => !(moving.has(x.exId) && x.date === to)); // tira só as séries em branco do dia certo
-        ss.forEach(x => { x.date = to; delete x.t0; }); cc.forEach(c => { c.date = to; });
+        ss.forEach(x => { x.date = to; delete x.t0; }); cc.forEach(c => { c.date = to; }); sessTouch();
         if (p.unlocks) delete p.unlocks[from];
         ui.histDay = to; ui.month = to.slice(0, 7);
         save(); render(); if (CLOUD && cloud && cloud.ready) await syncNow();
@@ -8707,6 +8745,10 @@ function refSrc() {
 const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x)
   ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
 const plain = v => JSON.parse(JSON.stringify(v));
+// Texto de comparação dos documentos que vieram da nuvem: cada documento recebido é guardado uma vez e nunca é alterado,
+// então o texto dele é calculado uma vez só (antes era refeito para TODOS os documentos a cada novidade da nuvem e o app travava).
+const canonMemo = new WeakMap();
+const canonR = v => { if (!v || typeof v !== 'object') return canon(v); let c = canonMemo.get(v); if (c === undefined) { c = canon(v); canonMemo.set(v, c); } return c; };
 const writable = path => cloud.role === 'admin' || path.includes('/months/');
 
 function loadScript(src, ordered) {
@@ -8966,7 +9008,7 @@ async function fixOnce() {
       if (!db.sessions.some(x => x.exId === e.id && x.date < D)) return;
       const oldId = e.id, keep = { ...plain(e), name: oldName, letter: null, archived: true }; delete keep.order;
       e.id = uid(); e.planDate = D; db.exercises.push(keep);
-      db.sessions.forEach(x => { if (x.exId === oldId && x.date >= D) x.exId = e.id; }); // o treino de hoje fica com o exercício
+      db.sessions.forEach(x => { if (x.exId === oldId && x.date >= D) x.exId = e.id; }); sessTouch(); // o treino de hoje fica com o exercício
       n++;
     });
     mark('pernas-zero-0310');
@@ -9018,7 +9060,7 @@ async function fixOnce() {
         delete sky.planDate; delete sky.archived;
         e.twin = 'evoque|' + k; // a partir daqui só compara com a Evoque
         const later = db.sessions.filter(x => x.exId === e.id && x.date >= CUT);
-        later.forEach(x => { x.exId = sky.id; moved++; });
+        later.forEach(x => { x.exId = sky.id; moved++; }); sessTouch();
         const last = later.sort((a, b) => b.date.localeCompare(a.date))[0];
         if (last) sky.sets = last.sets.map(({ carga, reps }) => ({ carga, reps }));
         const evo = db.sessions.filter(x => x.exId === e.id).sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -9129,7 +9171,7 @@ async function fixOnce() {
       delete keep.order; delete keep.twin; delete e.twin;
       e.id = uid(); e.planDate = D; e.noLink = true; e.sets = e.sets.map(x => ({ ...x, carga: null }));
       db.exercises.push(keep);
-      db.sessions.forEach(x => { if (x.exId === oldId && x.date >= D) x.exId = e.id; }); // o de hoje fica com o cross novo
+      db.sessions.forEach(x => { if (x.exId === oldId && x.date >= D) x.exId = e.id; }); sessTouch(); // o de hoje fica com o cross novo
       n++;
     });
     // outros guardados com o mesmo nome (fora dos treinos) também saem do "antes"
@@ -9281,7 +9323,7 @@ function ensureFull(pid) {
     const haveS = new Set(db.sessions.map(x => x.id)), haveC = new Set(db.cardio.map(x => x.id));
     snap.forEach(d => {
       const path = `profiles/${pid}/months/${d.id}`;
-      takeRemote(path, d.data()); const v = remote.get(path); lastSynced.set(path, canon(v));
+      takeRemote(path, d.data()); const v = remote.get(path); lastSynced.set(path, canonR(v));
       (v.sessions || []).forEach(x => { if (!haveS.has(x.id)) db.sessions.push(plain(x)); });
       (v.cardio || []).forEach(c => { if (!haveC.has(c.id)) db.cardio.push({ ...plain(c), profileId: pid }); });
     });
@@ -9370,7 +9412,7 @@ async function onRemote() {
   if (cloud.pending.size) { srv = new Map(remote); for (const [path, x] of cloud.pending) srv.set(path, x.doc); }
   db = assemble(srv);
   if (srv !== remote) assemble(); // lixeira (vem da nuvem)
-  lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
+  lastSynced = new Map([...remote].map(([k, v]) => [k, canonR(v)]));
   for (const [path, x] of cloud.pending) lastSynced.set(path, canon(x.doc)); // o pendente sobe sozinho (juntando com a nuvem)
   if (cloud.pending.size) scheduleSync();
   enterApp();
@@ -9495,9 +9537,10 @@ function splitDb() {
     const path = `profiles/${pid}/months/${date.slice(0, 7)}`;
     (months[path] = months[path] || { sessions: [], cardio: [] })[key].push(item);
   };
-  for (const x of db.sessions) { const e = exById(x.exId); if (e && own.has(e.profileId) && !isOldMonth(e.profileId, x.date.slice(0, 7))) put(e.profileId, x.date, 'sessions', x); }
+  const exPid = new Map(); for (const e of db.exercises) if (!exPid.has(e.id)) exPid.set(e.id, e.profileId); // (antes: uma busca na lista inteira para cada registro)
+  for (const x of db.sessions) { const pid = exPid.get(x.exId); if (pid !== undefined && own.has(pid) && !isOldMonth(pid, x.date.slice(0, 7))) put(pid, x.date, 'sessions', x); }
   for (const c of db.cardio) if (own.has(c.profileId) && !isOldMonth(c.profileId, c.date.slice(0, 7))) { const { profileId, ...rest } = c; put(c.profileId, c.date, 'cardio', rest); }
-  for (const [k, v] of Object.entries(months)) out.set(k, plain(v));
+  for (const [k, v] of Object.entries(months)) out.set(k, v); // sem cópia aqui: só o que mudou é copiado (syncOnce)
   // A cor do app do aluno fica num documento que o próprio aluno pode gravar
   for (const p of db.profiles) if (own.has(p.id) && ((p.id !== ME && p.photo) || p.color || p.ctMode || (p.cardioDays && p.cardioDays.length) || p.consultReq || p.seen || p.loginEmail || (p.replies && p.replies.length) || remote.has(`profiles/${p.id}/months/prefs`))) out.set(`profiles/${p.id}/months/prefs`, { ...(p.replies && p.replies.length ? { replies: p.replies } : {}), ...(p.color ? { color: p.color } : {}), ...(p.ctMode ? { ctMode: p.ctMode } : {}), ...(p.consultReq ? { consultReq: p.consultReq } : {}), ...(p.seen ? { seen: p.seen } : {}), ...(p.seenAt ? { seenAt: p.seenAt } : {}), ...(p.days ? { days: p.days } : {}), ...(p.cardioDays && p.cardioDays.length ? { cardioDays: p.cardioDays } : {}), ...(p.loginEmail ? { email: p.loginEmail } : {}), ...(p.photo && p.id !== ME ? { photo: p.photo } : {}) });
   // Treinos que o aluno montou: documento que o próprio aluno pode gravar
@@ -9575,20 +9618,25 @@ function syncNow() {
   syncRun = (async () => {
     try { do { syncAgain = false; await syncOnce(); } while (syncAgain && !syncTimer); }
     finally { syncRun = null; }
-    if (cloud.remoteDirty && !syncTimer && !isTyping() && !(cloud.pending && cloud.pending.size)) { cloud.remoteDirty = false; db = assemble(); lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)])); fixUi(); render(); }
+    if (cloud.remoteDirty && !syncTimer && !isTyping() && !(cloud.pending && cloud.pending.size)) { cloud.remoteDirty = false; db = assemble(); lastSynced = new Map([...remote].map(([k, v]) => [k, canonR(v)])); fixUi(); render(); }
   })();
   return syncRun;
 }
 // Tudo o que vai para a nuvem passa antes pela lista "pendente", guardada no aparelho. Só sai dela quando a nuvem
 // confirma. Assim nada se perde se a internet cair, o app fechar no meio ou o celular desligar: na próxima vez sobe
 // sozinho, juntando com o que estiver na nuvem (nunca grava por cima do que outro aparelho anotou).
+const localFast = new Map(); // caminho -> { texto rápido do documento, texto da nuvem naquela hora }
 async function syncOnce() {
   cloud.pending = cloud.pending || new Map();
   const cur = splitDb(), ops = [];
   for (const [path, doc] of cur) {
     if (cloud.removed && cloud.removed.has(pidOfPath(path))) continue;
+    // conferência rápida: documento igualzinho à última conferência (e nada novo da nuvem nele) não precisa da conta lenta
+    const f = JSON.stringify(doc), lf = localFast.get(path);
+    if (lf && lf.f === f && lf.ls === lastSynced.get(path)) continue;
     const c = canon(doc), was = lastSynced.get(path);
-    if (was !== c) { ops.push([path, was, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); } }
+    if (was !== c) { ops.push([path, was, doc]); lastSynced.set(path, c); remote.set(path, plain(doc)); }
+    localFast.set(path, { f, ls: lastSynced.get(path) }); }
   // Nada é apagado na nuvem (o Firebase também recusa): um mês que ficou vazio é gravado vazio
   for (const path of [...lastSynced.keys()]) if (writable(path) && !cur.has(path)) {
     if (!profile(pidOfPath(path)) || !path.includes('/months/')) continue; // aluno fora do app (lixeira etc.): não mexe
@@ -9672,11 +9720,11 @@ const isTyping = () => document.querySelector('dialog[open]') || (document.activ
 function applyRemote() {
   if (!cloud.ready) return;
   if (cloud.pending && cloud.pending.size) { cloud.remoteDirty = true; if (navigator.onLine && !syncRun && !retryTimer) scheduleSync(); return; } // primeiro sobe o que ficou guardado
-  let changed = [...remote].some(([k, v]) => lastSynced.get(k) !== canon(v)) || [...lastSynced.keys()].some(k => !remote.has(k));
+  let changed = [...remote].some(([k, v]) => lastSynced.get(k) !== canonR(v)) || [...lastSynced.keys()].some(k => !remote.has(k));
   if (!changed) return;
   if (syncTimer || syncRun || isTyping()) { cloud.remoteDirty = true; return; } // gravando ou digitando: atualiza depois
   db = assemble();
-  lastSynced = new Map([...remote].map(([k, v]) => [k, canon(v)]));
+  lastSynced = new Map([...remote].map(([k, v]) => [k, canonR(v)]));
   fixUi(); render();
 }
 $main.addEventListener('focusout', () => setTimeout(() => { if (cloud && cloud.remoteDirty && !isTyping() && !syncTimer && !syncRun) { cloud.remoteDirty = false; applyRemote(); } }, 50));
@@ -9952,7 +10000,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '14/11-23:32';
+const APP_VERSION = '16/11-23:43';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
