@@ -922,11 +922,12 @@ input,select,textarea{font-size:16px!important}
 :root[data-skin="v2"] .hero h1{font-size:30px;font-weight:300}
 :root[data-skin="v2"] .who,:root[data-skin="v2"] .date-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 :root[data-skin="v2"] .who .av{background:var(--acc);color:var(--acc-ink)}
-:root[data-skin="v2"] .stats div{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:20px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+:root[data-skin="v2"] .stats div{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:20px;isolation:isolate}
 :root[data-skin="v2"] .stats div:first-child{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
 :root[data-skin="v2"] .av{background:var(--lilac);color:var(--lilac-ink)}
 /* cartões de vidro */
-:root[data-skin="v2"] .card,:root[data-skin="v2"] .slist{border-radius:28px;border:1px solid var(--line);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%)}
+/* cartões sem desfoque do fundo: atrás deles só há o degradê liso (o desfoque não aparecia e deixava a rolagem pesada no PC) */
+:root[data-skin="v2"] .card,:root[data-skin="v2"] .slist{border-radius:28px;border:1px solid var(--line);isolation:isolate}
 :root[data-skin="v2"] .card.complete{border-color:var(--acc)}
 /* botões */
 :root[data-skin="v2"] .btn{border-radius:999px;padding:9px 16px;font-weight:800;color:var(--text);background:rgba(255,255,255,.07)}
@@ -977,7 +978,7 @@ body.v2-full main{margin-top:0}
 .v2-greet{font-family:'Outfit','Archivo',sans-serif;font-weight:300;font-size:34px;line-height:1.05;letter-spacing:-.02em;margin:2px 2px 16px}
 .v2-greet b{font-weight:600}
 .v2-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}
-.v2-week .d{display:grid;justify-items:center;gap:4px;padding:9px 0 8px;border-radius:18px;background:var(--card);border:1px solid var(--line);font-weight:800;color:var(--text);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.v2-week .d{display:grid;justify-items:center;gap:4px;padding:9px 0 8px;border-radius:18px;background:var(--card);border:1px solid var(--line);font-weight:800;color:var(--text);isolation:isolate}
 .v2-week .d small{font-size:10.5px;color:var(--muted);font-weight:800}
 .v2-week .d span{font-size:15px}
 .v2-week .d i{width:6px;height:6px;border-radius:50%;background:transparent}
@@ -1000,7 +1001,7 @@ body.v2-full main{margin-top:0}
 .v2-chip .v2i{width:14px;height:14px}
 .v2-chip.ok{background:rgba(111,209,150,.22);border-color:rgba(111,209,150,.5)}
 .v2-icb{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.24);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.v2-hero{background:rgba(6,12,34,.5);border:1px solid var(--line);color:var(--text);border-radius:28px;padding:0 20px 20px;position:relative;overflow:hidden;margin-bottom:14px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.v2-hero{background:rgba(6,12,34,.5);border:1px solid var(--line);color:var(--text);border-radius:28px;padding:0 20px 20px;position:relative;overflow:hidden;margin-bottom:14px;isolation:isolate}
 .v2-hero:not(:has(.v2-hero-ph)){padding-top:20px}
 .v2-hero-ph{margin:0 -20px 16px;height:176px}
 .v2-ph-title{position:absolute;left:18px;bottom:14px;z-index:2;color:#fff}
@@ -1206,7 +1207,7 @@ body.v2-stu main{margin-top:0;padding-top:calc(10px + env(safe-area-inset-top))}
 .v2-top b{display:block;font-size:18px;font-weight:800}
 .v2-top h2{margin:0;font-family:'Outfit','Archivo',sans-serif;font-weight:600;font-size:19px;letter-spacing:-.01em}
 .v2-top .av{width:44px;height:44px;font-size:14px;background:var(--lilac);color:var(--lilac-ink)}
-.v2-icbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--text);position:relative;flex:none;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.v2-icbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--text);position:relative;flex:none;isolation:isolate}
 .v2-icbtn.flip .v2i{transform:scaleX(-1)}
 .v2-icbtn:disabled{opacity:.35}
 .v2-icbtn .dot{position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--coral);border:2px solid #14214f}
@@ -1326,14 +1327,14 @@ body.desk .v2-verso{width:auto;max-width:none;margin-left:0;margin-right:0}
 body.desk .v2-verso blockquote{font-size:16px}
 .v2-kpis{display:grid;grid-template-columns:1.2fr 1fr;grid-template-rows:auto auto;gap:10px;margin-bottom:6px}
 .v2-kpis .v2-tile:first-child{grid-row:span 2;text-align:left;border:1px solid var(--line)}
-.v2-tile.dk{background:rgba(6,12,34,.55);color:var(--text);border:1px solid var(--line);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.v2-tile.dk{background:rgba(6,12,34,.55);color:var(--text);border:1px solid var(--line);isolation:isolate}
 .v2-tile b.xl{font-size:44px;margin-top:auto}
 .v2-tile b.md{font-size:16px;font-family:inherit;font-weight:800;letter-spacing:0;margin-top:auto}
 button.v2-tile{border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
 .v2-tile .v2i{width:22px;height:22px}
 .v2-chipwarn{display:inline-flex;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:800;background:rgba(255,138,104,.16);color:var(--coral)}
 .v2-stack{display:grid;gap:10px}
-.v2-att{display:flex;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:20px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.v2-att{display:flex;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:20px;isolation:isolate}
 .v2-att .grow{flex:1;min-width:0;cursor:pointer}.v2-att b{display:block;font-weight:800}.v2-att small{color:var(--coral);font-weight:700;font-size:12.5px}
 .v2-att .av{border:0;width:44px;height:44px;background:var(--lilac);color:var(--lilac-ink);font-weight:800}
 .v2-btn.ink .v2i,.v2-btn .v2i{width:16px;height:16px}
@@ -10000,7 +10001,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '16/11-23:43';
+const APP_VERSION = '16/11-23:49';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
