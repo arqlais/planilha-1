@@ -19,7 +19,7 @@
 if(/[?&]demo\b/.test(location.search))location.replace(location.pathname+"#/entrar/teste");
 if(/[?&]demo\b/.test(location.search)){document.querySelector('link[rel=manifest]').href="demo/manifest.webmanifest";document.querySelector('meta[name=apple-mobile-web-app-title]').content="PP Teste";document.title="Primeiro Passo (teste)"}</script>
 <link href="../fontes.css" rel="stylesheet">
-<script src="lucide.min.js"></script>
+<script src="vendor/lucide-pp.js?v=1"></script>
 <style>
 :root{
   --navy:#1B3A5C;--blue:#2F5D8A;--sky:#DCE7F3;--mist:#F3F6FA;--gold:#E0A93B;--gold-soft:#FBF1DC;
@@ -1274,6 +1274,11 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 .vid-soon span{color:var(--muted);font-size:14px;max-width:40ch}
 
 .lg-f{margin:0}
+.pw-wrap{position:relative;display:block;width:100%}
+.pw-wrap input{width:100%;padding-right:48px!important}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;display:grid;place-items:center;border:0;background:none;color:var(--muted,#6b7280);cursor:pointer;border-radius:10px;padding:0}
+.pw-eye:hover{color:var(--blue)}
+.pw-eye:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
 .lg-f input{border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--surface);font-size:16px;width:100%}
 .lg-links{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;font-size:14px}
 .lg-links a{color:var(--blue);font-weight:600;text-decoration:none}
@@ -1398,7 +1403,7 @@ img,video,canvas{max-width:100%}
 @media (min-width:2200px){html{zoom:1.25}}
 @media (min-width:3000px){html{zoom:1.5}}
 @media (max-width:340px){
-  body{overflow-wrap:anywhere}
+  body{overflow-wrap:break-word}
   .wrap{padding-left:12px;padding-right:12px}
   .topbar .wrap{gap:6px}
   .rbtn{width:38px;height:38px}
@@ -1409,6 +1414,8 @@ img,video,canvas{max-width:100%}
   .composer button{width:44px;height:44px}
 }
 @media (max-width:260px){
+  body .nw{white-space:normal}
+  body{overflow-wrap:anywhere} /* só no zoom muito alto (tela de 260 px ou menos): melhor quebrar a palavra do que a página escapar para o lado */
   .stats,.grid2,.grid2.wide,.plans,.plans.dyn{grid-template-columns:minmax(0,1fr)!important}
   .acc-btn span{display:none}
   .tabbar a{font-size:9px}
@@ -1423,7 +1430,22 @@ img,video,canvas{max-width:100%}
   .verif-done{justify-items:stretch;grid-template-columns:minmax(0,1fr)}
   .verif-done>*{max-width:100%}
   .pcard .top{flex-wrap:wrap}
+  .badges{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pill{white-space:normal;text-align:left;overflow-wrap:normal}
+  .hist small{flex-wrap:wrap;row-gap:6px}
 }
+/* notebook (até 1279 px): gráfico em largura inteira, para os números não ficarem minúsculos nem sobrar espaço vazio */
+@media (min-width:768px) and (max-width:1279px){.grid2:has(> .card .chart){grid-template-columns:minmax(0,1fr)}}
+@media (min-width:1280px){.grid2:has(> .card .chart){align-items:start}}
+/* gráfico estreito (celular, cartão pequeno): números do gráfico em tamanho de leitura */
+.chart{container-type:inline-size}
+@container (max-width:480px){.chart .ax{font-size:16px}.chart .vl{font-size:17px}}
+@container (max-width:360px){.chart .ax{font-size:20px}.chart .vl{font-size:21px}.chart svg{overflow:visible}}
+/* CREF e CPF nunca quebram no meio ("000000-/G/SP") */
+.nw{white-space:nowrap}
+.pn-me small{white-space:nowrap;font-size:12px}
+/* botão no fim da linha (Ver, Conferir, Pagar) nunca fica cortado: a linha quebra o texto, não o botão */
+.rw .end{min-width:min-content}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1458,6 +1480,7 @@ const saveA=id=>id===ME?save():FBL.saveAluno(id);
 const FBL=(()=>{
   if(!FB)return{booted:true};
   const app=firebase.initializeApp(FIREBASE_CONFIG),auth=firebase.auth(),db=firebase.firestore();
+  auth.languageCode="pt-BR"; /* e-mails do Firebase (recuperar senha) em português */
   if(/[?&]emulador\b/.test(location.search)){auth.useEmulator("http://127.0.0.1:9099");db.useEmulator("127.0.0.1",8080)}
   const FV=firebase.firestore.FieldValue;
   const J=v=>JSON.stringify(v===undefined?null:v);
@@ -1466,7 +1489,7 @@ const FBL=(()=>{
   const CFG=["prices","disc","fees","methodsOn","payoutDay","teste"],CFGI=["split"]; /* CFGI: só empresa e professores leem (config/interno) */
   const COLS={leads:"contatos",ratings:"avaliacoes",incidents:"relatos",flags:"alertas"};
   const pick=(o,ks)=>{const r={};ks.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
-  const warn=(what,e)=>console.warn("[firebase]",what,e&&e.code||e);
+  const warn=(what,e)=>{F.lastErr=e&&e.code||String(e);console.warn("[firebase]",what,e&&e.code||e)};
   let SYNC={},DBS={},PAYPID={},subs=[],timers={},dbTimer=null,rr=null;
   const F={booted:false,ready:false,busy:false,role:null,uid:null};
 
@@ -1583,14 +1606,18 @@ const FBL=(()=>{
     "auth/email-already-in-use":"Já existe uma conta com este e-mail. Use “Entrar” ou outro e-mail.","auth/weak-password":"A senha precisa de pelo menos 6 caracteres.",
     "auth/too-many-requests":"Muitas tentativas. Espere alguns minutos e tente de novo.","auth/network-request-failed":"Sem conexão com a internet. Tente de novo.",
     "auth/operation-not-allowed":"O login por e-mail ainda não foi ativado no Firebase (Authentication > Método de login > E-mail/senha)."};
-  F.err=e=>MSG[e&&e.code]||"Não deu certo agora. Tente de novo em instantes.";
+  F.err=e=>MSG[e&&e.code]||("Não deu certo agora. Tente de novo em instantes."+(e&&(e.code||e.message)?" (Motivo: "+(e.code||e.message)+")":""));
+  /* espera no máximo "ms"; se passar, avisa em que parte travou em vez de ficar parado sem dizer nada */
+  const limit=(pr,ms,msg)=>Promise.race([pr,new Promise((_,no)=>setTimeout(()=>no({msg}),ms))]);
   F.boot=()=>{auth.onAuthStateChanged(async u=>{if(F.busy)return;await loadFor(u);if(!F.booted){F.booted=true;route()}else route(true)})};
   /* entra e confere se a conta é do tipo pedido (aluno, professor ou empresa) */
-  F.login=async(email,pw,who)=>{F.busy=true;try{
-      const cr=await auth.signInWithEmailAndPassword(email,pw);await loadFor(cr.user);
+  F.login=async(email,pw,who)=>{F.busy=true;F.lastErr=null;try{
+      const cr=await limit(auth.signInWithEmailAndPassword(email,pw),25000,"O servidor de login não respondeu. Confira a internet e tente de novo. Se continuar, feche as outras abas do Primeiro Passo, aperte Ctrl + F5 e tente outra vez. (Motivo: login demorou demais)");
+      await limit(loadFor(cr.user),25000,"A senha está certa, mas os seus dados não carregaram. Confira a internet e tente de novo. Se continuar, feche as outras abas do Primeiro Passo, aperte Ctrl + F5 e tente outra vez. (Motivo: dados demoraram demais)");
       const want={aluno:"aluno",personal:"personal",empresa:"admin"}[who];
-      if(F.role!==want){const t=F.role==="admin"?"Esta é uma conta da empresa. Entre pela área da empresa.":F.role==="personal"?"Esta é uma conta de professor. Entre pela área do professor.":F.role==="aluno"?"Esta é uma conta de aluno. Entre pela área do aluno.":"Esta conta ainda não tem acesso. Fale com a empresa.";
+      if(F.role!==want){const t=F.role==="admin"?"Esta é uma conta da empresa. Entre pela área da empresa.":F.role==="personal"?"Esta é uma conta de professor. Entre pela área do professor.":F.role==="aluno"?"Esta é uma conta de aluno. Entre pela área do aluno.":F.lastErr?"A senha está certa, mas não conseguimos ler o seu acesso. Tente de novo em instantes. (Motivo: "+F.lastErr+")":"Esta conta ainda não tem acesso. Fale com a empresa.";
         await auth.signOut();await loadFor(null);throw{msg:t}}
+      if(who==="empresa")setSess({role:"admin"});
       if(who==="personal"){const p=findP(F.uid);if(!p||p.status!=="ativo"){await auth.signOut();await loadFor(null);throw{msg:p&&p.status==="inativo"?"Este acesso está desativado. Fale com a empresa.":"Seu cadastro ainda está em análise. Avisamos quando for aprovado."}}}
       if(who==="aluno"&&!S.profile){await auth.signOut();await loadFor(null);throw{msg:"Não encontramos os dados deste aluno. Fale com a empresa."}}
     }catch(e){throw e.msg?e:{msg:F.err(e)}}finally{F.busy=false}};
@@ -1718,7 +1745,14 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 function clipLists(){document.querySelectorAll(".rows.clip").forEach(r=>{if(r.nextElementSibling&&r.nextElementSibling.matches("[data-more]"))return;const n=r.children.length;if(n<=4)return;
   const b=document.createElement("button");b.className="btn btn-ghost btn-sm more";b.dataset.more="";b.textContent=`Ver mais ${n-4}`;b.onclick=()=>{r.classList.remove("clip");b.remove()};r.after(b)})}
 function labelTables(){document.querySelectorAll(".tbl table").forEach(t=>{const hs=[...t.querySelectorAll("thead th")].map(th=>th.textContent.trim());t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute("data-l",hs[i]||"")))})}
-const icons=()=>{labelTables();clipLists();if(window.lucide)lucide.createIcons()};
+const icons=()=>{labelTables();clipLists();eyes();if(window.lucide)lucide.createIcons()};
+/* olho na senha: mostra ou esconde o que foi digitado */
+const EYE_ON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  EYE_OFF='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.7 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.2 3.2M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7c1.9 0 3.6-.6 5-1.5M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20"/></svg>';
+function eyes(){document.querySelectorAll('input[type="password"]:not([data-eye])').forEach(i=>{i.dataset.eye="1";
+  const w=document.createElement("span");w.className="pw-wrap";i.parentNode.insertBefore(w,i);w.appendChild(i);
+  const b=document.createElement("button");b.type="button";b.className="pw-eye";b.setAttribute("aria-label","Mostrar senha");b.innerHTML=EYE_ON;w.appendChild(b);
+  b.onclick=()=>{const show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?EYE_OFF:EYE_ON;b.setAttribute("aria-label",show?"Esconder senha":"Mostrar senha");i.focus()}})}
 function toast(t){const el=$("#toast");el.innerHTML=`<i data-lucide="sparkles"></i>${esc(t)}`;icons();el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),2600)}
 const first=()=>S.profile?S.profile.name.split(" ")[0]:"";
 const nowT=()=>new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
@@ -2586,13 +2620,17 @@ function setSess(x){SESS=x;try{localStorage.setItem(SKEY,JSON.stringify(x))}catc
 const TEST_PASS="teste123",ADMIN_EMAIL="admin@primeiropasso.com.br";
 function mailOf(n){return n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().split(" ").filter(Boolean).slice(0,2).join(".")+"@primeiropasso.com.br"}
 if(!FB)DB.personals.forEach(p=>{if(!p.email)p.email=mailOf(p.name)});
+/* veio do PassosFit (menu do logo)? Então a tela de entrar mostra o caminho de volta */
+const FROM_PF=(()=>{try{const r=document.referrer?new URL(document.referrer):null;
+  if(r&&r.origin===location.origin&&!r.pathname.includes("/primeiro-passo")&&!r.pathname.includes("/portal"))sessionStorage.setItem("pp:dePF","1");
+  return sessionStorage.getItem("pp:dePF")==="1"}catch(e){return false}})();
 function login(){
   if(!FB)DB.personals.forEach(p=>{if(!p.email)p.email=mailOf(p.name)});
   const has=!!S.profile,who=(location.hash.split("/")[2]||"");
   const R={aluno:{ic:"footprints",t:"Entrar como aluno",d:"Seu caminho, treinos, agenda e conversa com o seu professor.",u:"E-mail",um:"email"},personal:{ic:"dumbbell",t:"Entrar como professor",d:"Seus alunos, alertas do dia, agenda, mensagens e ganhos.",u:FB?"E-mail":"E-mail ou CREF",um:"email"},
            empresa:{ic:"building-2",t:"Entrar como empresa",d:"Visão geral, clientes, professores, financeiro, segurança e preços.",u:"E-mail",um:"email"}}[who];
   const top=`<header class="topbar"><div class="wrap"><a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
-    <a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a><button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
+    ${FROM_PF?`<a class="btn btn-ghost" href="../index.html?app" style="margin-left:auto" aria-label="Voltar ao PassosFit"><i data-lucide="arrow-left"></i><span>Voltar ao PassosFit</span></a>`:`<a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a>`}<button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
   if(who==="teste"&&FB){
     const me=FBL.uid?(FBL.role==="admin"?"a empresa":FBL.role==="personal"?(findP(FBL.uid)||{}).name:S.profile&&S.profile.name):null;
     const go=r=>r==="admin"?"#/admin":r==="personal"?"#/personal":"#/app";
@@ -2668,7 +2706,10 @@ function login(){
   const norm=v=>String(v).trim().toLowerCase(),dig=v=>String(v).replace(/\D/g,""),err=t=>{$("#lge").textContent=t};
   $("#lgf").onsubmit=e=>{e.preventDefault();const u=norm($("#lgu").value),w=$("#lgw").value;
     if(!u||!w)return err(`Preencha ${R.u.toLowerCase()} e senha.`);
-    if(FB){const bt=$("#lgf button.btn-primary");bt.disabled=true;err("");FBL.login(u,w,who).then(()=>{location.hash=who==="aluno"?"#/app":who==="empresa"?"#/admin":"#/personal";route(true)}).catch(x=>{bt.disabled=false;err(x.msg)});return}
+    if(FB){const bt=$("#lgf button.btn-primary"),lbl=bt.innerHTML;bt.disabled=true;bt.textContent="Entrando…";err("");
+      const back=()=>{bt.disabled=false;bt.innerHTML=lbl;icons()};
+      FBL.login(u,w,who).then(()=>{location.hash=who==="aluno"?"#/app":who==="empresa"?"#/admin":"#/personal";route(true)})
+        .catch(x=>{back();err((x&&x.msg)||("Não deu certo agora. Tente de novo. (Motivo: "+((x&&(x.code||x.message))||"desconhecido")+")"))});return}
     if(who==="aluno"){if(!S.profile||!S.account)return err("Não encontramos uma conta com esse e-mail neste aparelho. Nesta versão de teste, a conta fica salva no navegador onde foi criada.");
       hashPw(w).then(h=>{if(u!==S.account.email||h!==S.account.h)return err("E-mail ou senha incorretos.");S.loggedOut=false;save();location.hash="#/app"});return}
     if(who==="empresa"){if(u!==ADMIN_EMAIL||w!==TEST_PASS)return err("E-mail ou senha incorretos.");setSess({role:"admin"});location.hash="#/admin";return}
@@ -2911,7 +2952,8 @@ function pMsgs(p,cs){
 }
 /* ================== PAINEL DA EMPRESA ================== */
 function panelAdmin(tab){
-  if(SESS.role!=="admin"){location.hash="#/entrar/empresa";return}
+  /* a empresa que estava "vendo como professor" volta direto ao painel dela (antes voltava para a tela de entrar, sem aviso) */
+  if(SESS.role!=="admin"){if(FB&&FBL.role==="admin")setSess({role:"admin"});else{location.hash="#/entrar/empresa";return}}
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
   const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Professores",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
   const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Professores"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Trabalho da faculdade","Apresentação"]}[tab]||["",""];
@@ -2955,7 +2997,7 @@ function aClientes(){
 function aPersonais(bl){
   const cur=mkey(Date.now()),act=allClients().filter(c=>c.status==="ativo");
   $("#pv").innerHTML=`<div class="pgrid">${DB.personals.map(p=>{const n=act.filter(c=>c.pid===p.id).length,rev=bl.filter(b=>b.m===cur&&b.pid===p.id).reduce((s,b)=>s+b.amount,0);
-    return`<article class="pcard"><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div></div>
+    return`<article class="pcard"><div class="top"><span class="av">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3><small style="color:var(--muted)"><span class="nw">${esc(p.cref)}</span> · ${esc(p.area)}</small></div></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${p.status==="ativo"?pill("ok","circle-check","Ativo"):p.status==="pendente"?pill("warn","hourglass","Aguardando análise"):pill("mute","pause","Inativo")}${p.spec.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>
       <p class="dm" style="color:var(--muted);font-size:14.5px">${esc(p.bio||"")}</p>
       ${p.status==="ativo"?`<div><div style="display:flex;justify-content:space-between;font-size:14px"><span>Alunos</span><b>${n} de ${p.cap}</b></div><div class="prog mt" style="margin-top:6px"><i style="width:${Math.min(100,n/p.cap*100)}%"></i></div></div>
@@ -3040,7 +3082,7 @@ function aLeads(){
   const ST={novo:["info","sparkles","Novo"],contatado:["warn","phone","Em contato"],convertido:["ok","circle-check","Convertido"],arquivado:["mute","archive","Arquivado"]};
   $("#pv").innerHTML=`<div class="filters" role="group" aria-label="Filtrar contatos">${[["novo","Novos"],["contatado","Em contato"],["convertido","Convertidos"],["todos","Todos"]].map(([k,t])=>`<button aria-pressed="${LF===k}" data-lf="${k}">${t} (${k==="todos"?DB.leads.length:DB.leads.filter(l=>l.status===k).length})</button>`).join("")}</div>
   <div class="pgrid">${L.length?L.map(l=>`<article class="lead"><div class="top">${pill(...ST[l.status])}${pill(l.type==="personal"?"warn":"mute",l.type==="personal"?"dumbbell":"user-round",l.type==="personal"?"Quer ser professor":"Quer começar")}<small style="margin-left:auto">${rel(l.at)}</small></div>
-    <b style="font-size:17px">${esc(l.name)}</b><small>${esc(l.contact)}${l.cref?" · "+esc(l.cref):""}${l.area?" · "+esc(l.area):""}</small><p>“${esc(l.msg)}”</p>
+    <b style="font-size:17px">${esc(l.name)}</b><small>${esc(l.contact)}${l.cref?` · <span class="nw">${esc(l.cref)}</span>`:""}${l.area?" · "+esc(l.area):""}</small><p>“${esc(l.msg)}”</p>
     <div class="pc-foot">${l.status==="novo"?`<button class="btn btn-ghost btn-sm" data-ls="${l.id}" data-v="contatado"><i data-lucide="phone"></i>Marcar em contato</button>`:""}${l.status!=="convertido"&&l.status!=="arquivado"?`<button class="btn btn-primary btn-sm" data-conv="${l.id}"><i data-lucide="${l.type==="personal"?"badge-check":"user-plus"}"></i>${l.type==="personal"?"Enviar para análise":"Virar cliente"}</button><button class="btn btn-ghost btn-sm" data-ls="${l.id}" data-v="arquivado" aria-label="Arquivar"><i data-lucide="archive"></i></button>`:""}</div></article>`).join(""):`<div class="empty">Nenhum contato aqui.</div>`}</div>
   <div class="info mt"><i data-lucide="info"></i><span>Os contatos chegam pelos formulários do site (“Fale com a gente” e “Seja professor parceiro”).</span></div>`;
   document.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{LF=b.dataset.lf;route(true)});
@@ -3115,7 +3157,7 @@ function pGanhos(p){
   <div class="info mt"><i data-lucide="percent"></i><span>Você fica com <b style="color:var(--ink)">${pctf(sp)}</b> de cada mensalidade dos seus alunos. ${pctf(1-sp)} fica com a empresa.</span></div>
   <section class="card mt"><div class="card-h"><h3>Seus ganhos por mês</h3></div>${vbars(ms.map(m=>({label:mlabel(m,1),short:mlabel(m),v:fin(bl.filter(b=>b.m===m)).rep})))}</section>
   <section class="card mt"><div class="card-h"><h3>Seus repasses</h3></div><div class="rows">${ms.slice(0,5).reverse().map(m=>{const f=fin(bl.filter(b=>b.m===m)),d=DB.payouts[payoutKey(p.id,m)];return`<div class="rw"><span><b>${mlabel(m,1)} de ${m.slice(0,4)}</b><small>${f.paidN} ${f.paidN===1?"mensalidade paga":"mensalidades pagas"}</small></span><span class="end"><b style="font-variant-numeric:tabular-nums">${money(f.rep)}</b>${(()=>{const ps=payoutState(p.id,m);return pill(ps.k,ps.ic,ps.t)})()}</span></div>`}).join("")}</div></section>
-  <a class="task mt" href="#/personal/dados" style="text-decoration:none;color:inherit"><span class="ti"><i data-lucide="landmark"></i></span><span><b>Onde você recebe</b><small>${p.payout&&p.payout.key?`Pix ${esc(p.payout.type)} ${esc(p.payout.key)}`:"Cadastre sua chave Pix"} · em Meus dados</small></span><i class="go" data-lucide="chevron-right"></i></a>`;
+  <a class="task mt" href="#/personal/dados" style="text-decoration:none;color:inherit"><span class="ti"><i data-lucide="landmark"></i></span><span><b>Onde você recebe</b><small>${p.payout&&p.payout.key?`Pix ${esc(p.payout.type)} <span class="nw">${esc(p.payout.key)}</span>`:"Cadastre sua chave Pix"} · em Meus dados</small></span><i class="go" data-lucide="chevron-right"></i></a>`;
 }
 
 /* ---------- empresa: financeiro ---------- */
@@ -3413,7 +3455,7 @@ function aSeg(){
   const SEV={alta:["bad","Alta"],media:["warn","Média"],baixa:["mute","Baixa"]};
   $("#pv").innerHTML=`<div class="kpis">${kpi("hourglass","Verificações em análise",pend.length,"clientes aguardando")}${kpi("shield-alert","Clientes sem verificação",unver.length,"a partir do nível 2")}${kpi("map-pin-check","Encontros presenciais hoje",today.length,`${today.filter(b=>(DB.checkins[b.id]||{}).in).length} com check-in`)}${kpi("message-square-warning","Relatos abertos",inc.filter(i=>i.status==="aberto").length,`${inc.filter(i=>i.status==="aberto"&&i.sev==="alta").length} urgentes`)}</div>
   <div class="grid2">
-    <section class="card"><div class="card-h"><h3>Verificações para aprovar</h3></div><div class="rows clip">${pend.length?pend.map(c=>{const k=kycOf(c.id);return`<div class="rw">${avatar(c)}<span><b>${esc(c.name)}</b><small>CPF ${esc(k.cpf||"—")} · ${esc(k.city||"")} · ${rel(k.at)}</small></span><span class="end"><button class="btn btn-ghost btn-sm" data-kyc="${c.id}" data-v="recusado" aria-label="Recusar"><i data-lucide="x"></i></button><button class="btn btn-primary btn-sm" data-kyc="${c.id}" data-v="verificado"><i data-lucide="check"></i>Aprovar</button></span></div>`}).join(""):`<p class="empty-s">Nenhuma verificação esperando.</p>`}</div>
+    <section class="card"><div class="card-h"><h3>Verificações para aprovar</h3></div><div class="rows clip">${pend.length?pend.map(c=>{const k=kycOf(c.id);return`<div class="rw">${avatar(c)}<span><b>${esc(c.name)}</b><small>CPF <span class="nw">${esc(k.cpf||"—")}</span> · ${esc(k.city||"")} · ${rel(k.at)}</small></span><span class="end"><button class="btn btn-ghost btn-sm" data-kyc="${c.id}" data-v="recusado" aria-label="Recusar"><i data-lucide="x"></i></button><button class="btn btn-primary btn-sm" data-kyc="${c.id}" data-v="verificado"><i data-lucide="check"></i>Aprovar</button></span></div>`}).join(""):`<p class="empty-s">Nenhuma verificação esperando.</p>`}</div>
       <p class="week-note">Na versão final, aqui aparecem o resultado da comparação facial e da leitura do documento feitos pelo serviço de verificação.</p></section>
     <section class="card"><div class="card-h"><h3>Encontros presenciais de hoje</h3></div><div class="rows">${today.length?today.map(b=>{const c=findC(b.cid),p=findP(b.pid),ck=DB.checkins[b.id]||{};return c?`<div class="rw"><span class="time">${hm(b.ts)}</span><span><b>${esc(c.name)} · ${esc(p?p.name.split(" ")[0]:"")}</b><small>${b.type} · código ${meetCode(b)}</small></span><span class="end">${ck.out?pill("ok","circle-check","Encerrado "+hm(ck.out)):ck.in?pill("info","map-pin-check","Em andamento desde "+hm(ck.in)):b.ts<Date.now()-15*6e4?pill("bad","circle-alert","Sem check-in"):pill("mute","clock","Aguardando")}</span></div>`:""}).join(""):`<p class="empty-s">Nenhum encontro presencial hoje.</p>`}</div></section>
   </div>
@@ -3425,7 +3467,7 @@ function aSeg(){
       <small>${esc(f.pname)} ↔ ${esc(f.cname)}</small><p>“${esc(f.text)}”</p>
       <div class="pc-foot">${f.status==="aberto"?`<button class="btn btn-primary btn-sm" data-flag="${f.id}" data-v="tratado"><i data-lucide="check"></i>Marcar tratado</button>${f.from==="personal"?`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="adv"><i data-lucide="file-warning"></i>Advertir professor</button>`:""}`:`<button class="btn btn-ghost btn-sm" data-flag="${f.id}" data-v="aberto">Reabrir</button>`}</div></article>`).join("")}</div>`:`<div class="empty">Nenhum alerta. As mensagens do chat são checadas automaticamente.</div>`}
     <p class="week-note">O chat avisa antes de enviar mensagens com telefone, redes sociais ou pagamento por fora. Se a pessoa enviar mesmo assim, o alerta aparece aqui. Termo de parceria, item 4: não aliciamento por 12 meses.</p></section>
-  <section class="card mt"><div class="card-h"><h3>Verificação dos professores</h3></div><div class="rows">${DB.personals.filter(p=>p.status!=="inativo").map(p=>{const s=p.safety||{};return`<div class="rw"><span class="av">${esc(initials(p.name))}</span><span><b>${esc(p.name)}</b><small>${esc(p.cref)}</small></span><span class="end">${[["doc","Documento"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes"]].map(([k,t])=>`<button class="pill ${s[k]?"ok":"mute"} tog" data-ps="${p.id}" data-k="${k}" aria-pressed="${!!s[k]}"><i data-lucide="${s[k]?"check":"circle-dashed"}"></i>${t}</button>`).join("")}</span></div>`}).join("")}</div>
+  <section class="card mt"><div class="card-h"><h3>Verificação dos professores</h3></div><div class="rows">${DB.personals.filter(p=>p.status!=="inativo").map(p=>{const s=p.safety||{};return`<div class="rw"><span class="av">${esc(initials(p.name))}</span><span><b>${esc(p.name)}</b><small><span class="nw">${esc(p.cref)}</span></small></span><span class="end">${[["doc","Documento"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes"]].map(([k,t])=>`<button class="pill ${s[k]?"ok":"mute"} tog" data-ps="${p.id}" data-k="${k}" aria-pressed="${!!s[k]}"><i data-lucide="${s[k]?"check":"circle-dashed"}"></i>${t}</button>`).join("")}</span></div>`}).join("")}</div>
     <p class="week-note">Um professor só recebe alunos para encontros presenciais com os quatro itens conferidos. Toque para marcar ou desmarcar.</p></section>`;
   document.querySelectorAll("[data-kyc]").forEach(b=>b.onclick=()=>{const id=b.dataset.kyc,v=b.dataset.v;
     const ak=A(id);if(ak){ak.kyc=Object.assign(ak.kyc||{},{status:v,at:Date.now()});saveA(id);ak.messages.push({from:"them",text:v==="verificado"?"Sua identidade foi verificada. Agora podemos marcar encontros presenciais com segurança.":"Não conseguimos confirmar sua identidade com as fotos enviadas. Pode tentar de novo pelo seu perfil?",t:nowT()});ak.unread++;saveA(id)}
@@ -3772,7 +3814,7 @@ function pDados(p){
 function openPFicha(id){const p=findP(id),inf=p.info||{},s=p.safety||{},po=p.payout||{},r=ratingOf(p.id),n=allClients().filter(c=>c.pid===p.id&&c.status==="ativo").length;
   const m=document.createElement("div");m.className="drawer";document.body.appendChild(m);document.body.style.overflow="hidden";
   const close=()=>{removeEventListener("keydown",k);m.remove();document.body.style.overflow="";route(true)};const k=e=>{if(e.key==="Escape")close()};addEventListener("keydown",k);m.onclick=e=>{if(e.target===m)close()};
-  m.innerHTML=`<div class="dp" role="dialog" aria-modal="true" aria-labelledby="pfh"><div class="dp-h"><span class="av">${esc(initials(p.name))}</span><div><h2 id="pfh">${esc(p.name)}</h2><small style="color:var(--muted)">${esc(p.cref)} · ${esc(p.area)}</small></div><button class="rbtn" id="pfx" aria-label="Fechar"><i data-lucide="x"></i></button></div>
+  m.innerHTML=`<div class="dp" role="dialog" aria-modal="true" aria-labelledby="pfh"><div class="dp-h"><span class="av">${esc(initials(p.name))}</span><div><h2 id="pfh">${esc(p.name)}</h2><small style="color:var(--muted)"><span class="nw">${esc(p.cref)}</span> · ${esc(p.area)}</small></div><button class="rbtn" id="pfx" aria-label="Fechar"><i data-lucide="x"></i></button></div>
     <div class="sec2"><h3>Dados pessoais</h3><div class="plist">${dline("E-mail",esc(p.email||"—"))}${dline("Celular",esc(inf.tel||"—"))}${dline("CPF",esc(inf.cpf||"***.***.***-**"))}${dline("Nascimento",inf.birth?new Date(inf.birth+"T12:00").toLocaleDateString("pt-BR"):"—")}${dline("Endereço",esc([inf.addr,inf.num&&"nº "+inf.num,inf.city].filter(Boolean).join(", ")||"—"))}</div></div>
     <div class="sec2"><h3>Contrato</h3><div class="plist">${dline("Termo de parceria",p.terms?`Aceito ${new Date(p.terms.at).toLocaleDateString("pt-BR")} · v${p.terms.v}`:"Pendente")}${dline("Percentual",pctf(splitOf(p.id)))}${dline("Recebimento",`Pix ${esc(po.type||"")} ${esc(po.key||"não cadastrado")}`)}${dline("Alunos ativos",`${n} de ${p.cap}`)}${dline("Avaliação (confidencial)",r.n?`${r.avg.toLocaleString("pt-BR",{maximumFractionDigits:1})} ★ · ${r.n} avaliações`:"—")}</div></div>
     <div class="sec2"><h3>Documentos</h3><div class="chk">${[["doc","Documento com foto"],["selfie","Selfie"],["cref","CREF"],["crim","Antecedentes criminais"]].map(([k2,t])=>`<div class="${s[k2]?"y":""}"><i data-lucide="${s[k2]?"circle-check":"circle-dashed"}"></i>${t}</div>`).join("")}</div></div>
