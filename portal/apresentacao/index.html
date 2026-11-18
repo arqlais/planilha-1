@@ -71,7 +71,7 @@ button svg{width:16px;height:16px}
 /* materiais que estiverem na pasta "materiais" */
 var MAT = [];
 var ICO = { pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>', mp4: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4Z"/></svg>' };
-document.getElementById('mat').innerHTML = MAT.map(function (m) { var ext = m[0].split('.').pop(); return '<a class="c site" href="materiais/' + encodeURIComponent(m[0]) + '" target="_blank"><span class="ic">' + (ICO[ext] || ICO.pdf) + '</span><b>' + m[1] + '</b><small>' + (ext === 'mp4' ? 'Vídeo' : 'PDF') + '</small></a>'; }).join('');
+document.getElementById('mat').innerHTML = MAT.map(function (m) { var ext = m[0].split('.').pop(); return '<a class="c site" href="materiais/' + encodeURIComponent(m[0]) + '" target="_blank"><span class="ic">' + (ICO[ext] || ICO.pdf) + '</span><b>' + m[1] + '</b><small>' + ({ mp4: 'Vídeo', docx: 'Word', xlsx: 'Planilha' }[ext] || 'PDF') + '</small></a>'; }).join('');
 document.getElementById('reset').onclick = function () {
   if (!confirm('Apagar o que foi mexido e voltar os exemplos do começo?')) return;
   try { Object.keys(localStorage).forEach(function (k) { if (/^apres-/.test(k)) localStorage.removeItem(k); }); } catch (e) {}
@@ -83,7 +83,7 @@ if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
   off.hidden = false; off.lastChild.textContent = 'Preparando para funcionar sem internet...'; off.style.opacity = .7;
   navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; }).then(function () {
     var tries = 0, t = setInterval(function () {
-      caches.has("apresentacao-20261104221048").then(function (ok) { if (ok || ++tries > 60) { clearInterval(t); if (ok) { off.lastChild.textContent = 'Pronto: já funciona sem internet'; off.style.opacity = 1; } } });
+      caches.has("apresentacao-20261118023631").then(function (ok) { if (ok || ++tries > 60) { clearInterval(t); if (ok) { off.lastChild.textContent = 'Pronto: já funciona sem internet'; off.style.opacity = 1; } } });
     }, 500);
   }).catch(function () { off.hidden = true; });
 }
