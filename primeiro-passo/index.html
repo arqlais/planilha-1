@@ -2625,13 +2625,17 @@ function setSess(x){SESS=x;try{localStorage.setItem(SKEY,JSON.stringify(x))}catc
 const TEST_PASS="teste123",ADMIN_EMAIL="admin@primeiropasso.com.br";
 function mailOf(n){return n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().split(" ").filter(Boolean).slice(0,2).join(".")+"@primeiropasso.com.br"}
 if(!FB)DB.personals.forEach(p=>{if(!p.email)p.email=mailOf(p.name)});
+/* veio do PassosFit (menu do logo)? Então a tela de entrar mostra o caminho de volta */
+const FROM_PF=(()=>{try{const r=document.referrer?new URL(document.referrer):null;
+  if(r&&r.origin===location.origin&&!r.pathname.includes("/primeiro-passo")&&!r.pathname.includes("/portal"))sessionStorage.setItem("pp:dePF","1");
+  return sessionStorage.getItem("pp:dePF")==="1"}catch(e){return false}})();
 function login(){
   if(!FB)DB.personals.forEach(p=>{if(!p.email)p.email=mailOf(p.name)});
   const has=!!S.profile,who=(location.hash.split("/")[2]||"");
   const R={aluno:{ic:"footprints",t:"Entrar como aluno",d:"Seu caminho, treinos, agenda e conversa com o seu professor.",u:"E-mail",um:"email"},personal:{ic:"dumbbell",t:"Entrar como professor",d:"Seus alunos, alertas do dia, agenda, mensagens e ganhos.",u:FB?"E-mail":"E-mail ou CREF",um:"email"},
            empresa:{ic:"building-2",t:"Entrar como empresa",d:"Visão geral, clientes, professores, financeiro, segurança e preços.",u:"E-mail",um:"email"}}[who];
   const top=`<header class="topbar"><div class="wrap"><a class="brand" href="#/"><span class="mk"><i data-lucide="footprints"></i></span><span>Primeiro Passo</span></a>
-    <a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a><button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
+    ${FROM_PF?`<a class="btn btn-ghost" href="../?app" style="margin-left:auto" aria-label="Voltar ao PassosFit"><i data-lucide="arrow-left"></i><span>Voltar ao PassosFit</span></a>`:`<a class="btn btn-ghost" href="#/" style="margin-left:auto" aria-label="Voltar ao site"><i data-lucide="arrow-left"></i><span class="dm">Voltar ao site</span></a>`}<button class="rbtn" id="theme" aria-label="Alternar tema claro e escuro"><i data-lucide="${themeIcon()}"></i></button></div></header>`;
   if(who==="teste"&&FB){
     const me=FBL.uid?(FBL.role==="admin"?"a empresa":FBL.role==="personal"?(findP(FBL.uid)||{}).name:S.profile&&S.profile.name):null;
     const go=r=>r==="admin"?"#/admin":r==="personal"?"#/personal":"#/app";
