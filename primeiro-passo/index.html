@@ -1485,6 +1485,7 @@ const saveA=id=>id===ME?save():FBL.saveAluno(id);
 const FBL=(()=>{
   if(!FB)return{booted:true};
   const app=firebase.initializeApp(FIREBASE_CONFIG),auth=firebase.auth(),db=firebase.firestore();
+  auth.languageCode="pt-BR"; /* e-mails do Firebase (recuperar senha) em português */
   if(/[?&]emulador\b/.test(location.search)){auth.useEmulator("http://127.0.0.1:9099");db.useEmulator("127.0.0.1",8080)}
   const FV=firebase.firestore.FieldValue;
   const J=v=>JSON.stringify(v===undefined?null:v);
