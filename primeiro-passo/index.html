@@ -1279,6 +1279,11 @@ body .ap-hero .btn-primary,body.ux .ap-hero .btn-primary{background:linear-gradi
 .vid-soon span{color:var(--muted);font-size:14px;max-width:40ch}
 
 .lg-f{margin:0}
+.pw-wrap{position:relative;display:block;width:100%}
+.pw-wrap input{width:100%;padding-right:48px!important}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;display:grid;place-items:center;border:0;background:none;color:var(--muted,#6b7280);cursor:pointer;border-radius:10px;padding:0}
+.pw-eye:hover{color:var(--blue)}
+.pw-eye:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
 .lg-f input{border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--surface);font-size:16px;width:100%}
 .lg-links{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;font-size:14px}
 .lg-links a{color:var(--blue);font-weight:600;text-decoration:none}
@@ -1488,7 +1493,7 @@ const FBL=(()=>{
   const CFG=["prices","disc","fees","methodsOn","payoutDay","teste"],CFGI=["split"]; /* CFGI: só empresa e professores leem (config/interno) */
   const COLS={leads:"contatos",ratings:"avaliacoes",incidents:"relatos",flags:"alertas"};
   const pick=(o,ks)=>{const r={};ks.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
-  const warn=(what,e)=>console.warn("[firebase]",what,e&&e.code||e);
+  const warn=(what,e)=>{F.lastErr=e&&e.code||String(e);console.warn("[firebase]",what,e&&e.code||e)};
   let SYNC={},DBS={},PAYPID={},subs=[],timers={},dbTimer=null,rr=null;
   const F={booted:false,ready:false,busy:false,role:null,uid:null};
 
@@ -1605,14 +1610,18 @@ const FBL=(()=>{
     "auth/email-already-in-use":"Já existe uma conta com este e-mail. Use “Entrar” ou outro e-mail.","auth/weak-password":"A senha precisa de pelo menos 6 caracteres.",
     "auth/too-many-requests":"Muitas tentativas. Espere alguns minutos e tente de novo.","auth/network-request-failed":"Sem conexão com a internet. Tente de novo.",
     "auth/operation-not-allowed":"O login por e-mail ainda não foi ativado no Firebase (Authentication > Método de login > E-mail/senha)."};
-  F.err=e=>MSG[e&&e.code]||"Não deu certo agora. Tente de novo em instantes.";
+  F.err=e=>MSG[e&&e.code]||("Não deu certo agora. Tente de novo em instantes."+(e&&(e.code||e.message)?" (Motivo: "+(e.code||e.message)+")":""));
+  /* espera no máximo "ms"; se passar, avisa em que parte travou em vez de ficar parado sem dizer nada */
+  const limit=(pr,ms,msg)=>Promise.race([pr,new Promise((_,no)=>setTimeout(()=>no({msg}),ms))]);
   F.boot=()=>{auth.onAuthStateChanged(async u=>{if(F.busy)return;await loadFor(u);if(!F.booted){F.booted=true;route()}else route(true)})};
   /* entra e confere se a conta é do tipo pedido (aluno, professor ou empresa) */
-  F.login=async(email,pw,who)=>{F.busy=true;try{
-      const cr=await auth.signInWithEmailAndPassword(email,pw);await loadFor(cr.user);
+  F.login=async(email,pw,who)=>{F.busy=true;F.lastErr=null;try{
+      const cr=await limit(auth.signInWithEmailAndPassword(email,pw),25000,"O servidor de login não respondeu. Confira a internet e tente de novo. Se continuar, feche as outras abas do Primeiro Passo, aperte Ctrl + F5 e tente outra vez. (Motivo: login demorou demais)");
+      await limit(loadFor(cr.user),25000,"A senha está certa, mas os seus dados não carregaram. Confira a internet e tente de novo. Se continuar, feche as outras abas do Primeiro Passo, aperte Ctrl + F5 e tente outra vez. (Motivo: dados demoraram demais)");
       const want={aluno:"aluno",personal:"personal",empresa:"admin"}[who];
-      if(F.role!==want){const t=F.role==="admin"?"Esta é uma conta da empresa. Entre pela área da empresa.":F.role==="personal"?"Esta é uma conta de professor. Entre pela área do professor.":F.role==="aluno"?"Esta é uma conta de aluno. Entre pela área do aluno.":"Esta conta ainda não tem acesso. Fale com a empresa.";
+      if(F.role!==want){const t=F.role==="admin"?"Esta é uma conta da empresa. Entre pela área da empresa.":F.role==="personal"?"Esta é uma conta de professor. Entre pela área do professor.":F.role==="aluno"?"Esta é uma conta de aluno. Entre pela área do aluno.":F.lastErr?"A senha está certa, mas não conseguimos ler o seu acesso. Tente de novo em instantes. (Motivo: "+F.lastErr+")":"Esta conta ainda não tem acesso. Fale com a empresa.";
         await auth.signOut();await loadFor(null);throw{msg:t}}
+      if(who==="empresa")setSess({role:"admin"});
       if(who==="personal"){const p=findP(F.uid);if(!p||p.status!=="ativo"){await auth.signOut();await loadFor(null);throw{msg:p&&p.status==="inativo"?"Este acesso está desativado. Fale com a empresa.":"Seu cadastro ainda está em análise. Avisamos quando for aprovado."}}}
       if(who==="aluno"&&!S.profile){await auth.signOut();await loadFor(null);throw{msg:"Não encontramos os dados deste aluno. Fale com a empresa."}}
     }catch(e){throw e.msg?e:{msg:F.err(e)}}finally{F.busy=false}};
@@ -1740,7 +1749,14 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 function clipLists(){document.querySelectorAll(".rows.clip").forEach(r=>{if(r.nextElementSibling&&r.nextElementSibling.matches("[data-more]"))return;const n=r.children.length;if(n<=4)return;
   const b=document.createElement("button");b.className="btn btn-ghost btn-sm more";b.dataset.more="";b.textContent=`Ver mais ${n-4}`;b.onclick=()=>{r.classList.remove("clip");b.remove()};r.after(b)})}
 function labelTables(){document.querySelectorAll(".tbl table").forEach(t=>{const hs=[...t.querySelectorAll("thead th")].map(th=>th.textContent.trim());t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute("data-l",hs[i]||"")))})}
-const icons=()=>{labelTables();clipLists();if(window.lucide)lucide.createIcons()};
+const icons=()=>{labelTables();clipLists();eyes();if(window.lucide)lucide.createIcons()};
+/* olho na senha: mostra ou esconde o que foi digitado */
+const EYE_ON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  EYE_OFF='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.7 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.2 3.2M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7c1.9 0 3.6-.6 5-1.5M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20"/></svg>';
+function eyes(){document.querySelectorAll('input[type="password"]:not([data-eye])').forEach(i=>{i.dataset.eye="1";
+  const w=document.createElement("span");w.className="pw-wrap";i.parentNode.insertBefore(w,i);w.appendChild(i);
+  const b=document.createElement("button");b.type="button";b.className="pw-eye";b.setAttribute("aria-label","Mostrar senha");b.innerHTML=EYE_ON;w.appendChild(b);
+  b.onclick=()=>{const show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?EYE_OFF:EYE_ON;b.setAttribute("aria-label",show?"Esconder senha":"Mostrar senha");i.focus()}})}
 function toast(t){const el=$("#toast");el.innerHTML=`<i data-lucide="sparkles"></i>${esc(t)}`;icons();el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),2600)}
 const first=()=>S.profile?S.profile.name.split(" ")[0]:"";
 const nowT=()=>new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
@@ -2690,7 +2706,10 @@ function login(){
   const norm=v=>String(v).trim().toLowerCase(),dig=v=>String(v).replace(/\D/g,""),err=t=>{$("#lge").textContent=t};
   $("#lgf").onsubmit=e=>{e.preventDefault();const u=norm($("#lgu").value),w=$("#lgw").value;
     if(!u||!w)return err(`Preencha ${R.u.toLowerCase()} e senha.`);
-    if(FB){const bt=$("#lgf button.btn-primary");bt.disabled=true;err("");FBL.login(u,w,who).then(()=>{location.hash=who==="aluno"?"#/app":who==="empresa"?"#/admin":"#/personal";route(true)}).catch(x=>{bt.disabled=false;err(x.msg)});return}
+    if(FB){const bt=$("#lgf button.btn-primary"),lbl=bt.innerHTML;bt.disabled=true;bt.textContent="Entrando…";err("");
+      const back=()=>{bt.disabled=false;bt.innerHTML=lbl;icons()};
+      FBL.login(u,w,who).then(()=>{location.hash=who==="aluno"?"#/app":who==="empresa"?"#/admin":"#/personal";route(true)})
+        .catch(x=>{back();err((x&&x.msg)||("Não deu certo agora. Tente de novo. (Motivo: "+((x&&(x.code||x.message))||"desconhecido")+")"))});return}
     if(who==="aluno"){if(!S.profile||!S.account)return err("Não encontramos uma conta com esse e-mail neste aparelho. Nesta versão de teste, a conta fica salva no navegador onde foi criada.");
       hashPw(w).then(h=>{if(u!==S.account.email||h!==S.account.h)return err("E-mail ou senha incorretos.");S.loggedOut=false;save();location.hash="#/app"});return}
     if(who==="empresa"){if(u!==ADMIN_EMAIL||w!==TEST_PASS)return err("E-mail ou senha incorretos.");setSess({role:"admin"});location.hash="#/admin";return}
@@ -2933,7 +2952,8 @@ function pMsgs(p,cs){
 }
 /* ================== PAINEL DA EMPRESA ================== */
 function panelAdmin(tab){
-  if(SESS.role!=="admin"){location.hash="#/entrar/empresa";return}
+  /* a empresa que estava "vendo como professor" volta direto ao painel dela (antes voltava para a tela de entrar, sem aviso) */
+  if(SESS.role!=="admin"){if(FB&&FBL.role==="admin")setSess({role:"admin"});else{location.hash="#/entrar/empresa";return}}
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
   const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Professores",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
   const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Professores"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Trabalho da faculdade","Apresentação"]}[tab]||["",""];
