@@ -7709,7 +7709,7 @@ function pzAct(b) {
   pzCfg(P);
   const wk = () => { const bl = P.blocks[+b.dataset.i]; return bl && bl.weeks[+b.dataset.j]; };
   if (k === 'av') { const w = wk(); if (!w) return; const n = pzWeeks(P).find(x => x.w === w); pzMed = bodyOf(me).map(e => e.date); const md = pzMedW(n.d);
-    if (md) return ask({ title: `Semana ${n.n}: avaliação feita`, msg: `Medidas anotadas em ${fmtDate(md)}. A avaliação desta semana já conta como feita.`, ok: 'Ver medidas', extra: w.av ? 'Desmarcar' : null })
+    if (md) return ask({ title: `Semana ${n.n}: avaliação feita`, msg: `Medidas anotadas em ${fmtDate(md)}. A avaliação desta semana já conta como feita.`, ok: 'Medidas', extra: w.av ? 'Desmarcar' : null })
       .then(r => { if (r.action === 'ok') { ui.stTab = 'medidas'; render(); showStTab(); } else if (r.action === 'extra') { w.av = false; save(); render(); } });
     w.av = !w.av; save(); render(); return toast(w.av ? `Avaliação marcada na semana ${n.n}` : `Avaliação tirada da semana ${n.n}`); }
   if (k === 'sessoes') { const w = wk(); if (!w) return; const n = pzWeeks(P).find(x => x.w === w);
