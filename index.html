@@ -3427,7 +3427,7 @@ function renderAgendaV2() {
   const body = sel === today() ? `<b>Hoje · ${sp.length ? esc(names(sp)) : 'Descanso'}</b><small>${ss.length || cm ? `${ss.length} exercícios · ${nSets} séries${cm ? ` · ${fmtMin(cm)} min de cardio` : ''}` : 'Ainda não começou'}</small>`
     : sel > today() ? `<b>${sp.length ? esc(names(sp)) : 'Descanso'}</b><small>${sp.length ? 'Planejado pelo professor' : 'Nada planejado ainda'}</small>`
     : ss.length || cm ? `<b>Treinou ✓</b><small>${[ss.length ? `${ss.length} exercícios · ${nSets} séries · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small>`
-    : `<b>Sem treino</b><small>${missedDay(p, sel) ? 'Faltou neste dia' : 'Dia de descanso'}</small>`;
+    : `<b>Sem treino</b><small>${missedDay(p, sel) ? 'Faltou neste dia' : pausedOn(p, sel) ? 'Aluno pausado' : coveredDay(p, sel) ? 'Treino feito em outro dia da semana' : 'Dia de descanso'}</small>`;
   const ws = weekStart(today());
   $main.innerHTML = `${v2TopHtml()}
     <div class="v2-tiles" style="margin-bottom:12px"><div class="v2-tile acc"><b>${count}</b><span>treinos no mês</span></div>
@@ -5204,19 +5204,36 @@ function dayCard(d, list) {
     ${list.map(s => {
       const done = s.sets.filter(x => x.done), before = prevSession(s.exId, s.date);
       return `<tr><td>${esc(exById(s.exId).name)}${s.by === 'aluno' ? '<span class="by">aluno</span>' : ''}</td><td>${done.length}</td><td>${fmt(Math.max(...done.map(x => x.carga || 0)))}</td>
-        <td><b>${fmt(sessVol(s))}</b></td><td>${before ? delta(sessVol(s), sessVol(before)) : ''}</td></tr>`;
+        <td><b>${fmt(sessVol(s))}</b></td><td>${before ? fairDelta(s, before) : ''}</td></tr>`;
     }).join('')}</tbody></table>` : ''}
     ${cardio.map(c => `<div class="list-row"><div class="grow">${modeOf(c.mode)[1]}${c.by === 'aluno' ? '<span class="by">aluno</span>' : ''}${cardioExtraTxt(c) ? `<small style="display:block;color:var(--muted)">${cardioExtraTxt(c)}</small>` : ''}</div><b>${fmtMin(c.min)} min</b></div>`).join('')}
     <div class="actions"><button class="btn" data-act="openday" data-d="${d}" data-g="${list.length ? exById(list[0].exId).letter || 'A' : CARDIO}">${d === today() && !list.every(x => x.fin) ? 'Abrir / editar este treino' : 'Ver este treino'}</button>${!ui.studentMode && cloudRole() !== 'student' && d < today() ? `<button class="btn" data-act="move-day" data-d="${d}"><i class="ic ic-cal"></i> Passar para outro dia</button>` : ''}${canCheckin() ? `<button class="btn" data-act="checkin" data-d="${d}"><i class="ic ic-cam"></i> Check-in</button>` : ''}</div>
   </section>`;
 }
 // Dia com treino planejado que já passou e o aluno não treinou (aparece no calendário como "não fez")
+// % do Histórico: só as mesmas séries das duas vezes (colocar ou tirar uma série não vira "subiu" ou "caiu", regra do Igor)
+const fairDelta = (s, b) => { const x = effSets(s).filter(q => q.done), y = effSets(b).filter(q => q.done), m = Math.min(x.length, y.length); return m ? delta(vol(x.slice(0, m)), vol(y.slice(0, m))) : ''; };
 function missedDay(p, iso) {
   if (!p || iso >= today()) return false;
-  const first = trainedDates(p.id)[0]; if (!first || iso < first || iso < addDays(today(), -120)) return false; // antes de começar a usar o app não conta
+  const td = trainedDates(p.id), first = td[0]; if (!first || iso < first || iso < addDays(today(), -120)) return false; // antes de começar a usar o app não conta
+  if (pausedOn(p, iso, td)) return false; // aluno pausado: os dias da pausa não contam como falta
   const o = datePlan(p, iso); if (o && o.skip) return false; // dia apagado pelo professor
-  return dayPlan(p, iso).some(w => w !== CARDIO && !isHeld(w, p.id));
+  const ws = dayPlan(p, iso).filter(w => w !== CARDIO && !isHeld(w, p.id));
+  return ws.length > 0 && ws.some(w => !madeUp(p, iso, w));
 }
+// Pausa (Pausar aluno): do dia da pausa até ele voltar a treinar
+const pausedOn = (p, iso, td = trainedDates(p.id)) => !!p.paused && iso >= p.paused && !td.some(d => d > p.paused && d <= iso);
+// Treino feito em outro dia da mesma semana (ex.: o de segunda feito na terça, regra do Igor): o dia planejado não é falta.
+// Conta as vezes: treino planejado 2 vezes na semana e feito 1 vez só cobre o primeiro dia.
+function madeUp(p, iso, w) {
+  const ws = weekStart(iso), we = addDays(ws, 6);
+  let need = 0; for (let d = ws; d <= iso; d = addDays(d, 1)) { const o = datePlan(p, d); if (!(o && o.skip) && dayPlan(p, d).includes(w)) need++; }
+  const days = new Set(profSessions(p.id).filter(s => s.date >= ws && s.date <= we && (s.w || (exById(s.exId) || {}).letter) === w).map(s => s.date));
+  return days.size >= need;
+}
+// Dia planejado que passou sem treino mas não é falta (treino feito em outro dia da semana ou aluno pausado)
+const coveredDay = (p, iso) => { const td = p ? trainedDates(p.id) : [];
+  return !!td.length && iso >= td[0] && iso < today() && !td.includes(iso) && !(datePlan(p, iso) || {}).skip && dayPlan(p, iso).some(w => w !== CARDIO && !isHeld(w, p.id)) && !missedDay(p, iso); };
 // ---------- Resumo da semana (segunda a domingo, igual às Séries por grupo e ao Montar), calculado com o que o aluno marcou ----------
 const sundayOf = iso => addDays(iso, -toDate(iso).getDay());
 const rangeLabel = (a, b) => `${+a.slice(8)}${a.slice(5, 7) === b.slice(5, 7) ? '' : ` de ${MONTHS[+a.slice(5, 7) - 1].slice(0, 3)}`} a ${+b.slice(8)} de ${MONTHS[+b.slice(5, 7) - 1].slice(0, 3)}`;
@@ -5234,8 +5251,9 @@ function periodReport(pid, ws, we, pa, pb, inside) {
   for (let d = ws; d <= we; d = addDays(d, 1)) all.push(d);
   const days = all.filter(d => d <= t);
   const did = new Set(trainedDates(pid).filter(d => d >= ws && d <= we));
-  const planned = days.filter(d => first && d >= first && !(datePlan(p, d) || {}).skip && dayPlan(p, d).some(w => w !== CARDIO && !isHeld(w, pid)));
-  const missed = planned.filter(d => !did.has(d) && d < t), hit = planned.filter(d => did.has(d)), extra = [...did].filter(d => !planned.includes(d));
+  const planned = days.filter(d => first && d >= first && !(datePlan(p, d) || {}).skip && !pausedOn(p, d) && dayPlan(p, d).some(w => w !== CARDIO && !isHeld(w, pid)));
+  // falta = mesma regra do calendário (treino feito em outro dia da semana não é falta)
+  const missed = planned.filter(d => !did.has(d) && missedDay(p, d)), hit = planned.filter(d => did.has(d) || d < t && !missed.includes(d)), extra = [...did].filter(d => !planned.includes(d));
   const ss = profSessions(pid).filter(s => s.date >= ws && s.date <= we);
   const sets = ss.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), half = ss.reduce((a, s) => a + s.sets.filter(x => !x.done).length, 0);
   const kg = volumeBetween(ws, we, null, pid), kgPrev = volumeBetween(pa, pb, null, pid);
@@ -5624,19 +5642,24 @@ const evoSetsVal = (sets, timed) => { const v = timed ? 0 : vol(sets); return v 
 // Uma vez feita: carga máxima (prancha: maior tempo), repetições e total (kg × reps) das séries feitas
 function evoPoint(s, ex) {
   const timed = isTimed(ex), sets = effSets(s).filter(x => x.done);
-  return { date: s.date, sets, timed, top: Math.max(0, ...sets.map(x => (timed ? x.reps : x.carga) || 0)), reps: sets.reduce((a, x) => a + (x.reps || 0), 0), vol: evoSetsVal(sets, timed) };
+  return { date: s.date, w: s.w || (exById(s.exId) || {}).letter || '', sets, timed, top: Math.max(0, ...sets.map(x => (timed ? x.reps : x.carga) || 0)), reps: sets.reduce((a, x) => a + (x.reps || 0), 0), vol: evoSetsVal(sets, timed) };
 }
 // % das mesmas séries: conta só a quantidade de séries que as duas vezes têm (regra do Igor)
 const evoFair = (a, b) => { const m = Math.min(a.sets.length, b.sets.length); if (!m) return null; const x = evoSetsVal(a.sets.slice(0, m), a.timed), y = evoSetsVal(b.sets.slice(0, m), b.timed); return y ? (x - y) / y * 100 : null; };
+// "Desde" e "Carga máx. (+x kg)": a primeira vez no mesmo treino da última (o da segunda com o da segunda)
+const evoFirst = P => P.find(p => p.w === P[P.length - 1].w) || P[0];
 function evoStatus(pts, active) {
   const n = pts.length, last = pts[n - 1], ago = daysBetween(last.date, today());
-  const pct = pts.map((p, i) => i ? evoFair(p, pts[i - 1]) : null), maxBefore = i => Math.max(0, ...pts.slice(0, i).map(p => p.top));
+  // % de cada vez: compara com a última vez no MESMO treino montado (igual ao "antes"; o da segunda e o da quinta têm cargas
+  // diferentes e antes a % pulava ▲▼ entre eles). Primeira vez do exercício naquele treino: fica sem % (não dá para comparar).
+  const ref = pts.map((p, i) => { for (let j = i - 1; j >= 0; j--) if (pts[j].w === p.w) return j; return -1; });
+  const pct = pts.map((p, i) => ref[i] >= 0 ? evoFair(p, pts[ref[i]]) : null), maxBefore = i => Math.max(0, ...pts.slice(0, i).map(p => p.top));
   let stag = 0; for (let i = n - 1; i > 0 && !(pts[i].top > maxBefore(i) + .01 || (pct[i] ?? 0) >= 2); i--) stag++;
   let down = 0; for (let i = n - 1; i > 0 && (pct[i] ?? 0) <= -2; i--) down++;
   const rec = n > 1 && last.top > maxBefore(n - 1) + .01, lp = pct[n - 1] ?? 0;
   const k = active && ago > 14 ? 'parado' : n < 2 ? 'novo' : down >= 2 ? 'queda' : stag >= 3 ? 'estag' : rec ? 'recorde' : lp >= 2 ? 'sobe' : lp <= -2 ? 'caiu' : 'estavel';
   const txt = { parado: `Parado há ${ago} dias`, queda: `Caiu ${down} vezes seguidas`, estag: `Travado há ${stag} treinos` }[k];
-  return { k, txt, ago, pct };
+  return { k, txt, ago, pct, ref };
 }
 // Exercícios do aluno com histórico: um por nome (gêmeos juntos) e por jeito (livre/máquina separados)
 function evoExercises(pid = ui.profile) {
@@ -5707,11 +5730,11 @@ function evoOverviewHtml(list, W) {
   const tiles = [['good', 'up', 'Evoluindo', cnt(['recorde', 'sobe'])], ['neu', 'flat', 'Estáveis', cnt(['estavel', 'novo'])], ['warn', 'pause', 'Atenção', cnt(['caiu', 'estag'])], ['bad', 'alert', 'Urgente', cnt(['queda', 'parado'])]];
   const order = { parado: 0, queda: 1, estag: 2, caiu: 3 };
   const att = base.filter(x => x.st.k in order).sort((a, b) => order[a.st.k] - order[b.st.k] || b.st.ago - a.st.ago);
-  const gain = x => x.pts[x.pts.length - 1].top - x.pts[0].top;
+  const gain = x => x.pts[x.pts.length - 1].top - evoFirst(x.pts).top;
   const good = base.filter(x => ['recorde', 'sobe'].includes(x.st.k)).sort((a, b) => gain(b) - gain(a));
   const name = x => `${esc(x.name)}${x.eq ? ` <small>· ${x.eq === 'maq' ? 'Máquina' : 'Livre'}</small>` : ''}`;
   const item = x => `<li><span class="evo-li-h"><b>${name(x)}</b>${evoChip(x.st.k, x.st.txt)}</span><small>${esc(x.group)} · ${EVO_HINT[x.st.k] || ''}</small></li>`;
-  const gItem = x => { const g = gain(x), f = x.pts[0], l = x.pts[x.pts.length - 1], tp = Math.round(evoFair(l, f) || 0);
+  const gItem = x => { const g = gain(x), f = evoFirst(x.pts), l = x.pts[x.pts.length - 1], tp = Math.round(evoFair(l, f) || 0);
     return `<li><span class="evo-li-h"><b>${name(x)}</b>${evoChip(x.st.k)}</span><small>${esc(x.group)} · ${g > 0 && x.vu === ' kg' ? `+${fmt(g)} kg de carga desde ${fmtDate(f.date)}` : tp > 0 ? `total +${tp}% desde ${fmtDate(f.date)}` : `total de ${fmt(l.vol)}${x.vu} no último`}</small></li>`; };
   // Frequência: grupos × últimas 8 semanas (quadro cheio = treinou; mais forte = mais séries)
   let heat = '';
@@ -5765,11 +5788,11 @@ function evoGroupHtml(g, W, list) {
   const mine = list.filter(x => x.group === g).sort((a, b) => b.active - a.active || b.pts[b.pts.length - 1].date.localeCompare(a.pts[a.pts.length - 1].date));
   const counts = ['recorde', 'sobe', 'estavel', 'novo', 'caiu', 'estag', 'queda', 'parado'].map(k => [k, mine.filter(x => x.st.k === k).length]).filter(x => x[1]);
   const exHtml = mine.map(x => {
-    const P = x.pts, f = P[0], l = P[P.length - 1], u = x.timed ? ' s' : ' kg', g2 = l.top - f.top;
+    const P = x.pts, f = evoFirst(P), l = P[P.length - 1], u = x.timed ? ' s' : ' kg', g2 = l.top - f.top;
     const tp = evoFair(l, f); // mesmas séries (regra do Igor): 3 séries contra 4 não vira "subiu"
     const facts = [`Total no último: <b>${fmt(l.vol)}${x.vu}</b>`, `Melhor total: <b>${fmt(Math.max(...P.map(p => p.vol)))}${x.vu}</b>`,
-      x.vu === ' kg' ? `Carga máx.: <b>${fmt(l.top)} kg</b>${P.length > 1 && g2 ? ` (${g2 > 0 ? '+' : ''}${fmt(g2)} kg)` : ''}` : '',
-      P.length > 1 && tp != null ? `Desde ${fmtDate(f.date)}: ${evoPctPill(tp)}` : '', `${P.length} ${P.length === 1 ? 'treino' : 'treinos'}`, x.active ? '' : 'fora do treino atual'].filter(Boolean);
+      x.vu === ' kg' ? `Carga máx.: <b>${fmt(l.top)} kg</b>${f !== l && g2 ? ` (${g2 > 0 ? '+' : ''}${fmt(g2)} kg)` : ''}` : '',
+      f !== l && tp != null ? `Desde ${fmtDate(f.date)}: ${evoPctPill(tp)}` : '', `${P.length} ${P.length === 1 ? 'treino' : 'treinos'}`, x.active ? '' : 'fora do treino atual'].filter(Boolean);
     const tr = P.slice().reverse().map((p, i, arr) => `<tr><td>${fmtDate(p.date)}<small>/${p.date.slice(2, 4)}</small></td><td><b>${fmt(p.top)}${u}</b></td><td>${p.sets.length}</td><td>${x.timed ? fmtSec(p.reps) : p.reps}</td><td>${fmt(p.vol)}</td><td>${arr[i + 1] ? evoPctPill(x.st.pct[P.length - 1 - i]) : ''}</td></tr>`).join('');
     const Q = x.prev || [], coach = canPullPrev() && !ui.demo, picking = coach && ui.evoSub === x.ex.id;
     const subRow = Q.length ? `<p class="evo-subn">${v2Ico(SUB_ICO)}<span class="grow">Substituiu <b>${esc(x.subName)}</b> em ${fmtDate(P[0].date)}. A parte cinza do gráfico é o exercício antigo.</span>${coach ? `<button class="link" data-act="evo-sub" data-id="${x.ex.id}">${picking ? 'Fechar' : 'Mudar'}</button>` : ''}</p>`
@@ -5846,11 +5869,11 @@ function drawEvoLine(wrap, x, W) {
       const r = el.getBoundingClientRect(), px = (e.clientX - r.left) * W / r.width;
       const A = [...(x.prev || []), ...x.pts], nq = A.length - x.pts.length;
       let i = 0, bd = Infinity; A.forEach((p, k) => { const d = Math.abs(X(p) - px); if (d < bd) { bd = d; i = k; } });
-      const p = A[i], pc = i >= nq ? x.st.pct[i - nq] : null;
+      const p = A[i], pc = i >= nq ? x.st.pct[i - nq] : null, rf = i >= nq && x.st.ref[i - nq] >= 0 ? x.pts[x.st.ref[i - nq]] : null;
       xh.setAttribute('x1', X(p)); xh.setAttribute('x2', X(p)); xh.setAttribute('visibility', 'visible');
       tip.innerHTML = `<div class="th">${fmtDate(p.date)}/${p.date.slice(2, 4)}</div>${nq ? `<div class="r"><span class="n">${esc(i < nq ? p.name : x.name)}</span></div>` : ''}<div class="r"><b>${fmt(p.vol)}${x.vu}</b><span class="n">total</span></div>${x.vu === ' kg' ? `<div class="r"><b>${fmt(p.top)} kg</b><span class="n">carga máx.</span></div>` : ''}
         <div class="r"><b>${p.sets.length} × ${x.timed ? fmtSec(Math.round(p.reps / Math.max(1, p.sets.length))) : fmt(Math.round(p.reps / Math.max(1, p.sets.length) * 10) / 10)}</b><span class="n">séries × média</span></div>
-        ${pc != null ? `<div class="r">${evoPctPill(pc)}<span class="n">vs. vez anterior</span></div>` : ''}`;
+        ${pc != null ? `<div class="r">${evoPctPill(pc)}<span class="n">vs. ${rf ? fmtDate(rf.date) : 'vez anterior'}</span></div>` : ''}`;
       tip.hidden = false;
       const left = X(p) * r.width / W, tw = tip.offsetWidth;
       tip.style.left = Math.min(Math.max(0, left > r.width / 2 ? left - tw - 12 : left + 12), r.width - tw) + 'px';
@@ -10026,7 +10049,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '17/11-23:26';
+const APP_VERSION = '19/11-00:47';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
