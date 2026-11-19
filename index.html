@@ -3427,7 +3427,7 @@ function renderAgendaV2() {
   const body = sel === today() ? `<b>Hoje · ${sp.length ? esc(names(sp)) : 'Descanso'}</b><small>${ss.length || cm ? `${ss.length} exercícios · ${nSets} séries${cm ? ` · ${fmtMin(cm)} min de cardio` : ''}` : 'Ainda não começou'}</small>`
     : sel > today() ? `<b>${sp.length ? esc(names(sp)) : 'Descanso'}</b><small>${sp.length ? 'Planejado pelo professor' : 'Nada planejado ainda'}</small>`
     : ss.length || cm ? `<b>Treinou ✓</b><small>${[ss.length ? `${ss.length} exercícios · ${nSets} séries · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small>`
-    : `<b>Sem treino</b><small>${missedDay(p, sel) ? 'Faltou neste dia' : pausedOn(p, sel) ? 'Aluno pausado' : coveredDay(p, sel) ? 'Treino feito em outro dia da semana' : 'Dia de descanso'}</small>`;
+    : `<b>Sem treino</b><small>${missedDay(p, sel) ? 'Faltou neste dia' : 'Dia de descanso'}</small>`;
   const ws = weekStart(today());
   $main.innerHTML = `${v2TopHtml()}
     <div class="v2-tiles" style="margin-bottom:12px"><div class="v2-tile acc"><b>${count}</b><span>treinos no mês</span></div>
@@ -5215,25 +5215,10 @@ function dayCard(d, list) {
 const fairDelta = (s, b) => { const x = effSets(s).filter(q => q.done), y = effSets(b).filter(q => q.done), m = Math.min(x.length, y.length); return m ? delta(vol(x.slice(0, m)), vol(y.slice(0, m))) : ''; };
 function missedDay(p, iso) {
   if (!p || iso >= today()) return false;
-  const td = trainedDates(p.id), first = td[0]; if (!first || iso < first || iso < addDays(today(), -120)) return false; // antes de começar a usar o app não conta
-  if (pausedOn(p, iso, td)) return false; // aluno pausado: os dias da pausa não contam como falta
+  const first = trainedDates(p.id)[0]; if (!first || iso < first || iso < addDays(today(), -120)) return false; // antes de começar a usar o app não conta
   const o = datePlan(p, iso); if (o && o.skip) return false; // dia apagado pelo professor
-  const ws = dayPlan(p, iso).filter(w => w !== CARDIO && !isHeld(w, p.id));
-  return ws.length > 0 && ws.some(w => !madeUp(p, iso, w));
+  return dayPlan(p, iso).some(w => w !== CARDIO && !isHeld(w, p.id));
 }
-// Pausa (Pausar aluno): do dia da pausa até ele voltar a treinar
-const pausedOn = (p, iso, td = trainedDates(p.id)) => !!p.paused && iso >= p.paused && !td.some(d => d > p.paused && d <= iso);
-// Treino feito em outro dia da mesma semana (ex.: o de segunda feito na terça, regra do Igor): o dia planejado não é falta.
-// Conta as vezes: treino planejado 2 vezes na semana e feito 1 vez só cobre o primeiro dia.
-function madeUp(p, iso, w) {
-  const ws = weekStart(iso), we = addDays(ws, 6);
-  let need = 0; for (let d = ws; d <= iso; d = addDays(d, 1)) { const o = datePlan(p, d); if (!(o && o.skip) && dayPlan(p, d).includes(w)) need++; }
-  const days = new Set(profSessions(p.id).filter(s => s.date >= ws && s.date <= we && (s.w || (exById(s.exId) || {}).letter) === w).map(s => s.date));
-  return days.size >= need;
-}
-// Dia planejado que passou sem treino mas não é falta (treino feito em outro dia da semana ou aluno pausado)
-const coveredDay = (p, iso) => { const td = p ? trainedDates(p.id) : [];
-  return !!td.length && iso >= td[0] && iso < today() && !td.includes(iso) && !(datePlan(p, iso) || {}).skip && dayPlan(p, iso).some(w => w !== CARDIO && !isHeld(w, p.id)) && !missedDay(p, iso); };
 // ---------- Resumo da semana (segunda a domingo, igual às Séries por grupo e ao Montar), calculado com o que o aluno marcou ----------
 const sundayOf = iso => addDays(iso, -toDate(iso).getDay());
 const rangeLabel = (a, b) => `${+a.slice(8)}${a.slice(5, 7) === b.slice(5, 7) ? '' : ` de ${MONTHS[+a.slice(5, 7) - 1].slice(0, 3)}`} a ${+b.slice(8)} de ${MONTHS[+b.slice(5, 7) - 1].slice(0, 3)}`;
@@ -5251,9 +5236,8 @@ function periodReport(pid, ws, we, pa, pb, inside) {
   for (let d = ws; d <= we; d = addDays(d, 1)) all.push(d);
   const days = all.filter(d => d <= t);
   const did = new Set(trainedDates(pid).filter(d => d >= ws && d <= we));
-  const planned = days.filter(d => first && d >= first && !(datePlan(p, d) || {}).skip && !pausedOn(p, d) && dayPlan(p, d).some(w => w !== CARDIO && !isHeld(w, pid)));
-  // falta = mesma regra do calendário (treino feito em outro dia da semana não é falta)
-  const missed = planned.filter(d => !did.has(d) && missedDay(p, d)), hit = planned.filter(d => did.has(d) || d < t && !missed.includes(d)), extra = [...did].filter(d => !planned.includes(d));
+  const planned = days.filter(d => first && d >= first && !(datePlan(p, d) || {}).skip && dayPlan(p, d).some(w => w !== CARDIO && !isHeld(w, pid)));
+  const missed = planned.filter(d => !did.has(d) && d < t), hit = planned.filter(d => did.has(d)), extra = [...did].filter(d => !planned.includes(d));
   const ss = profSessions(pid).filter(s => s.date >= ws && s.date <= we);
   const sets = ss.reduce((a, s) => a + s.sets.filter(x => x.done).length, 0), half = ss.reduce((a, s) => a + s.sets.filter(x => !x.done).length, 0);
   const kg = volumeBetween(ws, we, null, pid), kgPrev = volumeBetween(pa, pb, null, pid);
@@ -10049,7 +10033,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '19/11-00:47';
+const APP_VERSION = '19/11-20:12';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
