@@ -583,6 +583,8 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .pz-fases input:checked+span{border-color:var(--fc);background:color-mix(in srgb,var(--fc) 40%,transparent)!important}
 @media (max-width:340px){.pz-dlg .pz-2{grid-template-columns:1fr}}
 @media (max-width:420px){.pz-tot b{font-size:16px}.pz-t .pz-l{min-width:88px;max-width:88px;font-size:11.5px}}
+.pz-fe{display:inline-grid;place-items:center;min-width:26px;height:22px;border-radius:7px;font-size:12px;font-weight:800;background:rgba(255,255,255,.08)}.pz-fe.ok{background:var(--up-bg);color:var(--up)}.pz-fe.lo{background:var(--down-bg);color:var(--down)}
+.pz-al{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:14px;border:1px dashed var(--acc);background:var(--acc-soft)}.pz-al>.v2i{width:20px;height:20px;color:var(--acc);flex:none}.pz-al .grow{min-width:0}.pz-al small{display:block;color:var(--muted)}.pz-al .v2-btn{flex:none}
 /* Resumo em duas colunas que se encaixam (sem buracos entre os cartões) */
 body.desk .ws[data-active=resumo] [data-tab=resumo]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
 body.desk .ws[data-active=resumo] .rs-col > section{margin-top:0;margin-bottom:14px}
@@ -7538,10 +7540,11 @@ const PZI = {
 };
 const pzIco = k => v2Ico(PZI[k]);
 function pzModelo() {
-  const W = (ms, avs, ss) => ms.map((m, i) => ({ id: uid(), m, av: avs.includes(i + 1), s: ss[i] }));
+  let W = (ms, avs, ss) => ms.map((m, i) => ({ id: uid(), m, av: avs.includes(i + 1), s: ss[i] }));
   const caps = ['Flexibilidade', 'Força máxima', 'Força de resistência', 'Força isométrica', 'Resistência cardiorrespiratória', 'Potência', 'Velocidade de reação'].map(name => ({ id: uid(), name }));
   const C = lv => Object.fromEntries(caps.map((c, i) => [c.id, lv[i]]));
-  const ini = weekStart(today());
+  const ini = pzTreinoIni() || weekStart(today()), dias = pzDiasSemana();
+  const W0 = W; W = (ms, avs, ss) => W0(ms, avs, ss.map(x => Math.max(1, Math.round(x / 12 * dias))));
   return {
     info: { nome: 'Treinamento do semestre', mod: 'Jiu-jítsu', cat: 'Adulto', idade: '18 a 29 anos', sexo: 'Masculino', dur: 120, ini },
     caps,
@@ -7556,6 +7559,18 @@ function pzModelo() {
   };
 }
 const pzOf = () => profile(ME).perio;
+// Quando começou o treino atual (palpite): a semana em que mais exercícios do treino de hoje apareceram pela 1ª vez (últimas 12 semanas)
+function pzTreinoIni() {
+  const ids = new Set(profExs(ME).filter(e => !e.archived && isLetter(e.letter, ME)).map(e => e.id)), first = new Map();
+  for (const x of profSessions(ME)) if (ids.has(x.exId) && (!first.has(x.exId) || x.date < first.get(x.exId))) first.set(x.exId, x.date);
+  const lim = addDays(today(), -84), cnt = new Map();
+  for (const d of first.values()) if (d >= lim) { const w = weekStart(d); cnt.set(w, (cnt.get(w) || 0) + 1); }
+  let best = null; for (const [w, n] of cnt) if (n >= 2 && (!best || n > best[1] || (n === best[1] && w > best[0]))) best = [w, n];
+  return best ? best[0] : null;
+}
+// Treinos por semana da divisão (dias com treino de musculação); sem divisão, 4
+function pzDiasSemana() { const dv = profile(ME).division || {}; const n = Object.values(dv).filter(g => (g || []).some(x => x !== CARDIO)).length; return n || 4; }
+const pzFeitas = d => { const e = addDays(d, 6); return trainedDates(ME).filter(x => x >= d && x <= e).length; };
 // lista de semanas com o bloco e a data de cada uma
 function pzWeeks(P) {
   const out = []; let n = 0;
@@ -7589,8 +7604,10 @@ function periodHtml() {
     <tr><th class="pz-l">Microciclo</th>${cells(x => `<td class="pz-c"><button class="pz-m m-${x.w.m}" data-act="pz" data-k="semana" data-i="${x.bi}" data-j="${x.wi}">${x.w.m}</button></td>`)}</tr>
     <tr><th class="pz-l">Avaliação</th>${cells(x => `<td class="pz-c">${x.w.av ? `<span class="pz-av">${pzIco('check')}</span>` : ''}</td>`)}</tr>
     <tr><th class="pz-l">Sessões</th>${cells(x => `<td class="pz-c"><b>${+x.w.s || 0}</b></td>`)}</tr>
+    <tr><th class="pz-l">Feitas</th>${cells(x => { if (x.d > hoje) return '<td class="pz-c"></td>'; const f = pzFeitas(x.d), ok = f >= (+x.w.s || 0);
+      return `<td class="pz-c"><span class="pz-fe ${ok ? 'ok' : x === cur ? '' : 'lo'}">${f}</span></td>`; })}</tr>
     ${compRows}</table></div>`;
-  const legend = `<div class="pz-leg">${Object.entries(PZ_MICRO).map(([k, [n]]) => `<span><i class="pz-m m-${k}">${k}</i>${n}</span>`).join('')}<span><i class="pz-av">${pzIco('check')}</i>Avaliação</span></div>`;
+  const legend = `<div class="pz-leg">${Object.entries(PZ_MICRO).map(([k, [n]]) => `<span><i class="pz-m m-${k}">${k}</i>${n}</span>`).join('')}<span><i class="pz-av">${pzIco('check')}</i>Avaliação</span><span><i class="pz-fe ok">5</i>Feitas: treinos feitos na semana</span></div>`;
   // blocos
   const blocks = P.blocks.map((b, i) => { const s = b.weeks.reduce((a, w) => a + (+w.s || 0), 0), first = W.find(x => x.bi === i);
     return `<div class="pz-b" style="--fc:${PZ_FASES[b.fase][1]}"><div class="pz-bh"><div class="grow"><b>${esc(b.name)}</b>
@@ -7616,7 +7633,8 @@ function periodHtml() {
       <small>${fmtDateY(I.ini)} a ${fmtDateY(fim)}</small></div><button class="v2-icbtn sm" data-act="pz" data-k="info" aria-label="Editar dados">${pzIco('edit')}</button></div>
     ${chips ? `<div class="pz-chips">${chips}</div>` : ''}
     <div class="pz-kv pz-tot"><div><b>${W.length}</b><small>semanas</small></div><div><b>${P.blocks.length}</b><small>blocos</small></div><div><b>${tot}</b><small>sessões</small></div><div><b>${pzH(tot * (+I.dur || 0))}</b><small>horas</small></div></div>
-    ${cur ? `<div class="pz-now" style="--fc:${PZ_FASES[cur.b.fase][1]}">${pzIco('cal')}<div class="grow"><b>Agora: semana ${cur.n} de ${W.length}</b><small>${esc(cur.b.name)} · ${PZ_MICRO[cur.w.m][0].toLowerCase()} · ${+cur.w.s || 0} sessões</small></div></div>` : ''}</section>
+    ${(() => { const t = pzTreinoIni(); return I.alinhado ? '' : `<div class="pz-al">${pzIco('info')}<div class="grow"><b>Alinhar com o seu treino</b><small>${t ? `Pelo app, seu treino atual começou na semana de ${fmtDate(t)}.` : 'Diga quando começou o seu treino atual.'}</small></div><button class="v2-btn sm pri" data-act="pz" data-k="alinhar">Alinhar</button></div>`; })()}
+    ${cur ? `<div class="pz-now" style="--fc:${PZ_FASES[cur.b.fase][1]}">${pzIco('cal')}<div class="grow"><b>Agora: semana ${cur.n} de ${W.length}</b><small>${esc(cur.b.name)} · ${PZ_MICRO[cur.w.m][0].toLowerCase()} · ${pzFeitas(cur.d)} de ${+cur.w.s || 0} treinos feitos</small></div></div>` : ''}</section>
   <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('cal')} Macrociclo semana a semana</h3><small>Toque numa semana para mudar o microciclo, a avaliação e as sessões. Arraste para o lado para ver tudo.</small></div></div>
     ${W.length ? table + legend : '<p class="empty">Crie um bloco para ver as semanas.</p>'}</section>
   <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('layers')} Blocos (mesociclos)</h3><small>Cada bloco tem a sua fase, objetivo, volume e intensidade.</small></div></div>
@@ -7643,13 +7661,16 @@ const pzIn = (l, n, v = '', a = '') => `<label class="f">${l}<input name="${n}" 
 function pzAct(b) {
   const me = profile(ME), P = me.perio, k = b.dataset.k;
   if (k === 'modelo') { me.perio = pzModelo(); save(); return render(); }
-  if (k === 'zero') { me.perio = { info: { nome: 'Minha periodização', ini: weekStart(today()), dur: 60 }, caps: [], blocks: [{ id: uid(), name: 'Bloco 1', fase: 'prep', obj: '', vol: '', int: '', weeks: [1, 2, 3, 4].map(() => ({ id: uid(), m: 'ORD', av: false, s: 4 })), caps: {} }], comps: [] }; save(); return render(); }
+  if (k === 'zero') { me.perio = { info: { nome: 'Minha periodização', ini: pzTreinoIni() || weekStart(today()), dur: 60 }, caps: [], blocks: [{ id: uid(), name: 'Bloco 1', fase: 'prep', obj: '', vol: '', int: '', weeks: [1, 2, 3, 4].map(() => ({ id: uid(), m: 'ORD', av: false, s: pzDiasSemana() })), caps: {} }], comps: [] }; save(); return render(); }
   if (!P) return;
+  if (k === 'alinhar') { const t = pzTreinoIni() || weekStart(addDays(today(), -14));
+    return pzForm('Alinhar com o seu treino', `<p class="hint">A semana 1 da periodização passa a ser a semana em que o seu treino atual começou. Nada muda nos treinos e nas cargas.</p>${pzIn('Quando começou o treino atual?', 'ini', t, 'type="date" required')}`,
+      { onSave: f => { if (!f.ini.value) return false; P.info.ini = weekStart(f.ini.value); P.info.alinhado = true; ui.pzSL = null; } }); }
   if (k === 'info') { const I = P.info;
     return pzForm('Dados da periodização', pzIn('Nome do plano', 'nome', I.nome, 'required maxlength="60"') + `<div class="pz-2">${pzIn('Modalidade', 'mod', I.mod, 'maxlength="30"')}${pzIn('Categoria', 'cat', I.cat, 'maxlength="30"')}</div>
       <div class="pz-2">${pzIn('Idade', 'idade', I.idade, 'maxlength="20"')}${pzIn('Sexo', 'sexo', I.sexo, 'maxlength="20"')}</div>
       <div class="pz-2">${pzIn('Sessão (minutos)', 'dur', I.dur, 'inputmode="numeric" type="number" min="0" max="600"')}${pzIn('Começa em', 'ini', I.ini, 'type="date" required')}</div>`,
-    { del: 'Apagar a periodização', onSave: f => { const v = n => f[n].value.trim(); Object.assign(I, { nome: v('nome'), mod: v('mod'), cat: v('cat'), idade: v('idade'), sexo: v('sexo'), dur: Math.max(0, +v('dur') || 0) }); if (v('ini')) I.ini = v('ini'); }, onDel: () => { delete me.perio; } }); }
+    { del: 'Apagar a periodização', onSave: f => { const v = n => f[n].value.trim(); Object.assign(I, { nome: v('nome'), mod: v('mod'), cat: v('cat'), idade: v('idade'), sexo: v('sexo'), dur: Math.max(0, +v('dur') || 0) }); if (v('ini')) { if (v('ini') !== I.ini) I.alinhado = true; I.ini = v('ini'); } }, onDel: () => { delete me.perio; } }); }
   if (k === 'semana') { const bl = P.blocks[+b.dataset.i], w = bl && bl.weeks[+b.dataset.j]; if (!w) return;
     const n = pzWeeks(P).find(x => x.w === w);
     return pzForm(`Semana ${n.n} · ${fmtDate(n.d)} a ${fmtDate(addDays(n.d, 6))}`, `<p class="hint">${esc(bl.name)}</p><p class="hint" style="margin-bottom:6px">Tipo de semana (microciclo)</p>
@@ -10264,7 +10285,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '19/11-20:19';
+const APP_VERSION = '19/11-20:29';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
