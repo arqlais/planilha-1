@@ -1342,6 +1342,10 @@ a.v2-btn{text-decoration:none}
 .v2-row .av{background:var(--lilac);color:var(--lilac-ink)}
 .v2-row .av.sm{width:34px;height:34px;font-size:12px}
 .v2-row small.warn{color:var(--coral)}.v2-row small.ok{color:var(--good)}
+.v2-row small.live,.v2-live{color:var(--good);font-weight:800}.v2-row small.live::before,.v2-live::before,.v2-st.live::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:1px;animation:v2pulse 1.6s ease-in-out infinite}
+.v2-st.live{background:rgba(111,209,150,.18);color:var(--good);align-items:center}.v2-st.live::before{vertical-align:0}
+@keyframes v2pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(111,209,150,.55)}50%{opacity:.6;box-shadow:0 0 0 5px rgba(111,209,150,0)}}
+@media (prefers-reduced-motion:reduce){.v2-row small.live::before,.v2-live::before,.v2-st.live::before{animation:none}}
 .v2-t{font-size:12px;color:var(--muted);font-weight:700;flex:none}
 .v2-feat{display:block;width:100%;border:0;padding:0;background:none;text-align:left;border-radius:28px;overflow:hidden}
 .v2-featph{height:170px;border-radius:28px}
@@ -3921,12 +3925,24 @@ const v2Students = () => db.profiles.filter(p => p.id !== ME && !p.test).sort((a
 // Aluno pausado (parado, mas pode voltar): sai da lista de atenção e o contador de dias para.
 // Nada é apagado. Se ele voltar a treinar depois da pausa, sai da pausa sozinho.
 const isPaused = p => !!(p && p.paused && !((trainedDates(p.id).slice(-1)[0] || '') > p.paused));
+// Aluno treinando agora: já mexeu no treino de hoje (marcou série ou anotou carga) e ainda não enviou.
+// Ao enviar, vira "Treinou hoje". Se ficar 2 h sem mexer em nada (esqueceu de enviar), também volta a "Treinou hoje".
+// Só leitura: não muda nenhuma carga, série ou histórico.
+const TRAINING_IDLE = 2 * 3600e3;
+function trainingNow(pid) {
+  const ss = profSessions(pid).filter(s => s.date === today());
+  const sent = ss.map(s => s.fin).filter(Boolean).sort().pop() || '';
+  const open = ss.filter(s => !s.fin && s.sets.some(x => x.done || x.carga != null || x.reps != null));
+  const last = open.map(s => s.up || s.t0).filter(Boolean).sort().pop();
+  return !!last && last > sent && Date.now() - new Date(last).getTime() < TRAINING_IDLE;
+}
 function v2Status(p) {
   if (isPaused(p)) return ['pause', `Pausado desde ${fmtDate(p.paused)}`];
   if (CLOUD && !p.uid) return ['warn', 'Convite não aceito'];
   const last = trainedDates(p.id).pop();
   if (!last) return ['', 'Ainda não treinou'];
   const n = daysBetween(last, today());
+  if (n === 0 && trainingNow(p.id)) return ['live', 'Treinando agora'];
   return n === 0 ? ['ok', 'Treinou hoje'] : n === 1 ? ['', 'Treinou ontem'] : n >= 7 ? ['warn', `Há ${n} dias sem treinar`] : ['', `Último treino há ${n} dias`];
 }
 const v2WeekDots = pid => { const ws = weekStart(today()), d = v2Days(pid); return `<div class="v2-dots">${Array.from({ length: 7 }, (_, i) => `<i class="${d.has(addDays(ws, i)) ? 'on' : ''}"></i>`).join('')}</div>`; };
@@ -4057,7 +4073,7 @@ function renderPainelV2() {
     <div class="v2-sec"><h3>Hoje nos treinos</h3><button data-view="alunos">Todos</button></div>
     <section class="card">${todayL.map(p => { const ss = profSessions(p.id).filter(s => s.date === today() && hasDone(s)), kg = ss.reduce((a, s) => a + sessVol(s), 0), cm = cardioBetween(today(), today(), p.id);
       const fin = ss.map(s => s.fin).filter(Boolean).sort().pop();
-      return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
+      return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span><div class="grow"><b>${esc(firstName(p))}</b><small>${[ss.length ? `${ss.length} exercício${ss.length === 1 ? '' : 's'} · ${fmt(kg)} kg` : '', cm ? `${fmtMin(cm)} min de cardio` : ''].filter(Boolean).join(' · ')}</small></div><span class="v2-t">${trainingNow(p.id) ? '<span class="v2-live">treinando</span>' : fin ? new Date(fin).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'hoje'}</span></div>`; }).join('') || '<p class="v2-muted" style="margin:0;text-align:center">Ninguém treinou hoje ainda.</p>'}</section>
     ${cardioWeekListHtml(sts.filter(p => !isPaused(p)))}
     </div><div class="col">
     ${me ? cardioDaysHtml(me, 'Seu cardio da semana') : ''}
@@ -4086,7 +4102,7 @@ function renderAlunosV2() {
     ${v2Sign()}`;
 }
 const v2FilterOk = (p, f) => { const t = v2Status(p)[1];
-  return f === 'Pausados' ? isPaused(p) : f === 'Todos' ? true : f === 'Hoje' ? t === 'Treinou hoje' : f === 'Sumidos' ? /dias sem treinar/.test(t) : f === 'Convite' ? t === 'Convite não aceito' : true; };
+  return f === 'Pausados' ? isPaused(p) : f === 'Todos' ? true : f === 'Hoje' ? (t === 'Treinou hoje' || t === 'Treinando agora') : f === 'Sumidos' ? /dias sem treinar/.test(t) : f === 'Convite' ? t === 'Convite não aceito' : true; };
 const v2ListHtml = list => list.map(p => { const [k, t] = v2Status(p); return `<div class="v2-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av">${avIn(p)}</span><div class="grow"><b>${esc(p.name)}</b>
     <small class="${k}">${t}${isConsult(p) ? '' : ' · só o app'}</small>${v2WeekDots(p.id)}</div>${v2Ico('<path d="M5 12h14M13 6l6 6-6 6"/>')}</div>`; }).join('') || '<p class="v2-muted" style="text-align:center;margin:0">Ninguém aqui.</p>';
 function v2ProfHead(p) {
@@ -5954,7 +5970,7 @@ function profileSummary(pid) {
   const [now, before] = weekPair(null, pid, today());
   const lastGroups = last ? '· ' + [...new Set([...sess.filter(s => s.date === last).map(s => exById(s.exId).group), ...profCardio(pid).filter(c => c.date === last).map(() => CARDIO)])].join(', ') : '';
   let lastTxt = 'Ainda não treinou';
-  if (last) { const n = daysBetween(last, today()); lastTxt = n === 0 ? 'Treinou hoje' : n === 1 ? 'Treinou ontem' : `Último treino há ${n} dias (${fmtDate(last)})`; }
+  if (last) { const n = daysBetween(last, today()); lastTxt = n === 0 ? (trainingNow(pid) ? 'Treinando agora' : 'Treinou hoje') : n === 1 ? 'Treinou ontem' : `Último treino há ${n} dias (${fmtDate(last)})`; }
   return { last, lastTxt, lastGroups, weekDays, now, before };
 }
 // Perfil de teste: simula que o aluno fez todos os treinos nesta semana (um treino por dia, todas as séries feitas)
