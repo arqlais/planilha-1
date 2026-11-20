@@ -591,6 +591,7 @@ body.desk #rest{bottom:24px;left:calc(50% + 114px)}
 .pz-fa button{all:unset;cursor:pointer;display:block;width:100%;overflow:hidden}
 .pz-lh{margin:14px 0 0;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pz-cn .pz-flag{min-width:24px;height:18px;font-size:9.5px;text-decoration:none}.pz-cn span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.pz-ob .pz-tap{display:flex;gap:2px;justify-content:center}
 .pz-legb{margin-top:6px}.pz-legb button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:4px 10px 4px 4px;border-radius:99px;border:1px solid var(--line);color:var(--text);font-size:12.5px}
 .pz-legb button:hover{border-color:var(--acc)}.pz-legb .pz-new{padding:4px 10px;border-style:dashed;color:var(--acc)}.pz-legb .pz-new .v2i{width:14px;height:14px}
 .pz-fdot{display:block;width:14px;height:14px;border-radius:50%;background:var(--fc);margin-left:4px}
@@ -7588,7 +7589,7 @@ function pzModelo() {
       { id: uid(), name: 'Competitivo', fase: 'comp', obj: 'Máxima intensidade para competir', vol: '50 a 75', int: '80 a 100', weeks: W(['CHO', 'ORD', 'CHO', 'COMP'], [3], [12, 12, 10, 10]), caps: C([2, 3, 2, 3, 2, 3, 3]) },
       { id: uid(), name: 'Transição', fase: 'trans', obj: 'Recuperar o corpo', vol: '40 a 60', int: '40 a 60', weeks: W(['REC', 'REC', 'REC', 'REC'], [], [6, 6, 6, 6]), caps: C([1, 1, 1, 1, 1, 1, 1]) }
     ],
-    comps: [{ id: uid(), name: 'Campeonato Paulista', tag: 'CP', date: addDays(ini, 12 * 7 + 5) }, { id: uid(), name: 'Campeonato Mundial', tag: 'CM', date: addDays(ini, 19 * 7 + 5) }]
+    comps: [], objLimpo: true
   };
 }
 const pzOf = () => profile(ME).perio;
@@ -7618,6 +7619,8 @@ const pzH = min => { const h = min / 60; return `${fmt(Math.round(h * 10) / 10)}
 function pzCompWeek(P, c) { const k = Math.floor((toDate(c.date) - toDate(P.info.ini)) / 864e5 / 7); return k + 1; }
 function periodHtml() {
   const P = pzOf(); pzCfg(P);
+  // Igor (19/11): tirar as linhas de campeonato do modelo; fica uma linha só de Objetivo
+  if (P && !P.objLimpo) { P.comps = (P.comps || []).filter(c => !(['Campeonato Paulista', 'Campeonato Mundial'].includes(c.name) && ['CP', 'CM'].includes(c.tag))); P.objLimpo = true; save(); }
   if (!P) return `<section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('layers')} Periodização</h3>
       <small>Planeje a temporada em fases, blocos e semanas: volume, intensidade, capacidades e competições.</small></div></div>
       <div class="pz-empty"><p>Comece com o modelo pronto (macrociclo de 24 semanas) e depois ajuste tudo do seu jeito, ou comece do zero.</p>
@@ -7631,8 +7634,10 @@ function periodHtml() {
   const cells = (fn) => W.map(fn).join('');
   const span = (key, lab) => { const out = []; W.forEach(x => { const k = key(x); const l = out[out.length - 1]; if (l && l.k === k) l.n++; else out.push({ k, n: 1, x }); }); return out.map(o => lab(o)).join(''); };
   const fc = x => `style="--fc:${PZ_FASES[x.b.fase][1]}"`;
-  const compRows = P.comps.slice().sort((a, b) => a.date < b.date ? -1 : 1).map(c => { const k = pzCompWeek(P, c);
-    return `<tr><th class="pz-l" title="${esc(c.name)}"><button class="pz-cn" data-act="pz" data-k="comp" data-id="${c.id}"><span class="pz-flag">${esc(c.tag || '•')}</span><span>${esc(c.name)}</span></button></th>${cells(x => `<td class="pz-c"><button class="pz-tap" data-act="pz" data-k="comp-sem" data-id="${c.id}" data-n="${x.n}" aria-label="${esc(c.name)} na semana ${x.n}">${x.n === k ? `<span class="pz-flag">${esc(c.tag || '•')}</span>` : '<span class="pz-avo"></span>'}</button></td>`)}</tr>`; }).join('');
+  // Objetivos (competições, provas, metas com data): uma linha só; toque numa semana vazia cria um objetivo nela
+  const objW = n => P.comps.filter(c => pzCompWeek(P, c) === n).sort((a, b) => a.date < b.date ? -1 : 1);
+  const compRows = `<tr class="pz-ob"><th class="pz-l">Objetivo</th>${cells(x => { const os = objW(x.n);
+    return `<td class="pz-c"><button class="pz-tap" data-act="pz" data-k="${os.length ? 'comp' : 'obj-sem'}" data-id="${os.length ? os[0].id : ''}" data-n="${x.n}" aria-label="${os.length ? os.map(o => esc(o.name)).join(', ') : `Criar objetivo na semana ${x.n}`}" title="${os.map(o => esc(o.name)).join(', ')}">${os.length ? os.map(o => `<span class="pz-flag">${esc(o.tag || '•')}</span>`).join('') : '<span class="pz-avo"></span>'}</button></td>`; })}</tr>`;
   const table = `<div class="pz-scroll"><table class="pz-t">
     <tr class="pz-mo"><th class="pz-l">Mês</th>${span(x => x.d.slice(0, 7), o => `<td colspan="${o.n}">${pzMonth(o.x.d)}</td>`)}</tr>
     <tr class="pz-fa"><th class="pz-l">Fase</th>${span(x => x.b.fase + x.bi, o => `<td colspan="${o.n}" ${fc(o.x)}><button data-act="pz" data-k="fase" data-f="${o.x.b.fase}"><span>${esc(PZ_FASES[o.x.b.fase][0])}</span></button></td>`)}</tr>
@@ -7678,15 +7683,15 @@ function periodHtml() {
     ${(() => { const t = pzTreinoIni(); return I.alinhado ? '' : `<div class="pz-al">${pzIco('info')}<div class="grow"><b>Alinhar com o seu treino</b><small>${t ? `Pelo app, seu treino atual começou na semana de ${fmtDate(t)}.` : 'Diga quando começou o seu treino atual.'}</small></div><button class="v2-btn sm pri" data-act="pz" data-k="alinhar">Alinhar</button></div>`; })()}
     ${cur ? `<div class="pz-now" style="--fc:${PZ_FASES[cur.b.fase][1]}">${pzIco('cal')}<div class="grow"><b>Agora: semana ${cur.n} de ${W.length}</b><small>${esc(cur.b.name)} · ${esc(PZ_MICRO[cur.w.m][0].toLowerCase())} · ${pzFeitas(cur.d)} de ${+cur.w.s || 0} treinos feitos${pzMedW(cur.d) ? ` · avaliação feita ${fmtDate(pzMedW(cur.d))}` : cur.w.av ? ' · avaliação nesta semana: anote em Medidas' : ''}</small>
       <div class="pz-prog" aria-label="Macrociclo ${Math.round(cur.n / W.length * 100)}%">${W.map(x => `<i style="--fc:${PZ_FASES[x.b.fase][1]}" class="${x.n < cur.n ? 'on' : x === cur ? 'cur' : ''}"></i>`).join('')}</div></div></div>` : ''}</section>
-  <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('cal')} Macrociclo semana a semana</h3><small>Toque em qualquer quadradinho para mudar: tipo da semana, avaliação, sessões, fase, bloco ou competição. Arraste para o lado para ver tudo.</small></div></div>
+  <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('cal')} Macrociclo semana a semana</h3><small>Toque em qualquer quadradinho para mudar: tipo da semana, avaliação, sessões, fase, bloco ou objetivo. Arraste para o lado para ver tudo.</small></div></div>
     ${W.length ? table + legend : '<p class="empty">Crie um bloco para ver as semanas.</p>'}</section>
   <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('layers')} Blocos (mesociclos)</h3><small>Cada bloco tem a sua fase, objetivo, volume e intensidade.</small></div></div>
     <div class="pz-bs">${blocks}</div><button class="v2-btn sm line pz-add" data-act="pz" data-k="bloco-novo">${pzIco('plus')}Novo bloco</button></section>
   <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('bolt')} Capacidades · grau de importância</h3><small>Toque nos tracinhos para mudar: nenhum, pouco, importante ou muito importante.</small></div></div>
     ${capT}<div class="pz-leg pz-legb">${[1, 2, 3].map(n => `<button data-act="pz" data-k="niveis">${lv(n)}${esc(PZ_NIVEL[n])}</button>`).join('')}</div>
     <button class="v2-btn sm line pz-add" data-act="pz" data-k="cap-nova">${pzIco('plus')}Nova capacidade</button></section>
-  <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('trophy')} Competições</h3><small>Aparecem na semana certa do macrociclo.</small></div></div>
-    ${comps || '<p class="empty">Nenhuma competição marcada.</p>'}<button class="v2-btn sm line pz-add" data-act="pz" data-k="comp-nova">${pzIco('plus')}Nova competição</button></section>`;
+  <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('trophy')} Objetivos</h3><small>Competição, prova, viagem, meta... Aparecem na linha Objetivo, na semana certa.</small></div></div>
+    ${comps || '<p class="empty">Nenhum objetivo marcado.</p>'}<button class="v2-btn sm line pz-add" data-act="pz" data-k="comp-nova">${pzIco('plus')}Novo objetivo</button></section>`;
 }
 // Janela de edição da periodização (um formulário montado na hora)
 function pzForm(title, body, { del = '', onSave, onDel }) {
@@ -7714,9 +7719,6 @@ function pzAct(b) {
     w.av = !w.av; save(); render(); return toast(w.av ? `Avaliação marcada na semana ${n.n}` : `Avaliação tirada da semana ${n.n}`); }
   if (k === 'sessoes') { const w = wk(); if (!w) return; const n = pzWeeks(P).find(x => x.w === w);
     return pzForm(`Sessões · semana ${n.n}`, pzIn('Quantas sessões nesta semana?', 's', w.s, 'type="number" inputmode="numeric" min="0" max="50" required'), { onSave: f => { w.s = Math.max(0, Math.min(50, +f.s.value || 0)); } }); }
-  if (k === 'comp-sem') { const c = P.comps.find(x => x.id === b.dataset.id); if (!c) return; const n = +b.dataset.n;
-    if (pzCompWeek(P, c) === n) return pzAct({ dataset: { k: 'comp', id: c.id } });
-    const dow = (toDate(c.date).getDay() + 6) % 7; c.date = addDays(P.info.ini, (n - 1) * 7 + dow); save(); render(); return toast(`${esc(c.name)} foi para a semana ${n}`); }
   const cores = cur => `<p class="hint" style="margin-bottom:6px">Cor</p><div class="pz-cores">${PZ_CORES.map(c => `<label><input type="radio" name="cor" value="${c}" ${c === cur ? 'checked' : ''}><span style="--c:${c}" aria-label="Cor ${c}"></span></label>`).join('')}</div>`;
   const copia = (key, base) => { if (!P[key] || !P[key].length) P[key] = base.map(x => ({ ...x })); return P[key]; };
   if (k === 'micro' || k === 'micro-novo') { const nw = k === 'micro-novo', L = copia('micro', PZ_MICRO0);
@@ -7769,9 +7771,9 @@ function pzAct(b) {
   if (k === 'cap' || k === 'cap-nova') { const nw = k === 'cap-nova', c = nw ? { id: uid(), name: '' } : P.caps.find(x => x.id === b.dataset.id); if (!c) return;
     return pzForm(nw ? 'Nova capacidade' : 'Editar capacidade', pzIn('Nome', 'name', c.name, 'required maxlength="40" placeholder="Ex.: Mobilidade"'),
       { del: nw ? '' : 'Excluir capacidade', onSave: f => { c.name = f.name.value.trim() || c.name; if (nw) P.caps.push(c); }, onDel: () => { P.caps = P.caps.filter(x => x !== c); P.blocks.forEach(bl => bl.caps && delete bl.caps[c.id]); } }); }
-  if (k === 'comp' || k === 'comp-nova') { const nw = k === 'comp-nova', c = nw ? { id: uid(), name: '', tag: '', date: addDays(today(), 30) } : P.comps.find(x => x.id === b.dataset.id); if (!c) return;
-    return pzForm(nw ? 'Nova competição' : 'Editar competição', pzIn('Nome', 'name', c.name, 'required maxlength="40"') + `<div class="pz-2">${pzIn('Sigla (até 3 letras)', 'tag', c.tag, 'maxlength="3" placeholder="CP"')}${pzIn('Data', 'date', c.date, 'type="date" required')}</div>`,
-      { del: nw ? '' : 'Excluir competição', onSave: f => { c.name = f.name.value.trim() || c.name; c.tag = f.tag.value.trim().toUpperCase(); if (f.date.value) c.date = f.date.value; if (nw) P.comps.push(c); }, onDel: () => { P.comps = P.comps.filter(x => x !== c); } }); }
+  if (k === 'comp' || k === 'comp-nova' || k === 'obj-sem') { const nw = k !== 'comp', c = nw ? { id: uid(), name: '', tag: '', date: k === 'obj-sem' ? addDays(P.info.ini, (+b.dataset.n - 1) * 7 + 5) : addDays(today(), 30) } : P.comps.find(x => x.id === b.dataset.id); if (!c) return;
+    return pzForm(nw ? 'Novo objetivo' : 'Editar objetivo', pzIn('Objetivo', 'name', c.name, 'required maxlength="40" placeholder="Ex.: competição, prova, meta"') + `<div class="pz-2">${pzIn('Sigla (até 3 letras)', 'tag', c.tag, 'maxlength="3" placeholder="OBJ"')}${pzIn('Data', 'date', c.date, 'type="date" required')}</div>`,
+      { del: nw ? '' : 'Excluir objetivo', onSave: f => { c.name = f.name.value.trim() || c.name; c.tag = f.tag.value.trim().toUpperCase() || normName(c.name).replace(/[^a-z]/g, '').slice(0, 3).toUpperCase(); if (f.date.value) c.date = f.date.value; if (nw) P.comps.push(c); }, onDel: () => { P.comps = P.comps.filter(x => x !== c); } }); }
 }
 const ST_TABS = [['resumo', 'Resumo'], ['montar', 'Montar treino'], ['plano', 'Planejamento'], ['marcacoes', 'Marcações'], ['medidas', 'Medidas'], ['mensagens', 'Mensagens'], ['pagamento', 'Pagamento']];
 function perfilHtml(p, desk) {
@@ -10357,7 +10359,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '19/11-20:52';
+const APP_VERSION = '19/11-21:02';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
