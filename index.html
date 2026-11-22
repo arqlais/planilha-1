@@ -7547,7 +7547,8 @@ function rsMove(k, d) {
   profile(ME).rsOrder = { a: L.a, b: L.b }; ui.rsLast = k; save(); render();
 }
 // ---------- Periodização (só no Meu perfil do professor) ----------
-// Macrociclo dividido em blocos (mesociclos), cada bloco com semanas (microciclos). Tudo editável; fica em profile(ME).perio.
+// Macrociclo dividido em blocos (mesociclos), cada bloco com semanas (microciclos). Tudo editável pelo professor; fica em profile(pid).perio
+// (no Meu perfil e no perfil de cada aluno, desde 22/11). pzPid = perfil aberto.
 // Não mexe em treinos, cargas nem histórico.
 // Fases, tipos de semana (microciclos) e graus de importância: o professor muda nomes, siglas e cores (ficam em perio.fases/micro/niveis)
 const PZ_FASES0 = [{ k: 'prep', name: 'Preparatória', color: '#6FD196' }, { k: 'comp', name: 'Competitiva', color: '#FFB547' }, { k: 'trans', name: 'Transição', color: '#FF8A68' }];
@@ -7592,22 +7593,24 @@ function pzModelo() {
     comps: [], objLimpo: true
   };
 }
-const pzOf = () => profile(ME).perio;
+let pzPid = ME;
+const pzOf = () => (profile(pzPid) || {}).perio;
+const pzSeu = () => pzPid === ME ? 'o seu treino atual' : `o treino atual de ${esc(firstName(profile(pzPid)))}`;
 // Quando começou o treino atual (palpite): a semana em que mais exercícios do treino de hoje apareceram pela 1ª vez (últimas 12 semanas)
 function pzTreinoIni() {
-  const ids = new Set(profExs(ME).filter(e => !e.archived && isLetter(e.letter, ME)).map(e => e.id)), first = new Map();
-  for (const x of profSessions(ME)) if (ids.has(x.exId) && (!first.has(x.exId) || x.date < first.get(x.exId))) first.set(x.exId, x.date);
+  const ids = new Set(profExs(pzPid).filter(e => !e.archived && isLetter(e.letter, pzPid)).map(e => e.id)), first = new Map();
+  for (const x of profSessions(pzPid)) if (ids.has(x.exId) && (!first.has(x.exId) || x.date < first.get(x.exId))) first.set(x.exId, x.date);
   const lim = addDays(today(), -84), cnt = new Map();
   for (const d of first.values()) if (d >= lim) { const w = weekStart(d); cnt.set(w, (cnt.get(w) || 0) + 1); }
   let best = null; for (const [w, n] of cnt) if (n >= 2 && (!best || n > best[1] || (n === best[1] && w > best[0]))) best = [w, n];
   return best ? best[0] : null;
 }
 // Treinos por semana da divisão (dias com treino de musculação); sem divisão, 4
-function pzDiasSemana() { const dv = profile(ME).division || {}; const n = Object.values(dv).filter(g => (g || []).some(x => x !== CARDIO)).length; return n || 4; }
+function pzDiasSemana() { const dv = profile(pzPid).division || {}; const n = Object.values(dv).filter(g => (g || []).some(x => x !== CARDIO)).length; return n || 4; }
 let pzTd = null, pzMed = []; // dias treinados e dias com Medidas, lidos uma vez por tela
 // Avaliação feita = dia com Medidas anotadas naquela semana (a primeira da semana)
 const pzMedW = d => { const e = addDays(d, 6); return pzMed.find(x => x >= d && x <= e) || null; };
-const pzFeitas = d => { const e = addDays(d, 6); return (pzTd || trainedDates(ME)).filter(x => x >= d && x <= e).length; };
+const pzFeitas = d => { const e = addDays(d, 6); return (pzTd || trainedDates(pzPid)).filter(x => x >= d && x <= e).length; };
 // lista de semanas com o bloco e a data de cada uma
 function pzWeeks(P) {
   const out = []; let n = 0;
@@ -7617,15 +7620,15 @@ function pzWeeks(P) {
 const pzMonth = d => MONTHS[+d.slice(5, 7) - 1];
 const pzH = min => { const h = min / 60; return `${fmt(Math.round(h * 10) / 10)} h`; };
 function pzCompWeek(P, c) { const k = Math.floor((toDate(c.date) - toDate(P.info.ini)) / 864e5 / 7); return k + 1; }
-function periodHtml() {
-  const P = pzOf(); pzCfg(P);
+function periodHtml(pid = ME) {
+  pzPid = pid; const P = pzOf(); pzCfg(P);
   // Igor (19/11): tirar as linhas de campeonato do modelo; fica uma linha só de Objetivo
   if (P && !P.objLimpo) { P.comps = (P.comps || []).filter(c => !(['Campeonato Paulista', 'Campeonato Mundial'].includes(c.name) && ['CP', 'CM'].includes(c.tag))); P.objLimpo = true; save(); }
   if (!P) return `<section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('layers')} Periodização</h3>
       <small>Planeje a temporada em fases, blocos e semanas: volume, intensidade, capacidades e competições.</small></div></div>
       <div class="pz-empty"><p>Comece com o modelo pronto (macrociclo de 24 semanas) e depois ajuste tudo do seu jeito, ou comece do zero.</p>
-      <div class="pz-acts"><button class="v2-btn sm pri" data-act="pz" data-k="modelo">${pzIco('layers')}Usar o modelo</button><button class="v2-btn sm line" data-act="pz" data-k="zero">${pzIco('plus')}Começar do zero</button></div></div></section>`;
-  pzTd = trainedDates(ME); pzMed = bodyOf(profile(ME)).map(e => e.date);
+      <div class="pz-acts"><button class="v2-btn sm pri" data-act="pz" data-k="modelo">${pzIco('layers')}Usar o modelo</button>${pzPid !== ME && profile(ME).perio ? `<button class="v2-btn sm line" data-act="pz" data-k="copiar">${pzIco('layers')}Copiar a minha</button>` : ''}<button class="v2-btn sm line" data-act="pz" data-k="zero">${pzIco('plus')}Começar do zero</button></div></div></section>`;
+  pzTd = trainedDates(pzPid); pzMed = bodyOf(profile(pzPid)).map(e => e.date);
   const I = P.info, W = pzWeeks(P), tot = W.reduce((a, x) => a + (+x.w.s || 0), 0), hoje = today();
   const cur = W.find(x => hoje >= x.d && hoje < addDays(x.d, 7));
   const fim = W.length ? addDays(W[W.length - 1].d, 6) : I.ini;
@@ -7680,7 +7683,7 @@ function periodHtml() {
       <small>${fmtDateY(I.ini)} a ${fmtDateY(fim)}</small></div><button class="v2-icbtn sm" data-act="pz" data-k="info" aria-label="Editar dados">${pzIco('edit')}</button></div>
     ${chips ? `<div class="pz-chips">${chips}</div>` : ''}
     <div class="pz-kv pz-tot"><div><b>${W.length}</b><small>semanas</small></div><div><b>${P.blocks.length}</b><small>blocos</small></div><div><b>${tot}</b><small>sessões</small></div><div><b>${pzH(tot * (+I.dur || 0))}</b><small>horas</small></div></div>
-    ${(() => { const t = pzTreinoIni(); return I.alinhado ? '' : `<div class="pz-al">${pzIco('info')}<div class="grow"><b>Alinhar com o seu treino</b><small>${t ? `Pelo app, seu treino atual começou na semana de ${fmtDate(t)}.` : 'Diga quando começou o seu treino atual.'}</small></div><button class="v2-btn sm pri" data-act="pz" data-k="alinhar">Alinhar</button></div>`; })()}
+    ${(() => { const t = pzTreinoIni(); return I.alinhado ? '' : `<div class="pz-al">${pzIco('info')}<div class="grow"><b>Alinhar com o treino</b><small>${t ? `Pelo app, ${pzSeu()} começou na semana de ${fmtDate(t)}.` : `Diga quando começou ${pzSeu()}.`}</small></div><button class="v2-btn sm pri" data-act="pz" data-k="alinhar">Alinhar</button></div>`; })()}
     ${cur ? `<div class="pz-now" style="--fc:${PZ_FASES[cur.b.fase][1]}">${pzIco('cal')}<div class="grow"><b>Agora: semana ${cur.n} de ${W.length}</b><small>${esc(cur.b.name)} · ${esc(PZ_MICRO[cur.w.m][0].toLowerCase())} · ${pzFeitas(cur.d)} de ${+cur.w.s || 0} treinos feitos${pzMedW(cur.d) ? ` · avaliação feita ${fmtDate(pzMedW(cur.d))}` : cur.w.av ? ' · avaliação nesta semana: anote em Medidas' : ''}</small>
       <div class="pz-prog" aria-label="Macrociclo ${Math.round(cur.n / W.length * 100)}%">${W.map(x => `<i style="--fc:${PZ_FASES[x.b.fase][1]}" class="${x.n < cur.n ? 'on' : x === cur ? 'cur' : ''}"></i>`).join('')}</div></div></div>` : ''}</section>
   <section class="card pz"><div class="card-h"><div class="grow"><h3>${pzIco('cal')} Macrociclo semana a semana</h3><small>Toque em qualquer quadradinho para mudar: tipo da semana, avaliação, sessões, fase, bloco ou objetivo. Arraste para o lado para ver tudo.</small></div></div>
@@ -7707,9 +7710,17 @@ function pzForm(title, body, { del = '', onSave, onDel }) {
 }
 const pzIn = (l, n, v = '', a = '') => `<label class="f">${l}<input name="${n}" value="${esc(String(v ?? ''))}" autocomplete="off" ${a}></label>`;
 function pzAct(b) {
-  const me = profile(ME), P = me.perio, k = b.dataset.k;
-  if (k === 'modelo') { me.perio = pzModelo(); save(); return render(); }
-  if (k === 'zero') { me.perio = { info: { nome: 'Minha periodização', ini: pzTreinoIni() || weekStart(today()), dur: 60 }, caps: [], blocks: [{ id: uid(), name: 'Bloco 1', fase: 'prep', obj: '', vol: '', int: '', weeks: [1, 2, 3, 4].map(() => ({ id: uid(), m: 'ORD', av: false, s: pzDiasSemana() })), caps: {} }], comps: [] }; save(); return render(); }
+  pzPid = profile(ui.profile) ? ui.profile : ME;
+  const me = profile(pzPid), P = me.perio, k = b.dataset.k;
+  if (k === 'modelo') { me.perio = pzModelo(); if (pzPid !== ME) Object.assign(me.perio.info, { nome: `Periodização de ${firstName(me)}`, mod: '', cat: '', idade: '', sexo: '', dur: 60 }); save(); return render(); }
+  if (k === 'copiar') { const src = profile(ME).perio; if (!src || pzPid === ME) return;
+    // cópia da periodização do professor, com ids novos (cada aluno mexe na sua sem mudar a dele)
+    const c = JSON.parse(JSON.stringify(src)), capId = new Map(); c.caps.forEach(x => { const n = uid(); capId.set(x.id, n); x.id = n; });
+    c.blocks.forEach(bl => { bl.id = uid(); bl.weeks.forEach(w => { w.id = uid(); }); bl.caps = Object.fromEntries(Object.entries(bl.caps || {}).filter(([k2]) => capId.has(k2)).map(([k2, v]) => [capId.get(k2), v])); });
+    c.comps = []; c.objLimpo = true;
+    Object.assign(c.info, { nome: `Periodização de ${firstName(me)}`, mod: '', cat: '', idade: '', sexo: '', ini: pzTreinoIni() || weekStart(today()), alinhado: false });
+    me.perio = c; save(); render(); return toast(`Periodização copiada para ${esc(firstName(me))}`); }
+  if (k === 'zero') { me.perio = { info: { nome: pzPid === ME ? 'Minha periodização' : `Periodização de ${firstName(me)}`, ini: pzTreinoIni() || weekStart(today()), dur: 60 }, caps: [], blocks: [{ id: uid(), name: 'Bloco 1', fase: 'prep', obj: '', vol: '', int: '', weeks: [1, 2, 3, 4].map(() => ({ id: uid(), m: 'ORD', av: false, s: pzDiasSemana() })), caps: {} }], comps: [] }; save(); return render(); }
   if (!P) return;
   pzCfg(P);
   const wk = () => { const bl = P.blocks[+b.dataset.i]; return bl && bl.weeks[+b.dataset.j]; };
@@ -7738,7 +7749,7 @@ function pzAct(b) {
     return pzForm('Graus de importância', [1, 2, 3].map(n => pzIn(`${n} ${n === 1 ? 'tracinho' : 'tracinhos'}`, 'n' + n, N[n], 'required maxlength="24"')).join(''),
       { onSave: f => { P.niveis = [N[0], ...[1, 2, 3].map(n => f['n' + n].value.trim() || N[n])]; } }); }
   if (k === 'alinhar') { const t = pzTreinoIni() || weekStart(addDays(today(), -14));
-    return pzForm('Alinhar com o seu treino', `<p class="hint">A semana 1 da periodização passa a ser a semana em que o seu treino atual começou. Nada muda nos treinos e nas cargas.</p>${pzIn('Quando começou o treino atual?', 'ini', t, 'type="date" required')}`,
+    return pzForm('Alinhar com o treino', `<p class="hint">A semana 1 da periodização passa a ser a semana em que ${pzSeu()} começou. Nada muda nos treinos e nas cargas.</p>${pzIn('Quando começou o treino atual?', 'ini', t, 'type="date" required')}`,
       { onSave: f => { if (!f.ini.value) return false; P.info.ini = weekStart(f.ini.value); P.info.alinhado = true; ui.pzSL = null; } }); }
   if (k === 'info') { const I = P.info;
     return pzForm('Dados da periodização', pzIn('Nome do plano', 'nome', I.nome, 'required maxlength="60"') + `<div class="pz-2">${pzIn('Modalidade', 'mod', I.mod, 'maxlength="30"')}${pzIn('Categoria', 'cat', I.cat, 'maxlength="30"')}</div>
@@ -7850,7 +7861,7 @@ function perfilHtml(p, desk) {
     conta: mine ? '' : inviteHtml(p) + studentAccountHtml(p),
     hist: histImportHtml(p, noHist)
   };
-  const tabs = mine ? [...ST_TABS.filter(t => !['mensagens', 'pagamento'].includes(t[0]))].concat([['periodo', 'Periodização']]) : ST_TABS;
+  const tabs = mine ? [...ST_TABS.filter(t => !['mensagens', 'pagamento'].includes(t[0]))].concat([['periodo', 'Periodização']]) : [...ST_TABS.slice(0, 5), ['periodo', 'Periodização'], ...ST_TABS.slice(5)];
   const tab = tabs.some(t => t[0] === ui.stTab) ? ui.stTab : 'resumo';
   return `<div class="ws" data-active="${desk ? tab : 'all'}">
     <section class="card">
@@ -7878,7 +7889,7 @@ function perfilHtml(p, desk) {
     ${desk ? `<div class="tabs">${tabs.map(([id, l]) => `<button class="${id === tab ? 'on' : ''}" data-act="st-tab" data-t="${id}">${l}</button>`).join('')}${p.test || mine ? '' : readyBtn(p)}</div>` : ''}
     <div data-tab="resumo">${rsResumoHtml(rsHtml, noHist)}</div>
     <div data-tab="medidas">${bodySummaryHtml(p)}</div>
-    ${mine && desk ? `<div data-tab="periodo">${periodHtml()}</div>` : ''}
+    ${desk ? `<div data-tab="periodo">${periodHtml(p.id)}</div>` : ''}
     <div data-tab="marcacoes">${marcacoesHtml(p)}</div>
     <div data-tab="plano">${plannerHtml(p)}
     <section class="card">
@@ -10359,7 +10370,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '19/11-21:02';
+const APP_VERSION = '22/11-02:50';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
