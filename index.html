@@ -217,6 +217,10 @@ text.ig-tx.on[text-anchor="end"]{fill:var(--accent,var(--acc))}
 .wk-txt{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:14px}
 .wk-rt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .wk-rt small{color:var(--muted);white-space:nowrap}
+.cw-nav{display:flex;align-items:center;gap:10px;padding-bottom:6px}
+.cw-nav .grow{text-align:center;min-width:0}.cw-nav b{display:block;white-space:nowrap}.cw-nav small{color:var(--muted);font-size:12px;white-space:nowrap}
+.cw-arr{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:none;color:var(--text);cursor:pointer}.cw-arr svg{width:18px;height:18px}.cw-arr:disabled{opacity:.3;cursor:default}
+.cw-sub{display:block;color:var(--muted);font-size:12px;margin-top:4px}
 .goal-txt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .goal-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--acc-soft);border-radius:14px;padding:10px 12px;margin-bottom:12px}
 .goal-set label{flex:1 1 140px;display:grid}
@@ -4538,12 +4542,24 @@ function cardioGoalsMontarHtml(p) {
     </section>`;
 }
 // painel do professor: cada aluno com a barrinha da semana (quem está mais longe da meta aparece primeiro)
+// Painel: cardio de cada aluno numa semana (domingo a sábado). Setas voltam semanas para comparar quem fez mais.
 function cardioWeekListHtml(sts) {
-  const rows = sts.map(p => ({ p, w: cardioWeekOf(p) })).filter(r => r.w.goal).sort((a, b) => a.w.pct - b.w.pct);
-  if (!rows.length) return '';
-  return `<div class="v2-sec"><h3>Cardio da semana</h3><span class="v2-muted" style="margin:0;font-size:13px">${rows.filter(r => r.w.done >= r.w.goal).length} de ${rows.length} na meta</span></div>
-    <section class="card">${rows.map(({ p, w }) => `<div class="v2-row wk-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span>
-      <div class="grow"><div class="wk-rt"><b>${esc(firstName(p))}</b><small>${fmtMin(w.done)} de ${fmtMin(w.goal)} min${w.left ? ` · faltam ${fmtMin(w.left)}` : ' ✓'}</small></div>${cardioWeekBar(w, true)}</div></div>`).join('')}</section>`;
+  const off = Math.max(0, ui.cwOff || 0), ref = addDays(today(), -7 * off);
+  const rows = sts.map(p => {
+    const w = cardioWeekOf(p, ref), rs = profCardio(p.id).filter(c => c.date >= w.ws && c.date <= w.we && c.min > 0);
+    const ex = {}; rs.forEach(c => { const x = CARDIO_EXTRA[c.mode], v = x && c[x[0]]; if (v) ex[x[2]] = (ex[x[2]] || 0) + v; });
+    return { p, w, days: new Set(rs.map(c => c.date)).size, ex: Object.entries(ex).map(([u, v]) => `${fmtMin(Math.round(v * 100) / 100)} ${u}`).join(' · ') };
+  }).filter(r => r.w.goal || r.w.done).sort((a, b) => b.w.done - a.w.done || a.p.name.localeCompare(b.p.name));
+  if (!rows.length && !off) return '';
+  const wk = rows[0] ? rows[0].w : cardioWeekOf({}, ref), withGoal = rows.filter(r => r.w.goal);
+  const title = off === 0 ? 'Cardio da semana' : off === 1 ? 'Cardio da semana passada' : 'Cardio da semana';
+  return `<div class="v2-sec"><h3>${title}</h3><span class="v2-muted" style="margin:0;font-size:13px">${withGoal.filter(r => r.w.done >= r.w.goal).length} de ${withGoal.length} na meta</span></div>
+    <section class="card"><div class="cw-nav"><button class="cw-arr" data-act="cw-week" data-d="1" aria-label="Semana anterior">${v2Ico('<path d="M15 6l-6 6 6 6"/>')}</button>
+      <div class="grow"><b>${rangeLabel(wk.ws, wk.we)}</b><small>${off === 0 ? 'esta semana' : off === 1 ? 'semana passada' : `há ${off} semanas`} · domingo a sábado</small></div>
+      <button class="cw-arr" data-act="cw-week" data-d="-1" aria-label="Próxima semana"${off ? '' : ' disabled'}>${v2Ico('<path d="M9 6l6 6-6 6"/>')}</button></div>
+    ${rows.map(({ p, w, days, ex }) => `<div class="v2-row wk-row" data-act="open-profile" data-pid="${p.id}" data-v="perfil" style="cursor:pointer"><span class="av sm">${avIn(p)}</span>
+      <div class="grow"><div class="wk-rt"><b>${esc(firstName(p))}</b><small>${w.goal ? `${fmtMin(w.done)} de ${fmtMin(w.goal)} min${w.left ? (off ? '' : ` · faltam ${fmtMin(w.left)}`) : ' ✓'}` : `${fmtMin(w.done)} min`}</small></div>${w.goal ? cardioWeekBar(w, true) : ''}
+      <small class="cw-sub">${days ? `${days} dia${days === 1 ? '' : 's'} de cardio${ex ? ` · ${ex}` : ''}` : 'Sem cardio nesta semana'}</small></div></div>`).join('') || '<p class="v2-muted" style="margin:8px 0 0;text-align:center">Ninguém fez cardio nesta semana.</p>'}</section>`;
 }
 // ---------- Cronômetro do cardio (regressivo ou progressivo; a barra anda junto com o tempo) ----------
 const CT_KEY = 'planilha-cronometro';
@@ -8360,6 +8376,7 @@ $main.addEventListener('click', e => {
     case 'v2-save': return v2SharePost(true);
     case 'v2-mytreino': ui.profile = ME; ui.date = today(); ui.month = ui.date.slice(0, 7); ui.v2done = null; return go('treino');
     case 'v2-filter': ui.v2filter = b.dataset.f; return render();
+    case 'cw-week': ui.cwOff = Math.max(0, Math.min(52, (ui.cwOff || 0) + +b.dataset.d)); return render();
     case 'v2-paused-list': ui.v2filter = 'Pausados'; ui.q = ''; return go('alunos');
     case 'pause-student': {
       const p = profile(b.dataset.pid); if (!p) return;
@@ -10359,7 +10376,7 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app; ao abrir (ou voltar para o app), confere se há versão nova e recarrega.
-const APP_VERSION = '19/11-21:02';
+const APP_VERSION = '23/11-17:20';
 async function checkUpdate() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
