@@ -1689,7 +1689,7 @@ const FBL=(()=>{
     }catch(e){throw e.msg?e:{msg:F.err(e)}}finally{F.busy=false}};
   /* a empresa também atende como professor (pedido do Igor, 23/11): cria personais/{uid} da própria conta.
      As regras só deixam criar como "pendente"; logo em seguida a empresa (admin) ativa. Não precisa de regra nova. */
-  F.becomeProf=async(name)=>{if(F.role!=="admin")throw{msg:"Só a empresa pode fazer isso."};F.busy=true;try{
+  F.becomeProf=async(name)=>{if(F.role!=="admin")throw{msg:"Entre de novo como empresa (e-mail e senha da empresa) e tente outra vez.",login:true};F.busy=true;try{
       const uid=F.uid,ref=db.collection("personais").doc(uid),now=Date.now();
       const pub={name,cref:"Professor da empresa",uf:"SP",area:"Online",bio:"Responsável pelo Primeiro Passo. Acompanha você desde a primeira conversa.",spec:["Iniciantes"],status:"pendente",cap:15,since:now};
       const ex=await one(ref,"personal");
@@ -2597,7 +2597,7 @@ function becomeProf(){
     try{if(FB)await FBL.becomeProf(name);
       else{const id=myProfId(),p=findP(id);if(p)Object.assign(p,{name,status:"ativo"});else DB.personals.push({id,name,email:"empresa@primeiropasso.app",cref:"Professor da empresa",uf:"SP",area:"Online",bio:"",spec:["Iniciantes"],status:"ativo",cap:50,rating:null,since:Date.now(),terms:{v:TERMS_V,at:Date.now()}});saveDB()}
       close();toast("Pronto: você também é professor");openMyProf();
-    }catch(err){b.disabled=false;b.textContent="Ativar";m.querySelector(".bp-msg").textContent=(err&&err.msg)||"Não deu certo agora. Tente de novo."}};
+    }catch(err){if(err&&err.login){close();toast(err.msg);setSess({});location.hash="#/entrar/empresa";return}b.disabled=false;b.textContent="Ativar";m.querySelector(".bp-msg").textContent=(err&&err.msg)||"Não deu certo agora. Tente de novo."}};
 }
 function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||null,ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
 function updC(id,patch){
@@ -2998,6 +2998,8 @@ function pMsgs(p,cs){
 /* ================== PAINEL DA EMPRESA ================== */
 function panelAdmin(tab){
   /* a empresa que estava "vendo como professor" volta direto ao painel dela (antes voltava para a tela de entrar, sem aviso) */
+  /* painel da empresa só com o login da empresa de verdade (antes uma sessão antiga guardada no aparelho abria o painel vazio, sem login) */
+  if(FB&&FBL.booted&&!FBL.busy&&FBL.role!=="admin"){if(SESS.role==="admin")setSess({});location.hash="#/entrar/empresa";return}
   if(SESS.role!=="admin"){if(FB&&FBL.role==="admin")setSess({role:"admin"});else{location.hash="#/entrar/empresa";return}}
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
   const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Professores",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
