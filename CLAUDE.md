@@ -32,7 +32,7 @@ Leia antes de qualquer tarefa. Este repositório é **público**: nunca coloque 
 3. Teste no navegador (Playwright, já instalado): rode os testes a partir do scratchpad, nunca grave prints dentro do repositório.
    Ao abrir o site no ar (passosfit.com.br), use o link com `?claude` para o acesso aparecer como "Claude (teste)" em Acessos (o Playwright já é marcado sozinho).
    Mudou `firestore.rules`? Teste as regras no emulador do Firebase antes.
-4. `./bump-version.sh` antes do commit (faz o app avisar que tem versão nova). Commit com descrição em português.
+4. `./bump-version.sh` antes do commit (faz o PassosFit e o Primeiro Passo mostrarem o aviso "Nova versão do app"; só marca o app que mudou). Commit com descrição em português.
 5. **Abra um PR** para `claude/sharp-gauss-tw16z1`. A descrição **cita a Issue** (`Resolve #12`), explica em linguagem simples
    o que muda para o professor e os alunos, e diz se o Igor precisa colar regras novas no Firebase.
 6. **Nada vai para o ar sem o Igor aprovar e juntar o PR.** Quando ele junta, o site atualiza sozinho e a Issue fecha.

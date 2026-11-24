@@ -1458,6 +1458,21 @@ img,video,canvas{max-width:100%}
 /* botão no fim da linha (Ver, Conferir, Pagar) nunca fica cortado: a linha quebra o texto, não o botão */
 .rw .end{min-width:min-content}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* aviso de versão nova */
+#updBar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,calc(-100% - 40px));z-index:9999;display:flex;align-items:center;gap:12px;
+  width:min(420px,calc(100vw - 24px));box-sizing:border-box;padding:10px 8px 10px 14px;border-radius:16px;background:var(--navy);color:var(--on-navy);font-family:var(--body);
+  box-shadow:0 14px 34px -12px rgba(15,23,32,.55);cursor:pointer;transition:transform .35s cubic-bezier(.2,.9,.3,1.2);-webkit-tap-highlight-color:transparent}
+#updBar.show{transform:translate(-50%,0)}
+#updBar .ui{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:#1E2733}
+#updBar .ui svg{width:20px;height:20px}
+#updBar.busy .ui svg{animation:updSpin 1s linear infinite}
+@keyframes updSpin{to{transform:rotate(360deg)}}
+#updBar .ut{flex:1;min-width:0;line-height:1.25}
+#updBar .ut b,#updBar .ut small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#updBar .ut b{font-size:15px;font-weight:800}
+#updBar .ut small{font-size:12.5px;opacity:.8;font-weight:600}
+#updBar .ux{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:inherit;display:grid;place-items:center;opacity:.7;cursor:pointer}
+#updBar .ux svg{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -3960,6 +3975,53 @@ if(FB)FBL.boot();else route();
 </script>
 
 <script>
+/* Atualização: confere se há versão nova ao abrir, ao voltar para o app e a cada 5 min. Com o app em uso mostra
+   "Nova versão do app · Toque para atualizar"; voltando depois de 30 min, sem nada sendo digitado, atualiza sozinho.
+   Antes de recarregar espera a nuvem receber o que foi salvo; sem internet, não recarrega (nada se perde). */
+const PP_VERSION="23/11-21:22";
+(()=>{
+  if(!/^https?:/.test(location.protocol))return;
+  let shown="",snooze=0,hiddenAt=0;
+  const K="pp-atualizou",tried=v=>{let t="";try{t=sessionStorage.getItem(K)||""}catch(e){}const[a,b]=t.split("|");return a===v&&Date.now()-(+b||0)<120e3};
+  const busy=()=>document.querySelector(".modal,.drawer")||document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  const wait=ms=>new Promise(r=>setTimeout(()=>r("tempo"),ms));
+  async function apply(v){
+    const bar=document.getElementById("updBar");if(bar){bar.classList.add("busy");bar.querySelector("small").textContent="Salvando e atualizando…"}
+    try{if(window.firebase&&firebase.apps&&firebase.apps.length){const r=await Promise.race([firebase.firestore().waitForPendingWrites().then(()=>"ok"),wait(6000)]);
+      if(r!=="ok"){if(bar){bar.classList.remove("busy");bar.querySelector("small").textContent="Sem internet agora: tente de novo daqui a pouco"}return}}}catch(e){}
+    try{sessionStorage.setItem(K,v+"|"+Date.now())}catch(e){}
+    try{const reg=await navigator.serviceWorker.getRegistration();if(reg)await Promise.race([reg.update(),wait(3000)])}catch(e){}
+    location.reload();
+  }
+  function show(v){
+    let bar=document.getElementById("updBar");
+    if(!bar){
+      bar=document.createElement("div");bar.id="updBar";bar.setAttribute("role","button");bar.tabIndex=0;
+      bar.innerHTML='<span class="ui"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></span>'
+        +'<span class="ut"><b>Nova versão do app</b><small>Toque para atualizar</small></span>'
+        +'<button class="ux" type="button" aria-label="Agora não"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+      bar.querySelector(".ux").onclick=e=>{e.stopPropagation();snooze=Date.now()+30*60e3;bar.classList.remove("show")};
+      bar.onclick=()=>{if(!bar.classList.contains("busy"))apply(shown)};
+      bar.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();bar.click()}};
+      document.body.appendChild(bar);bar.getBoundingClientRect();
+    }
+    shown=v;bar.classList.remove("busy");bar.querySelector("small").textContent="Toque para atualizar";
+    requestAnimationFrame(()=>bar.classList.add("show"));
+  }
+  async function check(back){
+    try{
+      const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const{v}=await r.json();
+      if(!v||v===PP_VERSION||tried(v))return;
+      if(back&&!busy())return apply(v);
+      if(Date.now()<snooze&&shown===v)return;
+      show(v);
+    }catch(e){}
+  }
+  setTimeout(check,3000);
+  document.addEventListener("visibilitychange",()=>{if(document.hidden){hiddenAt=Date.now();return}check(hiddenAt&&Date.now()-hiddenAt>30*60e3)});
+  setInterval(()=>{if(!document.hidden)check()},5*60e3);
+  addEventListener("online",()=>check());
+})();
 if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
 </script>
 </body>
