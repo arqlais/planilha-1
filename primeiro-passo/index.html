@@ -3976,12 +3976,12 @@ if(FB)FBL.boot();else route();
 
 <script>
 /* Atualização: confere se há versão nova ao abrir, ao voltar para o app e a cada 5 min. Com o app em uso mostra
-   "Nova versão do app · Toque para atualizar"; voltando depois de 30 min, sem nada sendo digitado, atualiza sozinho.
+   "Nova versão do app · Toque para atualizar"; ao abrir ou voltar para o app, sem nada sendo digitado, atualiza sozinho.
    Antes de recarregar espera a nuvem receber o que foi salvo; sem internet, não recarrega (nada se perde). */
-const PP_VERSION="23/11-21:22";
+const PP_VERSION="23/11-21:31";
 (()=>{
   if(!/^https?:/.test(location.protocol))return;
-  let shown="",snooze=0,hiddenAt=0;
+  let shown="",snooze=0;
   const K="pp-atualizou",tried=v=>{let t="";try{t=sessionStorage.getItem(K)||""}catch(e){}const[a,b]=t.split("|");return a===v&&Date.now()-(+b||0)<120e3};
   const busy=()=>document.querySelector(".modal,.drawer")||document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
   const wait=ms=>new Promise(r=>setTimeout(()=>r("tempo"),ms));
@@ -4017,8 +4017,8 @@ const PP_VERSION="23/11-21:22";
       show(v);
     }catch(e){}
   }
-  setTimeout(check,3000);
-  document.addEventListener("visibilitychange",()=>{if(document.hidden){hiddenAt=Date.now();return}check(hiddenAt&&Date.now()-hiddenAt>30*60e3)});
+  setTimeout(()=>check(true),1500);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)check(true)});
   setInterval(()=>{if(!document.hidden)check()},5*60e3);
   addEventListener("online",()=>check());
 })();

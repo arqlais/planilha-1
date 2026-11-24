@@ -10392,11 +10392,11 @@ document.getElementById('authForgot').onclick = async () => {
 
 // ---------- Atualização automática ----------
 // O celular guarda uma cópia do app. Confere se há versão nova ao abrir, ao voltar para o app e a cada 5 min.
-// Recém-aberto (ou voltando depois de 30 min) e sem nada sendo digitado: atualiza sozinho. Com o app em uso: mostra o aviso
+// Ao abrir ou voltar para o app, sem nada sendo digitado: atualiza sozinho. Com o app em uso: mostra o aviso
 // "Nova versão do app · Toque para atualizar" no alto. Antes de recarregar, salva na nuvem o que estiver pendente (e fica guardado no aparelho).
-const APP_VERSION = '23/11-21:22';
+const APP_VERSION = '23/11-21:31';
 const BOOT_AT = Date.now();
-let updShown = '', updSnooze = 0, hiddenAt = 0;
+let updShown = '', updSnooze = 0;
 const UPD_TRY = 'planilha-atualizou';
 function updTried(v) { // já recarregou para esta versão há pouco (a internet ainda entregava a antiga): não insiste por 2 min
   let t = ''; try { t = sessionStorage.getItem(UPD_TRY) || ''; } catch (e) {}
@@ -10430,8 +10430,9 @@ async function checkUpdate(back) {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     const { v } = await r.json();
     if (!v || v === APP_VERSION) return;
-    const fresh = Date.now() - BOOT_AT < 8000 || back; // acabou de abrir, ou voltou depois de muito tempo
-    if (fresh && !isTyping() && !updTried(v)) return applyUpdate(v);
+    const fresh = Date.now() - BOOT_AT < 8000 || back; // acabou de abrir, ou voltou para o app
+    const typing = isTyping() || (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+    if (fresh && !typing && !updTried(v)) return applyUpdate(v);
     if (Date.now() < updSnooze && updShown === v) return;
     if (updTried(v)) return;
     showUpdateBar(v);
@@ -10439,8 +10440,8 @@ async function checkUpdate(back) {
 }
 checkUpdate();
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { hiddenAt = Date.now(); return; }
-  checkUpdate(hiddenAt && Date.now() - hiddenAt > 30 * 60e3);
+  if (document.hidden) return;
+  checkUpdate(true); // voltou para o app: atualiza sozinho (se não estiver digitando)
 });
 setInterval(() => { if (!document.hidden) checkUpdate(); }, 5 * 60e3);
 addEventListener('online', () => checkUpdate());
