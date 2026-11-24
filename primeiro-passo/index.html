@@ -1687,6 +1687,18 @@ const FBL=(()=>{
         for(let i=0;i<ds.length;i+=400){const b=db.batch();ds.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit()}n+=ds.length}
       await loadFor(auth.currentUser);return n;
     }catch(e){throw e.msg?e:{msg:F.err(e)}}finally{F.busy=false}};
+  /* a empresa também atende como professor (pedido do Igor, 23/11): cria personais/{uid} da própria conta.
+     As regras só deixam criar como "pendente"; logo em seguida a empresa (admin) ativa. Não precisa de regra nova. */
+  F.becomeProf=async(name)=>{if(F.role!=="admin")throw{msg:"Só a empresa pode fazer isso."};F.busy=true;try{
+      const uid=F.uid,ref=db.collection("personais").doc(uid),now=Date.now();
+      const pub={name,cref:"Professor da empresa",uf:"SP",area:"Online",bio:"Responsável pelo Primeiro Passo. Acompanha você desde a primeira conversa.",spec:["Iniciantes"],status:"pendente",cap:15,since:now};
+      const ex=await one(ref,"personal");
+      if(!ex)await ref.set(pub);
+      const up={status:"ativo",cap:Math.max(50,(ex&&ex.cap)||0),name};await ref.update(up);
+      const email=(auth.currentUser&&auth.currentUser.email)||"",priv={email,info:{name,email},terms:{v:TERMS_V,at:now}};
+      await db.collection("personaisPriv").doc(uid).set(priv,{merge:true});
+      addPersonal(uid,Object.assign({},ex||pub,up),priv);return uid;
+    }catch(e){throw e.msg?e:{msg:F.err(e)}}finally{F.busy=false}};
   F.saveAluno=saveAluno;F.saveDB=saveDB;
   return F;
 })();
@@ -2565,6 +2577,28 @@ const meC=()=>toC(ME);
 const allClients=()=>DB.clients.concat(alIds().map(toC).filter(Boolean));
 const findC=id=>allClients().find(c=>c.id===id);
 const findP=id=>DB.personals.find(p=>p.id===id);
+/* a empresa como professor: id do perfil de professor da própria conta da empresa */
+const myProfId=()=>FB?FBL.uid:"p-empresa";
+const myProf=()=>{const id=myProfId(),p=id&&findP(id);return p&&p.status==="ativo"?p:null};
+function openMyProf(){setSess({role:"personal",pid:myProfId(),back:"admin"});location.hash="#/personal"}
+function becomeProf(){
+  const old=document.querySelector(".modal");if(old)old.remove();
+  const m=document.createElement("div");m.className="modal";
+  m.innerHTML=`<form class="sheet" role="dialog" aria-modal="true" aria-labelledby="bpt" id="bpf"><div class="big"><i data-lucide="user-round-check"></i></div><h3 id="bpt">Atender como professor</h3>
+    <p>Você ganha um painel de professor igual ao dos parceiros: vê os seus alunos, monta os treinos e conversa com eles. O acesso da empresa continua igual.</p>
+    <div class="field" style="text-align:left"><label for="bpn">Nome que os alunos vão ver</label><input id="bpn" required maxlength="60" placeholder="Seu nome" autocomplete="name"></div>
+    <p class="bp-msg" style="color:var(--red);min-height:1em;margin:0"></p>
+    <div class="acts"><button class="btn btn-primary" id="bpok"><i data-lucide="check"></i>Ativar</button><button class="btn btn-ghost" type="button" id="bpno">Agora não</button></div></form>`;
+  document.body.appendChild(m);icons();
+  const close=()=>{removeEventListener("keydown",k);m.remove()};const k=e=>{if(e.key==="Escape")close()};addEventListener("keydown",k);
+  m.onclick=e=>{if(e.target===m)close()};$("#bpno").onclick=close;$("#bpn").focus();
+  $("#bpf").onsubmit=async e=>{e.preventDefault();const name=$("#bpn").value.trim().replace(/\s+/g," ");if(name.length<2)return;
+    const b=$("#bpok");b.disabled=true;b.textContent="Ativando…";
+    try{if(FB)await FBL.becomeProf(name);
+      else{const id=myProfId(),p=findP(id);if(p)Object.assign(p,{name,status:"ativo"});else DB.personals.push({id,name,email:"empresa@primeiropasso.app",cref:"Professor da empresa",uf:"SP",area:"Online",bio:"",spec:["Iniciantes"],status:"ativo",cap:50,rating:null,since:Date.now(),terms:{v:TERMS_V,at:Date.now()}});saveDB()}
+      close();toast("Pronto: você também é professor");openMyProf();
+    }catch(err){b.disabled=false;b.textContent="Ativar";m.querySelector(".bp-msg").textContent=(err&&err.msg)||"Não deu certo agora. Tente de novo."}};
+}
 function bookingsAll(){return DB.bookings.concat(alIds().flatMap(id=>{const a=A(id);return(a.bookings||[]).map(b=>({id:id+"-"+b.ts,cid:id,pid:a.pid||null,ts:b.ts,type:b.type,mode:b.mode,status:b.done?"feito":"agendado"}))}))}
 function updC(id,patch){
   const a=A(id);if(a){const map={level:"level",talked:"talked",outdoor:"outdoor",gym:"gymsessions",status:"status",pid:"pid"};
@@ -2823,7 +2857,7 @@ function openClient(id,role){
       <div style="display:flex;flex-wrap:wrap;gap:6px">${c.status==="pausado"?pill("mute","pause","Pausado"):pill("ok","circle-check","Ativo")}${al.map(a=>pill(a[2],a[0],a[1])).join("")}</div>
       <div class="minis mt"><div><b>${c.workouts.length}</b><small>treinos em casa</small></div><div><b>${rel(lastAct(c))}</b><small>última atividade</small></div><div><b>${daysAgo(c.since)}d</b><small>de acompanhamento</small></div></div>
       <div class="sec2"><h3>Ações</h3><div class="acts">${acts.map(([k,ic,t])=>`<button class="btn ${k==="up"?"btn-gold":"btn-ghost"} btn-sm" data-a="${k}"><i data-lucide="${ic}"></i>${t}</button>`).join("")}</div></div>
-      ${role==="admin"?`<div class="sec2"><h3>Professor responsável</h3><div class="toolbar" style="margin:0"><select id="dpp" aria-label="Personal responsável">${DB.personals.filter(x=>x.status==="ativo").map(x=>`<option value="${x.id}" ${x.id===c.pid?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>`:""}
+      ${role==="admin"?`<div class="sec2"><h3>Professor responsável</h3><div class="toolbar" style="margin:0"><select id="dpp" aria-label="Professor responsável">${c.pid?"":`<option value="" selected>Sem professor ainda</option>`}${DB.personals.filter(x=>x.status==="ativo").map(x=>`<option value="${x.id}" ${x.id===c.pid?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>`:""}
       <div class="sec2"><h3>Exercícios indicados</h3>${rxOf(c.id).length?`<div class="rxl">${rxOf(c.id).map(r=>{const e=exById(r.id);return e?`<div>${fig(e,"xs")}<span><b>${e.n}</b><small>${esc(r.dose)}${r.note?` · ${esc(r.note)}`:""}</small></span></div>`:""}).join("")}</div>`:`<p class="empty-s">Nenhum exercício indicado ainda.</p>`}</div>
       <div class="sec2"><h3>Para subir de nível</h3><div class="chk">${cr.map(([t,d])=>`<div class="${d?"y":""}"><i data-lucide="${d?"circle-check":"circle-dashed"}"></i>${esc(t)}</div>`).join("")}</div><div class="prog mt"><i style="width:${pctFor(c)}%"></i></div></div>
       <details class="fold sec2"><summary><h3>Questionário</h3><i data-lucide="chevron-down"></i></summary><div class="plist"><div><span>Objetivos</span><b>${esc(c.goals.join(", "))}</b></div><div><span>O que trava</span><b>${esc(c.barriers.join(", "))}</b></div><div><span>Contato preferido</span><b>${esc(c.contact)}</b></div><div><span>Disponibilidade</span><b>${esc((c.days||[]).join(", "))} · ${esc(c.period)}</b></div><div><span>Liberação médica</span><b>${c.medical?(c.medOk?"Recebida":"Pendente"):"Não necessária"}</b></div>${role==="admin"?`<div><span>Contato</span><b>${esc(c.phone)}</b></div><div><span>Professor</span><b>${esc(p?p.name:"-")}</b></div>`:""}</div></details>
@@ -2833,7 +2867,7 @@ function openClient(id,role){
     </div>`;
     icons();
     $("#dpx").onclick=close;
-    const dpp=$("#dpp");if(dpp)dpp.onchange=()=>{updC(c.id,{pid:dpp.value});toast("Personal alterada");render()};
+    const dpp=$("#dpp");if(dpp)dpp.onchange=()=>{if(!dpp.value)return;updC(c.id,{pid:dpp.value});toast(dpp.value===myProfId()?"Agora você é o professor dele":"Professor alterado");render()};
     m.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const a=b.dataset.a,first=c.name.split(" ")[0];
       if(a==="rx"){removeEventListener("keydown",k);m.remove();openRxEditor(c.id);return}
       if(a==="talk"){updC(c.id,{talked:true});bookingsAll().filter(x=>x.cid===c.id&&x.type==="Primeira conversa").forEach(x=>setBk(x,"feito"));pushMsg(c.id,`Adorei nossa conversa, ${first}! Seu plano está pronto.`);toast("Conversa confirmada")}
@@ -2968,7 +3002,8 @@ function panelAdmin(tab){
   const bl=bills(),late=bl.filter(b=>b.status==="atrasado").length,nl=DB.leads.filter(l=>l.status==="novo").length,pp=DB.personals.filter(p=>p.status==="pendente").length;
   const tabs=[{k:"geral",ic:"layout-dashboard",l:"Visão geral",s:"Geral"},{k:"clientes",ic:"users",l:"Clientes"},{k:"personais",ic:"badge-check",l:"Professores",cnt:pp},{k:"financeiro",ic:"wallet",l:"Financeiro",s:"Finanças",cnt:late},{k:"seguranca",ic:"shield-check",l:"Segurança",cnt:allClients().filter(c=>kycOf(c.id).status==="analise").length+DB.incidents.filter(i=>i.status==="aberto").length+(DB.flags||[]).filter(f=>f.status==="aberto").length},{k:"leads",ic:"inbox",l:"Contatos",cnt:nl},{k:"ajustes",ic:"settings",l:"Ajustes"},{k:"apresentacao",ic:"presentation",l:"Apresentação",s:"Apresentar"}];
   const T={geral:["Painel da empresa","Visão geral"],clientes:["Todos os clientes","Clientes"],personais:["Equipe e novos parceiros","Professores"],financeiro:["Mensalidades e repasses","Financeiro"],leads:["Mensagens do site","Contatos"],seguranca:["Verificações, encontros e relatos","Segurança"],ajustes:["Preços, pagamentos e dados","Ajustes"],apresentacao:["Trabalho da faculdade","Apresentação"]}[tab]||["",""];
-  shell({role:"Empresa",tabs,tab,base:"#/admin",me:{name:"Administração",sub:"Primeiro Passo"},title:T[1],kick:T[0]});
+  shell({role:"Empresa",tabs,tab,base:"#/admin",me:{name:"Administração",sub:"Primeiro Passo"},title:T[1],kick:T[0],acts:myProf()?`<button class="btn btn-primary btn-sm" data-myprof><i data-lucide="user-round-check"></i>Meu painel de professor</button>`:`<button class="btn btn-ghost btn-sm" data-myprof><i data-lucide="user-plus"></i>Atender como professor</button>`});
+  document.querySelectorAll("[data-myprof]").forEach(b=>b.onclick=()=>myProf()?openMyProf():becomeProf());
   ({geral:aGeral,clientes:aClientes,personais:aPersonais,financeiro:aFin,seguranca:aSeg,leads:aLeads,ajustes:aAjustes,apresentacao:aApres}[tab]||aGeral)(bl);
   bindOpen("admin");icons();
 }
@@ -2976,7 +3011,8 @@ function aGeral(bl){
   const cs=allClients(),act=cs.filter(c=>c.status==="ativo"),cur=mkey(Date.now()),ms=monthsBack(6);
   const mb=bl.filter(b=>b.m===cur),fat=mb.reduce((s,b)=>s+b.amount,0),rec=mb.filter(b=>b.paid).reduce((s,b)=>s+b.amount,0),late=bl.filter(b=>b.status==="atrasado");
   const novos=cs.filter(c=>mkey(c.since)===cur).length,idle=act.filter(c=>c.level>=2&&daysAgo(lastAct(c))>=14);
-  const pend=[...DB.personals.filter(p=>p.status==="pendente").map(p=>["badge-check",`${p.name} quer ser professor parceiro`,"#/admin/personais","warn","Analisar"]),
+  const pend=[...act.filter(c=>!c.pid&&!c.you).map(c=>["user-round-search",`${c.name} se cadastrou e está sem professor`,null,"warn","Escolher",c.id]),
+    ...DB.personals.filter(p=>p.status==="pendente").map(p=>["badge-check",`${p.name} quer ser professor parceiro`,"#/admin/personais","warn","Analisar"]),
     ...(late.length?[["circle-alert",`${late.length} mensalidades atrasadas (${money(late.reduce((s,b)=>s+b.amount,0))})`,"#/admin/financeiro","bad","Ver"]]:[]),
     ...(DB.flags||[]).filter(f=>f.status==="aberto").map(f=>["shield-alert",`Possível contato por fora: ${f.pname.split(" ")[0]} e ${f.cname.split(" ")[0]}`,"#/admin/seguranca",f.from==="personal"?"bad":"warn","Ver"]),
     ...DB.incidents.filter(i=>i.status==="aberto").map(i=>["message-square-warning",`Relato: ${i.type.toLowerCase()} (${i.who})`,"#/admin/seguranca",i.sev==="alta"?"bad":"warn","Ver"]),
