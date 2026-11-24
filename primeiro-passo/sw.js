@@ -1,7 +1,7 @@
 /* Guarda o site no aparelho para abrir sem internet.
-   Página: rede primeiro (sempre a versão mais nova), cópia salva se estiver offline.
+   Página: rede primeiro, sem a cópia de 10 min do navegador (sempre a versão mais nova), cópia salva se estiver offline.
    Fontes e biblioteca de ícones: cópia salva primeiro. */
-const CACHE = "primeiropasso-v32"; /* o PassosFit mora no mesmo site: só apaga cópias do Primeiro Passo */
+const CACHE = "primeiropasso-v33"; /* o PassosFit mora no mesmo site: só apaga cópias do Primeiro Passo */
 const CORE = ["./", "./index.html", "./vendor/lucide-pp.js?v=1", "./vendor/firebase-10.14.1/firebase-app-compat.js", "./vendor/firebase-10.14.1/firebase-auth-compat.js", "./vendor/firebase-10.14.1/firebase-firestore-compat.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -14,13 +14,14 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  if (url.pathname.endsWith("version.json")) return; /* conferência de versão: sempre da internet */
   const external = /(fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/.test(url.hostname);
   /* bibliotecas do próprio site (ícones e login): têm versão no nome, então a cópia guardada vale (abre mais rápido) */
   const lib = url.origin === location.origin && /\/primeiro-passo\/vendor\//.test(url.pathname);
   /* só a página principal é guardada como index.html; outras páginas (ex.: trabalho/) ficam com o próprio endereço */
   const home = req.mode === "navigate" && new URL("./", self.registration.scope).pathname === url.pathname.replace(/index\.html$/, "");
   if (req.mode === "navigate" || url.origin === location.origin && !external && !lib) {
-    e.respondWith(fetch(req).then(r => {
+    e.respondWith((req.mode === "navigate" ? fetch(req.url, { cache: "no-cache", credentials: "same-origin" }) : fetch(req)).then(r => {
       const copy = r.clone(); caches.open(CACHE).then(c => c.put(home ? "./index.html" : req, copy)); return r;
     }).catch(() => caches.match(home ? "./index.html" : req).then(r => r || caches.match("./index.html"))));
   } else if (external || lib) {
