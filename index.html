@@ -5253,7 +5253,7 @@ function compareHtml(s, prev) {
       <div class="track"><div class="fill" style="width:${total / max * 100}%"></div></div><b>${tm ? fmtSec(total) : `${fmt(total)} ${uu}`}</b></div>
     ${prev ? `<div class="cmp-row prev"><span>Anterior<small>${fmtDate(prev.date)}/${prev.date.slice(2, 4)}${cut ? ` · ${cut} série${cut === 1 ? '' : 's'}` : ''}</small></span>
       <div class="track"><div class="fill" style="width:${pt / max * 100}%"></div></div><b>${tm ? fmtSec(pt) : `${fmt(pt)} ${uu}`}</b></div>`
-      : `<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>${ex && !(CLOUD && cloud && cloud.role === 'student') ? (src => src.length ? `<div class="wk-src"><small>Puxar cargas de</small>${src.map(x => `<button data-act="wk-src" data-id="${ex.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)}</small></button>`).join('')}</div>` : '')(wkSources(ex.profileId, ex)) : ''}`}
+      : `<div class="cmp-row prev"><span>Anterior<small>—</small></span><small style="color:var(--muted)">nenhum treino anterior registrado</small><b></b></div>${ex && !ex.noLink && !(CLOUD && cloud && cloud.role === 'student') ? (src => src.length ? `<div class="wk-src"><small>Puxar cargas de</small>${src.map(x => `<button data-act="wk-src" data-id="${ex.id}" data-k="${esc(x.key)}"><b>${esc(x.label)}</b><small>${fmtDate(x.last.date)}</small></button>`).join('')}</div>` : '')(wkSources(ex.profileId, ex)) : ''}`}
     <div>${prev ? progress(total, pt, finished, uu) : total ? '<span class="pill up">primeiro registro</span>' : ''}</div>${pd ? PD_NOTE : ''}`;
 }
 function refreshCard(exId) {
@@ -7002,7 +7002,7 @@ function prevCandidates(ex) {
 }
 const canPullPrev = () => !CLOUD || (cloud && cloud.role === 'admin');
 function prevPullHtml(ex) {
-  if (!canPullPrev() || prevSession(ex.id, ui.date)) return '';
+  if (!canPullPrev() || ex.noLink || prevSession(ex.id, ui.date)) return ''; // histórico separado de propósito: não oferece puxar cargas antigas
   const list = ui.v2find === ex.id ? prevCandidates(ex) : null;
   if (!list) return `<button class="v2-pull" data-act="v2-find-prev"><i class="ic ic-up"></i><span class="grow"><b>Sem carga de antes</b><small>Já fez este exercício com outro nome? Toque para puxar as cargas.</small></span></button>`;
   return `<div class="v2-pull open"><b>De qual exercício puxar as cargas?</b>${list.length ? list.map(x => { const top = x.last.sets.filter(y => y.done)[0] || x.last.sets[0];
@@ -7204,15 +7204,31 @@ function nearName(a, b) {
   return d[a.length][b.length] <= 2;
 }
 const ownHistory = ex => db.sessions.some(x => x.exId === ex.id && (x.date < today() || x.fin));
-function splitHistory(ex, oldName) {
-  if (!ownHistory(ex)) return false;
+function splitHistory(ex, oldName, D = today()) {
+  if (D === today() ? !ownHistory(ex) : !db.sessions.some(x => x.exId === ex.id && x.date < D && hasDone(x))) return false;
   const oldId = ex.id, keep = { ...plain(ex), name: oldName, letter: null, archived: true };
   delete keep.order; delete keep.twin; delete ex.twin;
-  ex.id = uid(); ex.planDate = today(); ex.noLink = true;
+  ex.id = uid(); ex.planDate = D; ex.noLink = true;
   db.exercises.push(keep);
-  // treino de hoje ainda em andamento fica com o exercício novo
-  db.sessions.forEach(x => { if (x.exId === oldId && x.date === today() && !x.fin) x.exId = ex.id; }); sessTouch();
+  // treino de hoje ainda em andamento fica com o exercício novo (no conserto de depois: tudo o que foi feito desde a separação)
+  db.sessions.forEach(x => { if (x.exId === oldId && (D === today() ? x.date === D && !x.fin : x.date >= D)) x.exId = ex.id; }); sessTouch();
   return true;
+}
+// "Separar histórico" (pedido do Igor, 25/11): o mesmo exercício em outros dias/treinos divide o histórico com ele.
+// Separa todos juntos, senão o "antes" e a comparação continuam vindo do outro dia. Os novos continuam juntos entre si
+// (mesmo nome) e começam sem carga de antes. Nada é apagado: o antigo fica no Histórico como "(histórico antigo)".
+function splitTwins(ex, oldName, D = today()) {
+  const pid = ex.profileId, k = twinKey(ex), nk = twinKey({ name: ex.name });
+  const all = db.exercises.filter(e => e.profileId === pid && e.name && twinKey(e) === k);
+  let n = 0;
+  all.forEach(e => {
+    if (e.letter && isLetter(e.letter, pid) && !e.archived) {
+      if (splitHistory(e, oldName, D)) n++;
+      delete e.twin; if (twinKey(e) !== nk) e.twin = nk; e.noLink = true;
+      e.sets = e.sets.map(x => ({ ...x, carga: null })); e.planDate = D;
+    } else { e.name = oldName; e.archived = true; delete e.twin; n++; }
+  });
+  return n;
 }
 function builderChange(t) {
   const ex = exById(t.dataset.id); if (!ex) return;
@@ -8755,7 +8771,7 @@ document.getElementById('exSplit').onclick = async () => {
   $dlg.close();
   const ok = await confirmAsk(`Separar o histórico de ${ex.name}?`, `Use quando o "anterior" mostra cargas que não são deste exercício. Os treinos antigos ficam guardados no Histórico como "${ex.name} (histórico antigo)" e ${ex.name} passa a usar só o que for anotado daqui para a frente. Nada é apagado.`, 'Separar');
   if (!ok) return;
-  let n = splitHistory(ex, `${ex.name} (histórico antigo)`) ? 1 : 0;
+  let n = splitTwins(ex, `${ex.name} (histórico antigo)`);
   // outros exercícios guardados com o mesmo nome (fora dos treinos) também saem do "anterior"
   db.exercises.forEach(e => { if (e !== ex && e.profileId === ex.profileId && !isLetter(e.letter, e.profileId) && sameName(e.name, ex.name)) { e.name = `${ex.name} (histórico antigo)`; e.archived = true; n++; } });
   if (n) { save(); render(); toast(`Pronto: ${esc(ex.name)} começa com histórico novo.`); }
@@ -9599,6 +9615,25 @@ async function fixOnce() {
     if (dy && old && !dy.subOf) { subSet(dy, twinKey(old)); save(); msgs.push(`✓ Remada DY ligada à ${esc(old.name)} no gráfico da Evolução.`); }
     if ((dy && old) || today() > '2026-11-30') mark('remada-dy-troca-1311');
   }
+  // 1s) (25/11) "Separar histórico" só separava o exercício tocado: o mesmo exercício em outro dia continuava dando o "antes"
+  //     e a comparação com as cargas antigas (Abdominal na polia do professor). Separa também os outros, a partir do dia em
+  //     que o histórico foi separado. Nada é apagado: o antigo fica no Histórico como "(histórico antigo)".
+  if (!done.has('separar-gemeos-2511')) {
+    let n = 0;
+    for (const p of [profile(ME)]) { // só o caso do professor (Abdominal): outros exercícios separados não mudam
+      const exs = db.exercises.filter(e => e.profileId === p.id && e.name && /abdominal/.test(normName(e.name)));
+      const olds = new Set(exs.filter(e => / \(historico antigo\)$/.test(normName(e.name))).map(e => normName(e.name)));
+      const cands = exs.filter(e => e.noLink && !e.archived && isLetter(e.letter, p.id) && olds.has(normName(e.name) + ' (historico antigo)'));
+      if (!cands.length) continue;
+      await ensureFull(p.id);
+      for (const ex of cands) {
+        const D = ex.planDate || today(), ids = twinIds(ex.id); ids.delete(ex.id);
+        if (db.sessions.some(x => ids.has(x.exId) && x.date < D && hasDone(x))) n += splitTwins(ex, `${ex.name} (histórico antigo)`, D) ? 1 : 0;
+      }
+    }
+    mark('separar-gemeos-2511');
+    if (n) { save(); render(); msgs.push('✓ Histórico separado também nos outros dias: o "antes" e a comparação começam do zero.'); }
+  }
   if (msgs.length) toast(msgs.join('<br>'));
 }
 
@@ -10394,7 +10429,7 @@ document.getElementById('authForgot').onclick = async () => {
 // O celular guarda uma cópia do app. Confere se há versão nova ao abrir, ao voltar para o app e a cada 5 min.
 // Ao abrir ou voltar para o app, sem nada sendo digitado: atualiza sozinho. Com o app em uso: mostra o aviso
 // "Nova versão do app · Toque para atualizar" no alto. Antes de recarregar, salva na nuvem o que estiver pendente (e fica guardado no aparelho).
-const APP_VERSION = '23/11-21:31';
+const APP_VERSION = '25/11-07:23';
 const BOOT_AT = Date.now();
 let updShown = '', updSnooze = 0;
 const UPD_TRY = 'planilha-atualizou';
