@@ -8,6 +8,22 @@ Leia antes de qualquer tarefa. Este repositório é **público**: nunca coloque 
 - Ele não gosta da expressão "treino pago" (nas artes usamos "Treino feito" / "Check-in").
 - Depois de mudar o app, diga o que mudou e lembre: "feche e abra o app para ver".
 
+## Comece toda conversa nova assim (qualquer conta do Claude)
+1. A versão principal do GitHub ainda é a antiga (`claude/planilha-treino-funcional-kvei5o`). O site no ar é **`claude/sharp-gauss-tw16z1`**: comece sempre dela
+   (`git fetch origin && git checkout claude/sharp-gauss-tw16z1 && git pull --ff-only`), até o Igor trocar a principal no GitHub.
+2. Leia este arquivo e veja as **Issues abertas** (é a lista de tarefas pendentes).
+3. Nesta nuvem o GitHub funciona pelo `gh api` (REST); o GraphQL é bloqueado. Exemplos:
+   - Issue: `gh api repos/arqlais/planilha-1/issues -f title='[Melhoria] ...' -f body='...' -f 'labels[]=Melhoria'`
+   - PR: `gh api repos/arqlais/planilha-1/pulls -f title='...' -f head='<sua-branch>' -f base='claude/sharp-gauss-tw16z1' -f body='Resolve #NN ...'`
+4. O Igor não lembra de detalhes técnicos: se ele disser "continua de onde parou", olhe as Issues e os últimos PRs juntados.
+
+## Projetos neste repositório
+- **PassosFit** (raiz): app de treino do Igor e dos alunos, em **passosfit.com.br**. Detalhes abaixo.
+- **Primeiro Passo** (`primeiro-passo/`): plataforma de acompanhamento físico (site, app do cliente, painel da personal e painel da empresa).
+  Firebase próprio (`primeiro-passo-a792c`), regras em `primeiro-passo/firestore.rules`, explicação em `primeiro-passo/README.md`. `primeiro-passo/demo/` é o modo de teste.
+- **Portal** (`portal/`): página que reúne os dois; `portal/apresentacao/` é a demonstração que funciona sem internet.
+- `_config.yml` diz o que **não** vai para o site (anotações, regras, scripts). Arquivo novo de anotação? Coloque lá também.
+
 ## O app
 - PWA de arquivo único: `index.html` (todo o app), `sw.js` (cache offline), `manifest.webmanifest`, `config.js` (Firebase), `firestore.rules`.
 - No ar pelo GitHub Pages, branch `claude/sharp-gauss-tw16z1`, domínio **passosfit.com.br** (arquivo `CNAME`).
